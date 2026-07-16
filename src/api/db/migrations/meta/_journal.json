@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1785757645429,
+      "tag": "0000_graceful_zaran",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1785914938649,
+      "tag": "0001_cynical_nitro",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1785916235769,
+      "tag": "0002_modern_trauma",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1785939511867,
+      "tag": "0003_secret_the_call",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1785953504683,
+      "tag": "0004_clear_boomer",
+      "breakpoints": true
+    }
+  ]
+}

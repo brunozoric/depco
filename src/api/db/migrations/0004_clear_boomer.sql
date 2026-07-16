@@ -1,0 +1,1 @@
+ALTER TABLE `upgrade_jobs` ADD `parent_job_id` text;

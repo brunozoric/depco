@@ -1,0 +1,61 @@
+import { createAbstraction } from "#shared/index.js";
+import type { IChangelogEntry } from "#shared/changelog/types.js";
+
+export interface IPackageProject {
+    projectId: string;
+    projectName: string;
+    currentVersion: string;
+    latestVersion: string;
+    upgradeType: string;
+}
+
+export interface IPackageListItem {
+    name: string;
+    projects: IPackageProject[];
+    changelogCount: number;
+    lastPublishedAt: number | null;
+    dependencyKind: string;
+    registryResolved: boolean;
+}
+
+export interface IPackageListResponse {
+    items: IPackageListItem[];
+    total: number;
+}
+
+export interface IChangelogResult {
+    entries: IChangelogEntry[];
+    resolving: boolean;
+}
+
+export interface IPackageListFilters {
+    search?: string;
+    upgradeType?: string;
+    dependencyKind?: string;
+    projectId?: string;
+    hasChangelog?: boolean;
+    page?: number;
+    pageSize?: number;
+    sortBy?: string;
+    sortOrder?: string;
+    teamId?: string;
+}
+
+export interface IPackagesGateway {
+    list(filters?: IPackageListFilters): Promise<IPackageListResponse>;
+    rescanPackage(packageName: string): Promise<void>;
+    getChangelogs(packageName: string, from: string, to: string): Promise<IChangelogResult>;
+    reResolveChangelogs(packageName: string, from: string, to: string): Promise<IChangelogResult>;
+}
+
+export const PackagesGateway = createAbstraction<IPackagesGateway>("Ui/PackagesGateway");
+
+export namespace PackagesGateway {
+    export type Interface = IPackagesGateway;
+    export type PackageListItem = IPackageListItem;
+    export type PackageProject = IPackageProject;
+    export type ChangelogEntry = IChangelogEntry;
+    export type ChangelogResult = IChangelogResult;
+    export type Filters = IPackageListFilters;
+    export type ListResponse = IPackageListResponse;
+}

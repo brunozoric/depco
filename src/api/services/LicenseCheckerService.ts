@@ -1,0 +1,54 @@
+import { eq } from "drizzle-orm";
+import { LicenseCheckerService as Abstraction } from "./abstractions/LicenseCheckerService.js";
+import { RegistryCacheService } from "./abstractions/RegistryCacheService.js";
+import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { scanResults } from "#api/db/schema.js";
+
+class LicenseCheckerServiceImpl implements Abstraction.Interface {
+    public constructor(
+        private readonly registryCacheService: RegistryCacheService.Interface,
+        private readonly databaseClient: DatabaseClient.Interface
+    ) {}
+
+    public async scan({
+        projectId,
+        packageManager
+    }: Abstraction.ScanParams): Promise<Abstraction.LicenseRecord[]> {
+        const packages = await this.databaseClient.db
+            .select({ name: scanResults.name })
+            .from(scanResults)
+            .where(eq(scanResults.projectId, projectId))
+            .all();
+
+        const records: Abstraction.LicenseRecord[] = [];
+
+        for (const pkg of packages) {
+            try {
+                const info = await this.registryCacheService.getPackageInfo(
+                    pkg.name,
+                    packageManager
+                );
+                records.push({
+                    packageName: pkg.name,
+                    licenseName: info.license ?? "UNKNOWN",
+                    spdxId: info.license ?? null,
+                    licenseUrl: info.repoUrl
+                });
+            } catch {
+                records.push({
+                    packageName: pkg.name,
+                    licenseName: "UNKNOWN",
+                    spdxId: null,
+                    licenseUrl: null
+                });
+            }
+        }
+
+        return records;
+    }
+}
+
+export const LicenseCheckerService = Abstraction.createImplementation({
+    implementation: LicenseCheckerServiceImpl,
+    dependencies: [RegistryCacheService, DatabaseClient]
+});

@@ -1,0 +1,315 @@
+import { describe, it, expect, beforeEach } from "vitest";
+import { createContainer } from "#shared/index.js";
+import { AuditParserService } from "../abstractions/AuditParserService.js";
+import { AuditParserService as AuditParserServiceRegistration } from "../AuditParserService.js";
+
+// Fixtures below mirror real CLI output captured by running the audit
+// commands (`npm audit --json`, `yarn npm audit --recursive --json`,
+// `pnpm audit --json`) against a project with known-vulnerable packages
+// (lodash@4.17.4, minimist@0.0.8). npm's auditReportVersion 2 format is
+// also what Bun's `bun audit --json` emits.
+const NPM_AUDIT_JSON = JSON.stringify({
+    auditReportVersion: 2,
+    vulnerabilities: {
+        lodash: {
+            name: "lodash",
+            severity: "critical",
+            isDirect: true,
+            via: [
+                {
+                    source: 1106913,
+                    name: "lodash",
+                    dependency: "lodash",
+                    title: "Command Injection in lodash",
+                    url: "https://github.com/advisories/GHSA-35jh-r3h4-6jhm",
+                    severity: "high",
+                    range: "<4.17.21"
+                },
+                {
+                    source: 1106918,
+                    name: "lodash",
+                    dependency: "lodash",
+                    title: "Prototype Pollution in lodash",
+                    url: "https://github.com/advisories/GHSA-jf85-cpcp-j695",
+                    severity: "critical",
+                    range: "<4.17.12"
+                }
+            ],
+            effects: [],
+            range: "<=4.17.23",
+            nodes: ["node_modules/lodash"],
+            fixAvailable: { name: "lodash", version: "4.18.1", isSemVerMajor: false }
+        },
+        minimist: {
+            name: "minimist",
+            severity: "critical",
+            isDirect: true,
+            via: [
+                {
+                    source: 1097677,
+                    name: "minimist",
+                    dependency: "minimist",
+                    title: "Prototype Pollution in minimist",
+                    url: "https://github.com/advisories/GHSA-xvch-5gv4-984h",
+                    severity: "critical",
+                    range: "<0.2.4"
+                }
+            ],
+            effects: [],
+            range: "<=0.2.3",
+            nodes: ["node_modules/minimist"],
+            fixAvailable: { name: "minimist", version: "1.2.8", isSemVerMajor: true }
+        }
+    },
+    metadata: {
+        vulnerabilities: { info: 0, low: 0, moderate: 0, high: 0, critical: 2, total: 2 }
+    }
+});
+
+// Yarn (berry) NDJSON: one JSON object per line, no top-level wrapper.
+const YARN_AUDIT_NDJSON = [
+    JSON.stringify({
+        value: "lodash",
+        children: {
+            ID: 1106913,
+            Issue: "Command Injection in lodash",
+            URL: "https://github.com/advisories/GHSA-35jh-r3h4-6jhm",
+            Severity: "high",
+            "Vulnerable Versions": "<4.17.21",
+            "Tree Versions": ["4.17.4"],
+            Dependents: ["audit-test@workspace:."]
+        }
+    }),
+    JSON.stringify({
+        value: "minimist",
+        children: {
+            ID: 1097677,
+            Issue: "Prototype Pollution in minimist",
+            URL: "https://github.com/advisories/GHSA-xvch-5gv4-984h",
+            Severity: "critical",
+            "Vulnerable Versions": "<0.2.4",
+            "Tree Versions": ["0.0.8"],
+            Dependents: ["audit-test@workspace:."]
+        }
+    })
+].join("\n");
+
+const PNPM_AUDIT_JSON = JSON.stringify({
+    advisories: {
+        "1097677": {
+            findings: [{ version: "0.0.8", paths: [".>minimist"], dev: false }],
+            id: 1097677,
+            title: "Prototype Pollution in minimist",
+            module_name: "minimist",
+            vulnerable_versions: "<0.2.4",
+            patched_versions: ">=0.2.4",
+            severity: "critical",
+            cwe: "CWE-1321",
+            github_advisory_id: "GHSA-xvch-5gv4-984h",
+            url: "https://github.com/advisories/GHSA-xvch-5gv4-984h"
+        },
+        "1106913": {
+            findings: [{ version: "4.17.4", paths: [".>lodash"], dev: false }],
+            id: 1106913,
+            title: "Command Injection in lodash",
+            module_name: "lodash",
+            vulnerable_versions: "<4.17.21",
+            patched_versions: ">=4.17.21",
+            severity: "high",
+            cwe: "CWE-77, CWE-94",
+            github_advisory_id: "GHSA-35jh-r3h4-6jhm",
+            url: "https://github.com/advisories/GHSA-35jh-r3h4-6jhm"
+        }
+    },
+    metadata: {
+        vulnerabilities: { info: 0, low: 0, moderate: 0, high: 1, critical: 1 }
+    }
+});
+
+describe("AuditParserService", () => {
+    let service: AuditParserService.Interface;
+
+    beforeEach(() => {
+        const container = createContainer();
+        container.register(AuditParserServiceRegistration).inSingletonScope();
+        service = container.resolve(AuditParserService);
+    });
+
+    describe("npm format", () => {
+        it("parses vulnerabilities from the vulnerabilities.<name>.via shape", () => {
+            const result = service.parse(NPM_AUDIT_JSON, "npm");
+
+            expect(result).toHaveLength(3);
+            expect(result).toEqual(
+                expect.arrayContaining([
+                    {
+                        packageName: "lodash",
+                        severity: "high",
+                        title: "Command Injection in lodash",
+                        advisoryUrl: "https://github.com/advisories/GHSA-35jh-r3h4-6jhm",
+                        cveId: null,
+                        vulnerableRange: "<4.17.21",
+                        fixVersion: "4.18.1"
+                    },
+                    {
+                        packageName: "lodash",
+                        severity: "critical",
+                        title: "Prototype Pollution in lodash",
+                        advisoryUrl: "https://github.com/advisories/GHSA-jf85-cpcp-j695",
+                        cveId: null,
+                        vulnerableRange: "<4.17.12",
+                        fixVersion: "4.18.1"
+                    },
+                    {
+                        packageName: "minimist",
+                        severity: "critical",
+                        title: "Prototype Pollution in minimist",
+                        advisoryUrl: "https://github.com/advisories/GHSA-xvch-5gv4-984h",
+                        cveId: null,
+                        vulnerableRange: "<0.2.4",
+                        fixVersion: "1.2.8"
+                    }
+                ])
+            );
+        });
+
+        it("returns an empty array for empty stdout", () => {
+            expect(service.parse("", "npm")).toEqual([]);
+        });
+
+        it("returns an empty array for malformed JSON", () => {
+            expect(service.parse("{not valid json", "npm")).toEqual([]);
+        });
+
+        it("returns an empty array when there are no vulnerabilities", () => {
+            expect(service.parse(JSON.stringify({ vulnerabilities: {} }), "npm")).toEqual([]);
+        });
+    });
+
+    describe("bun format (same shape as npm)", () => {
+        it("parses vulnerabilities using the npm parser", () => {
+            const result = service.parse(NPM_AUDIT_JSON, "bun");
+
+            expect(result).toHaveLength(3);
+            expect(result[0]!.packageName).toBe("lodash");
+        });
+    });
+
+    describe("yarn format (NDJSON)", () => {
+        it("parses one vulnerability per NDJSON line", () => {
+            const result = service.parse(YARN_AUDIT_NDJSON, "yarn");
+
+            expect(result).toEqual([
+                {
+                    packageName: "lodash",
+                    severity: "high",
+                    title: "Command Injection in lodash",
+                    advisoryUrl: "https://github.com/advisories/GHSA-35jh-r3h4-6jhm",
+                    cveId: null,
+                    vulnerableRange: "<4.17.21",
+                    fixVersion: null
+                },
+                {
+                    packageName: "minimist",
+                    severity: "critical",
+                    title: "Prototype Pollution in minimist",
+                    advisoryUrl: "https://github.com/advisories/GHSA-xvch-5gv4-984h",
+                    cveId: null,
+                    vulnerableRange: "<0.2.4",
+                    fixVersion: null
+                }
+            ]);
+        });
+
+        it("skips blank lines and returns an empty array for empty stdout", () => {
+            expect(service.parse("\n\n", "yarn")).toEqual([]);
+            expect(service.parse("", "yarn")).toEqual([]);
+        });
+
+        it("skips unparsable lines instead of throwing", () => {
+            const withGarbageLine = `not json\n${YARN_AUDIT_NDJSON}`;
+            const result = service.parse(withGarbageLine, "yarn");
+
+            expect(result).toHaveLength(2);
+        });
+    });
+
+    describe("pnpm format", () => {
+        it("parses vulnerabilities from the advisories.<id> shape", () => {
+            const result = service.parse(PNPM_AUDIT_JSON, "pnpm");
+
+            expect(result).toEqual(
+                expect.arrayContaining([
+                    {
+                        packageName: "minimist",
+                        severity: "critical",
+                        title: "Prototype Pollution in minimist",
+                        advisoryUrl: "https://github.com/advisories/GHSA-xvch-5gv4-984h",
+                        cveId: null,
+                        vulnerableRange: "<0.2.4",
+                        fixVersion: ">=0.2.4"
+                    },
+                    {
+                        packageName: "lodash",
+                        severity: "high",
+                        title: "Command Injection in lodash",
+                        advisoryUrl: "https://github.com/advisories/GHSA-35jh-r3h4-6jhm",
+                        cveId: null,
+                        vulnerableRange: "<4.17.21",
+                        fixVersion: ">=4.17.21"
+                    }
+                ])
+            );
+            expect(result).toHaveLength(2);
+        });
+
+        it("returns an empty array when there are no advisories", () => {
+            expect(service.parse(JSON.stringify({ advisories: {} }), "pnpm")).toEqual([]);
+        });
+
+        it("returns an empty array for malformed JSON", () => {
+            expect(service.parse("not json", "pnpm")).toEqual([]);
+        });
+    });
+
+    describe("severity mapping", () => {
+        it("normalizes recognized severities and falls back to info for unrecognized values", () => {
+            const json = JSON.stringify({
+                vulnerabilities: {
+                    foo: {
+                        name: "foo",
+                        severity: "weird",
+                        via: [
+                            {
+                                title: "Some issue",
+                                url: "https://example.com",
+                                severity: "weird",
+                                range: "*"
+                            }
+                        ]
+                    }
+                }
+            });
+
+            const result = service.parse(json, "npm");
+
+            expect(result).toEqual([
+                {
+                    packageName: "foo",
+                    severity: "info",
+                    title: "Some issue",
+                    advisoryUrl: "https://example.com",
+                    cveId: null,
+                    vulnerableRange: "*",
+                    fixVersion: null
+                }
+            ]);
+        });
+    });
+
+    describe("unknown package manager", () => {
+        it("returns an empty array", () => {
+            expect(service.parse(NPM_AUDIT_JSON, "unknown-pm")).toEqual([]);
+        });
+    });
+});

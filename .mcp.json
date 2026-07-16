@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "stdlib": {
+      "command": "node",
+      "args": ["node_modules/@webiny/stdlib/mcp/cli.js", "serve"]
+    }
+  }
+}
