@@ -9,8 +9,8 @@ permissions:
   contents: read
 
 jobs:
-  audit:
-    name: Security audit (Node ${{ matrix.node-version }})
+  ci:
+    name: CI (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -23,80 +23,8 @@ jobs:
           cache: yarn
       - run: yarn install --immutable
       - run: yarn npm audit
-
-  imports:
-    name: Import check (Node ${{ matrix.node-version }})
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [24, 26]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: yarn
-      - run: yarn install --immutable
       - run: yarn adio
-
-  lint:
-    name: Lint (Node ${{ matrix.node-version }})
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [24, 26]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: yarn
-      - run: yarn install --immutable
       - run: yarn lint
-
-  format:
-    name: Format (Node ${{ matrix.node-version }})
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [24, 26]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: yarn
-      - run: yarn install --immutable
       - run: yarn format:check
-
-  build:
-    name: Build (Node ${{ matrix.node-version }})
-    needs: [audit, imports, lint, format]
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [24, 26]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: yarn
-      - run: yarn install --immutable
       - run: yarn build
-
-  test:
-    name: Test (Node ${{ matrix.node-version }})
-    needs: [build]
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [24, 26]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: yarn
-      - run: yarn install --immutable
       - run: yarn test
