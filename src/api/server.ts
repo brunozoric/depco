@@ -7,6 +7,7 @@ import { pathToFileURL } from "url";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import fastifyCompress from "@fastify/compress";
+import fastifyRateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
 import { createContainer } from "#shared/index.js";
 import { ApiFeature } from "./feature.js";
@@ -87,6 +88,7 @@ export async function createServer(): Promise<FastifyInstance> {
 
     const app = Fastify({ logger: true });
     await app.register(fastifyCompress);
+    await app.register(fastifyRateLimit, { max: 100, timeWindow: "1 minute" });
 
     // Route plugins are registered here, each receiving the DI container via
     // its Fastify plugin options (`{ container }`).

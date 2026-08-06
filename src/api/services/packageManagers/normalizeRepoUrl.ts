@@ -12,11 +12,20 @@ export function normalizeRepoUrl(repository: unknown): string | null {
         .replace(/^git\+/, "")
         .replace(/\.git$/, "")
         .replace(/^ssh:\/\/git@github\.com/, "https://github.com");
-    if (!url.includes("github.com")) {
+    const sshMatch = url.match(/^git@github\.com:([^/]+\/[^/]+)$/);
+    if (sshMatch) {
+        return `https://github.com/${sshMatch[1]}`;
+    }
+    try {
+        const parsed = new URL(url);
+        if (parsed.hostname !== "github.com") {
+            return null;
+        }
+        const pathMatch = parsed.pathname.match(/^\/([^/]+\/[^/]+)/);
+        return pathMatch ? `https://github.com${pathMatch[0]}` : null;
+    } catch {
         return null;
     }
-    const match = url.match(/github\.com[/:]([^/]+\/[^/]+)/);
-    return match ? `https://github.com/${match[1]}` : null;
 }
 
 export function extractRepoDirectory(repository: unknown): string | null {

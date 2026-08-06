@@ -21,11 +21,12 @@ export class ForgeServiceImpl implements Abstraction.Interface {
         });
 
         const url = result.stdout.trim();
+        const hostname = extractHostname(url);
 
-        if (url.includes("github.com")) {
+        if (hostname === "github.com") {
             return "github";
         }
-        if (url.includes("gitlab.com")) {
+        if (hostname === "gitlab.com") {
             return "gitlab";
         }
         return "unknown";
@@ -142,6 +143,18 @@ export class ForgeServiceImpl implements Abstraction.Interface {
         }
 
         throw new Error(`Cannot parse remote URL: ${url}`);
+    }
+}
+
+function extractHostname(url: string): string | null {
+    const sshMatch = url.match(/^git@([^:]+):/);
+    if (sshMatch) {
+        return sshMatch[1]!;
+    }
+    try {
+        return new URL(url).hostname;
+    } catch {
+        return null;
     }
 }
 

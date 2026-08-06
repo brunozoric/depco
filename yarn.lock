@@ -1014,6 +1014,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fastify/rate-limit@npm:^11.2.0":
+  version: 11.2.0
+  resolution: "@fastify/rate-limit@npm:11.2.0"
+  dependencies:
+    "@lukeed/ms": "npm:^2.0.2"
+    fastify-plugin: "npm:^6.0.0"
+    ip-address: "npm:^10.2.0"
+    toad-cache: "npm:^3.7.0"
+  checksum: 10/8028e374c28a97e54a6c8f97a8b0ce5b33ee1b064270a3a091f74d5f35fb5441bf8af56b7e0f9237484c2173c2fe3a8e6c10ce843c3cbb6d5b31ba8ea5e30cad
+  languageName: node
+  linkType: hard
+
 "@fastify/send@npm:^4.0.0":
   version: 4.1.0
   resolution: "@fastify/send@npm:4.1.0"
@@ -1111,6 +1123,7 @@ __metadata:
   dependencies:
     "@emotion/react": "npm:^11.14.0"
     "@fastify/compress": "npm:^9.1.0"
+    "@fastify/rate-limit": "npm:^11.2.0"
     "@fastify/static": "npm:^10.1.2"
     "@fastify/websocket": "npm:^11.3.0"
     "@gitbeaker/rest": "npm:^43.8.0"
