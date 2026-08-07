@@ -6,7 +6,7 @@ import { createContainer } from "#shared/index.js";
 import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { JobWorker } from "../../services/abstractions/JobWorker.js";
+import { JobWorker } from "../../services/JobExecution/index.js";
 import { AutoFixSettingsService } from "../../services/AutoFix/AutoFixSettingsService.js";
 import { EmailService } from "../../services/Email/index.js";
 import { UserService as UserServiceRegistration } from "../../services/UserService.js";

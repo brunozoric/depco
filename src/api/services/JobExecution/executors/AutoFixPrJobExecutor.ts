@@ -1,10 +1,10 @@
 import { eq, and } from "drizzle-orm";
 import type { JobExecutor } from "./abstractions/JobExecutor.js";
 import { AutoFixPrJobExecutor as Abstraction } from "./abstractions/AutoFixPrJobExecutor.js";
-import { AutoFixPrService } from "../AutoFix/index.js";
-import { GitService } from "../Git/index.js";
-import { ForgeService } from "../Git/index.js";
-import { UpgradeService } from "../Upgrade/index.js";
+import { AutoFixPrService } from "../../AutoFix/index.js";
+import { GitService } from "../../Git/index.js";
+import { ForgeService } from "../../Git/index.js";
+import { UpgradeService } from "../../Upgrade/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { autoFixPullRequests } from "#api/db/schema.js";

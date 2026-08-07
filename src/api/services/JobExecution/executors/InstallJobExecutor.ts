@@ -2,9 +2,9 @@ import { z } from "zod";
 import type { JobExecutor } from "./abstractions/JobExecutor.js";
 import { InstallJobExecutor as Abstraction } from "./abstractions/InstallJobExecutor.js";
 import { PackageManagerDriverRegistry } from "../PackageManager/abstractions/PackageManagerDriverRegistry.js";
-import { CommandRunner } from "../CommandRunner/index.js";
+import { CommandRunner } from "../../CommandRunner/index.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
-import { FileConfigService } from "../FileConfig/index.js";
+import { FileConfigService } from "../../FileConfig/index.js";
 
 class InstallJobExecutorImpl implements JobExecutor.Interface {
     public readonly type = "install";

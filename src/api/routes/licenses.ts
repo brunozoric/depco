@@ -13,7 +13,7 @@ import {
     getLicenseViolationsSummaryRoute
 } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { JobWorker } from "#api/services/abstractions/JobWorker.js";
+import { JobWorker } from "#api/services/JobExecution/index.js";
 import { licenses, licenseViolations, projects, teamProjects } from "#api/db/schema.js";
 
 interface PluginOptions extends FastifyPluginOptions {

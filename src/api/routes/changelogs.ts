@@ -6,7 +6,7 @@ import { requirePermission } from "#api/middleware/requirePermission.js";
 import { getChangelogsRoute, reResolveChangelogsRoute } from "#shared/routes/index.js";
 import { ChangelogService } from "#api/services/Changelog/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { JobWorker } from "#api/services/abstractions/JobWorker.js";
+import { JobWorker } from "#api/services/JobExecution/index.js";
 import { upgradeJobs } from "#api/db/schema.js";
 import { compareVersions } from "#api/services/ChangelogService.js";
 

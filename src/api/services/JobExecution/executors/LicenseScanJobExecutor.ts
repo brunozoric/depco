@@ -2,15 +2,15 @@ import { and, eq, lt } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import type { JobExecutor } from "./abstractions/JobExecutor.js";
 import { LicenseScanJobExecutor as Abstraction } from "./abstractions/LicenseScanJobExecutor.js";
-import { LicenseCheckerService } from "../License/index.js";
-import { LicensePolicyService } from "../License/index.js";
+import { LicenseCheckerService } from "../../License/index.js";
+import { LicensePolicyService } from "../../License/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
-import { EventBus } from "../EventBus/index.js";
+import { EventBus } from "../../EventBus/index.js";
 import { licenses, licenseSnapshots } from "#api/db/schema.js";
 import { classifyLicenseRiskTier } from "#shared/licenses/types.js";
 
-declare module "../EventBus/index.js" {
+declare module "../../EventBus/index.js" {
     interface IEventMap {
         "license-scan:completed": [projectId: string];
     }

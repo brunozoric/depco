@@ -25,7 +25,7 @@ import {
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { SecurityService } from "../services/Security/index.js";
 import { PackageManagerService } from "../services/PackageManager/index.js";
-import { JobWorker } from "../services/abstractions/JobWorker.js";
+import { JobWorker } from "../services/JobExecution/index.js";
 import { ScanSchedulerService } from "../services/ScanScheduler/index.js";
 import { registerProject as registerProjectHelper } from "../services/registerProject.js";
 import {

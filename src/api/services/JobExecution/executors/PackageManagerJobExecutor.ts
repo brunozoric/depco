@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { JobExecutor } from "./abstractions/JobExecutor.js";
 import { PackageManagerJobExecutor as Abstraction } from "./abstractions/PackageManagerJobExecutor.js";
-import { PackageManagerService } from "../PackageManager/index.js";
+import { PackageManagerService } from "../../PackageManager/index.js";
 
 const packageManagerPackageSchema = z.object({
     from: z.string(),

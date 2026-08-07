@@ -4,7 +4,7 @@ import { join } from "path";
 import { ConsoleLoggerConfig, ConsoleLoggerFeature } from "@webiny/stdlib";
 import { DirectoryToolFeature, FileToolFeature, JsonFileToolFeature } from "@webiny/stdlib/node";
 import { createContainer } from "#shared/index.js";
-import { CommandRunner } from "../../CommandRunner/index.js";
+import { CommandRunner } from "../../../CommandRunner/index.js";
 import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../PackageManager/PackageManagerDriverRegistry.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { FileConfigService as FileConfigServiceRegistration } from "../../FileConfigService.js";

@@ -21,7 +21,7 @@ import { generateId } from "@webiny/stdlib";
 import { changelogs, dependencies, dependencyVersions, upgradeJobs } from "#api/db/schema.js";
 import { changelogRoutes } from "../changelogs.js";
 import { eq } from "drizzle-orm";
-import { JobWorker } from "../../services/abstractions/JobWorker.js";
+import { JobWorker } from "../../services/JobExecution/index.js";
 
 function createStubFileConfigService(): FileConfigService.Interface {
     return {

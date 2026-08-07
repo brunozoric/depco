@@ -1,13 +1,13 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import { JobWorker as Abstraction } from "./abstractions/JobWorker.js";
-import { PackageManagerService } from "./PackageManager/index.js";
-import { SecurityService } from "./Security/index.js";
+import { PackageManagerService } from "../PackageManager/index.js";
+import { SecurityService } from "../Security/index.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { JobExecutorRegistry } from "./jobExecutors/abstractions/JobExecutorRegistry.js";
-import type { ISetProgressInput } from "./jobExecutors/abstractions/JobExecutor.js";
-import { ErrorReporter } from "./ErrorReporter/index.js";
+import { JobExecutorRegistry } from "./executors/abstractions/JobExecutorRegistry.js";
+import type { ISetProgressInput } from "./executors/abstractions/JobExecutor.js";
+import { ErrorReporter } from "../ErrorReporter/index.js";
 import { projects, upgradeJobs } from "#api/db/schema.js";
 
 const PROGRESS_DB_WRITE_THROTTLE_MS = 1000;

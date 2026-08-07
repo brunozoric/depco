@@ -1,6 +1,6 @@
 import type { JobExecutor } from "./abstractions/JobExecutor.js";
 import { GraphRefreshJobExecutor as Abstraction } from "./abstractions/GraphRefreshJobExecutor.js";
-import { DependencyGraphService } from "../DependencyGraph/index.js";
+import { DependencyGraphService } from "../../DependencyGraph/index.js";
 
 class GraphRefreshJobExecutorImpl implements Abstraction.Interface {
     public readonly type = "graph-refresh" as const;

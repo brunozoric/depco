@@ -11,7 +11,7 @@ import fastifyRateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
 import { createContainer } from "#shared/index.js";
 import { ApiFeature } from "./feature.js";
-import { JobWorker } from "./services/abstractions/JobWorker.js";
+import { JobWorker } from "./services/JobExecution/index.js";
 import { ScanSchedulerService } from "./services/ScanScheduler/index.js";
 import { EventBus } from "./services/EventBus/index.js";
 import { VulnerabilityService } from "./services/Vulnerability/index.js";

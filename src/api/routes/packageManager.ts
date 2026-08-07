@@ -5,7 +5,7 @@ import { registerRoute, sendOne, sendError } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { getPackageManagerRoute, updatePackageManagerRoute } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { JobWorker } from "../services/abstractions/JobWorker.js";
+import { JobWorker } from "../services/JobExecution/index.js";
 import { PackageManagerService } from "../services/PackageManager/index.js";
 import { projects } from "#api/db/schema.js";
 
