@@ -10,7 +10,7 @@ import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { projects, projectStepHooks } from "#api/db/schema.js";
 import { StepHookService } from "../abstractions/StepHookService.js";
 import { StepHookService as StepHookServiceRegistration } from "../StepHookService.js";
-import { FileConfigService as FileConfigServiceRegistration } from "../FileConfigService.js";
+import { FileConfigService as FileConfigServiceRegistration } from "../../FileConfig/FileConfigService.js";
 
 describe("StepHookService", () => {
     let db: Awaited<ReturnType<typeof createTestDb>>;

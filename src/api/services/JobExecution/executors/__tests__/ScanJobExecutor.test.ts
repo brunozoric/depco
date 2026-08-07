@@ -9,7 +9,7 @@ import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroad
 import { EventBus } from "../../../EventBus/index.js";
 import { JobWorker } from "../../abstractions/JobWorker.js";
 import { JobWorkerProvider } from "../../abstractions/JobWorkerProvider.js";
-import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../PackageManager/PackageManagerDriverRegistry.js";
+import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../../PackageManager/PackageManagerDriverRegistry.js";
 import { projects, scanResults } from "#api/db/schema.js";
 import { generateId } from "@webiny/stdlib";
 import { ScanJobExecutor } from "../abstractions/ScanJobExecutor.js";

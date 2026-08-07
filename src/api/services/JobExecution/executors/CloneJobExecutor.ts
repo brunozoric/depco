@@ -6,7 +6,7 @@ import { CommandRunner } from "../../CommandRunner/index.js";
 import { PackageManagerService } from "../../PackageManager/index.js";
 import { SecurityService } from "../../Security/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { registerProject } from "../registerProject.js";
+import { registerProject } from "../../../utils/registerProject.js";
 import { upgradeJobs } from "#api/db/schema.js";
 
 const clonePackagesSchema = z.object({

@@ -5,7 +5,7 @@ import { generateId } from "@webiny/stdlib";
 import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
 import type { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { DatabaseClient as DatabaseClientAbstraction } from "#api/db/abstractions/DatabaseClient.js";
-import { SbomService as SbomServiceRegistration } from "../../services/SbomService.js";
+import { SbomService as SbomServiceRegistration } from "../../services/Sbom/SbomService.js";
 import { SbomFormatterRegistry as SbomFormatterRegistryRegistration } from "../../services/Sbom/SbomFormatterRegistry.js";
 import { CycloneDxFormatter as CycloneDxFormatterRegistration } from "../../services/Sbom/formatters/CycloneDxFormatter.js";
 import { SpdxFormatter as SpdxFormatterRegistration } from "../../services/Sbom/formatters/SpdxFormatter.js";

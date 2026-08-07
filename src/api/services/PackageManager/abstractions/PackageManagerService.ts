@@ -1,6 +1,6 @@
 import { createAbstraction } from "#shared/index.js";
 import type { PackageManagerId } from "#shared/security/types.js";
-import type { IAuditVulnerability } from "./AuditParserService.js";
+import type { IAuditVulnerability } from "../../Vulnerability/abstractions/AuditParserService.js";
 
 export type { PackageManagerId as TPackageManager } from "#shared/security/types.js";
 

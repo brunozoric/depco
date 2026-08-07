@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { SbomFormatterRegistry } from "../SbomFormatterRegistry.js";
-import { SbomFormatterRegistry as SbomFormatterRegistryAbstraction } from "../../abstractions/SbomFormatterRegistry.js";
+import { SbomFormatterRegistry as SbomFormatterRegistryAbstraction } from "../abstractions/SbomFormatterRegistry.js";
 import { createContainer } from "#shared/di/index.js";
-import { CycloneDxFormatter } from "../CycloneDxFormatter.js";
-import { SpdxFormatter } from "../SpdxFormatter.js";
+import { CycloneDxFormatter } from "../formatters/CycloneDxFormatter.js";
+import { SpdxFormatter } from "../formatters/SpdxFormatter.js";
 
 describe("SbomFormatterRegistry", () => {
     const container = createContainer();

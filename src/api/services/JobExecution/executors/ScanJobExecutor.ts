@@ -4,7 +4,7 @@ import { and, eq, lt, sql } from "drizzle-orm";
 import type { JobExecutor } from "./abstractions/JobExecutor.js";
 import { ScanJobExecutor as Abstraction } from "./abstractions/ScanJobExecutor.js";
 import { JobWorkerProvider } from "../abstractions/JobWorkerProvider.js";
-import { PackageManagerDriverRegistry } from "../PackageManager/abstractions/PackageManagerDriverRegistry.js";
+import { PackageManagerDriverRegistry } from "../../PackageManager/abstractions/PackageManagerDriverRegistry.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { EventBus } from "../../EventBus/index.js";

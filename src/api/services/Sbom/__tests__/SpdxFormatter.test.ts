@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { SpdxFormatter } from "../SpdxFormatter.js";
-import type { SbomService } from "../../abstractions/SbomService.js";
+import { SpdxFormatter } from "../formatters/SpdxFormatter.js";
+import type { SbomService } from "../abstractions/SbomService.js";
 
 function createTestData(overrides?: Partial<SbomService.ProjectData>): SbomService.ProjectData {
     return {

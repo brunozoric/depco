@@ -1,5 +1,5 @@
-import { PackageManagerDriver as Abstraction } from "./abstractions/PackageManagerDriver.js";
-import { parseRegistryOutput } from "./registrySchema.js";
+import { PackageManagerDriver as Abstraction } from "../abstractions/PackageManagerDriver.js";
+import { parseRegistryOutput } from "../registrySchema.js";
 import type { IInstallFlagDefinition } from "#shared/install/types.js";
 import { YARN_INSTALL_FLAGS } from "#shared/install/yarn.js";
 

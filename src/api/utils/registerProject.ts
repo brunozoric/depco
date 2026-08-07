@@ -1,7 +1,7 @@
 import { readFile } from "fs/promises";
 import { join, basename } from "path";
 import { generateId } from "@webiny/stdlib";
-import type { PackageManagerService } from "./PackageManager/index.js";
+import type { PackageManagerService } from "../services/PackageManager/index.js";
 import type { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { projects } from "#api/db/schema.js";
 

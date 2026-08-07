@@ -12,8 +12,8 @@ import { FileConfigService } from "../../services/FileConfig/index.js";
 import { RegistryCacheService as RegistryCacheServiceReg } from "../../services/RegistryCache/RegistryCacheService.js";
 import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../services/PackageManager/PackageManagerDriverRegistry.js";
 import { EmailService } from "../../services/Email/index.js";
-import { UserService as UserServiceRegistration } from "../../services/UserService.js";
-import { AuthService as AuthServiceRegistration } from "../../services/AuthService.js";
+import { UserService as UserServiceRegistration } from "../../services/Auth/UserService.js";
+import { AuthService as AuthServiceRegistration } from "../../services/Auth/AuthService.js";
 import { createAuthHook } from "../../middleware/authHook.js";
 import { cacheRoutes } from "../cache.js";
 

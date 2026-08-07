@@ -10,13 +10,13 @@ import { CommandRunner } from "../../../CommandRunner/index.js";
 import { ErrorReporter } from "../../../ErrorReporter/index.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { FileConfigService } from "../../../FileConfig/index.js";
-import { ScanService as ScanServiceReg } from "../../ScanService.js";
-import { PackageManagerService as PackageManagerServiceReg } from "../../PackageManagerService.js";
-import { AuditParserService as AuditParserServiceReg } from "../../AuditParserService.js";
-import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../PackageManager/PackageManagerDriverRegistry.js";
-import { RegistryCacheService as RegistryCacheServiceReg } from "../../RegistryCacheService.js";
+import { ScanService as ScanServiceReg } from "../../../Scan/ScanService.js";
+import { PackageManagerService as PackageManagerServiceReg } from "../../../PackageManager/PackageManagerService.js";
+import { AuditParserService as AuditParserServiceReg } from "../../../Vulnerability/AuditParserService.js";
+import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../../PackageManager/PackageManagerDriverRegistry.js";
+import { RegistryCacheService as RegistryCacheServiceReg } from "../../../RegistryCache/RegistryCacheService.js";
 import { LockfileParserService } from "../../../DependencyGraph/index.js";
-import { SecurityService as SecurityServiceReg } from "../../SecurityService.js";
+import { SecurityService as SecurityServiceReg } from "../../../Security/SecurityService.js";
 
 import {
     projects,
@@ -30,7 +30,7 @@ import {
 import { generateId } from "@webiny/stdlib";
 import { PackageScanJobExecutor } from "../abstractions/PackageScanJobExecutor.js";
 import { PackageScanJobExecutor as PackageScanJobExecutorRegistration } from "../PackageScanJobExecutor.js";
-import { DependencyChangeService as DependencyChangeServiceReg } from "../../DependencyChangeService.js";
+import { DependencyChangeService as DependencyChangeServiceReg } from "../../../DependencyChange/DependencyChangeService.js";
 import type { JobExecutor } from "../abstractions/JobExecutor.js";
 
 function createStubFileConfigService(): FileConfigService.Interface {

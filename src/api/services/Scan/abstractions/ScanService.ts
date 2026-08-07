@@ -1,5 +1,5 @@
 import { createAbstraction } from "#shared/index.js";
-import type { IRegistryCacheProject } from "./RegistryCacheService.js";
+import type { IRegistryCacheProject } from "../../RegistryCache/abstractions/RegistryCacheService.js";
 
 export type DependencyKind =
     | "dependency"

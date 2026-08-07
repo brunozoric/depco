@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { CycloneDxFormatter } from "../CycloneDxFormatter.js";
-import type { SbomService } from "../../abstractions/SbomService.js";
+import { CycloneDxFormatter } from "../formatters/CycloneDxFormatter.js";
+import type { SbomService } from "../abstractions/SbomService.js";
 
 function createTestData(overrides?: Partial<SbomService.ProjectData>): SbomService.ProjectData {
     return {

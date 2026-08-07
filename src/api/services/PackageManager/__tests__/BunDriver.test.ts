@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { PackageManagerDriver } from "../abstractions/PackageManagerDriver.js";
-import { BunDriver as BunDriverRegistration } from "../BunDriver.js";
+import { BunDriver as BunDriverRegistration } from "../drivers/BunDriver.js";
 
 describe("BunDriver", () => {
     function createDriver(): PackageManagerDriver.Interface {

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { PackageManagerDriver } from "../abstractions/PackageManagerDriver.js";
-import { YarnDriver as YarnDriverRegistration } from "../YarnDriver.js";
+import { YarnDriver as YarnDriverRegistration } from "../drivers/YarnDriver.js";
 
 describe("YarnDriver", () => {
     function createDriver(): PackageManagerDriver.Interface {

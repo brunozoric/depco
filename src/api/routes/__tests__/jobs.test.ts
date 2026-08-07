@@ -22,7 +22,7 @@ import { createAuthHook } from "#api/middleware/authHook.js";
 import { CommandRunner } from "../../services/CommandRunner/index.js";
 import { SecurityService as SecurityServiceReg } from "../../services/Security/SecurityService.js";
 import { UpgradeService as UpgradeServiceReg } from "../../services/Upgrade/UpgradeService.js";
-import { PackageManagerService as PackageManagerServiceReg } from "../../services/PackageManagerService.js";
+import { PackageManagerService as PackageManagerServiceReg } from "../../services/PackageManager/PackageManagerService.js";
 import { AuditParserService as AuditParserServiceReg } from "../../services/Vulnerability/AuditParserService.js";
 import { OsvCacheService as OsvCacheServiceReg } from "../../services/Vulnerability/OsvCacheService.js";
 import { VulnerabilityService as VulnerabilityServiceReg } from "../../services/Vulnerability/VulnerabilityService.js";
@@ -36,7 +36,7 @@ import { JobWorker as JobWorkerReg } from "../../services/JobExecution/JobWorker
 import { JobWorker } from "../../services/JobExecution/index.js";
 import { JobWorkerProvider } from "../../services/JobExecution/index.js";
 import { JobExecutorRegistry as JobExecutorRegistryReg } from "../../services/JobExecution/executors/JobExecutorRegistry.js";
-import { LockfileParserService as LockfileParserServiceReg } from "../../services/LockfileParserService.js";
+import { LockfileParserService as LockfileParserServiceReg } from "../../services/DependencyGraph/LockfileParserService.js";
 import { DependencyGraphService as DependencyGraphServiceReg } from "../../services/DependencyGraph/DependencyGraphService.js";
 import { DependencyChangeService as DependencyChangeServiceReg } from "../../services/DependencyChange/DependencyChangeService.js";
 import { FileConfigService as FileConfigServiceReg } from "../../services/FileConfig/FileConfigService.js";

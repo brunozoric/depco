@@ -1,5 +1,5 @@
 import { createAbstraction } from "#shared/index.js";
-import type { DependencyKind } from "./ScanService.js";
+import type { DependencyKind } from "../../Scan/abstractions/ScanService.js";
 
 export interface ISbomComponent {
     packageName: string;
