@@ -93,7 +93,10 @@ export const getProjectDependenciesRoute = defineRoute({
                 "transitive"
             ])
             .optional(),
-        registryResolved: z.enum(["all", "true", "false"]).optional()
+        registryResolved: z.enum(["all", "true", "false"]).optional(),
+        search: z.string().optional(),
+        page: z.coerce.number().optional(),
+        pageSize: z.coerce.number().optional()
     }),
     response: z.object({ items: z.array(dependencySchema), total: z.number() })
 });

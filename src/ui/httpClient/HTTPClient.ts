@@ -19,12 +19,15 @@ class HTTPClientImpl implements Abstraction.Interface {
         if (args.query) {
             const searchParams = new URLSearchParams();
             for (const [key, value] of Object.entries(args.query)) {
+                if (value == null) {
+                    continue;
+                }
                 if (Array.isArray(value)) {
                     for (const item of value) {
                         searchParams.append(key, item);
                     }
                 } else {
-                    searchParams.append(key, value);
+                    searchParams.append(key, String(value));
                 }
             }
             const queryString = searchParams.toString();
