@@ -7,6 +7,8 @@
 ## Global Constraints
 
 Same as prior batches.
+- **After moving each file**, grep within it for relative imports (`from "."`) and adjust depth
+- **Import paths in tables are from ORIGINAL codebase state.** If prior batches have run, use grep to find current file locations
 
 ---
 

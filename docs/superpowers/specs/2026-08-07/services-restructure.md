@@ -538,6 +538,22 @@ Files that need import path updates (by category):
 7. **Top-level feature.ts** — complete rewrite of imports
 8. **Testing helpers** (`src/testing/helpers/`) — if any reference service abstractions
 
+## Critical: Internal Import Depth Adjustment
+
+When a file moves from `services/X.ts` to `services/X/X.ts`, it is now one directory level deeper. ALL relative imports WITHIN that file change:
+
+- `./abstractions/Y.js` → `../abstractions/Y.js` (if Y is still in shared abstractions/)
+- `./abstractions/Y.js` → `../Y/index.js` (if Y has already been moved to its own folder)
+- `./Y.ts` → `../Y.ts` (any sibling import)
+
+**After every file move, run grep within the moved file(s) to fix all relative imports:**
+```bash
+grep -n "from \"\." <moved-file>
+```
+Adjust every relative path for the new directory depth.
+
+This is bidirectional — imports TO the moved service AND imports WITHIN the moved service both need updating.
+
 ## Execution Strategy
 
 Work in small chunks by service folder. Each chunk:

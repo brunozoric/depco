@@ -15,6 +15,8 @@
 - No code logic changes
 - Run `yarn format:fix` after moves
 - Commit after each service move
+- **After moving each file**, grep within it for relative imports (`from "."`) and adjust depth. See spec "Critical: Internal Import Depth Adjustment" section
+- **Import paths in tables are from ORIGINAL codebase state.** If prior batches have run, use grep to find current file locations
 
 ---
 

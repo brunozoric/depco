@@ -123,7 +123,14 @@ export { UpgradeSessionStepResolverRegistry } from "./stepResolvers/abstractions
 export { UpgradeSessionFeature } from "./feature.js";
 ```
 
-**Import updates:** All files importing UpgradeSessionService abstraction from `abstractions/UpgradeSessionService.js` → `UpgradeSession/index.js`. All files importing step resolvers from `stepResolvers/...` → `UpgradeSession/stepResolvers/...`. Internal step resolver imports of other service abstractions (GitService, UpgradeService, CommandRunner, ForgeService) need path updates based on whether those services have been moved.
+**Import updates:** Run these greps to find ALL imports that need updating:
+```bash
+grep -rn "from.*abstractions/UpgradeSessionService" src/api --include="*.ts"
+grep -rn 'from.*services/UpgradeSessionService"' src/api --include="*.ts"
+grep -rn "from.*stepResolvers/" src/api --include="*.ts" | grep -v "src/api/services/stepResolvers/"
+grep -rn "from.*stepResolvers/" src/api/services/stepResolvers --include="*.ts"
+```
+Update: abstraction imports → `UpgradeSession/index.js`, step resolver imports → `UpgradeSession/stepResolvers/...`. Internal step resolver imports of other service abstractions (GitService, UpgradeService, CommandRunner, ForgeService) need path updates — they were `../abstractions/X.js`, now should be `../X/index.js` (if X already moved) or remain pointing to shared abstractions (if not yet moved).
 
 **Commit:** `refactor: move UpgradeSession + stepResolvers into domain folder`
 

@@ -97,7 +97,13 @@ export { ChangelogResolver } from "./abstractions/ChangelogResolver.js";
 export { ChangelogFeature } from "./feature.js";
 ```
 
-**Import updates:** All files importing from `changelogResolvers/` paths need updating to `Changelog/resolvers/`. All imports of ChangelogService abstraction/implementation need updating.
+**Import updates:** Run these greps to find ALL imports that need updating:
+```bash
+grep -rn "from.*changelogResolvers" src/api --include="*.ts"
+grep -rn "from.*abstractions/ChangelogService" src/api --include="*.ts"
+grep -rn 'from.*services/ChangelogService"' src/api --include="*.ts"
+```
+Update all matches: `changelogResolvers/` → `Changelog/resolvers/`, abstraction imports → `Changelog/index.js`, implementation imports → `Changelog/ChangelogService.js`.
 
 **Commit:** `refactor: restructure Changelog domain folder`
 

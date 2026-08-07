@@ -140,7 +140,14 @@ export { JobExecutionFeature } from "./feature.js";
 - `src/api/routes/licenses.ts:16` — `#api/services/abstractions/JobWorker.js` → `#api/services/JobExecution/index.js`
 - All route files and tests importing `JobWorker` from `abstractions/JobWorker.js`
 
-**Import updates for executor abstractions:** Since executors moved from `jobExecutors/` to `JobExecution/executors/`, all internal imports within executors that reference `../abstractions/X.js` (other service abstractions) need path adjustment — they're now one level deeper (`../../X/index.js` instead of `../X/index.js`).
+**Import updates for executor abstractions:** Since executors moved from `jobExecutors/` to `JobExecution/executors/`, all internal imports within executors that reference `../abstractions/X.js` (other service abstractions) need path adjustment. Run:
+```bash
+grep -rn "from.*abstractions/" src/api/services/jobExecutors --include="*.ts" | grep -v "./abstractions/"
+grep -rn "from.*abstractions/JobWorker" src/api --include="*.ts"
+grep -rn 'from.*services/JobWorker"' src/api --include="*.ts"
+grep -rn "from.*jobExecutors/" src/api --include="*.ts" | grep -v "src/api/services/jobExecutors/"
+```
+Cross-service imports like `../abstractions/ScanService.js` become `../../Scan/index.js` (if Scan already moved) — the executor files are one directory level deeper than before.
 
 **Import updates for JobExecutorRegistry:** Files importing from `jobExecutors/JobExecutorRegistry.js` → `JobExecution/executors/JobExecutorRegistry.js`.
 

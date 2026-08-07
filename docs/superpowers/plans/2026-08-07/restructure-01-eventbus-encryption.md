@@ -15,6 +15,8 @@
 - `feature.ts` uses `createFeature()` for DI registration
 - No code logic changes — only file moves and import path updates
 - Run `yarn format:fix` after all moves
+- **After moving each file**, grep within it for relative imports (`from "."`) and adjust depth. See spec "Critical: Internal Import Depth Adjustment" section
+- **Import paths in tables are from ORIGINAL codebase state.** If prior batches have run, use grep to find current file locations
 
 ---
 
