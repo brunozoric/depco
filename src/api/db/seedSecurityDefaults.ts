@@ -1,12 +1,12 @@
 import { eq, count } from "drizzle-orm";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { generateId } from "@webiny/stdlib";
 import { pmSecuritySettings } from "./schema.js";
 import { SECURITY_FIELD_REGISTRY, type PackageManagerId } from "#shared/security/index.js";
 
-export async function seedSecurityDefaults(db: LibSQLDatabase): Promise<void> {
+export function seedSecurityDefaults(db: BetterSQLite3Database): void {
     for (const [packageManager, fields] of Object.entries(SECURITY_FIELD_REGISTRY)) {
-        const [row] = await db
+        const [row] = db
             .select({ total: count() })
             .from(pmSecuritySettings)
             .where(eq(pmSecuritySettings.packageManager, packageManager))
@@ -16,8 +16,7 @@ export async function seedSecurityDefaults(db: LibSQLDatabase): Promise<void> {
             continue;
         }
 
-        await db
-            .insert(pmSecuritySettings)
+        db.insert(pmSecuritySettings)
             .values(
                 fields.map(field => ({
                     id: generateId(),

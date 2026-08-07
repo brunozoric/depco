@@ -1,5 +1,5 @@
 import { PackageManagerDriver as Abstraction } from "./abstractions/PackageManagerDriver.js";
-import { normalizeRepoUrl, extractRepoDirectory } from "./normalizeRepoUrl.js";
+import { parseRegistryOutput } from "./registrySchema.js";
 import type { IInstallFlagDefinition } from "#shared/install/types.js";
 import { PNPM_INSTALL_FLAGS } from "#shared/install/pnpm.js";
 
@@ -77,19 +77,7 @@ class PnpmDriverImpl implements Abstraction.Interface {
     }
 
     public parseRegistryInfo(stdout: string): Abstraction.RegistryPackageInfo {
-        const raw = JSON.parse(stdout) as Record<string, unknown>;
-        const distTags = (raw["dist-tags"] as Record<string, string> | undefined) ?? {};
-        return {
-            name: "",
-            latestVersion: distTags["latest"] ?? "",
-            distTags,
-            versions: (raw["versions"] as string[] | undefined) ?? [],
-            time: (raw["time"] as Record<string, string> | undefined) ?? {},
-            repoUrl: normalizeRepoUrl(raw["repository"]),
-            repoDirectory: extractRepoDirectory(raw["repository"]),
-            readme: (raw["readme"] as string | undefined) ?? null,
-            license: (raw["license"] as string | undefined) ?? null
-        };
+        return parseRegistryOutput(stdout);
     }
 
     public installFlags(): IInstallFlagDefinition[] {

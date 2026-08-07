@@ -34,15 +34,10 @@ export async function appSettingsRoutes(
     const { db } = databaseClient;
 
     registerRoute(app, listAppSettingsRoute, {}, async (_request, reply) => {
-        const rows = await db
-            .select()
-            .from(appSettings)
-            .all()
-            .then(items =>
-                items.map(row =>
-                    TOKEN_KEYS.has(row.key) && row.value ? { ...row, value: "••••••••" } : row
-                )
-            );
+        const items = db.select().from(appSettings).all();
+        const rows = items.map(row =>
+            TOKEN_KEYS.has(row.key) && row.value ? { ...row, value: "••••••••" } : row
+        );
 
         const fileConfigService = container.resolve(FileConfigService);
         const fileSettingsResult = await fileConfigService.readGlobalSettings();

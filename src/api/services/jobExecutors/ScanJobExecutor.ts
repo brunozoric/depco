@@ -80,9 +80,9 @@ class ScanJobExecutorImpl implements JobExecutor.Interface {
             )
             .run();
 
-        if (staleResult.rowsAffected > 0) {
+        if (staleResult.changes > 0) {
             appendLog(
-                `Marked ${staleResult.rowsAffected} stale transitive deps for re-resolution (TTL: ${ttlHours}h).`
+                `Marked ${staleResult.changes} stale transitive deps for re-resolution (TTL: ${ttlHours}h).`
             );
         }
     }

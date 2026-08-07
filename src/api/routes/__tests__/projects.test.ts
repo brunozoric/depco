@@ -4,7 +4,7 @@ import { join, basename } from "path";
 import { tmpdir } from "os";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { eq } from "drizzle-orm";
 import { generateId, ConsoleLoggerConfig, ConsoleLoggerFeature } from "@webiny/stdlib";
 import { DirectoryToolFeature, FileToolFeature, JsonFileToolFeature } from "@webiny/stdlib/node";
@@ -114,7 +114,7 @@ interface ScanSchedulerServiceMock {
 describe("project routes", () => {
     let app: FastifyInstance;
     let testDir: string;
-    let db: LibSQLDatabase;
+    let db: BetterSQLite3Database;
     let jobWorker: JobWorker.Interface;
     let scanSchedulerMock: ScanSchedulerServiceMock;
 

@@ -47,6 +47,7 @@ import { UpdateScanScheduleUseCase as UpdateScanScheduleUseCaseRegistration } fr
 import { ResetScanScheduleUseCase as ResetScanScheduleUseCaseRegistration } from "../../../scanSchedules/useCases/ResetScanScheduleUseCase.js";
 import { ProjectDetailPresenter } from "../abstractions/ProjectDetailPresenter.js";
 import { ProjectDetailPresenter as ProjectDetailPresenterRegistration } from "../ProjectDetailPresenter.js";
+import { UrlFilterService } from "../../../../features/urlFilter/abstractions/UrlFilterService.js";
 
 interface RecordedCall {
     route: unknown;
@@ -252,6 +253,11 @@ describe("ProjectDetailPresenter", () => {
         AutoFixFeature.register(container);
         TeamsFeature.register(container);
         TeamFilterFeature.register(container);
+        container.registerInstance(UrlFilterService, {
+            read: () => ({}),
+            update: () => {},
+            onChange: () => () => {}
+        });
         container.register(LoadProjectsUseCaseRegistration);
         container.register(ScanProjectUseCaseRegistration);
         container.register(CheckSecurityUseCaseRegistration);
@@ -328,6 +334,10 @@ describe("ProjectDetailPresenter", () => {
             dependencies: [],
             upgradeFilter: "all",
             totalDependencyCount: 0,
+            search: "",
+            page: 1,
+            pageSize: 25,
+            totalPages: 0,
             canUpgrade: false,
             selectedCount: 0,
             packageManagerUpdateVersion: "",

@@ -40,11 +40,10 @@ class LicenseScanJobExecutorImpl implements Abstraction.Interface {
         });
         const scannedAt = Date.now();
 
-        await this.databaseClient.db.transaction(async tx => {
+        this.databaseClient.db.transaction(tx => {
             for (const record of records) {
                 const riskTier = classifyLicenseRiskTier(record.spdxId);
-                await tx
-                    .insert(licenses)
+                tx.insert(licenses)
                     .values({
                         id: generateId(),
                         projectId,
@@ -70,8 +69,7 @@ class LicenseScanJobExecutorImpl implements Abstraction.Interface {
                     .run();
             }
 
-            await tx
-                .delete(licenses)
+            tx.delete(licenses)
                 .where(and(eq(licenses.projectId, projectId), lt(licenses.scannedAt, scannedAt)))
                 .run();
         });

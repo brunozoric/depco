@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { existsSync } from "fs";
 import { join } from "path";
-import { eq, and, sql, type SQL } from "drizzle-orm";
+import { eq, and, sql, like, type SQL } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import { registerRoute, sendOne, sendList, sendNone, sendError } from "#shared/routing/index.js";
 import {
@@ -311,7 +311,10 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
             return;
         }
 
-        const { dependencyKind, registryResolved } = request.query;
+        const { dependencyKind, registryResolved, search, page, pageSize } = request.query;
+        const resolvedPageSize = pageSize ?? 25;
+        const resolvedPage = page ?? 1;
+        const offset = (resolvedPage - 1) * resolvedPageSize;
 
         const conditions: SQL[] = [eq(scanResults.projectId, project.id)];
         if (dependencyKind && dependencyKind !== "all") {
@@ -320,11 +323,26 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
         if (registryResolved && registryResolved !== "all") {
             conditions.push(eq(scanResults.registryResolved, registryResolved === "true" ? 1 : 0));
         }
+        if (search) {
+            conditions.push(like(scanResults.name, `%${search}%`));
+        }
 
-        const rows = await db
+        const where = and(...conditions);
+
+        const countRow = db
+            .select({ count: sql<number>`COUNT(*)` })
+            .from(scanResults)
+            .where(where)
+            .get();
+        const total = countRow?.count ?? 0;
+
+        const rows = db
             .select()
             .from(scanResults)
-            .where(and(...conditions))
+            .where(where)
+            .orderBy(scanResults.name)
+            .limit(resolvedPageSize)
+            .offset(offset)
             .all();
 
         const dependencies = rows.map(row => ({
@@ -338,7 +356,7 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
             registryResolved: row.registryResolved === 1
         }));
 
-        sendList(reply, dependencies, dependencies.length);
+        sendList(reply, dependencies, total);
     });
 
     // GET /api/projects/:id/transitive-resolve-status — counts of registry-resolved
@@ -437,12 +455,11 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
 
         const uniqueTeamIds = [...new Set(teamIds)];
 
-        await db.transaction(async tx => {
-            await tx.delete(teamProjects).where(eq(teamProjects.projectId, id)).run();
+        db.transaction(tx => {
+            tx.delete(teamProjects).where(eq(teamProjects.projectId, id)).run();
 
             if (uniqueTeamIds.length > 0) {
-                await tx
-                    .insert(teamProjects)
+                tx.insert(teamProjects)
                     .values(
                         uniqueTeamIds.map(teamId => ({
                             id: generateId(),

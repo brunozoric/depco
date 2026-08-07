@@ -23,7 +23,17 @@ import { AutoFixGateway } from "../../../features/autoFix/abstractions/AutoFixGa
 import { SbomGateway } from "../../../features/sbom/abstractions/SbomGateway.js";
 import { TeamsGateway } from "../../../features/teams/abstractions/TeamsGateway.js";
 import { TeamListService } from "../../../features/teamFilter/abstractions/TeamListService.js";
+import { UrlFilterService } from "../../../features/urlFilter/abstractions/UrlFilterService.js";
 import { downloadBlob } from "#ui/shared/download/downloadBlob.js";
+import { getProjectDependenciesRoute } from "#shared/routes/projects.js";
+import type { z } from "zod";
+
+const DEFAULT_PAGE_SIZE = 25;
+
+const DEPENDENCY_FILTER_SCHEMA = getProjectDependenciesRoute.querystring as NonNullable<
+    typeof getProjectDependenciesRoute.querystring
+> &
+    z.ZodObject<z.ZodRawShape>;
 
 interface LicenseData {
     licenseName: string;
@@ -57,6 +67,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
     private projectTeamIdValues: string[] = [];
 
     private readonly changelogTracker: ChangelogTracker;
+    private readonly disposeUrlListener: () => void;
 
     private readonly handleScanProgress: EventBridge.Callback<"scan:progress">;
     private readonly handleScanComplete: EventBridge.Callback<"scan:complete">;
@@ -81,7 +92,8 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         private readonly autoFixGateway: AutoFixGateway.Interface,
         private readonly sbomGateway: SbomGateway.Interface,
         private readonly teamsGateway: TeamsGateway.Interface,
-        private readonly teamListService: TeamListService.Interface
+        private readonly teamListService: TeamListService.Interface,
+        private readonly urlFilterService: UrlFilterService.Interface
     ) {
         makeAutoObservable(this, { vm: computed });
         this.changelogTracker = new ChangelogTracker(this.eventBridge);
@@ -134,6 +146,12 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         this.eventBridge.on("scan:failed", this.handleScanFailed);
         this.eventBridge.on("install:complete", this.handleInstallComplete);
         this.eventBridge.on("transitive-resolve:complete", this.handleTransitiveResolveComplete);
+
+        this.disposeUrlListener = this.urlFilterService.onChange(() => {
+            if (this.currentProjectId) {
+                void this.loadDependencies(this.currentProjectId);
+            }
+        });
     }
 
     public get vm(): Abstraction.ViewModel {
@@ -157,7 +175,11 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
             ? this.scanSchedulesRepository.getSchedule(this.currentProjectId)
             : undefined;
 
-        const allDependencies = (dependenciesResponse?.dependencies ?? []).map(
+        const urlFilters = this.urlFilterService.read(DEPENDENCY_FILTER_SCHEMA);
+        const pageSize = urlFilters.pageSize ?? DEFAULT_PAGE_SIZE;
+        const totalCount = dependenciesResponse?.total ?? 0;
+
+        const dependencies = (dependenciesResponse?.dependencies ?? []).map(
             (dependency): Abstraction.DependencyViewModel => {
                 const vulnerabilityData = this.vulnerabilitiesByPackage.get(dependency.name);
                 const licenseData = this.licenseByPackage.get(dependency.name);
@@ -178,13 +200,6 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
                 };
             }
         );
-
-        const dependencies =
-            this.upgradeFilterValue === "all"
-                ? allDependencies
-                : this.upgradeFilterValue === "upgradeable"
-                  ? allDependencies.filter(d => d.upgradeType !== "none")
-                  : allDependencies.filter(d => d.upgradeType === "none");
 
         return {
             loading: this.loading,
@@ -209,7 +224,11 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
                 : null,
             dependencies,
             upgradeFilter: this.upgradeFilterValue,
-            totalDependencyCount: allDependencies.length,
+            totalDependencyCount: totalCount,
+            search: urlFilters.search ?? "",
+            page: urlFilters.page ?? 1,
+            pageSize,
+            totalPages: Math.ceil(totalCount / pageSize),
             canUpgrade: this.selectedNames.size > 0,
             selectedCount: this.selectedNames.size,
             packageManagerUpdateVersion: this.packageManagerUpdateVersionValue,
@@ -300,7 +319,11 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
     };
 
     private loadDependencies = async (projectId: string): Promise<void> => {
-        const response = await this.projectsGateway.getDependencies(projectId);
+        const urlFilters = this.urlFilterService.read(DEPENDENCY_FILTER_SCHEMA);
+        const response = await this.projectsGateway.getDependencies(projectId, {
+            ...urlFilters,
+            pageSize: urlFilters.pageSize ?? DEFAULT_PAGE_SIZE
+        });
         this.projectsRepository.setDependencies(projectId, response);
     };
 
@@ -427,6 +450,19 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         this.upgradeFilterValue = filter;
     };
 
+    public setSearch = (value: string): void => {
+        this.urlFilterService.update(DEPENDENCY_FILTER_SCHEMA, {
+            search: value || null,
+            page: null
+        });
+    };
+
+    public setPage = (page: number): void => {
+        this.urlFilterService.update(DEPENDENCY_FILTER_SCHEMA, {
+            page: page > 1 ? String(page) : null
+        });
+    };
+
     public refreshTransient = async (): Promise<void> => {
         if (!this.currentProjectId) {
             return;
@@ -540,6 +576,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
 
     public dispose = (): void => {
         this.changelogTracker.dispose();
+        this.disposeUrlListener();
         this.eventBridge.off("scan:progress", this.handleScanProgress);
         this.eventBridge.off("scan:complete", this.handleScanComplete);
         this.eventBridge.off("scan:failed", this.handleScanFailed);
@@ -589,6 +626,7 @@ export const ProjectDetailPresenter = Abstraction.createImplementation({
         AutoFixGateway,
         SbomGateway,
         TeamsGateway,
-        TeamListService
+        TeamListService,
+        UrlFilterService
     ]
 });

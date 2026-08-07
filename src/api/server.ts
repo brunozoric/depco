@@ -62,16 +62,16 @@ export async function createServer(): Promise<FastifyInstance> {
     }
 
     // Create the DI container and register all API services.
-    const databaseClient = await createDatabaseClient(DB_PATH);
+    const databaseClient = createDatabaseClient(DB_PATH);
     const container = createContainer();
     ApiFeature.register(container, { databaseClient });
 
     // Run pending Drizzle migrations before accepting traffic.
-    await runMigrations(databaseClient.db);
-    await seedSecurityDefaults(databaseClient.db);
-    await seedAppSettings(databaseClient.db);
+    runMigrations(databaseClient.db);
+    seedSecurityDefaults(databaseClient.db);
+    seedAppSettings(databaseClient.db);
 
-    const snoozeIntervalRow = await databaseClient.db
+    const snoozeIntervalRow = databaseClient.db
         .select({ value: appSettings.value })
         .from(appSettings)
         .where(eq(appSettings.key, "snooze_check_interval"))
@@ -86,7 +86,17 @@ export async function createServer(): Promise<FastifyInstance> {
     const scanScheduler = container.resolve(ScanSchedulerService);
     await scanScheduler.init();
 
-    const app = Fastify({ logger: true });
+    const app = Fastify({ logger: { level: "warn" } });
+
+    app.setErrorHandler((error: Error & { statusCode?: number }, _request, reply) => {
+        const statusCode = error.statusCode ?? 500;
+        console.error("Route error:", error);
+        reply.status(statusCode).send({
+            error: error.message ?? "Internal error",
+            stack: process.env["NODE_ENV"] !== "production" ? error.stack : undefined
+        });
+    });
+
     await app.register(fastifyCompress);
     await app.register(fastifyRateLimit, { max: 100, timeWindow: "1 minute" });
 
@@ -128,28 +138,36 @@ export async function createServer(): Promise<FastifyInstance> {
     }
 
     const pollInterval = setInterval(() => {
-        void jobWorker.processNextJob();
+        jobWorker.processNextJob().catch(error => {
+            console.error("Job processing error:", error);
+        });
     }, POLL_INTERVAL_MS);
 
     const eventBus = container.resolve(EventBus);
     eventBus.on("scan:scheduled", (projectId: string) => {
-        void jobWorker.enqueue({
-            referenceId: projectId,
-            referenceType: "project",
-            type: "scan"
-        });
+        jobWorker
+            .enqueue({ referenceId: projectId, referenceType: "project", type: "scan" })
+            .catch(error => {
+                console.error("Failed to enqueue scheduled scan:", error);
+            });
     });
 
     const autoFixSettingsService = container.resolve(AutoFixSettingsService);
-    eventBus.on("scan:completed", async (projectId: string) => {
-        const settings = await autoFixSettingsService.getSettings(projectId);
-        if (settings?.enabled) {
-            void jobWorker.enqueue({
-                referenceId: projectId,
-                referenceType: "project",
-                type: "auto-fix-pr"
+    eventBus.on("scan:completed", (projectId: string) => {
+        autoFixSettingsService
+            .getSettings(projectId)
+            .then(async settings => {
+                if (settings?.enabled) {
+                    await jobWorker.enqueue({
+                        referenceId: projectId,
+                        referenceType: "project",
+                        type: "auto-fix-pr"
+                    });
+                }
+            })
+            .catch(error => {
+                console.error("Failed to enqueue auto-fix PR:", error);
             });
-        }
     });
 
     // Periodically check for vulnerabilities whose snooze window has recently
@@ -184,6 +202,14 @@ export async function createServer(): Promise<FastifyInstance> {
 }
 
 async function main(): Promise<void> {
+    process.on("uncaughtException", error => {
+        console.error("Uncaught exception:", error);
+    });
+
+    process.on("unhandledRejection", reason => {
+        console.error("Unhandled rejection:", reason);
+    });
+
     const app = await createServer();
     await app.listen({ port: API_PORT, host: "0.0.0.0" });
 }
@@ -192,5 +218,8 @@ const isMainModule =
     process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
 
 if (isMainModule) {
-    void main();
+    main().catch(error => {
+        console.error("Server failed to start:", error);
+        process.exit(1);
+    });
 }

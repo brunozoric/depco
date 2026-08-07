@@ -1,12 +1,11 @@
 import { generateId } from "@webiny/stdlib";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { pmSecuritySettings } from "#api/db/schema.js";
 
 // Mirrors the npm defaults defined in src/shared/security/npm.ts,
 // so tests can exercise the same config-driven security rules as production.
-export async function seedNpmSecuritySettings(db: LibSQLDatabase): Promise<void> {
-    await db
-        .insert(pmSecuritySettings)
+export function seedNpmSecuritySettings(db: BetterSQLite3Database): void {
+    db.insert(pmSecuritySettings)
         .values([
             {
                 id: generateId(),

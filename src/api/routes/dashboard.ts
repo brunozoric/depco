@@ -473,7 +473,7 @@ export async function dashboardRoutes(app: FastifyInstance, options: PluginOptio
                 .select({ count: sql<number>`COUNT(*)` })
                 .from(dependencyChanges)
                 .where(where)
-                .get() as Promise<ICountRow | undefined>
+                .get() as ICountRow | undefined
         ]);
 
         sendList(reply, items, countResult?.count ?? 0);

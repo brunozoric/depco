@@ -15,7 +15,7 @@ class LicenseCheckerServiceImpl implements Abstraction.Interface {
         packageManager
     }: Abstraction.ScanParams): Promise<Abstraction.LicenseRecord[]> {
         const packages = await this.databaseClient.db
-            .select({ name: scanResults.name })
+            .select({ name: scanResults.name, currentVersion: scanResults.currentVersion })
             .from(scanResults)
             .where(eq(scanResults.projectId, projectId))
             .all();
@@ -28,10 +28,22 @@ class LicenseCheckerServiceImpl implements Abstraction.Interface {
                     pkg.name,
                     packageManager
                 );
+
+                let license = info.license;
+                if (!license && pkg.currentVersion) {
+                    try {
+                        const versionInfo = await this.registryCacheService.getPackageInfo(
+                            `${pkg.name}@${pkg.currentVersion}`,
+                            packageManager
+                        );
+                        license = versionInfo.license;
+                    } catch {}
+                }
+
                 records.push({
                     packageName: pkg.name,
-                    licenseName: info.license ?? "UNKNOWN",
-                    spdxId: info.license ?? null,
+                    licenseName: license ?? "UNKNOWN",
+                    spdxId: license ?? null,
                     licenseUrl: info.repoUrl
                 });
             } catch {

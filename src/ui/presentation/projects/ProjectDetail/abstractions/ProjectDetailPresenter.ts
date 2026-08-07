@@ -101,6 +101,10 @@ export interface IProjectDetailViewModel {
     dependencies: IProjectDetailDependencyViewModel[];
     upgradeFilter: UpgradeFilter;
     totalDependencyCount: number;
+    search: string;
+    page: number;
+    pageSize: number;
+    totalPages: number;
     canUpgrade: boolean;
     selectedCount: number;
     packageManagerUpdateVersion: string;
@@ -140,6 +144,8 @@ export interface IProjectDetailPresenter {
     generateAutoFixPrs: () => Promise<void>;
     exportSbom: (format: string) => Promise<void>;
     setProjectTeams: (teamIds: string[]) => Promise<void>;
+    setSearch: (value: string) => void;
+    setPage: (page: number) => void;
     startChangelogTracking: (input: IStartChangelogTrackingInput) => void;
     stopChangelogTracking: () => void;
     dispose: () => void;

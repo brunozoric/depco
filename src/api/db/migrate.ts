@@ -1,6 +1,6 @@
-import { migrate } from "drizzle-orm/libsql/migrator";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 
-export async function runMigrations(db: LibSQLDatabase): Promise<void> {
-    await migrate(db, { migrationsFolder: "./src/api/db/migrations" });
+export function runMigrations(db: BetterSQLite3Database): void {
+    migrate(db, { migrationsFolder: "./src/api/db/migrations" });
 }

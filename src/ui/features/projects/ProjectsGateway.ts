@@ -114,12 +114,32 @@ class ProjectsGatewayImpl implements Abstraction.Interface {
         return response.item;
     }
 
-    public async getDependencies(id: string): Promise<Abstraction.DependenciesResponse> {
+    public async getDependencies(
+        id: string,
+        filters?: Abstraction.DependencyFilters
+    ): Promise<Abstraction.DependenciesResponse> {
         const response = await this.httpClient.request(getProjectDependenciesRoute, {
             params: { id },
-            query: {}
+            query: {
+                page: filters?.page,
+                pageSize: filters?.pageSize,
+                search: filters?.search,
+                dependencyKind: filters?.dependencyKind as
+                    | "all"
+                    | "dependency"
+                    | "devDependency"
+                    | "peerDependency"
+                    | "optionalDependency"
+                    | "transitive"
+                    | undefined,
+                registryResolved: filters?.registryResolved as "all" | "true" | "false" | undefined
+            }
         });
-        return { dependencies: response.items.map(toDependency), lastScannedAt: null };
+        return {
+            dependencies: response.items.map(toDependency),
+            total: response.total,
+            lastScannedAt: null
+        };
     }
 
     public async getSecurity(id: string): Promise<Abstraction.SecurityStatus> {

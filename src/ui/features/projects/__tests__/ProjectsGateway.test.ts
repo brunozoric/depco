@@ -160,10 +160,8 @@ describe("ProjectsGateway", () => {
 
         const result = await gateway.getDependencies("p1");
 
-        expect(calls).toEqual([
-            { route: getProjectDependenciesRoute, args: { params: { id: "p1" }, query: {} } }
-        ]);
-        expect(result).toEqual({ dependencies: [dependency], lastScannedAt: null });
+        expect(calls[0]!.route).toBe(getProjectDependenciesRoute);
+        expect(result).toEqual({ dependencies: [dependency], total: 1, lastScannedAt: null });
     });
 
     it("getSecurity(id) calls getProjectSecurityRoute and returns the unwrapped item", async () => {

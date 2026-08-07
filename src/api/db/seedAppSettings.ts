@@ -1,4 +1,4 @@
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { appSettings } from "./schema.js";
 
 interface IDefaultSetting {
@@ -29,8 +29,8 @@ const DEFAULT_SETTINGS: IDefaultSetting[] = [
     }
 ];
 
-export async function seedAppSettings(db: LibSQLDatabase): Promise<void> {
+export function seedAppSettings(db: BetterSQLite3Database): void {
     for (const setting of DEFAULT_SETTINGS) {
-        await db.insert(appSettings).values(setting).onConflictDoNothing().run();
+        db.insert(appSettings).values(setting).onConflictDoNothing().run();
     }
 }

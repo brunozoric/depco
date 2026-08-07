@@ -1,5 +1,15 @@
 import spdxLicenseList from "spdx-license-list";
 
+function normalizeSpdxId(value: unknown): string | null {
+    if (!value) {
+        return null;
+    }
+    if (typeof value === "object") {
+        return normalizeSpdxId((value as { type?: string }).type);
+    }
+    return String(value).trim() || null;
+}
+
 export const RISK_TIER_VALUES = [
     "permissive",
     "weak-copyleft",
@@ -15,6 +25,7 @@ export const LICENSE_RISK_TIERS: Record<string, LicenseRiskTier> = {
     Unlicense: "permissive",
     WTFPL: "permissive",
     BSD: "permissive",
+    "MIT/X11": "permissive",
     "LGPL-2.0": "weak-copyleft",
     "LGPL-2.0-only": "weak-copyleft",
     "LGPL-2.1": "weak-copyleft",
@@ -40,6 +51,8 @@ export const LICENSE_RISK_TIERS: Record<string, LicenseRiskTier> = {
     "AGPL-3.0-only": "copyleft",
     "AGPL-3.0-or-later": "copyleft",
     "SSPL-1.0": "copyleft",
+    "CC-BY-4.0": "permissive",
+    "CC-BY-3.0": "permissive",
     "CC-BY-SA-4.0": "copyleft",
     "CC-BY-NC-4.0": "proprietary",
     "CC-BY-NC-SA-4.0": "proprietary",
@@ -72,7 +85,9 @@ function classifySingle(spdxId: string): LicenseRiskTier {
     return "unknown";
 }
 
-export function classifyLicenseRiskTier(spdxId: string | null): LicenseRiskTier {
+export function classifyLicenseRiskTier(rawSpdxId: string | null | unknown): LicenseRiskTier {
+    const spdxId = normalizeSpdxId(rawSpdxId);
+
     if (!spdxId) {
         return "unknown";
     } else if (spdxId === "UNLICENSED") {
@@ -82,12 +97,6 @@ export function classifyLicenseRiskTier(spdxId: string | null): LicenseRiskTier 
     const direct = classifySingle(spdxId);
     if (direct !== "unknown") {
         return direct;
-    }
-    /**
-     * I have no idea how is this possible but few times I got an error that .replace() does not exist on spdxId.
-     */
-    if (!spdxId?.replace) {
-        throw new Error(`spdxId is of type: ${typeof spdxId}: ${spdxId}`);
     }
     const components = spdxId
         .replace(/[()]/g, "")

@@ -281,24 +281,27 @@ class PackageScanJobExecutorImpl implements Abstraction.Interface {
 
         if (results.length > 0) {
             const scannedAt = Date.now();
-            await this.databaseClient.db
-                .insert(scanResults)
-                .values(
-                    results.map(dependency => ({
-                        id: generateId(),
-                        projectId: context.referenceId,
-                        name: dependency.name,
-                        currentVersion: dependency.currentVersion,
-                        latestVersion: dependency.latestVersion,
-                        latestInRange: dependency.latestInRange,
-                        type: dependency.dependencyKind,
-                        upgradeType: dependency.upgradeType,
-                        dependencyKind: dependency.dependencyKind,
-                        registryResolved: dependency.registryResolved ? 1 : 0,
-                        scannedAt
-                    }))
-                )
-                .run();
+            const rows = results.map(dependency => ({
+                id: generateId(),
+                projectId: context.referenceId,
+                name: dependency.name,
+                currentVersion: dependency.currentVersion,
+                latestVersion: dependency.latestVersion,
+                latestInRange: dependency.latestInRange,
+                type: dependency.dependencyKind,
+                upgradeType: dependency.upgradeType,
+                dependencyKind: dependency.dependencyKind,
+                registryResolved: dependency.registryResolved ? 1 : 0,
+                scannedAt
+            }));
+
+            const BATCH_SIZE = 100;
+            for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+                this.databaseClient.db
+                    .insert(scanResults)
+                    .values(rows.slice(i, i + BATCH_SIZE))
+                    .run();
+            }
         }
 
         context.appendLog(`Saved ${results.length} scan results`);

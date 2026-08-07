@@ -1,53 +1,69 @@
+import { z } from "zod";
 import { AuditParserService as Abstraction } from "./abstractions/AuditParserService.js";
 import {
     VULNERABILITY_SEVERITIES,
     type VulnerabilitySeverity
 } from "#shared/vulnerabilities/types.js";
 
-interface INpmAuditAdvisory {
-    title: string;
-    url?: string;
-    severity: string;
-    range?: string;
-}
+const npmAuditAdvisorySchema = z.object({
+    title: z.string(),
+    url: z.string().optional(),
+    severity: z.string(),
+    range: z.string().optional()
+});
 
-interface INpmAuditVulnerabilityEntry {
-    name: string;
-    severity: string;
-    via: Array<INpmAuditAdvisory | string>;
-    fixAvailable?: boolean | { name: string; version: string; isSemVerMajor: boolean };
-}
+const npmAuditSchema = z.object({
+    vulnerabilities: z
+        .record(
+            z.string(),
+            z.object({
+                name: z.string(),
+                severity: z.string(),
+                via: z.array(z.union([npmAuditAdvisorySchema, z.string()])),
+                fixAvailable: z
+                    .union([
+                        z.boolean(),
+                        z.object({
+                            name: z.string(),
+                            version: z.string(),
+                            isSemVerMajor: z.boolean()
+                        })
+                    ])
+                    .optional()
+            })
+        )
+        .optional()
+        .default({})
+});
 
-interface INpmAuditJson {
-    vulnerabilities?: Record<string, INpmAuditVulnerabilityEntry>;
-}
+const yarnAuditLineSchema = z.object({
+    value: z.string(),
+    children: z.object({
+        ID: z.number(),
+        Issue: z.string(),
+        URL: z.string(),
+        Severity: z.string(),
+        "Vulnerable Versions": z.string()
+    })
+});
 
-interface IYarnAuditLineChildren {
-    ID: number;
-    Issue: string;
-    URL: string;
-    Severity: string;
-    "Vulnerable Versions": string;
-}
-
-interface IYarnAuditLine {
-    value: string;
-    children: IYarnAuditLineChildren;
-}
-
-interface IPnpmAdvisory {
-    module_name: string;
-    severity: string;
-    title: string;
-    url?: string;
-    cves?: string[];
-    vulnerable_versions?: string;
-    patched_versions?: string;
-}
-
-interface IPnpmAuditJson {
-    advisories?: Record<string, IPnpmAdvisory>;
-}
+const pnpmAuditSchema = z.object({
+    advisories: z
+        .record(
+            z.string(),
+            z.object({
+                module_name: z.string(),
+                severity: z.string(),
+                title: z.string(),
+                url: z.string().optional(),
+                cves: z.array(z.string()).optional().default([]),
+                vulnerable_versions: z.string().optional(),
+                patched_versions: z.string().optional()
+            })
+        )
+        .optional()
+        .default({})
+});
 
 function normalizeSeverity(value: string): VulnerabilitySeverity {
     const lowered = value.toLowerCase();
@@ -57,7 +73,7 @@ function normalizeSeverity(value: string): VulnerabilitySeverity {
 }
 
 function extractFixVersion(
-    fixAvailable: INpmAuditVulnerabilityEntry["fixAvailable"]
+    fixAvailable: boolean | { name: string; version: string; isSemVerMajor: boolean } | undefined
 ): string | null {
     if (fixAvailable && typeof fixAvailable === "object" && fixAvailable.version) {
         return fixAvailable.version;
@@ -86,15 +102,15 @@ class AuditParserServiceImpl implements Abstraction.Interface {
     }
 
     private parseNpmAudit(jsonOutput: string): Abstraction.Vulnerability[] {
-        let parsed: INpmAuditJson;
+        let parsed: z.infer<typeof npmAuditSchema>;
         try {
-            parsed = JSON.parse(jsonOutput) as INpmAuditJson;
+            parsed = npmAuditSchema.parse(JSON.parse(jsonOutput));
         } catch {
             return [];
         }
 
         const vulnerabilities: Abstraction.Vulnerability[] = [];
-        for (const entry of Object.values(parsed.vulnerabilities ?? {})) {
+        for (const entry of Object.values(parsed.vulnerabilities)) {
             const fixVersion = extractFixVersion(entry.fixAvailable);
 
             for (const via of entry.via) {
@@ -125,16 +141,17 @@ class AuditParserServiceImpl implements Abstraction.Interface {
                 continue;
             }
 
-            let entry: IYarnAuditLine;
+            let json: unknown;
             try {
-                entry = JSON.parse(line) as IYarnAuditLine;
+                json = JSON.parse(line);
             } catch {
                 continue;
             }
-
-            if (!entry.value || !entry.children) {
+            const parseResult = yarnAuditLineSchema.safeParse(json);
+            if (!parseResult.success) {
                 continue;
             }
+            const entry = parseResult.data;
 
             vulnerabilities.push({
                 packageName: entry.value,
@@ -151,15 +168,15 @@ class AuditParserServiceImpl implements Abstraction.Interface {
     }
 
     private parsePnpmAudit(jsonOutput: string): Abstraction.Vulnerability[] {
-        let parsed: IPnpmAuditJson;
+        let parsed: z.infer<typeof pnpmAuditSchema>;
         try {
-            parsed = JSON.parse(jsonOutput) as IPnpmAuditJson;
+            parsed = pnpmAuditSchema.parse(JSON.parse(jsonOutput));
         } catch {
             return [];
         }
 
         const vulnerabilities: Abstraction.Vulnerability[] = [];
-        for (const advisory of Object.values(parsed.advisories ?? {})) {
+        for (const advisory of Object.values(parsed.advisories)) {
             vulnerabilities.push({
                 packageName: advisory.module_name,
                 severity: normalizeSeverity(advisory.severity),

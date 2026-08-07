@@ -189,7 +189,7 @@ export async function backupRoutes(app: FastifyInstance, options: PluginOptions)
                 .values(setting)
                 .onConflictDoNothing()
                 .run();
-            if (inserted.rowsAffected > 0) {
+            if (inserted.changes > 0) {
                 result.appSettings.imported++;
             } else {
                 result.appSettings.skipped++;
@@ -202,7 +202,7 @@ export async function backupRoutes(app: FastifyInstance, options: PluginOptions)
                 .values({ id: generateId(), ...setting })
                 .onConflictDoNothing()
                 .run();
-            if (inserted.rowsAffected > 0) {
+            if (inserted.changes > 0) {
                 result.securitySettings.imported++;
             } else {
                 result.securitySettings.skipped++;
@@ -215,7 +215,7 @@ export async function backupRoutes(app: FastifyInstance, options: PluginOptions)
                 .values(entry)
                 .onConflictDoNothing()
                 .run();
-            if (inserted.rowsAffected > 0) {
+            if (inserted.changes > 0) {
                 result.registryCache.imported++;
             } else {
                 result.registryCache.skipped++;
@@ -277,7 +277,7 @@ export async function backupRoutes(app: FastifyInstance, options: PluginOptions)
                 continue;
             }
 
-            if (depInserted.rowsAffected > 0) {
+            if (depInserted.changes > 0) {
                 result.dependencies.imported++;
             } else {
                 result.dependencies.skipped++;
@@ -295,7 +295,7 @@ export async function backupRoutes(app: FastifyInstance, options: PluginOptions)
                     .onConflictDoNothing()
                     .run();
 
-                if (vInserted.rowsAffected > 0) {
+                if (vInserted.changes > 0) {
                     result.dependencies.imported++;
                 } else {
                     result.dependencies.skipped++;
@@ -324,7 +324,7 @@ export async function backupRoutes(app: FastifyInstance, options: PluginOptions)
                             .onConflictDoNothing()
                             .run();
 
-                        if (clInserted.rowsAffected > 0) {
+                        if (clInserted.changes > 0) {
                             result.dependencies.imported++;
                         } else {
                             result.dependencies.skipped++;

@@ -41,7 +41,16 @@ export interface ISecurityStatus {
 
 export interface IDependenciesResponse {
     dependencies: IDependency[];
+    total: number;
     lastScannedAt: number | null;
+}
+
+export interface IDependencyFilters {
+    page?: number | undefined;
+    pageSize?: number | undefined;
+    search?: string | undefined;
+    dependencyKind?: string | undefined;
+    registryResolved?: string | undefined;
 }
 
 export interface IScanJob {
@@ -59,7 +68,7 @@ export interface IProjectsGateway {
     create(path: string): Promise<IProject>;
     remove(id: string): Promise<void>;
     scan(id: string, force?: boolean): Promise<IScanJob>;
-    getDependencies(id: string): Promise<IDependenciesResponse>;
+    getDependencies(id: string, filters?: IDependencyFilters): Promise<IDependenciesResponse>;
     getSecurity(id: string): Promise<ISecurityStatus>;
     checkSecurity(id: string): Promise<ISecurityStatus>;
     clone(url: string, destination: string, folderName?: string): Promise<IScanJob>;
@@ -77,6 +86,7 @@ export namespace ProjectsGateway {
     export type Dependency = IDependency;
     export type SecurityStatus = ISecurityStatus;
     export type DependenciesResponse = IDependenciesResponse;
+    export type DependencyFilters = IDependencyFilters;
     export type ScanJob = IScanJob;
     export type InstallFlagDefinition = IInstallFlagDefinition;
     export type ChangelogEntry = IChangelogEntry;

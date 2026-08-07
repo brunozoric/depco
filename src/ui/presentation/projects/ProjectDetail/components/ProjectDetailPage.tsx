@@ -9,6 +9,7 @@ import {
     Loader,
     Menu,
     MultiSelect,
+    Pagination,
     Progress,
     SegmentedControl,
     Stack,
@@ -160,6 +161,12 @@ export const ProjectDetailPage = observer(function ProjectDetailPage({
             ) : (
                 <>
                     <Group gap="sm">
+                        <TextInput
+                            placeholder="Search packages..."
+                            value={vm.search}
+                            onChange={event => presenter.setSearch(event.currentTarget.value)}
+                            style={{ flex: 1, maxWidth: 300 }}
+                        />
                         <SegmentedControl
                             value={vm.upgradeFilter}
                             onChange={value => presenter.setUpgradeFilter(value as UpgradeFilter)}
@@ -170,9 +177,18 @@ export const ProjectDetailPage = observer(function ProjectDetailPage({
                             ]}
                         />
                         <Text size="sm" c="dimmed">
-                            {vm.dependencies.length} of {vm.totalDependencyCount} packages
+                            {vm.totalDependencyCount} packages
                         </Text>
                     </Group>
+                    {vm.totalPages > 1 && (
+                        <Group justify="center">
+                            <Pagination
+                                total={vm.totalPages}
+                                value={vm.page}
+                                onChange={presenter.setPage}
+                            />
+                        </Group>
+                    )}
                     <DependencyTable
                         dependencies={vm.dependencies}
                         onToggle={presenter.togglePackage}
@@ -182,6 +198,15 @@ export const ProjectDetailPage = observer(function ProjectDetailPage({
                             setChangelogTarget({ name, currentVersion, latestVersion })
                         }
                     />
+                    {vm.totalPages > 1 && (
+                        <Group justify="center">
+                            <Pagination
+                                total={vm.totalPages}
+                                value={vm.page}
+                                onChange={presenter.setPage}
+                            />
+                        </Group>
+                    )}
                 </>
             )}
 

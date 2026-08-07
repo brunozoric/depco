@@ -1,11 +1,14 @@
+import { z } from "zod";
 import { ChangelogResolver as Abstraction } from "./abstractions/ChangelogResolver.js";
 import { CommandRunner } from "../abstractions/CommandRunner.js";
 import { extractOwnerRepo } from "./extractOwnerRepo.js";
 
-interface IGitHubRelease {
-    tag_name: string;
-    body: string | null;
-}
+const githubReleasesSchema = z.array(
+    z.object({
+        tag_name: z.string(),
+        body: z.string().nullable().default(null)
+    })
+);
 
 class GitHubReleasesResolverImpl implements Abstraction.Interface {
     public readonly name = "github-releases";
@@ -49,7 +52,7 @@ class GitHubReleasesResolverImpl implements Abstraction.Interface {
                 return new Map();
             }
 
-            const releases = JSON.parse(result.stdout) as IGitHubRelease[];
+            const releases = githubReleasesSchema.parse(JSON.parse(result.stdout));
             const versionSet = new Set(versions);
             const found = new Map<string, string>();
 
