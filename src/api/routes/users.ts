@@ -104,6 +104,10 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
         }
 
         const updated = await userService.update({ id, data });
+        if (!updated) {
+            sendError(reply, 404, "User not found");
+            return;
+        }
         sendOne(reply, updated);
     });
 
