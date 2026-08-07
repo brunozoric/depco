@@ -132,11 +132,7 @@ class ProjectsGatewayImpl implements Abstraction.Interface {
                     | "optionalDependency"
                     | "transitive"
                     | undefined,
-                registryResolved: filters?.registryResolved as
-                    | "all"
-                    | "true"
-                    | "false"
-                    | undefined
+                registryResolved: filters?.registryResolved as "all" | "true" | "false" | undefined
             }
         });
         return {
