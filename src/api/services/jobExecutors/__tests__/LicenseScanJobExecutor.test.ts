@@ -9,7 +9,7 @@ import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { LicenseCheckerService } from "../../abstractions/LicenseCheckerService.js";
 import { LicensePolicyService } from "../../abstractions/LicensePolicyService.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
-import { EventBus } from "../../abstractions/EventBus.js";
+import { EventBus } from "../../EventBus/index.js";
 import { projects, licenses, licenseSnapshots } from "#api/db/schema.js";
 import { LicenseScanJobExecutor } from "../abstractions/LicenseScanJobExecutor.js";
 import { LicenseScanJobExecutor as LicenseScanJobExecutorRegistration } from "../LicenseScanJobExecutor.js";

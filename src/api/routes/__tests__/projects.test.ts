@@ -61,7 +61,7 @@ import { LicenseScanJobExecutor as LicenseScanJobExecutorReg } from "../../servi
 import { GraphRefreshJobExecutor as GraphRefreshJobExecutorReg } from "../../services/jobExecutors/GraphRefreshJobExecutor.js";
 import { ErrorReporter } from "../../services/abstractions/ErrorReporter.js";
 import { ScanSchedulerService } from "../../services/abstractions/ScanSchedulerService.js";
-import { EventBus } from "../../services/EventBus.js";
+import { EventBus } from "../../services/EventBus/EventBus.js";
 import { projectRoutes } from "../projects.js";
 import {
     projects,

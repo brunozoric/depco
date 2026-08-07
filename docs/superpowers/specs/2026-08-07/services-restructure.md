@@ -45,48 +45,48 @@ The top-level `src/api/feature.ts` becomes a compositor that imports and calls e
 
 These folders contain multiple related services/classes:
 
-| Folder | Services Moved In | Notes |
-|--------|-------------------|-------|
-| `AutoFix/` | AutoFixSettingsService, AutoFixPrService | |
-| `License/` | LicenseCheckerService, LicensePolicyService | |
-| `Vulnerability/` | VulnerabilityService, OsvCacheService, AuditParserService | |
-| `Git/` | GitService, ForgeService | |
-| `PackageManager/` | PackageManagerService (from root), drivers, registry | PackageManagerService moves in from services root. Drivers stay in `drivers/` subfolder |
-| `Sbom/` | SbomService, formatters (CycloneDx, Spdx, registry) | Formatters stay in `formatters/` subfolder |
-| `Changelog/` | ChangelogService, resolvers (GitHub, File, Npm) | Resolvers stay in `resolvers/` subfolder. Includes helpers (extractOwnerRepo, parseVersionSections) |
-| `JobExecution/` | JobWorker, JobExecutorRegistry, all 13 executors | JobWorker moves in from root. Executors organized in subfolders |
-| `Auth/` | AuthService, UserService | |
-| `DependencyGraph/` | DependencyGraphService, LockfileParserService | LockfileParserService moves in from root |
-| `UpgradeSession/` | UpgradeSessionService, stepResolvers/ | stepResolvers/ becomes a subfolder inside |
+| Folder             | Services Moved In                                         | Notes                                                                                               |
+| ------------------ | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `AutoFix/`         | AutoFixSettingsService, AutoFixPrService                  |                                                                                                     |
+| `License/`         | LicenseCheckerService, LicensePolicyService               |                                                                                                     |
+| `Vulnerability/`   | VulnerabilityService, OsvCacheService, AuditParserService |                                                                                                     |
+| `Git/`             | GitService, ForgeService                                  |                                                                                                     |
+| `PackageManager/`  | PackageManagerService (from root), drivers, registry      | PackageManagerService moves in from services root. Drivers stay in `drivers/` subfolder             |
+| `Sbom/`            | SbomService, formatters (CycloneDx, Spdx, registry)       | Formatters stay in `formatters/` subfolder                                                          |
+| `Changelog/`       | ChangelogService, resolvers (GitHub, File, Npm)           | Resolvers stay in `resolvers/` subfolder. Includes helpers (extractOwnerRepo, parseVersionSections) |
+| `JobExecution/`    | JobWorker, JobExecutorRegistry, all 13 executors          | JobWorker moves in from root. Executors organized in subfolders                                     |
+| `Auth/`            | AuthService, UserService                                  |                                                                                                     |
+| `DependencyGraph/` | DependencyGraphService, LockfileParserService             | LockfileParserService moves in from root                                                            |
+| `UpgradeSession/`  | UpgradeSessionService, stepResolvers/                     | stepResolvers/ becomes a subfolder inside                                                           |
 
 ### Service Folders (standalone)
 
 Each contains a single service:
 
-| Folder | Service |
-|--------|---------|
-| `AppLog/` | AppLogService |
-| `CommandRunner/` | CommandRunner |
+| Folder              | Service                 |
+| ------------------- | ----------------------- |
+| `AppLog/`           | AppLogService           |
+| `CommandRunner/`    | CommandRunner           |
 | `DependencyChange/` | DependencyChangeService |
-| `Encryption/` | EncryptionService |
-| `ErrorReporter/` | ErrorReporter |
-| `EventBus/` | EventBus |
-| `FileConfig/` | FileConfigService |
-| `PackageJson/` | PackageJsonService |
-| `RegistryCache/` | RegistryCacheService |
-| `Scan/` | ScanService |
-| `ScanScheduler/` | ScanSchedulerService |
-| `Security/` | SecurityService |
-| `StepHook/` | StepHookService |
-| `Upgrade/` | UpgradeService |
-| `Email/` | ConsoleEmailService |
+| `Encryption/`       | EncryptionService       |
+| `ErrorReporter/`    | ErrorReporter           |
+| `EventBus/`         | EventBus                |
+| `FileConfig/`       | FileConfigService       |
+| `PackageJson/`      | PackageJsonService      |
+| `RegistryCache/`    | RegistryCacheService    |
+| `Scan/`             | ScanService             |
+| `ScanScheduler/`    | ScanSchedulerService    |
+| `Security/`         | SecurityService         |
+| `StepHook/`         | StepHookService         |
+| `Upgrade/`          | UpgradeService          |
+| `Email/`            | ConsoleEmailService     |
 
 ### Shared Infrastructure (outside services/)
 
-| Location | Contents |
-|----------|----------|
-| `src/api/utils/` | `registerProject.ts` |
-| `src/api/workers/` | `scanWorker.js` |
+| Location           | Contents             |
+| ------------------ | -------------------- |
+| `src/api/utils/`   | `registerProject.ts` |
+| `src/api/workers/` | `scanWorker.js`      |
 
 ## Import Path Changes
 
@@ -475,51 +475,51 @@ import { ChangelogFeature } from "./services/Changelog/index.js";
 // ... etc
 
 export const ApiFeature = createFeature<IApiFeatureContext>({
-    name: "Api",
-    register(container, context) {
-        ProcessEnvFeature.register(container);
-        container.registerInstance(DatabaseClient, context.databaseClient);
+  name: "Api",
+  register(container, context) {
+    ProcessEnvFeature.register(container);
+    container.registerInstance(DatabaseClient, context.databaseClient);
 
-        // Compose all service features
-        AppLogFeature.register(container);
-        AutoFixFeature.register(container);
-        AuthFeature.register(container);
-        ChangelogFeature.register(container);
-        CommandRunnerFeature.register(container);
-        DependencyChangeFeature.register(container);
-        DependencyGraphFeature.register(container);
-        EmailFeature.register(container);
-        EncryptionFeature.register(container);
-        ErrorReporterFeature.register(container);
-        EventBusFeature.register(container);
-        FileConfigFeature.register(container);
-        GitFeature.register(container);
-        JobExecutionFeature.register(container);
-        LicenseFeature.register(container);
-        PackageJsonFeature.register(container);
-        PackageManagerFeature.register(container);
-        RegistryCacheFeature.register(container);
-        SbomFeature.register(container);
-        ScanFeature.register(container);
-        ScanSchedulerFeature.register(container);
-        SecurityFeature.register(container);
-        StepHookFeature.register(container);
-        UpgradeFeature.register(container);
-        UpgradeSessionFeature.register(container);
-        VulnerabilityFeature.register(container);
+    // Compose all service features
+    AppLogFeature.register(container);
+    AutoFixFeature.register(container);
+    AuthFeature.register(container);
+    ChangelogFeature.register(container);
+    CommandRunnerFeature.register(container);
+    DependencyChangeFeature.register(container);
+    DependencyGraphFeature.register(container);
+    EmailFeature.register(container);
+    EncryptionFeature.register(container);
+    ErrorReporterFeature.register(container);
+    EventBusFeature.register(container);
+    FileConfigFeature.register(container);
+    GitFeature.register(container);
+    JobExecutionFeature.register(container);
+    LicenseFeature.register(container);
+    PackageJsonFeature.register(container);
+    PackageManagerFeature.register(container);
+    RegistryCacheFeature.register(container);
+    SbomFeature.register(container);
+    ScanFeature.register(container);
+    ScanSchedulerFeature.register(container);
+    SecurityFeature.register(container);
+    StepHookFeature.register(container);
+    UpgradeFeature.register(container);
+    UpgradeSessionFeature.register(container);
+    VulnerabilityFeature.register(container);
 
-        // Infrastructure that doesn't belong to a service
-        container.registerInstance(ConsoleLoggerConfig, {
-            getConfig: () => ({ logLevel: "error" })
-        });
-        ConsoleLoggerFeature.register(container);
-        DirectoryToolFeature.register(container);
-        FileToolFeature.register(container);
-        JsonFileToolFeature.register(container);
+    // Infrastructure that doesn't belong to a service
+    container.registerInstance(ConsoleLoggerConfig, {
+      getConfig: () => ({ logLevel: "error" })
+    });
+    ConsoleLoggerFeature.register(container);
+    DirectoryToolFeature.register(container);
+    FileToolFeature.register(container);
+    JsonFileToolFeature.register(container);
 
-        // WebSocket broadcaster stays at top level (not a service)
-        container.register(WebSocketBroadcaster).inSingletonScope();
-    }
+    // WebSocket broadcaster stays at top level (not a service)
+    container.register(WebSocketBroadcaster).inSingletonScope();
+  }
 });
 ```
 
@@ -547,9 +547,11 @@ When a file moves from `services/X.ts` to `services/X/X.ts`, it is now one direc
 - `./Y.ts` → `../Y.ts` (any sibling import)
 
 **After every file move, run grep within the moved file(s) to fix all relative imports:**
+
 ```bash
 grep -n "from \"\." <moved-file>
 ```
+
 Adjust every relative path for the new directory depth.
 
 This is bidirectional — imports TO the moved service AND imports WITHIN the moved service both need updating.

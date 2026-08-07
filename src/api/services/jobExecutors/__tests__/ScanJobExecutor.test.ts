@@ -6,7 +6,7 @@ import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
-import { EventBus } from "../../abstractions/EventBus.js";
+import { EventBus } from "../../EventBus/index.js";
 import { JobWorker } from "../../abstractions/JobWorker.js";
 import { JobWorkerProvider } from "../../abstractions/JobWorkerProvider.js";
 import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../packageManagers/PackageManagerDriverRegistry.js";

@@ -42,7 +42,7 @@ import { DependencyChangeService as DependencyChangeServiceReg } from "../../ser
 import { FileConfigService as FileConfigServiceReg } from "../../services/FileConfigService.js";
 import { ErrorReporter } from "../../services/abstractions/ErrorReporter.js";
 import { ScanSchedulerService } from "../../services/abstractions/ScanSchedulerService.js";
-import { EventBus } from "../../services/EventBus.js";
+import { EventBus } from "../../services/EventBus/EventBus.js";
 import { GitService as GitServiceReg } from "../../services/GitService.js";
 import { registerEncryption } from "#testing/helpers/registerEncryption.js";
 import { ForgeService as ForgeServiceReg } from "../../services/ForgeService.js";

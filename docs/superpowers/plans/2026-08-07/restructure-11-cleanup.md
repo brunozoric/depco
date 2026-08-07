@@ -18,6 +18,7 @@ mv src/api/services/registerProject.ts src/api/utils/registerProject.ts
 ```
 
 Update all imports:
+
 - `src/api/routes/projects.ts` — update registerProject import path
 - `src/api/services/jobExecutors/CloneJobExecutor.ts` — update path (now at `../../utils/registerProject.js` from `JobExecution/executors/`)
 
@@ -40,6 +41,7 @@ Update the import path in ScanSchedulerService (now at `ScanScheduler/ScanSchedu
 ### Task 3: Delete old directories
 
 Verify all files moved:
+
 ```bash
 ls src/api/services/abstractions/  # should only have index.ts left (or be empty)
 ls src/api/services/__tests__/     # should be empty
@@ -51,6 +53,7 @@ ls src/api/services/packageManagers/     # should be empty (renamed to PackageMa
 ```
 
 Delete them:
+
 ```bash
 rm -rf src/api/services/abstractions
 rm -rf src/api/services/__tests__
@@ -73,10 +76,10 @@ Replace the monolithic `src/api/feature.ts` with the compositor pattern. Import 
 ```typescript
 import { ConsoleLoggerConfig, ConsoleLoggerFeature } from "@webiny/stdlib";
 import {
-    DirectoryToolFeature,
-    FileToolFeature,
-    JsonFileToolFeature,
-    ProcessEnvFeature
+  DirectoryToolFeature,
+  FileToolFeature,
+  JsonFileToolFeature,
+  ProcessEnvFeature
 } from "@webiny/stdlib/node";
 import { createFeature } from "#shared/index.js";
 import { DatabaseClient } from "./db/abstractions/DatabaseClient.js";
@@ -110,52 +113,52 @@ import { UpgradeSessionFeature } from "./services/UpgradeSession/index.js";
 import { VulnerabilityFeature } from "./services/Vulnerability/index.js";
 
 interface IApiFeatureContext {
-    databaseClient: DatabaseClient.Interface;
+  databaseClient: DatabaseClient.Interface;
 }
 
 export const ApiFeature = createFeature<IApiFeatureContext>({
-    name: "Api",
-    register(container, context) {
-        ProcessEnvFeature.register(container);
-        container.registerInstance(DatabaseClient, context.databaseClient);
+  name: "Api",
+  register(container, context) {
+    ProcessEnvFeature.register(container);
+    container.registerInstance(DatabaseClient, context.databaseClient);
 
-        container.registerInstance(ConsoleLoggerConfig, {
-            getConfig: () => ({ logLevel: "error" })
-        });
-        ConsoleLoggerFeature.register(container);
-        DirectoryToolFeature.register(container);
-        FileToolFeature.register(container);
-        JsonFileToolFeature.register(container);
+    container.registerInstance(ConsoleLoggerConfig, {
+      getConfig: () => ({ logLevel: "error" })
+    });
+    ConsoleLoggerFeature.register(container);
+    DirectoryToolFeature.register(container);
+    FileToolFeature.register(container);
+    JsonFileToolFeature.register(container);
 
-        container.register(WebSocketBroadcaster).inSingletonScope();
+    container.register(WebSocketBroadcaster).inSingletonScope();
 
-        EncryptionFeature.register(container);
-        EventBusFeature.register(container);
-        CommandRunnerFeature.register(container);
-        EmailFeature.register(container);
-        AppLogFeature.register(container);
-        ErrorReporterFeature.register(container);
-        PackageJsonFeature.register(container);
-        FileConfigFeature.register(container);
-        SecurityFeature.register(container);
-        StepHookFeature.register(container);
-        RegistryCacheFeature.register(container);
-        UpgradeFeature.register(container);
-        DependencyChangeFeature.register(container);
-        ScanFeature.register(container);
-        ScanSchedulerFeature.register(container);
-        PackageManagerFeature.register(container);
-        ChangelogFeature.register(container);
-        SbomFeature.register(container);
-        GitFeature.register(container);
-        AutoFixFeature.register(container);
-        LicenseFeature.register(container);
-        VulnerabilityFeature.register(container);
-        DependencyGraphFeature.register(container);
-        UpgradeSessionFeature.register(container);
-        AuthFeature.register(container);
-        JobExecutionFeature.register(container);
-    }
+    EncryptionFeature.register(container);
+    EventBusFeature.register(container);
+    CommandRunnerFeature.register(container);
+    EmailFeature.register(container);
+    AppLogFeature.register(container);
+    ErrorReporterFeature.register(container);
+    PackageJsonFeature.register(container);
+    FileConfigFeature.register(container);
+    SecurityFeature.register(container);
+    StepHookFeature.register(container);
+    RegistryCacheFeature.register(container);
+    UpgradeFeature.register(container);
+    DependencyChangeFeature.register(container);
+    ScanFeature.register(container);
+    ScanSchedulerFeature.register(container);
+    PackageManagerFeature.register(container);
+    ChangelogFeature.register(container);
+    SbomFeature.register(container);
+    GitFeature.register(container);
+    AutoFixFeature.register(container);
+    LicenseFeature.register(container);
+    VulnerabilityFeature.register(container);
+    DependencyGraphFeature.register(container);
+    UpgradeSessionFeature.register(container);
+    AuthFeature.register(container);
+    JobExecutionFeature.register(container);
+  }
 });
 ```
 

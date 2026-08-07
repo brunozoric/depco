@@ -13,6 +13,7 @@ Same as prior batches.
 ### Task 1: DependencyGraph Domain
 
 **Move:**
+
 - `abstractions/DependencyGraphService.ts` → `DependencyGraph/abstractions/DependencyGraphService.ts`
 - `abstractions/LockfileParserService.ts` → `DependencyGraph/abstractions/LockfileParserService.ts`
 - `DependencyGraphService.ts` → `DependencyGraph/DependencyGraphService.ts`
@@ -21,21 +22,23 @@ Same as prior batches.
 - `__tests__/LockfileParserService.test.ts` → `DependencyGraph/__tests__/LockfileParserService.test.ts`
 
 **feature.ts:**
+
 ```typescript
 import { createFeature } from "#shared/index.js";
 import { DependencyGraphService } from "./DependencyGraphService.js";
 import { LockfileParserService } from "./LockfileParserService.js";
 
 export const DependencyGraphFeature = createFeature({
-    name: "Api/DependencyGraphFeature",
-    register(container) {
-        container.register(LockfileParserService).inSingletonScope();
-        container.register(DependencyGraphService).inSingletonScope();
-    }
+  name: "Api/DependencyGraphFeature",
+  register(container) {
+    container.register(LockfileParserService).inSingletonScope();
+    container.register(DependencyGraphService).inSingletonScope();
+  }
 });
 ```
 
 **index.ts:**
+
 ```typescript
 export { DependencyGraphService } from "./abstractions/DependencyGraphService.js";
 export { LockfileParserService } from "./abstractions/LockfileParserService.js";
@@ -53,12 +56,14 @@ export { DependencyGraphFeature } from "./feature.js";
 **This is complex.** Absorbs `stepResolvers/` as a subfolder and pulls in UpgradeSessionService from root.
 
 **Move:**
+
 - `abstractions/UpgradeSessionService.ts` → `UpgradeSession/abstractions/UpgradeSessionService.ts`
 - `UpgradeSessionService.ts` → `UpgradeSession/UpgradeSessionService.ts`
 - `__tests__/UpgradeSessionService.test.ts` → `UpgradeSession/__tests__/UpgradeSessionService.test.ts`
-- `stepResolvers/` → `UpgradeSession/stepResolvers/` (entire directory including abstractions/, __tests__/, all resolvers)
+- `stepResolvers/` → `UpgradeSession/stepResolvers/` (entire directory including abstractions/, **tests**/, all resolvers)
 
 **Directory structure after move:**
+
 ```
 UpgradeSession/
   abstractions/
@@ -88,6 +93,7 @@ UpgradeSession/
 ```
 
 **feature.ts:**
+
 ```typescript
 import { createFeature } from "#shared/index.js";
 import { UpgradeSessionService } from "./UpgradeSessionService.js";
@@ -101,22 +107,23 @@ import { PushResolver } from "./stepResolvers/PushResolver.js";
 import { PrResolver } from "./stepResolvers/PrResolver.js";
 
 export const UpgradeSessionFeature = createFeature({
-    name: "Api/UpgradeSessionFeature",
-    register(container) {
-        container.register(SelectPackagesResolver);
-        container.register(BranchResolver);
-        container.register(UpgradeResolver);
-        container.register(RefreshTransientResolver);
-        container.register(CommitResolver);
-        container.register(PushResolver);
-        container.register(PrResolver);
-        container.register(UpgradeSessionStepResolverRegistry);
-        container.register(UpgradeSessionService).inSingletonScope();
-    }
+  name: "Api/UpgradeSessionFeature",
+  register(container) {
+    container.register(SelectPackagesResolver);
+    container.register(BranchResolver);
+    container.register(UpgradeResolver);
+    container.register(RefreshTransientResolver);
+    container.register(CommitResolver);
+    container.register(PushResolver);
+    container.register(PrResolver);
+    container.register(UpgradeSessionStepResolverRegistry);
+    container.register(UpgradeSessionService).inSingletonScope();
+  }
 });
 ```
 
 **index.ts:**
+
 ```typescript
 export { UpgradeSessionService } from "./abstractions/UpgradeSessionService.js";
 export { UpgradeSessionStepResolverRegistry } from "./stepResolvers/abstractions/UpgradeSessionStepResolverRegistry.js";
@@ -124,12 +131,14 @@ export { UpgradeSessionFeature } from "./feature.js";
 ```
 
 **Import updates:** Run these greps to find ALL imports that need updating:
+
 ```bash
 grep -rn "from.*abstractions/UpgradeSessionService" src/api --include="*.ts"
 grep -rn 'from.*services/UpgradeSessionService"' src/api --include="*.ts"
 grep -rn "from.*stepResolvers/" src/api --include="*.ts" | grep -v "src/api/services/stepResolvers/"
 grep -rn "from.*stepResolvers/" src/api/services/stepResolvers --include="*.ts"
 ```
+
 Update: abstraction imports → `UpgradeSession/index.js`, step resolver imports → `UpgradeSession/stepResolvers/...`. Internal step resolver imports of other service abstractions (GitService, UpgradeService, CommandRunner, ForgeService) need path updates — they were `../abstractions/X.js`, now should be `../X/index.js` (if X already moved) or remain pointing to shared abstractions (if not yet moved).
 
 **Commit:** `refactor: move UpgradeSession + stepResolvers into domain folder`
@@ -139,6 +148,7 @@ Update: abstraction imports → `UpgradeSession/index.js`, step resolver imports
 ### Task 3: Auth Domain
 
 **Move:**
+
 - `abstractions/AuthService.ts` → `Auth/abstractions/AuthService.ts`
 - `abstractions/UserService.ts` → `Auth/abstractions/UserService.ts`
 - `AuthService.ts` → `Auth/AuthService.ts`
@@ -147,21 +157,23 @@ Update: abstraction imports → `UpgradeSession/index.js`, step resolver imports
 - `__tests__/UserService.test.ts` → `Auth/__tests__/UserService.test.ts`
 
 **feature.ts:**
+
 ```typescript
 import { createFeature } from "#shared/index.js";
 import { UserService } from "./UserService.js";
 import { AuthService } from "./AuthService.js";
 
 export const AuthFeature = createFeature({
-    name: "Api/AuthFeature",
-    register(container) {
-        container.register(UserService).inSingletonScope();
-        container.register(AuthService).inSingletonScope();
-    }
+  name: "Api/AuthFeature",
+  register(container) {
+    container.register(UserService).inSingletonScope();
+    container.register(AuthService).inSingletonScope();
+  }
 });
 ```
 
 **index.ts:**
+
 ```typescript
 export { AuthService } from "./abstractions/AuthService.js";
 export { UserService } from "./abstractions/UserService.js";
@@ -169,6 +181,7 @@ export { AuthFeature } from "./feature.js";
 ```
 
 **Import updates:**
+
 - `src/api/server.ts:19` — `./services/abstractions/AuthService.js` → `./services/Auth/index.js`
 - `src/api/middleware/authHook.ts:4` — `#api/services/abstractions/AuthService.js` → `#api/services/Auth/index.js`
 - `src/api/websocket/WebSocketPlugin.ts:6` — `#api/services/abstractions/AuthService.js` → `#api/services/Auth/index.js`

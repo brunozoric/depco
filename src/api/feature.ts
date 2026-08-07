@@ -55,7 +55,7 @@ import { PrResolver } from "./services/stepResolvers/PrResolver.js";
 import { AppLogService } from "./services/AppLogService.js";
 import { ErrorReporter } from "./services/ErrorReporter.js";
 import { ScanSchedulerService } from "./services/ScanSchedulerService.js";
-import { EventBus } from "./services/EventBus.js";
+import { EventBusFeature } from "./services/EventBus/index.js";
 import { StepHookService } from "./services/StepHookService.js";
 import { FileConfigService } from "./services/FileConfigService.js";
 import { PackageJsonService } from "./services/PackageJsonService.js";
@@ -65,7 +65,7 @@ import { LockfileParserService } from "./services/LockfileParserService.js";
 import { DependencyGraphService } from "./services/DependencyGraphService.js";
 import { SbomService } from "./services/SbomService.js";
 import { DependencyChangeService } from "./services/DependencyChangeService.js";
-import { EncryptionService } from "./services/EncryptionService.js";
+import { EncryptionFeature } from "./services/Encryption/index.js";
 import { SbomFormatterRegistry } from "#api/services/sbomFormatters/SbomFormatterRegistry.js";
 import { CycloneDxFormatter } from "#api/services/sbomFormatters/CycloneDxFormatter.js";
 import { SpdxFormatter } from "#api/services/sbomFormatters/SpdxFormatter.js";
@@ -82,8 +82,8 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
     register(container, context) {
         ProcessEnvFeature.register(container);
         container.registerInstance(DatabaseClient, context.databaseClient);
-        container.register(EncryptionService).inSingletonScope();
-        container.register(EventBus).inSingletonScope();
+        EncryptionFeature.register(container);
+        EventBusFeature.register(container);
         container.register(CommandRunner).inSingletonScope();
         container.register(SecurityService).inSingletonScope();
         container.register(RegistryCacheService).inSingletonScope();

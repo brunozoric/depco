@@ -5,7 +5,7 @@ import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { projects, scanSchedules, appSettings } from "#api/db/schema.js";
 import { eq } from "drizzle-orm";
 import { ScanSchedulerServiceImpl } from "../ScanSchedulerService.js";
-import type { EventBus } from "../abstractions/EventBus.js";
+import type { EventBus } from "../EventBus/index.js";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 

@@ -15,6 +15,7 @@ Same as prior batches.
 **Current state:** `packageManagers/` already has `abstractions/`, `feature.ts`, `index.ts`, drivers, helpers. PackageManagerService sits orphaned in root.
 
 **Actions:**
+
 1. Rename `packageManagers/` → `PackageManager/`
 2. Move `abstractions/PackageManagerService.ts` → `PackageManager/abstractions/PackageManagerService.ts`
 3. Move `PackageManagerService.ts` → `PackageManager/PackageManagerService.ts`
@@ -24,6 +25,7 @@ Same as prior batches.
 7. Update `PackageManager/index.ts` to also export PackageManagerService abstraction
 
 **Rename existing files (drivers into subfolder):**
+
 ```bash
 mv src/api/services/packageManagers src/api/services/PackageManager
 mkdir -p src/api/services/PackageManager/drivers
@@ -34,6 +36,7 @@ mv src/api/services/PackageManager/BunDriver.ts src/api/services/PackageManager/
 ```
 
 **Move root service in:**
+
 ```bash
 mv src/api/services/abstractions/PackageManagerService.ts src/api/services/PackageManager/abstractions/PackageManagerService.ts
 mv src/api/services/PackageManagerService.ts src/api/services/PackageManager/PackageManagerService.ts
@@ -45,6 +48,7 @@ mv src/api/services/__tests__/PackageManagerService.test.ts src/api/services/Pac
 **Update index.ts** — add `PackageManagerService` export.
 
 **Import updates for PackageManagerService abstraction:**
+
 - `src/api/routes/projects.ts:27` — look for PackageManagerService import, update path
 - All files importing `PackageManagerService` from `abstractions/PackageManagerService.js` → `PackageManager/index.js`
 
@@ -61,6 +65,7 @@ mv src/api/services/__tests__/PackageManagerService.test.ts src/api/services/Pac
 **Current state:** `changelogResolvers/` has resolvers + own `abstractions/ChangelogResolver.ts`. ChangelogService sits orphaned in root.
 
 **Actions:**
+
 1. Create `Changelog/` folder
 2. Move `abstractions/ChangelogService.ts` → `Changelog/abstractions/ChangelogService.ts`
 3. Move `changelogResolvers/abstractions/ChangelogResolver.ts` → `Changelog/abstractions/ChangelogResolver.ts`
@@ -72,6 +77,7 @@ mv src/api/services/__tests__/PackageManagerService.test.ts src/api/services/Pac
 9. Delete empty `changelogResolvers/` directory
 
 **feature.ts:**
+
 ```typescript
 import { createFeature } from "#shared/index.js";
 import { ChangelogService } from "./ChangelogService.js";
@@ -80,17 +86,18 @@ import { ChangelogFileResolver } from "./resolvers/ChangelogFileResolver.js";
 import { NpmReadmeResolver } from "./resolvers/NpmReadmeResolver.js";
 
 export const ChangelogFeature = createFeature({
-    name: "Api/ChangelogFeature",
-    register(container) {
-        container.register(GitHubReleasesResolver);
-        container.register(ChangelogFileResolver);
-        container.register(NpmReadmeResolver);
-        container.register(ChangelogService).inSingletonScope();
-    }
+  name: "Api/ChangelogFeature",
+  register(container) {
+    container.register(GitHubReleasesResolver);
+    container.register(ChangelogFileResolver);
+    container.register(NpmReadmeResolver);
+    container.register(ChangelogService).inSingletonScope();
+  }
 });
 ```
 
 **index.ts:**
+
 ```typescript
 export { ChangelogService } from "./abstractions/ChangelogService.js";
 export { ChangelogResolver } from "./abstractions/ChangelogResolver.js";
@@ -98,11 +105,13 @@ export { ChangelogFeature } from "./feature.js";
 ```
 
 **Import updates:** Run these greps to find ALL imports that need updating:
+
 ```bash
 grep -rn "from.*changelogResolvers" src/api --include="*.ts"
 grep -rn "from.*abstractions/ChangelogService" src/api --include="*.ts"
 grep -rn 'from.*services/ChangelogService"' src/api --include="*.ts"
 ```
+
 Update all matches: `changelogResolvers/` → `Changelog/resolvers/`, abstraction imports → `Changelog/index.js`, implementation imports → `Changelog/ChangelogService.js`.
 
 **Commit:** `refactor: restructure Changelog domain folder`
@@ -114,6 +123,7 @@ Update all matches: `changelogResolvers/` → `Changelog/resolvers/`, abstractio
 **Current state:** `sbomFormatters/` has 2 formatters + registry. SbomService and 3 Sbom abstractions sit in root/abstractions.
 
 **Actions:**
+
 1. Create `Sbom/` folder
 2. Move `abstractions/SbomService.ts` → `Sbom/abstractions/SbomService.ts`
 3. Move `abstractions/SbomFormatter.ts` → `Sbom/abstractions/SbomFormatter.ts`
@@ -126,6 +136,7 @@ Update all matches: `changelogResolvers/` → `Changelog/resolvers/`, abstractio
 10. Delete empty `sbomFormatters/`
 
 **feature.ts:**
+
 ```typescript
 import { createFeature } from "#shared/index.js";
 import { SbomService } from "./SbomService.js";
@@ -134,17 +145,18 @@ import { SpdxFormatter } from "./formatters/SpdxFormatter.js";
 import { SbomFormatterRegistry } from "./SbomFormatterRegistry.js";
 
 export const SbomFeature = createFeature({
-    name: "Api/SbomFeature",
-    register(container) {
-        container.register(CycloneDxFormatter);
-        container.register(SpdxFormatter);
-        container.register(SbomFormatterRegistry).inSingletonScope();
-        container.register(SbomService).inSingletonScope();
-    }
+  name: "Api/SbomFeature",
+  register(container) {
+    container.register(CycloneDxFormatter);
+    container.register(SpdxFormatter);
+    container.register(SbomFormatterRegistry).inSingletonScope();
+    container.register(SbomService).inSingletonScope();
+  }
 });
 ```
 
 **index.ts:**
+
 ```typescript
 export { SbomService } from "./abstractions/SbomService.js";
 export { SbomFormatterRegistry } from "./abstractions/SbomFormatterRegistry.js";

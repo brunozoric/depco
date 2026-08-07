@@ -7,10 +7,10 @@ import { JobWorkerProvider } from "../abstractions/JobWorkerProvider.js";
 import { PackageManagerDriverRegistry } from "../packageManagers/abstractions/PackageManagerDriverRegistry.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
-import { EventBus } from "../abstractions/EventBus.js";
+import { EventBus } from "../EventBus/index.js";
 import { appSettings, scanResults } from "#api/db/schema.js";
 
-declare module "../abstractions/EventBus.js" {
+declare module "../EventBus/index.js" {
     interface IEventMap {
         "scan:completed": [projectId: string];
     }

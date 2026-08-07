@@ -13,7 +13,7 @@ import { createContainer } from "#shared/index.js";
 import { ApiFeature } from "./feature.js";
 import { JobWorker } from "./services/abstractions/JobWorker.js";
 import { ScanSchedulerService } from "./services/abstractions/ScanSchedulerService.js";
-import { EventBus } from "./services/abstractions/EventBus.js";
+import { EventBus } from "./services/EventBus/index.js";
 import { VulnerabilityService } from "./services/abstractions/VulnerabilityService.js";
 import { AutoFixSettingsService } from "./services/abstractions/AutoFixSettingsService.js";
 import { AuthService } from "./services/abstractions/AuthService.js";

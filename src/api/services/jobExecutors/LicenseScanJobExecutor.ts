@@ -6,11 +6,11 @@ import { LicenseCheckerService } from "../abstractions/LicenseCheckerService.js"
 import { LicensePolicyService } from "../abstractions/LicensePolicyService.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
-import { EventBus } from "../abstractions/EventBus.js";
+import { EventBus } from "../EventBus/index.js";
 import { licenses, licenseSnapshots } from "#api/db/schema.js";
 import { classifyLicenseRiskTier } from "#shared/licenses/types.js";
 
-declare module "../abstractions/EventBus.js" {
+declare module "../EventBus/index.js" {
     interface IEventMap {
         "license-scan:completed": [projectId: string];
     }
