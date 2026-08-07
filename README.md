@@ -33,12 +33,23 @@ yarn install
 cp .env.example .env
 # Generate a key: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
+# Build and create the first admin user
+yarn build
+depco init
+
+# Start the app
 yarn dev
 ```
 
-Opens at `http://localhost:5173` with API on port 3001.
+Opens at `http://localhost:5173` with API on port 3001. Login with the credentials you created during `depco init`.
 
-## Commands
+## CLI Commands
+
+| Command      | Description                                                                                                                                                   |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `depco init` | Create the first admin user. Prompts for email, display name, and password. Creates the database and runs migrations if needed. Exits if users already exist. |
+
+## Development Commands
 
 | Command             | Description                                        |
 | ------------------- | -------------------------------------------------- |
