@@ -3,7 +3,7 @@ import { join } from "path";
 import { PackageManagerService as Abstraction } from "./abstractions/PackageManagerService.js";
 import { CommandRunner } from "./CommandRunner/index.js";
 import { PackageManagerDriverRegistry } from "./packageManagers/abstractions/PackageManagerDriverRegistry.js";
-import { AuditParserService } from "./abstractions/AuditParserService.js";
+import { AuditParserService } from "./Vulnerability/index.js";
 
 class PackageManagerServiceImpl implements Abstraction.Interface {
     public constructor(

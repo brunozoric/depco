@@ -30,11 +30,9 @@ import { VulnerabilityScanJobExecutor } from "./services/jobExecutors/Vulnerabil
 import { LicenseScanJobExecutor } from "./services/jobExecutors/LicenseScanJobExecutor.js";
 import { GraphRefreshJobExecutor } from "./services/jobExecutors/GraphRefreshJobExecutor.js";
 import { PackageManagerService } from "./services/PackageManagerService.js";
-import { AuditParserService } from "./services/AuditParserService.js";
-import { OsvCacheService } from "./services/OsvCacheService.js";
-import { VulnerabilityService } from "./services/VulnerabilityService.js";
-import { LicenseCheckerService } from "./services/LicenseCheckerService.js";
-import { LicensePolicyService } from "./services/LicensePolicyService.js";
+import { VulnerabilityFeature } from "./services/Vulnerability/index.js";
+import { LicenseFeature } from "./services/License/index.js";
+
 import { PackageManagerDriverFeature } from "./services/packageManagers/feature.js";
 import { JobExecutorRegistry } from "./services/jobExecutors/JobExecutorRegistry.js";
 import { JobWorker } from "./services/JobWorker.js";
@@ -107,11 +105,8 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
         container.register(ChangelogService).inSingletonScope();
         GitFeature.register(container);
         PackageManagerDriverFeature.register(container);
-        container.register(AuditParserService).inSingletonScope();
-        container.register(OsvCacheService).inSingletonScope();
-        container.register(VulnerabilityService).inSingletonScope();
-        container.register(LicenseCheckerService).inSingletonScope();
-        container.register(LicensePolicyService).inSingletonScope();
+        VulnerabilityFeature.register(container);
+        LicenseFeature.register(container);
         container.register(PackageManagerService).inSingletonScope();
         container.register(JobExecutorRegistry).inSingletonScope();
         container.register(JobWorker).inSingletonScope();

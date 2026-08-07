@@ -16,15 +16,15 @@ import {
     getExpiredSnoozesRoute
 } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { VulnerabilityService } from "#api/services/abstractions/VulnerabilityService.js";
+import { VulnerabilityService } from "#api/services/Vulnerability/index.js";
 import type {
     IVulnerabilityFilters,
     IEnrichedVulnerability,
     IEnrichAndSortOptions,
     TVulnerabilitySource
-} from "#api/services/abstractions/VulnerabilityService.js";
-import { OsvCacheService } from "#api/services/abstractions/OsvCacheService.js";
-import type { IOsvInvalidateOptions } from "#api/services/abstractions/OsvCacheService.js";
+} from "#api/services/Vulnerability/index.js";
+import { OsvCacheService } from "#api/services/Vulnerability/index.js";
+import type { IOsvInvalidateOptions } from "#api/services/Vulnerability/index.js";
 import type { VulnerabilitySeverity } from "#shared/vulnerabilities/types.js";
 import { projects, teamProjects } from "#api/db/schema.js";
 

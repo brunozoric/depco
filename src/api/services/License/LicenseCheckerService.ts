@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { LicenseCheckerService as Abstraction } from "./abstractions/LicenseCheckerService.js";
-import { RegistryCacheService } from "./RegistryCache/index.js";
+import { RegistryCacheService } from "../RegistryCache/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { scanResults } from "#api/db/schema.js";
 

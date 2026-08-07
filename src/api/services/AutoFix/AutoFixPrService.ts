@@ -2,7 +2,7 @@ import { and, eq, or } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import { AutoFixPrService as Abstraction } from "./abstractions/AutoFixPrService.js";
 import { AutoFixSettingsService } from "./abstractions/AutoFixSettingsService.js";
-import { LicensePolicyService } from "../abstractions/LicensePolicyService.js";
+import { LicensePolicyService } from "../License/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { scanResults, autoFixPullRequests, licenses } from "#api/db/schema.js";
 

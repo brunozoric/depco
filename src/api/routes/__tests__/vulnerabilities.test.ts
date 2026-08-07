@@ -12,7 +12,7 @@ import { UserService as UserServiceRegistration } from "#api/services/UserServic
 import { AuthService as AuthServiceRegistration } from "#api/services/AuthService.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
 import { CommandRunner } from "#api/services/CommandRunner/index.js";
-import { VulnerabilityService } from "#api/services/abstractions/VulnerabilityService.js";
+import { VulnerabilityService } from "#api/services/Vulnerability/index.js";
 import type {
     IVulnerability,
     IVulnerabilityDetail,
@@ -20,13 +20,13 @@ import type {
     IVulnerabilitySummary,
     IEnrichedVulnerability,
     IEnrichAndSortOptions
-} from "#api/services/abstractions/VulnerabilityService.js";
-import { OsvCacheService } from "#api/services/abstractions/OsvCacheService.js";
-import type { IOsvEnrichedDetail } from "#api/services/abstractions/OsvCacheService.js";
-import { VulnerabilityService as VulnerabilityServiceImpl } from "#api/services/VulnerabilityService.js";
+} from "#api/services/Vulnerability/index.js";
+import { OsvCacheService } from "#api/services/Vulnerability/index.js";
+import type { IOsvEnrichedDetail } from "#api/services/Vulnerability/index.js";
+import { VulnerabilityService as VulnerabilityServiceImpl } from "#api/services/Vulnerability/VulnerabilityService.js";
 import { PackageManagerService as PackageManagerServiceImpl } from "#api/services/PackageManagerService.js";
-import { AuditParserService as AuditParserServiceImpl } from "#api/services/AuditParserService.js";
-import { OsvCacheService as OsvCacheServiceImpl } from "#api/services/OsvCacheService.js";
+import { AuditParserService as AuditParserServiceImpl } from "#api/services/Vulnerability/AuditParserService.js";
+import { OsvCacheService as OsvCacheServiceImpl } from "#api/services/Vulnerability/OsvCacheService.js";
 import { PackageManagerDriverRegistry as PackageManagerDriverRegistryImpl } from "#api/services/packageManagers/PackageManagerDriverRegistry.js";
 import { projects, vulnerabilities, teams, teamProjects } from "#api/db/schema.js";
 import { vulnerabilityRoutes } from "../vulnerabilities.js";

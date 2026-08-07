@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { generateId } from "@webiny/stdlib";
 import { licensePolicyRules, licenses, projects } from "#api/db/schema.js";
 import type { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import type { LicensePolicyService } from "#api/services/abstractions/LicensePolicyService.js";
+import type { LicensePolicyService } from "#api/services/License/index.js";
 import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
 
 async function createService(databaseClient: DatabaseClient.Interface) {
