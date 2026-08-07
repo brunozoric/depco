@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { PrResolver } from "../PrResolver.js";
 import { StepResolver } from "../abstractions/StepResolver.js";
-import { ForgeService } from "../../abstractions/ForgeService.js";
-import { GitService } from "../../abstractions/GitService.js";
+import { ForgeService } from "../../Git/index.js";
+import { GitService } from "../../Git/index.js";
 import type { IStepContext, IStepState } from "../abstractions/StepResolver.js";
 
 function createMockForgeService(): ForgeService.Interface {

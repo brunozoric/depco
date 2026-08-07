@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { ForgeService } from "../abstractions/ForgeService.js";
 import { ForgeService as ForgeServiceRegistration } from "../ForgeService.js";
-import { CommandRunner } from "../CommandRunner/index.js";
+import { CommandRunner } from "../../CommandRunner/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
 import { registerEncryption } from "#testing/helpers/registerEncryption.js";

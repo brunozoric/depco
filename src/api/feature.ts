@@ -41,8 +41,7 @@ import { JobWorker } from "./services/JobWorker.js";
 import { JobWorker as JobWorkerAbstraction } from "./services/abstractions/JobWorker.js";
 import { JobWorkerProvider } from "./services/abstractions/JobWorkerProvider.js";
 import { WebSocketBroadcaster } from "./websocket/WebSocketBroadcaster.js";
-import { GitService } from "./services/GitService.js";
-import { ForgeService } from "./services/ForgeService.js";
+import { GitFeature } from "./services/Git/index.js";
 import { UpgradeSessionService } from "./services/UpgradeSessionService.js";
 import { UpgradeSessionStepResolverRegistry } from "./services/stepResolvers/StepResolverRegistry.js";
 import { SelectPackagesResolver } from "./services/stepResolvers/SelectPackagesResolver.js";
@@ -59,8 +58,8 @@ import { EventBusFeature } from "./services/EventBus/index.js";
 import { StepHookFeature } from "./services/StepHook/index.js";
 import { FileConfigFeature } from "./services/FileConfig/index.js";
 import { PackageJsonFeature } from "./services/PackageJson/index.js";
-import { AutoFixSettingsService } from "./services/AutoFixSettingsService.js";
-import { AutoFixPrService } from "./services/AutoFixPrService.js";
+import { AutoFixFeature } from "./services/AutoFix/index.js";
+
 import { LockfileParserService } from "./services/LockfileParserService.js";
 import { DependencyGraphService } from "./services/DependencyGraphService.js";
 import { SbomService } from "./services/SbomService.js";
@@ -106,7 +105,7 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
         container.register(LicenseScanJobExecutor);
         container.register(GraphRefreshJobExecutor);
         container.register(ChangelogService).inSingletonScope();
-        container.register(GitService).inSingletonScope();
+        GitFeature.register(container);
         PackageManagerDriverFeature.register(container);
         container.register(AuditParserService).inSingletonScope();
         container.register(OsvCacheService).inSingletonScope();
@@ -130,7 +129,7 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
         container.register(WebSocketBroadcaster).inSingletonScope();
         AppLogFeature.register(container);
         ErrorReporterFeature.register(container);
-        container.register(ForgeService).inSingletonScope();
+        // ForgeService registered via GitFeature
         container.register(SbomService).inSingletonScope();
         DependencyChangeFeature.register(container);
         ScanSchedulerFeature.register(container);
@@ -150,8 +149,7 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
         FileConfigFeature.register(container);
         PackageJsonFeature.register(container);
         StepHookFeature.register(container);
-        container.register(AutoFixSettingsService).inSingletonScope();
-        container.register(AutoFixPrService).inSingletonScope();
+        AutoFixFeature.register(container);
         container.register(LockfileParserService).inSingletonScope();
         container.register(DependencyGraphService).inSingletonScope();
 

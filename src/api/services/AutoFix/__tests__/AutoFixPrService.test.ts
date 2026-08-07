@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { eq } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import type { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import type { AutoFixPrService } from "#api/services/abstractions/AutoFixPrService.js";
+import type { AutoFixPrService } from "#api/services/AutoFix/index.js";
 import {
     projects,
     scanResults,

@@ -38,11 +38,11 @@ import { DependencyGraphService as DependencyGraphServiceReg } from "../../servi
 import { DependencyChangeService as DependencyChangeServiceReg } from "../../services/DependencyChange/DependencyChangeService.js";
 import { WebSocketBroadcaster as WebSocketBroadcasterReg } from "#api/websocket/WebSocketBroadcaster.js";
 import { FileConfigService as FileConfigServiceReg } from "../../services/FileConfig/FileConfigService.js";
-import { GitService as GitServiceReg } from "../../services/GitService.js";
+import { GitService as GitServiceReg } from "../../services/Git/GitService.js";
 import { registerEncryption } from "#testing/helpers/registerEncryption.js";
-import { ForgeService as ForgeServiceReg } from "../../services/ForgeService.js";
-import { AutoFixSettingsService as AutoFixSettingsServiceReg } from "../../services/AutoFixSettingsService.js";
-import { AutoFixPrService as AutoFixPrServiceReg } from "../../services/AutoFixPrService.js";
+import { ForgeService as ForgeServiceReg } from "../../services/Git/ForgeService.js";
+import { AutoFixSettingsService as AutoFixSettingsServiceReg } from "../../services/AutoFix/AutoFixSettingsService.js";
+import { AutoFixPrService as AutoFixPrServiceReg } from "../../services/AutoFix/AutoFixPrService.js";
 import { GitHubReleasesResolver } from "../../services/changelogResolvers/GitHubReleasesResolver.js";
 import { ChangelogFileResolver } from "../../services/changelogResolvers/ChangelogFileResolver.js";
 import { NpmReadmeResolver } from "../../services/changelogResolvers/NpmReadmeResolver.js";

@@ -3,7 +3,7 @@ import type { Container } from "@webiny/di";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { getAutoFixSettingsRoute, updateAutoFixSettingsRoute } from "#shared/routes/index.js";
-import { AutoFixSettingsService } from "#api/services/abstractions/AutoFixSettingsService.js";
+import { AutoFixSettingsService } from "#api/services/AutoFix/index.js";
 
 interface PluginOptions extends FastifyPluginOptions {
     container: Container;

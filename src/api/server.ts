@@ -15,7 +15,7 @@ import { JobWorker } from "./services/abstractions/JobWorker.js";
 import { ScanSchedulerService } from "./services/ScanScheduler/index.js";
 import { EventBus } from "./services/EventBus/index.js";
 import { VulnerabilityService } from "./services/abstractions/VulnerabilityService.js";
-import { AutoFixSettingsService } from "./services/abstractions/AutoFixSettingsService.js";
+import { AutoFixSettingsService } from "./services/AutoFix/index.js";
 import { AuthService } from "./services/abstractions/AuthService.js";
 import { WebSocketBroadcaster } from "./websocket/abstractions/WebSocketBroadcaster.js";
 import { createAuthHook } from "./middleware/authHook.js";

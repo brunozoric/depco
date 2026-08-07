@@ -1,8 +1,8 @@
 import type { IStepExecuteParams, IStepResult } from "./abstractions/StepResolver.js";
 import { StepResolver as StepResolverAbstraction } from "./abstractions/StepResolver.js";
 import { getNextStep } from "./abstractions/StepResolver.js";
-import { ForgeService } from "../abstractions/ForgeService.js";
-import { GitService } from "../abstractions/GitService.js";
+import { ForgeService } from "../Git/index.js";
+import { GitService } from "../Git/index.js";
 
 class PrResolverImpl implements StepResolverAbstraction.Interface {
     public readonly type = "create-pr";

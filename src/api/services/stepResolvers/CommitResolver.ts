@@ -1,7 +1,7 @@
 import type { IStepExecuteParams, IStepResult } from "./abstractions/StepResolver.js";
 import { StepResolver as StepResolverAbstraction } from "./abstractions/StepResolver.js";
 import { getNextStep } from "./abstractions/StepResolver.js";
-import { GitService } from "../abstractions/GitService.js";
+import { GitService } from "../Git/index.js";
 
 class CommitResolverImpl implements StepResolverAbstraction.Interface {
     public readonly type = "commit";

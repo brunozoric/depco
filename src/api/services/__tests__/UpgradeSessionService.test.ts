@@ -15,7 +15,7 @@ import { RefreshTransientResolver } from "../stepResolvers/RefreshTransientResol
 import { CommitResolver } from "../stepResolvers/CommitResolver.js";
 import { StepHookService } from "../StepHook/index.js";
 import { CommandRunner } from "../CommandRunner/index.js";
-import { GitService } from "../abstractions/GitService.js";
+import { GitService } from "../Git/index.js";
 import { UpgradeService } from "../Upgrade/index.js";
 
 function createMockGitService(): GitService.Interface {
