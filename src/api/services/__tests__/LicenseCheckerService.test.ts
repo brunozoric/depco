@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import type { RegistryCacheService } from "#api/services/abstractions/RegistryCacheService.js";
+import type { RegistryCacheService } from "#api/services/RegistryCache/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
 import { scanResults, projects } from "#api/db/schema.js";
@@ -48,7 +48,7 @@ async function createService(registryCache: RegistryCacheService.Interface, db: 
     const { LicenseCheckerService } = await import("#api/services/LicenseCheckerService.js");
     const container = (await import("#shared/index.js")).createContainer();
     container.registerInstance(
-        (await import("#api/services/abstractions/RegistryCacheService.js")).RegistryCacheService,
+        (await import("#api/services/RegistryCache/index.js")).RegistryCacheService,
         registryCache
     );
     container.registerInstance(DatabaseClient, { db });

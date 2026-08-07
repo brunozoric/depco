@@ -36,7 +36,7 @@ import { DependencyGraphService as DependencyGraphServiceRegistration } from "..
 import { DependencyChangeService as DependencyChangeServiceRegistration } from "../DependencyChangeService.js";
 import { FileConfigService as FileConfigServiceRegistration } from "../FileConfigService.js";
 import { ErrorReporter } from "../ErrorReporter/index.js";
-import { ScanSchedulerService } from "../abstractions/ScanSchedulerService.js";
+import { ScanSchedulerService } from "../ScanScheduler/index.js";
 import { EventBus } from "../EventBus/EventBus.js";
 import { GitService as GitServiceRegistration } from "../GitService.js";
 import { registerEncryption } from "#testing/helpers/registerEncryption.js";

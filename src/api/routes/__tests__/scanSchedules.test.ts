@@ -6,7 +6,7 @@ import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { ScanSchedulerService } from "#api/services/abstractions/ScanSchedulerService.js";
+import { ScanSchedulerService } from "#api/services/ScanScheduler/index.js";
 import { EmailService } from "#api/services/Email/index.js";
 import { UserService as UserServiceRegistration } from "#api/services/UserService.js";
 import { AuthService as AuthServiceRegistration } from "#api/services/AuthService.js";

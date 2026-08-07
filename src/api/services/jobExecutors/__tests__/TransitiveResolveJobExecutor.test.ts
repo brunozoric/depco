@@ -5,7 +5,7 @@ import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
-import { RegistryCacheService } from "../../abstractions/RegistryCacheService.js";
+import { RegistryCacheService } from "../../RegistryCache/index.js";
 import { projects, scanResults } from "#api/db/schema.js";
 import { TransitiveResolveJobExecutor } from "../abstractions/TransitiveResolveJobExecutor.js";
 import { TransitiveResolveJobExecutor as TransitiveResolveJobExecutorRegistration } from "../TransitiveResolveJobExecutor.js";

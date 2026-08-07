@@ -11,7 +11,7 @@ import { UserService as UserServiceRegistration } from "../../services/UserServi
 import { AuthService as AuthServiceRegistration } from "../../services/AuthService.js";
 import { createAuthHook } from "../../middleware/authHook.js";
 import { FileConfigService } from "../../services/FileConfig/index.js";
-import { RegistryCacheService as RegistryCacheServiceReg } from "../../services/RegistryCacheService.js";
+import { RegistryCacheService as RegistryCacheServiceReg } from "../../services/RegistryCache/RegistryCacheService.js";
 import { ChangelogService as ChangelogServiceReg } from "../../services/ChangelogService.js";
 import { GitHubReleasesResolver } from "../../services/changelogResolvers/GitHubReleasesResolver.js";
 import { ChangelogFileResolver } from "../../services/changelogResolvers/ChangelogFileResolver.js";

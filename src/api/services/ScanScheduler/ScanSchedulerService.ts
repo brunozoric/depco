@@ -3,11 +3,11 @@ import Bree from "bree";
 import { eq } from "drizzle-orm";
 import { ScanSchedulerService as Abstraction } from "./abstractions/ScanSchedulerService.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { EventBus } from "./EventBus/index.js";
+import { EventBus } from "../EventBus/index.js";
 import { projects, scanSchedules, appSettings } from "#api/db/schema.js";
 import { INTERVAL_MS, type ScanInterval } from "#shared/schedules/types.js";
 
-declare module "./EventBus/index.js" {
+declare module "../EventBus/index.js" {
     interface IEventMap {
         "scan:completed": [projectId: string];
         "scan:scheduled": [projectId: string];

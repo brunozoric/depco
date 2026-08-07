@@ -1,6 +1,6 @@
 import type { JobExecutor } from "./abstractions/JobExecutor.js";
 import { TransientJobExecutor as Abstraction } from "./abstractions/TransientJobExecutor.js";
-import { UpgradeService } from "../abstractions/UpgradeService.js";
+import { UpgradeService } from "../Upgrade/index.js";
 
 const VALID_PACKAGE_NAME = /^(@[a-z0-9._~-]+\/)?[a-z0-9._~-]+$/i;
 

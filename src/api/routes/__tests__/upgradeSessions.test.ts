@@ -20,7 +20,7 @@ import { UpgradeResolver } from "#api/services/stepResolvers/UpgradeResolver.js"
 import { RefreshTransientResolver } from "#api/services/stepResolvers/RefreshTransientResolver.js";
 import { CommitResolver } from "#api/services/stepResolvers/CommitResolver.js";
 import { GitService } from "#api/services/abstractions/GitService.js";
-import { UpgradeService } from "#api/services/abstractions/UpgradeService.js";
+import { UpgradeService } from "#api/services/Upgrade/index.js";
 import { StepHookService } from "#api/services/StepHook/index.js";
 import { CommandRunner } from "#api/services/CommandRunner/index.js";
 import { upgradeSessionRoutes } from "../upgradeSessions.js";

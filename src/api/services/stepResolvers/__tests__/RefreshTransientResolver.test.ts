@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { RefreshTransientResolver } from "../RefreshTransientResolver.js";
 import { createDefaultSteps, StepResolver, STEP_ORDER } from "../abstractions/StepResolver.js";
-import { UpgradeService } from "../../abstractions/UpgradeService.js";
+import { UpgradeService } from "../../Upgrade/index.js";
 
 function createResolver(overrides: Partial<UpgradeService.Interface> = {}): StepResolver.Interface {
     const upgradeService: UpgradeService.Interface = {

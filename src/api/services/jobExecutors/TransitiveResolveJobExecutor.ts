@@ -1,7 +1,7 @@
 import { eq, and } from "drizzle-orm";
 import type { JobExecutor } from "./abstractions/JobExecutor.js";
 import { TransitiveResolveJobExecutor as Abstraction } from "./abstractions/TransitiveResolveJobExecutor.js";
-import { RegistryCacheService } from "../abstractions/RegistryCacheService.js";
+import { RegistryCacheService } from "../RegistryCache/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { scanResults } from "#api/db/schema.js";

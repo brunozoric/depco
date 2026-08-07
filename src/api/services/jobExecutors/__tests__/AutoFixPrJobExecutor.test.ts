@@ -7,7 +7,7 @@ import type { JobExecutor } from "../abstractions/JobExecutor.js";
 import { AutoFixPrService } from "../../abstractions/AutoFixPrService.js";
 import { GitService } from "../../abstractions/GitService.js";
 import { ForgeService } from "../../abstractions/ForgeService.js";
-import { UpgradeService } from "../../abstractions/UpgradeService.js";
+import { UpgradeService } from "../../Upgrade/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";

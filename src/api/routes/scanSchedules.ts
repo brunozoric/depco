@@ -12,7 +12,7 @@ import {
     upsertScanScheduleDefaultRoute
 } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { ScanSchedulerService } from "#api/services/abstractions/ScanSchedulerService.js";
+import { ScanSchedulerService } from "#api/services/ScanScheduler/index.js";
 import { projects, scanSchedules, appSettings } from "#api/db/schema.js";
 
 const SCAN_SCHEDULE_DEFAULT_KEY = "scan_schedule_default";

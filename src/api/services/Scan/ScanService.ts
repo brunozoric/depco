@@ -2,10 +2,10 @@ import { readFile, readdir } from "fs/promises";
 import { join } from "path";
 import semver from "semver";
 import { ScanService as Abstraction } from "./abstractions/ScanService.js";
-import { CommandRunner } from "./CommandRunner/index.js";
-import { RegistryCacheService } from "./abstractions/RegistryCacheService.js";
-import { LockfileParserService } from "./abstractions/LockfileParserService.js";
-import { PackageManagerDriverRegistry } from "./packageManagers/abstractions/PackageManagerDriverRegistry.js";
+import { CommandRunner } from "../CommandRunner/index.js";
+import { RegistryCacheService } from "../RegistryCache/index.js";
+import { LockfileParserService } from "../abstractions/LockfileParserService.js";
+import { PackageManagerDriverRegistry } from "../packageManagers/abstractions/PackageManagerDriverRegistry.js";
 import { classifyUpgrade } from "#shared/versions/types.js";
 
 interface IWorkspaceEntry {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { NpmReadmeResolver } from "../NpmReadmeResolver.js";
-import type { RegistryCacheService } from "../../abstractions/RegistryCacheService.js";
+import type { RegistryCacheService } from "../../RegistryCache/index.js";
 
 function createRegistryCacheService(readme: string | null): RegistryCacheService.Interface {
     return {

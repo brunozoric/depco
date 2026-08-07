@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { JobExecutor } from "./abstractions/JobExecutor.js";
 import { DependencyJobExecutor as Abstraction } from "./abstractions/DependencyJobExecutor.js";
-import { UpgradeService } from "../abstractions/UpgradeService.js";
+import { UpgradeService } from "../Upgrade/index.js";
 
 const dependencyPackagesSchema = z.array(
     z.object({

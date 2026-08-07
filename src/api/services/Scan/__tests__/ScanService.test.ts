@@ -4,11 +4,11 @@ import { join } from "path";
 import { tmpdir } from "os";
 import { createContainer } from "#shared/index.js";
 import { CommandRunner } from "../CommandRunner/index.js";
-import { RegistryCacheService } from "../abstractions/RegistryCacheService.js";
-import { LockfileParserService } from "../abstractions/LockfileParserService.js";
+import { RegistryCacheService } from "../RegistryCache/index.js";
+import { LockfileParserService } from "../../abstractions/LockfileParserService.js";
 import { ScanService } from "../abstractions/ScanService.js";
 import { ScanService as ScanServiceRegistration } from "../ScanService.js";
-import { PackageManagerDriverRegistry as RegistryRegistration } from "../packageManagers/PackageManagerDriverRegistry.js";
+import { PackageManagerDriverRegistry as RegistryRegistration } from "../../packageManagers/PackageManagerDriverRegistry.js";
 
 const REGISTRY_DATA: Record<string, RegistryCacheService.PackageInfo> = {
     react: {

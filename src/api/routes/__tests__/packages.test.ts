@@ -20,7 +20,7 @@ import {
     teamProjects
 } from "#api/db/schema.js";
 import { packagesRoutes } from "../packages.js";
-import { RegistryCacheService } from "../../services/abstractions/RegistryCacheService.js";
+import { RegistryCacheService } from "../../services/RegistryCache/index.js";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 

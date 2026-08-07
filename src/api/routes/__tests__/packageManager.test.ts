@@ -21,7 +21,7 @@ import { AuthService as AuthServiceRegistration } from "#api/services/AuthServic
 import { createAuthHook } from "#api/middleware/authHook.js";
 import { CommandRunner } from "../../services/CommandRunner/index.js";
 import { SecurityService as SecurityServiceReg } from "../../services/Security/SecurityService.js";
-import { UpgradeService as UpgradeServiceReg } from "../../services/UpgradeService.js";
+import { UpgradeService as UpgradeServiceReg } from "../../services/Upgrade/UpgradeService.js";
 import { PackageManagerService as PackageManagerServiceReg } from "../../services/PackageManagerService.js";
 import { AuditParserService as AuditParserServiceReg } from "../../services/AuditParserService.js";
 import { OsvCacheService as OsvCacheServiceReg } from "../../services/OsvCacheService.js";
@@ -29,8 +29,8 @@ import { VulnerabilityService as VulnerabilityServiceReg } from "../../services/
 import { LicenseCheckerService as LicenseCheckerServiceReg } from "../../services/LicenseCheckerService.js";
 import { LicensePolicyService as LicensePolicyServiceReg } from "../../services/LicensePolicyService.js";
 import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../services/packageManagers/PackageManagerDriverRegistry.js";
-import { ScanService as ScanServiceReg } from "../../services/ScanService.js";
-import { RegistryCacheService as RegistryCacheServiceReg } from "../../services/RegistryCacheService.js";
+import { ScanService as ScanServiceReg } from "../../services/Scan/ScanService.js";
+import { RegistryCacheService as RegistryCacheServiceReg } from "../../services/RegistryCache/RegistryCacheService.js";
 import { WebSocketBroadcaster as WebSocketBroadcasterReg } from "#api/websocket/WebSocketBroadcaster.js";
 import { JobWorker } from "../../services/abstractions/JobWorker.js";
 import { JobWorker as JobWorkerReg } from "../../services/JobWorker.js";
@@ -38,7 +38,7 @@ import { JobWorkerProvider } from "../../services/abstractions/JobWorkerProvider
 import { JobExecutorRegistry as JobExecutorRegistryReg } from "../../services/jobExecutors/JobExecutorRegistry.js";
 import { LockfileParserService as LockfileParserServiceReg } from "../../services/LockfileParserService.js";
 import { DependencyGraphService as DependencyGraphServiceReg } from "../../services/DependencyGraphService.js";
-import { DependencyChangeService as DependencyChangeServiceReg } from "../../services/DependencyChangeService.js";
+import { DependencyChangeService as DependencyChangeServiceReg } from "../../services/DependencyChange/DependencyChangeService.js";
 import { FileConfigService as FileConfigServiceReg } from "../../services/FileConfig/FileConfigService.js";
 import { GitService as GitServiceReg } from "../../services/GitService.js";
 import { registerEncryption } from "#testing/helpers/registerEncryption.js";
@@ -62,7 +62,7 @@ import { VulnerabilityScanJobExecutor as VulnerabilityScanJobExecutorReg } from 
 import { LicenseScanJobExecutor as LicenseScanJobExecutorReg } from "../../services/jobExecutors/LicenseScanJobExecutor.js";
 import { GraphRefreshJobExecutor as GraphRefreshJobExecutorReg } from "../../services/jobExecutors/GraphRefreshJobExecutor.js";
 import { ErrorReporter } from "../../services/ErrorReporter/index.js";
-import { ScanSchedulerService } from "../../services/abstractions/ScanSchedulerService.js";
+import { ScanSchedulerService } from "../../services/ScanScheduler/index.js";
 import { EventBus } from "../../services/EventBus/EventBus.js";
 import { packageManagerRoutes } from "../packageManager.js";
 import { projects } from "#api/db/schema.js";

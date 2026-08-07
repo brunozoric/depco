@@ -6,7 +6,7 @@ import { registerRoute, sendOne } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { listPackagesRoute, rescanPackageRoute } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { RegistryCacheService } from "../services/abstractions/RegistryCacheService.js";
+import { RegistryCacheService } from "../services/RegistryCache/index.js";
 import { scanResults } from "#api/db/schema.js";
 
 interface PluginOptions extends FastifyPluginOptions {

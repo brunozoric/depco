@@ -4,7 +4,7 @@ import { AutoFixPrJobExecutor as Abstraction } from "./abstractions/AutoFixPrJob
 import { AutoFixPrService } from "../abstractions/AutoFixPrService.js";
 import { GitService } from "../abstractions/GitService.js";
 import { ForgeService } from "../abstractions/ForgeService.js";
-import { UpgradeService } from "../abstractions/UpgradeService.js";
+import { UpgradeService } from "../Upgrade/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { autoFixPullRequests } from "#api/db/schema.js";
