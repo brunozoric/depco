@@ -22,3 +22,5 @@ export { autoFixPrRoutes } from "./autoFixPrs.js";
 export { dependencyGraphRoutes } from "./dependencyGraph.js";
 export { sbomRoutes } from "./sbom.js";
 export { teamsRoutes } from "./teams.js";
+export { userRoutes } from "./users.js";
+export { authRoutes } from "./auth.js";

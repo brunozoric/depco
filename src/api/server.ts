@@ -48,7 +48,9 @@ import {
     autoFixPrRoutes,
     dependencyGraphRoutes,
     sbomRoutes,
-    teamsRoutes
+    teamsRoutes,
+    userRoutes,
+    authRoutes
 } from "./routes/index.js";
 import { websocketRoutes } from "./websocket/WebSocketPlugin.js";
 
@@ -135,6 +137,8 @@ export async function createServer(): Promise<FastifyInstance> {
     await app.register(dependencyGraphRoutes, { container });
     await app.register(sbomRoutes, { container });
     await app.register(teamsRoutes, { container });
+    await app.register(userRoutes, { container });
+    await app.register(authRoutes, { container });
     await app.register(websocketRoutes, { container });
 
     // In production, serve the built UI as static files.
