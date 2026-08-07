@@ -144,12 +144,13 @@ class JobWorkerImpl implements Abstraction.Interface {
                 return;
             }
             logsDirty = false;
-            this.databaseClient.db
-                .update(upgradeJobs)
-                .set({ logs })
-                .where(eq(upgradeJobs.id, job.id))
-                .run()
-                .catch(() => {});
+            try {
+                this.databaseClient.db
+                    .update(upgradeJobs)
+                    .set({ logs })
+                    .where(eq(upgradeJobs.id, job.id))
+                    .run();
+            } catch {}
         };
         const logFlushTimer = setInterval(flushLogs, LOG_DB_FLUSH_INTERVAL_MS);
 
@@ -180,12 +181,13 @@ class JobWorkerImpl implements Abstraction.Interface {
                 now - lastProgressDbWriteAt >= PROGRESS_DB_WRITE_THROTTLE_MS
             ) {
                 lastProgressDbWriteAt = now;
-                this.databaseClient.db
-                    .update(upgradeJobs)
-                    .set({ progress: input.percent, progressLabel })
-                    .where(eq(upgradeJobs.id, job.id))
-                    .run()
-                    .catch(() => {});
+                try {
+                    this.databaseClient.db
+                        .update(upgradeJobs)
+                        .set({ progress: input.percent, progressLabel })
+                        .where(eq(upgradeJobs.id, job.id))
+                        .run();
+                } catch {}
             }
         };
 

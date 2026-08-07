@@ -1,12 +1,11 @@
 import { generateId } from "@webiny/stdlib";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { pmSecuritySettings } from "#api/db/schema.js";
 
 // Mirrors the Yarn defaults seeded by migration 0001_scan_results_pm_security.sql,
 // so tests can exercise the same config-driven security rules as production.
-export async function seedYarnSecuritySettings(db: LibSQLDatabase): Promise<void> {
-    await db
-        .insert(pmSecuritySettings)
+export function seedYarnSecuritySettings(db: BetterSQLite3Database): void {
+    db.insert(pmSecuritySettings)
         .values([
             {
                 id: generateId(),

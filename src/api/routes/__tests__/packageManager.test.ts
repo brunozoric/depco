@@ -4,7 +4,7 @@ import { join } from "path";
 import { tmpdir } from "os";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { ConsoleLoggerConfig, ConsoleLoggerFeature } from "@webiny/stdlib";
 import { DirectoryToolFeature, FileToolFeature, JsonFileToolFeature } from "@webiny/stdlib/node";
 import { createContainer } from "#shared/index.js";
@@ -65,7 +65,7 @@ import { projects } from "#api/db/schema.js";
 describe("package manager routes", () => {
     let app: FastifyInstance;
     let testDir: string;
-    let db: LibSQLDatabase;
+    let db: BetterSQLite3Database;
 
     beforeEach(async () => {
         testDir = join(

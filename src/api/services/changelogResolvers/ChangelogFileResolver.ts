@@ -1,7 +1,13 @@
+import { z } from "zod";
 import { ChangelogResolver as Abstraction } from "./abstractions/ChangelogResolver.js";
 import { CommandRunner } from "../abstractions/CommandRunner.js";
 import { extractOwnerRepo } from "./extractOwnerRepo.js";
 import { parseVersionSections } from "./parseVersionSections.js";
+
+const githubContentsSchema = z.object({
+    content: z.string().optional(),
+    encoding: z.string().optional()
+});
 
 const CHANGELOG_FILES = ["CHANGELOG.md", "CHANGES.md", "History.md"];
 
@@ -68,10 +74,7 @@ class ChangelogFileResolverImpl implements Abstraction.Interface {
                     continue;
                 }
 
-                const response = JSON.parse(result.stdout) as {
-                    content?: string;
-                    encoding?: string;
-                };
+                const response = githubContentsSchema.parse(JSON.parse(result.stdout));
                 if (response.content && response.encoding === "base64") {
                     const decoded = Buffer.from(response.content, "base64").toString("utf-8");
                     const found = parseVersionSections(decoded, versionSet);

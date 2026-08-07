@@ -1,5 +1,15 @@
 import spdxLicenseList from "spdx-license-list";
 
+function normalizeSpdxId(value: unknown): string | null {
+    if (!value) {
+        return null;
+    }
+    if (typeof value === "object") {
+        return normalizeSpdxId((value as { type?: string }).type);
+    }
+    return String(value).trim() || null;
+}
+
 export const RISK_TIER_VALUES = [
     "permissive",
     "weak-copyleft",
@@ -72,7 +82,9 @@ function classifySingle(spdxId: string): LicenseRiskTier {
     return "unknown";
 }
 
-export function classifyLicenseRiskTier(spdxId: string | null): LicenseRiskTier {
+export function classifyLicenseRiskTier(rawSpdxId: string | null | unknown): LicenseRiskTier {
+    const spdxId = normalizeSpdxId(rawSpdxId);
+
     if (!spdxId) {
         return "unknown";
     } else if (spdxId === "UNLICENSED") {
@@ -82,12 +94,6 @@ export function classifyLicenseRiskTier(spdxId: string | null): LicenseRiskTier 
     const direct = classifySingle(spdxId);
     if (direct !== "unknown") {
         return direct;
-    }
-    /**
-     * I have no idea how is this possible but few times I got an error that .replace() does not exist on spdxId.
-     */
-    if (!spdxId?.replace) {
-        throw new Error(`spdxId is of type: ${typeof spdxId}: ${spdxId}`);
     }
     const components = spdxId
         .replace(/[()]/g, "")

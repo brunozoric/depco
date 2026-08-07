@@ -104,9 +104,8 @@ class LicensePolicyServiceImpl implements Abstraction.Interface {
         );
         const now = Date.now();
 
-        await this.databaseClient.db.transaction(async tx => {
-            await tx
-                .delete(licenseViolations)
+        this.databaseClient.db.transaction(tx => {
+            tx.delete(licenseViolations)
                 .where(
                     and(
                         eq(licenseViolations.projectId, projectId),
@@ -119,8 +118,7 @@ class LicensePolicyServiceImpl implements Abstraction.Interface {
                 return;
             }
 
-            await tx
-                .insert(licenseViolations)
+            tx.insert(licenseViolations)
                 .values(
                     persistableViolations.map(violation => ({
                         id: generateId(),

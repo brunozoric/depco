@@ -1,13 +1,11 @@
-import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
+import Database from "better-sqlite3";
+import { drizzle } from "drizzle-orm/better-sqlite3";
 import type { DatabaseClient } from "./abstractions/DatabaseClient.js";
 
-export async function createDatabaseClient(dbPath: string): Promise<DatabaseClient.Interface> {
-    const client = createClient({ url: "file:" + dbPath });
-    await client.batch([
-        "PRAGMA journal_mode = WAL",
-        "PRAGMA busy_timeout = 5000",
-        "PRAGMA foreign_keys = ON"
-    ]);
-    return { db: drizzle(client) };
+export function createDatabaseClient(dbPath: string): DatabaseClient.Interface {
+    const sqlite = new Database(dbPath);
+    sqlite.pragma("journal_mode = WAL");
+    sqlite.pragma("busy_timeout = 5000");
+    sqlite.pragma("foreign_keys = ON");
+    return { db: drizzle(sqlite) };
 }

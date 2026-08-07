@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { writeFile, readFile, rm } from "node:fs/promises";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { ConsoleLoggerConfig, ConsoleLoggerFeature } from "@webiny/stdlib";
 import { DirectoryToolFeature, FileToolFeature, JsonFileToolFeature } from "@webiny/stdlib/node";
 import { generateId } from "@webiny/stdlib";
@@ -15,9 +15,8 @@ import { FileConfigService } from "#api/services/FileConfigService.js";
 import { pmSecuritySettings } from "#api/db/schema.js";
 import { settingsRoutes } from "../settings.js";
 
-async function seedPnpmSecuritySettings(db: LibSQLDatabase): Promise<void> {
-    await db
-        .insert(pmSecuritySettings)
+function seedPnpmSecuritySettings(db: BetterSQLite3Database): void {
+    db.insert(pmSecuritySettings)
         .values([
             {
                 id: generateId(),
@@ -41,10 +40,10 @@ async function seedPnpmSecuritySettings(db: LibSQLDatabase): Promise<void> {
 
 describe("settings routes", () => {
     let app: FastifyInstance;
-    let db: LibSQLDatabase;
+    let db: BetterSQLite3Database;
 
     beforeEach(async () => {
-        db = await createTestDb();
+        db = createTestDb();
         const container = createContainer();
         container.registerInstance(DatabaseClient, { db });
         container.registerInstance(ConsoleLoggerConfig, {

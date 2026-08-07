@@ -7,6 +7,8 @@ import type { PackageManagerDriver } from "./packageManagers/abstractions/Packag
 import { FileConfigService } from "./abstractions/FileConfigService.js";
 import { registryCache } from "#api/db/schema.js";
 
+import { parseLicense } from "./packageManagers/parseLicense.js";
+
 const TTL_MS = 30 * 60 * 1000;
 
 class RegistryCacheServiceImpl implements Abstraction.Interface {
@@ -54,7 +56,9 @@ class RegistryCacheServiceImpl implements Abstraction.Interface {
                 .get();
 
             if (cached && Date.now() - cached.cachedAt < TTL_MS) {
-                return JSON.parse(cached.data) as Abstraction.PackageInfo;
+                const info = JSON.parse(cached.data) as Abstraction.PackageInfo;
+                info.license = parseLicense(info.license);
+                return info;
             }
         }
 
@@ -98,7 +102,7 @@ class RegistryCacheServiceImpl implements Abstraction.Interface {
             repoUrl: parsed.repoUrl,
             repoDirectory: parsed.repoDirectory,
             readme: parsed.readme,
-            license: parsed.license
+            license: parseLicense(parsed.license)
         };
 
         await this.databaseClient.db

@@ -163,29 +163,31 @@ class DependencyGraphServiceImpl implements Abstraction.Interface {
         const parsedEdges = await this.lockfileParserService.parse(projectPath, packageManager);
         const now = Date.now();
 
-        await this.databaseClient.db.transaction(async tx => {
-            await tx.delete(dependencyEdges).where(eq(dependencyEdges.projectId, projectId)).run();
+        this.databaseClient.db.transaction(tx => {
+            tx.delete(dependencyEdges).where(eq(dependencyEdges.projectId, projectId)).run();
 
             if (parsedEdges.length === 0) {
                 return;
             }
 
-            await tx
-                .insert(dependencyEdges)
-                .values(
-                    parsedEdges.map(edge => ({
-                        id: generateId(),
-                        projectId,
-                        parentPackage: edge.parentPackage,
-                        parentVersion: edge.parentVersion,
-                        childPackage: edge.childPackage,
-                        childVersion: edge.childVersion,
-                        dependencyType: edge.dependencyType,
-                        depth: edge.depth,
-                        scannedAt: now
-                    }))
-                )
-                .run();
+            const rows = parsedEdges.map(edge => ({
+                id: generateId(),
+                projectId,
+                parentPackage: edge.parentPackage,
+                parentVersion: edge.parentVersion,
+                childPackage: edge.childPackage,
+                childVersion: edge.childVersion,
+                dependencyType: edge.dependencyType,
+                depth: edge.depth,
+                scannedAt: now
+            }));
+
+            const BATCH_SIZE = 100;
+            for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+                tx.insert(dependencyEdges)
+                    .values(rows.slice(i, i + BATCH_SIZE))
+                    .run();
+            }
         });
 
         return parsedEdges.length;

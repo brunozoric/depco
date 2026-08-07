@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { eq } from "drizzle-orm";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
 import {
     projects,
@@ -11,10 +11,10 @@ import {
 } from "../schema.js";
 
 describe("database schema", () => {
-    let db: LibSQLDatabase;
+    let db: BetterSQLite3Database;
 
-    beforeEach(async () => {
-        db = await createTestDb();
+    beforeEach(() => {
+        db = createTestDb();
     });
 
     it("inserts and retrieves a project", async () => {
@@ -98,12 +98,12 @@ describe("database schema", () => {
             .values({ id: "p1", name: "test", path: "/tmp/test", addedAt: Date.now() })
             .run();
 
-        await expect(
+        expect(() =>
             db
                 .insert(projects)
                 .values({ id: "p2", name: "test2", path: "/tmp/test", addedAt: Date.now() })
                 .run()
-        ).rejects.toThrow();
+        ).toThrow();
     });
 
     it("stores packageManager and pmVersion on projects", async () => {
@@ -243,7 +243,7 @@ describe("database schema", () => {
             })
             .run();
 
-        await expect(
+        expect(() =>
             db
                 .insert(pmSecuritySettings)
                 .values({
@@ -254,6 +254,6 @@ describe("database schema", () => {
                     expectedValue: "false"
                 })
                 .run()
-        ).rejects.toThrow();
+        ).toThrow();
     });
 });

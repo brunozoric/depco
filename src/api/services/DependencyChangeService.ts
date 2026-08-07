@@ -75,20 +75,22 @@ class DependencyChangeServiceImpl implements Abstraction.Interface {
         }
 
         if (changes.length > 0) {
-            await db
-                .insert(dependencyChanges)
-                .values(
-                    changes.map(change => ({
-                        id: generateId(),
-                        projectId,
-                        packageName: change.packageName,
-                        changeType: change.changeType,
-                        previousVersion: change.previousVersion,
-                        newVersion: change.newVersion,
-                        detectedAt: now
-                    }))
-                )
-                .run();
+            const rows = changes.map(change => ({
+                id: generateId(),
+                projectId,
+                packageName: change.packageName,
+                changeType: change.changeType,
+                previousVersion: change.previousVersion,
+                newVersion: change.newVersion,
+                detectedAt: now
+            }));
+
+            const BATCH_SIZE = 100;
+            for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+                db.insert(dependencyChanges)
+                    .values(rows.slice(i, i + BATCH_SIZE))
+                    .run();
+            }
         }
 
         return changes.length;

@@ -437,12 +437,11 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
 
         const uniqueTeamIds = [...new Set(teamIds)];
 
-        await db.transaction(async tx => {
-            await tx.delete(teamProjects).where(eq(teamProjects.projectId, id)).run();
+        db.transaction(tx => {
+            tx.delete(teamProjects).where(eq(teamProjects.projectId, id)).run();
 
             if (uniqueTeamIds.length > 0) {
-                await tx
-                    .insert(teamProjects)
+                tx.insert(teamProjects)
                     .values(
                         uniqueTeamIds.map(teamId => ({
                             id: generateId(),

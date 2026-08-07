@@ -1,8 +1,8 @@
 import { createAbstraction } from "#shared/index.js";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 
 export interface IDatabaseClient {
-    readonly db: LibSQLDatabase;
+    readonly db: BetterSQLite3Database;
 }
 
 export const DatabaseClient = createAbstraction<IDatabaseClient>("Api/DatabaseClient");

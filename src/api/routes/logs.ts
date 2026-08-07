@@ -67,7 +67,7 @@ export async function logsRoutes(app: FastifyInstance, options: PluginOptions): 
                 .select({ count: sql<number>`COUNT(*)` })
                 .from(appLogs)
                 .where(where)
-                .get() as Promise<ICountRow | undefined>
+                .get() as ICountRow | undefined
         ]);
 
         sendList(reply, items, countResult?.count ?? 0);

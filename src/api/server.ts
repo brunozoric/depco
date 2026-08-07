@@ -62,16 +62,16 @@ export async function createServer(): Promise<FastifyInstance> {
     }
 
     // Create the DI container and register all API services.
-    const databaseClient = await createDatabaseClient(DB_PATH);
+    const databaseClient = createDatabaseClient(DB_PATH);
     const container = createContainer();
     ApiFeature.register(container, { databaseClient });
 
     // Run pending Drizzle migrations before accepting traffic.
-    await runMigrations(databaseClient.db);
-    await seedSecurityDefaults(databaseClient.db);
-    await seedAppSettings(databaseClient.db);
+    runMigrations(databaseClient.db);
+    seedSecurityDefaults(databaseClient.db);
+    seedAppSettings(databaseClient.db);
 
-    const snoozeIntervalRow = await databaseClient.db
+    const snoozeIntervalRow = databaseClient.db
         .select({ value: appSettings.value })
         .from(appSettings)
         .where(eq(appSettings.key, "snooze_check_interval"))
@@ -86,7 +86,7 @@ export async function createServer(): Promise<FastifyInstance> {
     const scanScheduler = container.resolve(ScanSchedulerService);
     await scanScheduler.init();
 
-    const app = Fastify({ logger: true });
+    const app = Fastify({ logger: { level: "error" } });
     await app.register(fastifyCompress);
     await app.register(fastifyRateLimit, { max: 100, timeWindow: "1 minute" });
 

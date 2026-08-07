@@ -1,10 +1,9 @@
 import { generateId } from "@webiny/stdlib";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { pmSecuritySettings } from "#api/db/schema.js";
 
-export async function seedBunSecuritySettings(db: LibSQLDatabase): Promise<void> {
-    await db
-        .insert(pmSecuritySettings)
+export function seedBunSecuritySettings(db: BetterSQLite3Database): void {
+    db.insert(pmSecuritySettings)
         .values([
             {
                 id: generateId(),

@@ -1,14 +1,11 @@
+import { z } from "zod";
 import { and, eq, gt, inArray, lt, type SQL } from "drizzle-orm";
 import {
     OsvCacheService as Abstraction,
     mapCvssScoreToSeverity,
     osvCacheKey
 } from "./abstractions/OsvCacheService.js";
-import type {
-    IOsvAdvisory,
-    IOsvQueryInput,
-    IOsvReference
-} from "./abstractions/OsvCacheService.js";
+import type { IOsvAdvisory, IOsvQueryInput } from "./abstractions/OsvCacheService.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { osvCache } from "#api/db/schema.js";
 import type { VulnerabilitySeverity } from "#shared/vulnerabilities/types.js";
@@ -56,51 +53,69 @@ function getTtlMs(): number {
 // `GET /v1/vulns/:id`.
 // ---------------------------------------------------------------------------
 
-interface IOsvBatchVulnerabilityRef {
-    id: string;
-}
+const osvBatchResponseSchema = z.object({
+    results: z
+        .array(
+            z.object({
+                vulns: z
+                    .array(z.object({ id: z.string() }))
+                    .optional()
+                    .default([])
+            })
+        )
+        .optional()
+        .default([])
+});
 
-interface IOsvBatchQueryResult {
-    vulns?: IOsvBatchVulnerabilityRef[];
-}
+const osvReferenceSchema = z.object({
+    type: z.string().optional().default("WEB"),
+    url: z.string()
+});
 
-interface IOsvBatchResponse {
-    results?: IOsvBatchQueryResult[];
-}
+const osvVulnerabilityDetailSchema = z.object({
+    id: z.string(),
+    summary: z.string().optional(),
+    details: z.string().optional(),
+    severity: z
+        .array(z.object({ type: z.string(), score: z.string() }))
+        .optional()
+        .default([]),
+    aliases: z.array(z.string()).optional().default([]),
+    affected: z
+        .array(
+            z.object({
+                package: z.object({ name: z.string() }).optional(),
+                ranges: z
+                    .array(
+                        z.object({
+                            events: z
+                                .array(
+                                    z.object({
+                                        introduced: z.string().optional(),
+                                        fixed: z.string().optional(),
+                                        last_affected: z.string().optional()
+                                    })
+                                )
+                                .optional()
+                                .default([])
+                        })
+                    )
+                    .optional()
+                    .default([])
+            })
+        )
+        .optional()
+        .default([]),
+    references: z.array(osvReferenceSchema).optional().default([])
+});
 
-interface IOsvSeverityEntry {
-    type: string;
-    score: string;
-}
-
-interface IOsvRangeEvent {
-    introduced?: string;
-    fixed?: string;
-    last_affected?: string;
-}
-
-interface IOsvAffectedRange {
-    events?: IOsvRangeEvent[];
-}
-
-interface IOsvAffectedPackage {
-    name: string;
-}
-
-interface IOsvAffectedEntry {
-    package?: IOsvAffectedPackage;
-    ranges?: IOsvAffectedRange[];
-}
-
-interface IOsvVulnerabilityDetail {
-    id: string;
-    summary?: string;
-    details?: string;
-    severity?: IOsvSeverityEntry[];
-    aliases?: string[];
-    affected?: IOsvAffectedEntry[];
-    references?: IOsvReference[];
-}
+type IOsvVulnerabilityDetail = z.infer<typeof osvVulnerabilityDetailSchema>;
+type IOsvSeverityEntry = IOsvVulnerabilityDetail["severity"][number];
+type IOsvAffectedEntry = IOsvVulnerabilityDetail["affected"][number];
+type IOsvAffectedRange = IOsvAffectedEntry["ranges"][number];
+type IOsvBatchVulnerabilityRef = z.infer<
+    typeof osvBatchResponseSchema
+>["results"][number]["vulns"][number];
 
 // ---------------------------------------------------------------------------
 // CVSS vector parsing.
@@ -435,8 +450,8 @@ class OsvCacheServiceImpl implements Abstraction.Interface {
             );
         }
 
-        const data = (await response.json()) as IOsvBatchResponse;
-        return pkgs.map((_pkg, index) => data.results?.[index]?.vulns ?? []);
+        const data = osvBatchResponseSchema.parse(await response.json());
+        return pkgs.map((_pkg, index) => data.results[index]?.vulns ?? []);
     }
 
     private async fetchVulnerabilityDetails(
@@ -450,7 +465,7 @@ class OsvCacheServiceImpl implements Abstraction.Interface {
         await mapWithConcurrency(ids, OSV_FETCH_CONCURRENCY, async id => {
             const response = await fetch(`${OSV_VULNERABILITY_URL}/${id}`);
             if (response.ok) {
-                detailById.set(id, (await response.json()) as IOsvVulnerabilityDetail);
+                detailById.set(id, osvVulnerabilityDetailSchema.parse(await response.json()));
             }
         });
 
@@ -463,7 +478,7 @@ class OsvCacheServiceImpl implements Abstraction.Interface {
             if (!response.ok) {
                 return null;
             }
-            const detail = (await response.json()) as IOsvVulnerabilityDetail;
+            const detail = osvVulnerabilityDetailSchema.parse(await response.json());
 
             let cvssScore: number | null = null;
             let cvssVector: string | null = null;
