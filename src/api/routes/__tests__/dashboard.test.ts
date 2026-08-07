@@ -177,6 +177,14 @@ describe("Dashboard Routes", () => {
 
     describe("GET /api/dashboard/health/trend", () => {
         it("should return snapshots within range", async () => {
+            const today = new Date();
+            const recentDate = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000)
+                .toISOString()
+                .slice(0, 10);
+            const oldDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
+                .toISOString()
+                .slice(0, 10);
+
             const project = {
                 id: generateId(),
                 name: "project-a",
@@ -191,7 +199,7 @@ describe("Dashboard Routes", () => {
                     {
                         id: generateId(),
                         projectId: project.id,
-                        date: "2026-07-30",
+                        date: recentDate,
                         score: 80,
                         totalPackages: 10,
                         upToDate: 8,
@@ -203,7 +211,7 @@ describe("Dashboard Routes", () => {
                     {
                         id: generateId(),
                         projectId: project.id,
-                        date: "2026-06-01",
+                        date: oldDate,
                         score: 60,
                         totalPackages: 10,
                         upToDate: 6,
@@ -223,7 +231,7 @@ describe("Dashboard Routes", () => {
 
             expect(body.items).toHaveLength(1);
             expect(body.items[0].snapshots).toHaveLength(1);
-            expect(body.items[0].snapshots[0].date).toBe("2026-07-30");
+            expect(body.items[0].snapshots[0].date).toBe(recentDate);
         });
 
         it("should return all snapshots when range is all", async () => {
