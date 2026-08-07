@@ -635,7 +635,7 @@ export function App(): React.ReactNode {
             <SessionRestorer />
             <MagicLinkHandler />
             <MantineProvider>
-                <Notifications position="top-right" />
+                <Notifications position="bottom-left" />
                 <AuthGate>
                     <WebSocketConnector />
                     <JobNotificationListener />
