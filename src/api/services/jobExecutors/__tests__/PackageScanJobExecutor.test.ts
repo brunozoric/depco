@@ -7,7 +7,7 @@ import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { CommandRunner } from "../../CommandRunner/index.js";
-import { ErrorReporter } from "../../abstractions/ErrorReporter.js";
+import { ErrorReporter } from "../../ErrorReporter/index.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { FileConfigService } from "../../abstractions/FileConfigService.js";
 import { ScanService as ScanServiceReg } from "../../ScanService.js";

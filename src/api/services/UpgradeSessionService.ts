@@ -10,7 +10,7 @@ import { UpgradeSessionStepResolverRegistry } from "./stepResolvers/abstractions
 import type { ICustomStepConfig } from "./stepResolvers/abstractions/CustomStepConfig.js";
 import { CustomStepResolver } from "./stepResolvers/CustomStepResolver.js";
 import { buildStepOrder, createSessionSteps, toSlug } from "./stepResolvers/stepPipeline.js";
-import { ErrorReporter } from "./abstractions/ErrorReporter.js";
+import { ErrorReporter } from "./ErrorReporter/index.js";
 import { StepHookService } from "./abstractions/StepHookService.js";
 import { CommandRunner } from "./CommandRunner/index.js";
 

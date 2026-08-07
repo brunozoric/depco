@@ -40,7 +40,7 @@ import { LockfileParserService as LockfileParserServiceReg } from "../../service
 import { DependencyGraphService as DependencyGraphServiceReg } from "../../services/DependencyGraphService.js";
 import { DependencyChangeService as DependencyChangeServiceReg } from "../../services/DependencyChangeService.js";
 import { FileConfigService as FileConfigServiceReg } from "../../services/FileConfigService.js";
-import { ErrorReporter } from "../../services/abstractions/ErrorReporter.js";
+import { ErrorReporter } from "../../services/ErrorReporter/index.js";
 import { ScanSchedulerService } from "../../services/abstractions/ScanSchedulerService.js";
 import { EventBus } from "../../services/EventBus/EventBus.js";
 import { GitService as GitServiceReg } from "../../services/GitService.js";

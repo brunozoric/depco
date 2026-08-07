@@ -1,5 +1,5 @@
 import { EmailService } from "./abstractions/EmailService.js";
-import { AppLogService } from "../abstractions/AppLogService.js";
+import { AppLogService } from "../AppLog/index.js";
 
 class ConsoleEmailServiceImpl implements EmailService.Interface {
     public constructor(private readonly appLogService: AppLogService.Interface) {}

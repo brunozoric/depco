@@ -16,7 +16,7 @@ import { AuthService as AuthServiceRegistration } from "#api/services/AuthServic
 import { createAuthHook } from "#api/middleware/authHook.js";
 import { projects, projectStepHooks } from "#api/db/schema.js";
 import { FileConfigService } from "../../services/FileConfigService.js";
-import { PackageJsonService } from "../../services/PackageJsonService.js";
+import { PackageJsonService } from "../../services/PackageJson/PackageJsonService.js";
 import { stepHooksRoutes } from "../stepHooks.js";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;

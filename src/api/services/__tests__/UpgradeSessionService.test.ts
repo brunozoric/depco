@@ -6,7 +6,7 @@ import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroad
 import { projects } from "#api/db/schema.js";
 import { UpgradeSessionService } from "../abstractions/UpgradeSessionService.js";
 import { UpgradeSessionService as UpgradeSessionServiceRegistration } from "../UpgradeSessionService.js";
-import { ErrorReporter } from "../abstractions/ErrorReporter.js";
+import { ErrorReporter } from "../ErrorReporter/index.js";
 import { UpgradeSessionStepResolverRegistry } from "../stepResolvers/StepResolverRegistry.js";
 import { SelectPackagesResolver } from "../stepResolvers/SelectPackagesResolver.js";
 import { BranchResolver } from "../stepResolvers/BranchResolver.js";

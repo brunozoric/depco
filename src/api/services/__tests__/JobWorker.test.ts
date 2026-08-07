@@ -35,7 +35,7 @@ import { LockfileParserService } from "../abstractions/LockfileParserService.js"
 import { DependencyGraphService as DependencyGraphServiceRegistration } from "../DependencyGraphService.js";
 import { DependencyChangeService as DependencyChangeServiceRegistration } from "../DependencyChangeService.js";
 import { FileConfigService as FileConfigServiceRegistration } from "../FileConfigService.js";
-import { ErrorReporter } from "../abstractions/ErrorReporter.js";
+import { ErrorReporter } from "../ErrorReporter/index.js";
 import { ScanSchedulerService } from "../abstractions/ScanSchedulerService.js";
 import { EventBus } from "../EventBus/EventBus.js";
 import { GitService as GitServiceRegistration } from "../GitService.js";

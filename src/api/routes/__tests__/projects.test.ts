@@ -59,7 +59,7 @@ import { PackageScanJobExecutor as PackageScanJobExecutorReg } from "../../servi
 import { VulnerabilityScanJobExecutor as VulnerabilityScanJobExecutorReg } from "../../services/jobExecutors/VulnerabilityScanJobExecutor.js";
 import { LicenseScanJobExecutor as LicenseScanJobExecutorReg } from "../../services/jobExecutors/LicenseScanJobExecutor.js";
 import { GraphRefreshJobExecutor as GraphRefreshJobExecutorReg } from "../../services/jobExecutors/GraphRefreshJobExecutor.js";
-import { ErrorReporter } from "../../services/abstractions/ErrorReporter.js";
+import { ErrorReporter } from "../../services/ErrorReporter/index.js";
 import { ScanSchedulerService } from "../../services/abstractions/ScanSchedulerService.js";
 import { EventBus } from "../../services/EventBus/EventBus.js";
 import { projectRoutes } from "../projects.js";

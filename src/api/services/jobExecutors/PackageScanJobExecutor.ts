@@ -10,7 +10,7 @@ import { PackageManagerService } from "../abstractions/PackageManagerService.js"
 import { SecurityService } from "../abstractions/SecurityService.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
-import { ErrorReporter } from "../abstractions/ErrorReporter.js";
+import { ErrorReporter } from "../ErrorReporter/index.js";
 import { DependencyChangeService } from "../abstractions/DependencyChangeService.js";
 import {
     projects,

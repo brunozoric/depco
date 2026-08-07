@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { EmailService } from "../abstractions/EmailService.js";
 import { ConsoleEmailService } from "../ConsoleEmailService.js";
-import { AppLogService } from "../../abstractions/AppLogService.js";
+import { AppLogService } from "../../AppLog/index.js";
 
 function createMockAppLogService(): AppLogService.Interface {
     return {

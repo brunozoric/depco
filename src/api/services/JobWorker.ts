@@ -7,7 +7,7 @@ import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroad
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { JobExecutorRegistry } from "./jobExecutors/abstractions/JobExecutorRegistry.js";
 import type { ISetProgressInput } from "./jobExecutors/abstractions/JobExecutor.js";
-import { ErrorReporter } from "./abstractions/ErrorReporter.js";
+import { ErrorReporter } from "./ErrorReporter/index.js";
 import { projects, upgradeJobs } from "#api/db/schema.js";
 
 const PROGRESS_DB_WRITE_THROTTLE_MS = 1000;

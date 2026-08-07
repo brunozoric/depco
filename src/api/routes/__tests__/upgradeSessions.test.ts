@@ -12,7 +12,7 @@ import { createAuthHook } from "#api/middleware/authHook.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { projects } from "#api/db/schema.js";
 import { UpgradeSessionService as UpgradeSessionServiceRegistration } from "#api/services/UpgradeSessionService.js";
-import { ErrorReporter } from "#api/services/abstractions/ErrorReporter.js";
+import { ErrorReporter } from "#api/services/ErrorReporter/index.js";
 import { UpgradeSessionStepResolverRegistry } from "#api/services/stepResolvers/StepResolverRegistry.js";
 import { SelectPackagesResolver } from "#api/services/stepResolvers/SelectPackagesResolver.js";
 import { BranchResolver } from "#api/services/stepResolvers/BranchResolver.js";

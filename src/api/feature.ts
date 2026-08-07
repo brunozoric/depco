@@ -52,13 +52,13 @@ import { RefreshTransientResolver } from "./services/stepResolvers/RefreshTransi
 import { CommitResolver } from "./services/stepResolvers/CommitResolver.js";
 import { PushResolver } from "./services/stepResolvers/PushResolver.js";
 import { PrResolver } from "./services/stepResolvers/PrResolver.js";
-import { AppLogService } from "./services/AppLogService.js";
-import { ErrorReporter } from "./services/ErrorReporter.js";
+import { AppLogFeature } from "./services/AppLog/index.js";
+import { ErrorReporterFeature } from "./services/ErrorReporter/index.js";
 import { ScanSchedulerService } from "./services/ScanSchedulerService.js";
 import { EventBusFeature } from "./services/EventBus/index.js";
 import { StepHookService } from "./services/StepHookService.js";
 import { FileConfigService } from "./services/FileConfigService.js";
-import { PackageJsonService } from "./services/PackageJsonService.js";
+import { PackageJsonFeature } from "./services/PackageJson/index.js";
 import { AutoFixSettingsService } from "./services/AutoFixSettingsService.js";
 import { AutoFixPrService } from "./services/AutoFixPrService.js";
 import { LockfileParserService } from "./services/LockfileParserService.js";
@@ -128,8 +128,8 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
             get: () => container.resolve(JobWorkerAbstraction)
         }));
         container.register(WebSocketBroadcaster).inSingletonScope();
-        container.register(AppLogService).inSingletonScope();
-        container.register(ErrorReporter).inSingletonScope();
+        AppLogFeature.register(container);
+        ErrorReporterFeature.register(container);
         container.register(ForgeService).inSingletonScope();
         container.register(SbomService).inSingletonScope();
         container.register(DependencyChangeService).inSingletonScope();
@@ -148,7 +148,7 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
         FileToolFeature.register(container);
         JsonFileToolFeature.register(container);
         container.register(FileConfigService).inSingletonScope();
-        container.register(PackageJsonService).inSingletonScope();
+        PackageJsonFeature.register(container);
         container.register(StepHookService).inSingletonScope();
         container.register(AutoFixSettingsService).inSingletonScope();
         container.register(AutoFixPrService).inSingletonScope();
