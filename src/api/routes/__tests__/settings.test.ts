@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { join } from "node:path";
 import { writeFile, readFile, rm } from "node:fs/promises";
 import Fastify from "fastify";
@@ -9,9 +9,14 @@ import { DirectoryToolFeature, FileToolFeature, JsonFileToolFeature } from "@web
 import { generateId } from "@webiny/stdlib";
 import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { seedYarnSecuritySettings } from "#testing/helpers/seedYarnSecuritySettings.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { FileConfigService } from "#api/services/FileConfigService.js";
+import { EmailService } from "#api/services/abstractions/EmailService.js";
+import { UserService as UserServiceRegistration } from "#api/services/UserService.js";
+import { AuthService as AuthServiceRegistration } from "#api/services/AuthService.js";
+import { createAuthHook } from "#api/middleware/authHook.js";
 import { pmSecuritySettings } from "#api/db/schema.js";
 import { settingsRoutes } from "../settings.js";
 
@@ -41,6 +46,7 @@ function seedPnpmSecuritySettings(db: BetterSQLite3Database): void {
 describe("settings routes", () => {
     let app: FastifyInstance;
     let db: BetterSQLite3Database;
+    let token: string;
 
     beforeEach(async () => {
         db = createTestDb();
@@ -54,10 +60,16 @@ describe("settings routes", () => {
         FileToolFeature.register(container);
         JsonFileToolFeature.register(container);
         container.register(FileConfigService).inSingletonScope();
+        container.registerInstance(EmailService, { send: vi.fn() });
+        container.register(UserServiceRegistration).inSingletonScope();
+        container.register(AuthServiceRegistration).inSingletonScope();
 
         app = Fastify();
+        app.addHook("onRequest", createAuthHook(container));
         await app.register(settingsRoutes, { container });
         await app.ready();
+
+        ({ token } = await createTestSession({ db }));
     });
 
     afterEach(async () => {
@@ -68,6 +80,7 @@ describe("settings routes", () => {
     describe("GET /api/settings/security", () => {
         it("returns empty list when no settings exist", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/settings/security"
             });
@@ -82,6 +95,7 @@ describe("settings routes", () => {
             await seedYarnSecuritySettings(db);
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/settings/security"
             });
@@ -109,6 +123,7 @@ describe("settings routes", () => {
                 await seedPnpmSecuritySettings(db);
 
                 const response = await app.inject({
+                    headers: { authorization: `Bearer ${token}` },
                     method: "GET",
                     url: "/api/settings/security"
                 });
@@ -148,6 +163,7 @@ describe("settings routes", () => {
                 await seedYarnSecuritySettings(db);
 
                 const response = await app.inject({
+                    headers: { authorization: `Bearer ${token}` },
                     method: "GET",
                     url: "/api/settings/security"
                 });
@@ -172,6 +188,7 @@ describe("settings routes", () => {
                 await seedYarnSecuritySettings(db);
 
                 const response = await app.inject({
+                    headers: { authorization: `Bearer ${token}` },
                     method: "GET",
                     url: "/api/settings/security"
                 });
@@ -192,6 +209,7 @@ describe("settings routes", () => {
             await seedYarnSecuritySettings(db);
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/settings/security"
             });
@@ -206,6 +224,7 @@ describe("settings routes", () => {
     describe("POST /api/settings/security", () => {
         it("creates a setting for a known PM and field", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/settings/security",
                 payload: {
@@ -226,6 +245,7 @@ describe("settings routes", () => {
 
         it("returns 400 for unknown package manager", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/settings/security",
                 payload: {
@@ -240,6 +260,7 @@ describe("settings routes", () => {
 
         it("returns 400 for unknown field name", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/settings/security",
                 payload: {
@@ -254,6 +275,7 @@ describe("settings routes", () => {
 
         it("returns 400 for invalid expected value", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/settings/security",
                 payload: {
@@ -268,6 +290,7 @@ describe("settings routes", () => {
 
         it("returns 409 for duplicate setting", async () => {
             await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/settings/security",
                 payload: {
@@ -278,6 +301,7 @@ describe("settings routes", () => {
             });
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/settings/security",
                 payload: {
@@ -292,6 +316,7 @@ describe("settings routes", () => {
 
         it("creates a setting for npm (ignore-scripts)", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/settings/security",
                 payload: {
@@ -311,6 +336,7 @@ describe("settings routes", () => {
 
         it("creates a setting for pnpm (strictPeerDependencies)", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/settings/security",
                 payload: {
@@ -332,6 +358,7 @@ describe("settings routes", () => {
     describe("PUT /api/settings/security/:id", () => {
         it("updates the expected value of an existing setting", async () => {
             const createResponse = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/settings/security",
                 payload: {
@@ -343,6 +370,7 @@ describe("settings routes", () => {
             const { id } = createResponse.json().item;
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: `/api/settings/security/${id}`,
                 payload: { expectedValue: "true" }
@@ -354,6 +382,7 @@ describe("settings routes", () => {
 
         it("returns 404 for unknown id", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: "/api/settings/security/nonexistent",
                 payload: { expectedValue: "true" }
@@ -366,6 +395,7 @@ describe("settings routes", () => {
     describe("PATCH /api/settings/security/:id/toggle", () => {
         it("toggles an existing setting from enabled to disabled and back", async () => {
             const createResponse = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/settings/security",
                 payload: {
@@ -377,6 +407,7 @@ describe("settings routes", () => {
             const { id } = createResponse.json().item;
 
             const toggleResponse = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PATCH",
                 url: `/api/settings/security/${id}/toggle`
             });
@@ -385,6 +416,7 @@ describe("settings routes", () => {
             expect(toggleResponse.json().item.enabled).toBe(false);
 
             const toggleAgainResponse = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PATCH",
                 url: `/api/settings/security/${id}/toggle`
             });
@@ -393,6 +425,7 @@ describe("settings routes", () => {
             expect(toggleAgainResponse.json().item.enabled).toBe(true);
 
             const listResponse = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/settings/security"
             });
@@ -401,6 +434,7 @@ describe("settings routes", () => {
 
         it("returns 404 for unknown id", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PATCH",
                 url: "/api/settings/security/nonexistent/toggle"
             });
@@ -412,6 +446,7 @@ describe("settings routes", () => {
     describe("POST /api/settings/security/reset", () => {
         it("deletes existing settings and creates defaults from registry", async () => {
             await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/settings/security",
                 payload: {
@@ -422,6 +457,7 @@ describe("settings routes", () => {
             });
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/settings/security/reset",
                 payload: { packageManager: "yarn" }
@@ -454,6 +490,7 @@ describe("settings routes", () => {
 
         it("returns 400 for unknown package manager", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/settings/security/reset",
                 payload: { packageManager: "unknown-pm" }
@@ -464,6 +501,7 @@ describe("settings routes", () => {
 
         it("works when no existing settings (creates all defaults)", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/settings/security/reset",
                 payload: { packageManager: "yarn" }
@@ -475,6 +513,7 @@ describe("settings routes", () => {
 
         it("returns default items for npm (4 registry fields) with correct defaults", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/settings/security/reset",
                 payload: { packageManager: "npm" }
@@ -500,6 +539,7 @@ describe("settings routes", () => {
 
         it("returns default items for pnpm (7 registry fields) with correct defaults", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/settings/security/reset",
                 payload: { packageManager: "pnpm" }
@@ -521,6 +561,7 @@ describe("settings routes", () => {
 
         it("replaces existing pnpm settings with defaults on reset", async () => {
             await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/settings/security",
                 payload: {
@@ -531,6 +572,7 @@ describe("settings routes", () => {
             });
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/settings/security/reset",
                 payload: { packageManager: "pnpm" }
@@ -549,6 +591,7 @@ describe("settings routes", () => {
     describe("GET /api/settings/pm", () => {
         it("returns default install flags for all PMs when no file config", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/settings/pm"
             });
@@ -587,6 +630,7 @@ describe("settings routes", () => {
 
             try {
                 const response = await app.inject({
+                    headers: { authorization: `Bearer ${token}` },
                     method: "GET",
                     url: "/api/settings/pm"
                 });
@@ -616,6 +660,7 @@ describe("settings routes", () => {
 
             try {
                 const response = await app.inject({
+                    headers: { authorization: `Bearer ${token}` },
                     method: "GET",
                     url: "/api/settings/pm"
                 });
@@ -636,6 +681,7 @@ describe("settings routes", () => {
     describe("PUT /api/settings/pm/:pm", () => {
         it("writes install flags to config file", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: "/api/settings/pm/pnpm",
                 payload: {
@@ -655,6 +701,7 @@ describe("settings routes", () => {
 
         it("writes registryUrl to config file", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: "/api/settings/pm/yarn",
                 payload: {
@@ -672,6 +719,7 @@ describe("settings routes", () => {
             const configPath = join(process.cwd(), ".dependency-upgrader.json");
 
             const setResponse = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: "/api/settings/pm/yarn",
                 payload: {
@@ -684,6 +732,7 @@ describe("settings routes", () => {
             expect(raw.pmSettings.yarn.registryUrl).toBe("https://custom.registry.com");
 
             const clearResponse = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: "/api/settings/pm/yarn",
                 payload: {
@@ -701,6 +750,7 @@ describe("settings routes", () => {
 
         it("writes upgradeStrategy to config file", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: "/api/settings/pm/npm",
                 payload: {
@@ -716,6 +766,7 @@ describe("settings routes", () => {
 
         it("rejects invalid package manager", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: "/api/settings/pm/invalid",
                 payload: { upgradeStrategy: "caret" }
@@ -726,6 +777,7 @@ describe("settings routes", () => {
 
         it("rejects invalid upgradeStrategy value", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: "/api/settings/pm/yarn",
                 payload: { upgradeStrategy: "invalid" }
@@ -736,6 +788,7 @@ describe("settings routes", () => {
 
         it("returns updated PM config after write", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: "/api/settings/pm/pnpm",
                 payload: {

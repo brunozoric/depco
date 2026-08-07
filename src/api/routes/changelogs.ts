@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { and, eq, inArray } from "drizzle-orm";
 import { registerRoute } from "#shared/routing/index.js";
+import { requirePermission } from "#api/middleware/requirePermission.js";
 import { getChangelogsRoute, reResolveChangelogsRoute } from "#shared/routes/index.js";
 import { ChangelogService } from "#api/services/abstractions/ChangelogService.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
@@ -111,20 +112,30 @@ export async function changelogRoutes(app: FastifyInstance, options: PluginOptio
         reply.send({ items: entries, total: entries.length, resolving });
     });
 
-    registerRoute(app, reResolveChangelogsRoute, {}, async (request, reply) => {
-        const { packageName } = request.params;
-        const { from, to } = request.body;
+    registerRoute(
+        app,
+        reResolveChangelogsRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { packageName } = request.params;
+            const { from, to } = request.body;
 
-        if (from === to) {
-            reply.send({ items: [], total: 0, resolving: false });
-            return;
+            if (from === to) {
+                reply.send({ items: [], total: 0, resolving: false });
+                return;
+            }
+
+            await changelogService.resetFailed(packageName);
+
+            await enqueueChangelogIfNeeded(
+                { db: databaseClient.db, jobWorker },
+                packageName,
+                from,
+                to
+            );
+
+            const entries = await changelogService.getChangelogs(packageName, from, to);
+            reply.send({ items: entries, total: entries.length, resolving: true });
         }
-
-        await changelogService.resetFailed(packageName);
-
-        await enqueueChangelogIfNeeded({ db: databaseClient.db, jobWorker }, packageName, from, to);
-
-        const entries = await changelogService.getChangelogs(packageName, from, to);
-        reply.send({ items: entries, total: entries.length, resolving: true });
-    });
+    );
 }

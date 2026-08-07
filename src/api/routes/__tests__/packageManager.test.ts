@@ -9,11 +9,16 @@ import { ConsoleLoggerConfig, ConsoleLoggerFeature } from "@webiny/stdlib";
 import { DirectoryToolFeature, FileToolFeature, JsonFileToolFeature } from "@webiny/stdlib/node";
 import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestSession } from "#testing/helpers/createTestSession.js";
 import {
     seedYarnSecuritySettings,
     VALID_YARNRC
 } from "#testing/helpers/seedYarnSecuritySettings.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { EmailService } from "#api/services/abstractions/EmailService.js";
+import { UserService as UserServiceRegistration } from "#api/services/UserService.js";
+import { AuthService as AuthServiceRegistration } from "#api/services/AuthService.js";
+import { createAuthHook } from "#api/middleware/authHook.js";
 import { CommandRunner } from "../../services/abstractions/CommandRunner.js";
 import { SecurityService as SecurityServiceReg } from "../../services/SecurityService.js";
 import { UpgradeService as UpgradeServiceReg } from "../../services/UpgradeService.js";
@@ -66,6 +71,7 @@ describe("package manager routes", () => {
     let app: FastifyInstance;
     let testDir: string;
     let db: BetterSQLite3Database;
+    let token: string;
 
     beforeEach(async () => {
         testDir = join(
@@ -166,10 +172,16 @@ describe("package manager routes", () => {
             onGlobalDefaultChanged: vi.fn(),
             onScanComplete: vi.fn()
         });
+        container.registerInstance(EmailService, { send: vi.fn() });
+        container.register(UserServiceRegistration).inSingletonScope();
+        container.register(AuthServiceRegistration).inSingletonScope();
 
         app = Fastify();
+        app.addHook("onRequest", createAuthHook(container));
         await app.register(packageManagerRoutes, { container });
         await app.ready();
+
+        ({ token } = await createTestSession({ db }));
     });
 
     afterEach(async () => {
@@ -179,6 +191,7 @@ describe("package manager routes", () => {
 
     it("GET /api/projects/:id/package-manager returns the current version", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/p1/package-manager"
         });
@@ -190,6 +203,7 @@ describe("package manager routes", () => {
 
     it("GET /api/projects/:id/package-manager returns 404 for an unknown project", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/unknown/package-manager"
         });
@@ -199,6 +213,7 @@ describe("package manager routes", () => {
 
     it("POST /api/projects/:id/package-manager/update enqueues a packageManager-type job", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/p1/package-manager/update",
             payload: { version: "4.20.0" }
@@ -209,6 +224,7 @@ describe("package manager routes", () => {
         expect(body.item.jobId).toBeDefined();
 
         const jobResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/p1/package-manager"
         });
@@ -290,13 +306,19 @@ describe("package manager routes", () => {
             onScanComplete: vi.fn()
         });
 
+        container.registerInstance(EmailService, { send: vi.fn() });
+        container.register(UserServiceRegistration).inSingletonScope();
+        container.register(AuthServiceRegistration).inSingletonScope();
+
         const jobWorker = container.resolve(JobWorker);
 
         const localApp = Fastify();
+        localApp.addHook("onRequest", createAuthHook(container));
         await localApp.register(packageManagerRoutes, { container });
         await localApp.ready();
 
         const response = await localApp.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/p1/package-manager/update",
             payload: { version: "4.20.0" }
@@ -312,6 +334,7 @@ describe("package manager routes", () => {
 
     it("returns 404 when updating the package manager for an unknown project", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/unknown/package-manager/update",
             payload: { version: "4.20.0" }
@@ -412,13 +435,19 @@ describe("package manager routes", () => {
             onScanComplete: vi.fn()
         });
 
+        container.registerInstance(EmailService, { send: vi.fn() });
+        container.register(UserServiceRegistration).inSingletonScope();
+        container.register(AuthServiceRegistration).inSingletonScope();
+
         const jobWorker = container.resolve(JobWorker);
 
         const localApp = Fastify();
+        localApp.addHook("onRequest", createAuthHook(container));
         await localApp.register(packageManagerRoutes, { container });
         await localApp.ready();
 
         const response = await localApp.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/p2/package-manager/update",
             payload: { version: "4.20.0" }
@@ -474,12 +503,17 @@ describe("package manager routes", () => {
             waitForJobs: vi.fn(async () => []),
             getRunningJobsForReference: vi.fn(async () => [])
         });
+        container.registerInstance(EmailService, { send: vi.fn() });
+        container.register(UserServiceRegistration).inSingletonScope();
+        container.register(AuthServiceRegistration).inSingletonScope();
 
         const localApp = Fastify();
+        localApp.addHook("onRequest", createAuthHook(container));
         await localApp.register(packageManagerRoutes, { container });
         await localApp.ready();
 
         const response = await localApp.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/p1/package-manager/update",
             payload: { version: "4.20.0" }

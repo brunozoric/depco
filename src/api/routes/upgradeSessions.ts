@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendError } from "#shared/routing/index.js";
+import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     createUpgradeSessionRoute,
     getUpgradeSessionRoute,
@@ -40,17 +41,22 @@ export async function upgradeSessionRoutes(
     const { container } = options;
     const upgradeSessionService = container.resolve(UpgradeSessionService);
 
-    registerRoute(app, createUpgradeSessionRoute, {}, async (request, reply) => {
-        const { id } = request.params;
+    registerRoute(
+        app,
+        createUpgradeSessionRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id } = request.params;
 
-        try {
-            const session = await upgradeSessionService.createSession(id);
-            sendOne(reply, session);
-        } catch (error) {
-            const message = (error as Error).message;
-            sendError(reply, mapErrorStatus(message), message);
+            try {
+                const session = await upgradeSessionService.createSession(id);
+                sendOne(reply, session);
+            } catch (error) {
+                const message = (error as Error).message;
+                sendError(reply, mapErrorStatus(message), message);
+            }
         }
-    });
+    );
 
     registerRoute(app, getUpgradeSessionRoute, {}, async (request, reply) => {
         const { id, sessionId } = request.params;
@@ -68,44 +74,59 @@ export async function upgradeSessionRoutes(
         }
     });
 
-    registerRoute(app, executeUpgradeStepRoute, {}, async (request, reply) => {
-        const { id, sessionId, stepType } = request.params;
+    registerRoute(
+        app,
+        executeUpgradeStepRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id, sessionId, stepType } = request.params;
 
-        try {
-            const session = await upgradeSessionService.executeStep(
-                sessionId,
-                id,
-                stepType,
-                request.body
-            );
-            sendOne(reply, session);
-        } catch (error) {
-            const message = (error as Error).message;
-            sendError(reply, mapErrorStatus(message), message);
+            try {
+                const session = await upgradeSessionService.executeStep(
+                    sessionId,
+                    id,
+                    stepType,
+                    request.body
+                );
+                sendOne(reply, session);
+            } catch (error) {
+                const message = (error as Error).message;
+                sendError(reply, mapErrorStatus(message), message);
+            }
         }
-    });
+    );
 
-    registerRoute(app, skipUpgradeStepRoute, {}, async (request, reply) => {
-        const { id, sessionId, stepType } = request.params;
+    registerRoute(
+        app,
+        skipUpgradeStepRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id, sessionId, stepType } = request.params;
 
-        try {
-            const session = await upgradeSessionService.skipStep(sessionId, id, stepType);
-            sendOne(reply, session);
-        } catch (error) {
-            const message = (error as Error).message;
-            sendError(reply, mapErrorStatus(message), message);
+            try {
+                const session = await upgradeSessionService.skipStep(sessionId, id, stepType);
+                sendOne(reply, session);
+            } catch (error) {
+                const message = (error as Error).message;
+                sendError(reply, mapErrorStatus(message), message);
+            }
         }
-    });
+    );
 
-    registerRoute(app, abortUpgradeSessionRoute, {}, async (request, reply) => {
-        const { id, sessionId } = request.params;
+    registerRoute(
+        app,
+        abortUpgradeSessionRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id, sessionId } = request.params;
 
-        try {
-            const session = await upgradeSessionService.abortSession(sessionId, id);
-            sendOne(reply, session);
-        } catch (error) {
-            const message = (error as Error).message;
-            sendError(reply, mapErrorStatus(message), message);
+            try {
+                const session = await upgradeSessionService.abortSession(sessionId, id);
+                sendOne(reply, session);
+            } catch (error) {
+                const message = (error as Error).message;
+                sendError(reply, mapErrorStatus(message), message);
+            }
         }
-    });
+    );
 }

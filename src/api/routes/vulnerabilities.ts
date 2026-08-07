@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { eq } from "drizzle-orm";
 import { registerRoute, sendList, sendError } from "#shared/routing/index.js";
+import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listVulnerabilitiesRoute,
     getVulnerabilitySummaryRoute,
@@ -222,56 +223,74 @@ export async function vulnerabilityRoutes(
     });
 
     // Registered before "/:projectId/scan" so it isn't shadowed by that param route.
-    registerRoute(app, refreshOsvCacheRoute, {}, async (request, reply) => {
-        const invalidated = await vulnerabilityService.forceOsvRefresh(
-            buildRefreshOptions(request.body)
-        );
-        reply.send({ invalidated });
-    });
-
-    registerRoute(app, bulkVulnerabilitiesRoute, {}, async (request, reply) => {
-        const { ids } = request.body;
-        let updatedCount: number;
-
-        switch (request.body.action) {
-            case "dismiss":
-                updatedCount = await vulnerabilityService.bulkDismiss(ids);
-                break;
-            case "snooze":
-                updatedCount = await vulnerabilityService.bulkSnooze(ids, request.body.snoozeDays);
-                break;
-            case "undismiss":
-                updatedCount = await vulnerabilityService.bulkUndismiss(ids);
-                break;
+    registerRoute(
+        app,
+        refreshOsvCacheRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const invalidated = await vulnerabilityService.forceOsvRefresh(
+                buildRefreshOptions(request.body)
+            );
+            reply.send({ invalidated });
         }
+    );
 
-        reply.send({ updatedCount });
-    });
+    registerRoute(
+        app,
+        bulkVulnerabilitiesRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { ids } = request.body;
+            let updatedCount: number;
+
+            switch (request.body.action) {
+                case "dismiss":
+                    updatedCount = await vulnerabilityService.bulkDismiss(ids);
+                    break;
+                case "snooze":
+                    updatedCount = await vulnerabilityService.bulkSnooze(
+                        ids,
+                        request.body.snoozeDays
+                    );
+                    break;
+                case "undismiss":
+                    updatedCount = await vulnerabilityService.bulkUndismiss(ids);
+                    break;
+            }
+
+            reply.send({ updatedCount });
+        }
+    );
 
     // Registered before "/:projectId" so it isn't shadowed by that param route.
-    registerRoute(app, bulkRescanVulnerabilitiesRoute, {}, async (request, reply) => {
-        const { ids } = request.body;
-        const projectIds = await vulnerabilityService.getProjectIdsForVulnerabilityIds(ids);
+    registerRoute(
+        app,
+        bulkRescanVulnerabilitiesRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { ids } = request.body;
+            const projectIds = await vulnerabilityService.getProjectIdsForVulnerabilityIds(ids);
 
-        let projectsQueued = 0;
-        for (const projectId of projectIds) {
-            const project = await db
-                .select()
-                .from(projects)
-                .where(eq(projects.id, projectId))
-                .get();
-            if (project?.packageManager) {
-                await vulnerabilityService.scan({
-                    projectId,
-                    projectPath: project.path,
-                    packageManager: project.packageManager
-                });
-                projectsQueued++;
+            let projectsQueued = 0;
+            for (const projectId of projectIds) {
+                const project = await db
+                    .select()
+                    .from(projects)
+                    .where(eq(projects.id, projectId))
+                    .get();
+                if (project?.packageManager) {
+                    await vulnerabilityService.scan({
+                        projectId,
+                        projectPath: project.path,
+                        packageManager: project.packageManager
+                    });
+                    projectsQueued++;
+                }
             }
-        }
 
-        reply.send({ projectsQueued });
-    });
+            reply.send({ projectsQueued });
+        }
+    );
 
     // Registered before "/:projectId" so it isn't shadowed by that param route.
     registerRoute(app, exportVulnerabilitiesRoute, {}, async (request, reply) => {
@@ -396,27 +415,36 @@ export async function vulnerabilityRoutes(
         sendList(reply, result.items, result.total);
     });
 
-    registerRoute(app, scanVulnerabilitiesRoute, {}, async (request, reply) => {
-        const { projectId } = request.params;
+    registerRoute(
+        app,
+        scanVulnerabilitiesRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { projectId } = request.params;
 
-        const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
-        if (!project) {
-            sendError(reply, 404, "Project not found");
-            return;
-        }
+            const project = await db
+                .select()
+                .from(projects)
+                .where(eq(projects.id, projectId))
+                .get();
+            if (!project) {
+                sendError(reply, 404, "Project not found");
+                return;
+            }
 
-        if (!project.packageManager) {
-            reply.status(422).send({
-                error: "Project has no detected package manager. Run a dependency scan first."
+            if (!project.packageManager) {
+                reply.status(422).send({
+                    error: "Project has no detected package manager. Run a dependency scan first."
+                });
+                return;
+            }
+
+            const result = await vulnerabilityService.scan({
+                projectId,
+                projectPath: project.path,
+                packageManager: project.packageManager
             });
-            return;
+            reply.send({ total: result.total, counts: result.counts });
         }
-
-        const result = await vulnerabilityService.scan({
-            projectId,
-            projectPath: project.path,
-            packageManager: project.packageManager
-        });
-        reply.send({ total: result.total, counts: result.counts });
-    });
+    );
 }

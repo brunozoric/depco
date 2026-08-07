@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { eq } from "drizzle-orm";
 import { registerRoute, sendOne, sendError } from "#shared/routing/index.js";
+import { requirePermission } from "#api/middleware/requirePermission.js";
 import { getPackageManagerRoute, updatePackageManagerRoute } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { JobWorker } from "../services/abstractions/JobWorker.js";
@@ -40,37 +41,45 @@ export async function packageManagerRoutes(
 
     // POST /api/projects/:id/package-manager/update — enqueue a package
     // manager version update job.
-    registerRoute(app, updatePackageManagerRoute, {}, async (request, reply) => {
-        const { id } = request.params;
-        const body = request.body;
+    registerRoute(
+        app,
+        updatePackageManagerRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id } = request.params;
+            const body = request.body;
 
-        const project = await db.select().from(projects).where(eq(projects.id, id)).get();
-        if (!project) {
-            sendError(reply, 404, "Project not found");
-            return;
+            const project = await db.select().from(projects).where(eq(projects.id, id)).get();
+            if (!project) {
+                sendError(reply, 404, "Project not found");
+                return;
+            }
+
+            const packageManager =
+                project.packageManager ?? (await packageManagerService.detect(project.path));
+
+            let currentVersion: string;
+            try {
+                currentVersion = await packageManagerService.getVersion(
+                    project.path,
+                    packageManager
+                );
+            } catch {
+                currentVersion = project.pmVersion ?? "unknown";
+            }
+
+            try {
+                const jobId = await jobWorker.enqueue({
+                    referenceId: id,
+                    referenceType: "project",
+                    type: "packageManager",
+                    packages: { from: currentVersion, to: body.version }
+                });
+
+                sendOne(reply, { jobId });
+            } catch (error) {
+                sendError(reply, 403, (error as Error).message);
+            }
         }
-
-        const packageManager =
-            project.packageManager ?? (await packageManagerService.detect(project.path));
-
-        let currentVersion: string;
-        try {
-            currentVersion = await packageManagerService.getVersion(project.path, packageManager);
-        } catch {
-            currentVersion = project.pmVersion ?? "unknown";
-        }
-
-        try {
-            const jobId = await jobWorker.enqueue({
-                referenceId: id,
-                referenceType: "project",
-                type: "packageManager",
-                packages: { from: currentVersion, to: body.version }
-            });
-
-            sendOne(reply, { jobId });
-        } catch (error) {
-            sendError(reply, 403, (error as Error).message);
-        }
-    });
+    );
 }

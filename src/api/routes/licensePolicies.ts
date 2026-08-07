@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import { registerRoute, sendError } from "#shared/routing/index.js";
+import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listLicensePoliciesRoute,
     createLicensePolicyRoute,
@@ -50,60 +51,83 @@ export async function licensePolicyRoutes(
         reply.send({ items });
     });
 
-    registerRoute(app, createLicensePolicyRoute, {}, async (request, reply) => {
-        const body = request.body;
-        const now = Date.now();
+    registerRoute(
+        app,
+        createLicensePolicyRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const body = request.body;
+            const now = Date.now();
 
-        const rule = {
-            id: generateId(),
-            action: body.action,
-            licensePattern: body.licensePattern ?? null,
-            packagePattern: body.packagePattern ?? null,
-            projectId: body.projectId ?? null,
-            priority: body.priority,
-            reason: body.reason ?? null,
-            createdAt: now,
-            updatedAt: now
-        };
+            const rule = {
+                id: generateId(),
+                action: body.action,
+                licensePattern: body.licensePattern ?? null,
+                packagePattern: body.packagePattern ?? null,
+                projectId: body.projectId ?? null,
+                priority: body.priority,
+                reason: body.reason ?? null,
+                createdAt: now,
+                updatedAt: now
+            };
 
-        await db.insert(licensePolicyRules).values(rule).run();
-        reply.status(201).send(rule);
-    });
-
-    registerRoute(app, updateLicensePolicyRoute, {}, async (request, reply) => {
-        const { id } = request.params;
-        const body = request.body;
-
-        const existing = await db
-            .select()
-            .from(licensePolicyRules)
-            .where(eq(licensePolicyRules.id, id))
-            .get();
-        if (!existing) {
-            sendError(reply, 404, "License policy rule not found");
-            return;
+            await db.insert(licensePolicyRules).values(rule).run();
+            reply.status(201).send(rule);
         }
+    );
 
-        const updates = {
-            action: body.action ?? existing.action,
-            licensePattern:
-                body.licensePattern !== undefined ? body.licensePattern : existing.licensePattern,
-            packagePattern:
-                body.packagePattern !== undefined ? body.packagePattern : existing.packagePattern,
-            projectId: body.projectId !== undefined ? body.projectId : existing.projectId,
-            priority: body.priority ?? existing.priority,
-            reason: body.reason !== undefined ? body.reason : existing.reason,
-            updatedAt: Date.now()
-        };
+    registerRoute(
+        app,
+        updateLicensePolicyRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id } = request.params;
+            const body = request.body;
 
-        await db.update(licensePolicyRules).set(updates).where(eq(licensePolicyRules.id, id)).run();
+            const existing = await db
+                .select()
+                .from(licensePolicyRules)
+                .where(eq(licensePolicyRules.id, id))
+                .get();
+            if (!existing) {
+                sendError(reply, 404, "License policy rule not found");
+                return;
+            }
 
-        reply.send({ ...existing, ...updates });
-    });
+            const updates = {
+                action: body.action ?? existing.action,
+                licensePattern:
+                    body.licensePattern !== undefined
+                        ? body.licensePattern
+                        : existing.licensePattern,
+                packagePattern:
+                    body.packagePattern !== undefined
+                        ? body.packagePattern
+                        : existing.packagePattern,
+                projectId: body.projectId !== undefined ? body.projectId : existing.projectId,
+                priority: body.priority ?? existing.priority,
+                reason: body.reason !== undefined ? body.reason : existing.reason,
+                updatedAt: Date.now()
+            };
 
-    registerRoute(app, deleteLicensePolicyRoute, {}, async (request, reply) => {
-        const { id } = request.params;
-        await db.delete(licensePolicyRules).where(eq(licensePolicyRules.id, id)).run();
-        reply.send({ deleted: true });
-    });
+            await db
+                .update(licensePolicyRules)
+                .set(updates)
+                .where(eq(licensePolicyRules.id, id))
+                .run();
+
+            reply.send({ ...existing, ...updates });
+        }
+    );
+
+    registerRoute(
+        app,
+        deleteLicensePolicyRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id } = request.params;
+            await db.delete(licensePolicyRules).where(eq(licensePolicyRules.id, id)).run();
+            reply.send({ deleted: true });
+        }
+    );
 }

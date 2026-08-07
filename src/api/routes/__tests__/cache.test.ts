@@ -1,15 +1,20 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { eq } from "drizzle-orm";
 import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { registryCache } from "#api/db/schema.js";
 import { CommandRunner } from "../../services/abstractions/CommandRunner.js";
 import { FileConfigService } from "../../services/abstractions/FileConfigService.js";
 import { RegistryCacheService as RegistryCacheServiceReg } from "../../services/RegistryCacheService.js";
 import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../services/packageManagers/PackageManagerDriverRegistry.js";
+import { EmailService } from "../../services/abstractions/EmailService.js";
+import { UserService as UserServiceRegistration } from "../../services/UserService.js";
+import { AuthService as AuthServiceRegistration } from "../../services/AuthService.js";
+import { createAuthHook } from "../../middleware/authHook.js";
 import { cacheRoutes } from "../cache.js";
 
 function createStubFileConfigService(): FileConfigService.Interface {
@@ -24,6 +29,7 @@ function createStubFileConfigService(): FileConfigService.Interface {
 describe("cache routes", () => {
     let app: FastifyInstance;
     let db: Awaited<ReturnType<typeof createTestDb>>;
+    let token: string;
 
     beforeEach(async () => {
         db = await createTestDb();
@@ -44,10 +50,16 @@ describe("cache routes", () => {
         container.register(PackageManagerDriverRegistryReg).inSingletonScope();
         container.registerInstance(FileConfigService, createStubFileConfigService());
         container.register(RegistryCacheServiceReg).inSingletonScope();
+        container.registerInstance(EmailService, { send: vi.fn() });
+        container.register(UserServiceRegistration).inSingletonScope();
+        container.register(AuthServiceRegistration).inSingletonScope();
 
         app = Fastify();
+        app.addHook("onRequest", createAuthHook(container));
         await app.register(cacheRoutes, { container });
         await app.ready();
+
+        ({ token } = await createTestSession({ db }));
     });
 
     afterEach(async () => {
@@ -64,7 +76,11 @@ describe("cache routes", () => {
             .values({ packageName: "vue", data: "{}", cachedAt: Date.now() })
             .run();
 
-        const response = await app.inject({ method: "DELETE", url: "/api/cache" });
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "DELETE",
+            url: "/api/cache"
+        });
 
         expect(response.statusCode).toBe(200);
         expect(response.json()).toEqual({ success: true });
@@ -81,7 +97,11 @@ describe("cache routes", () => {
             .values({ packageName: "vue", data: "{}", cachedAt: Date.now() })
             .run();
 
-        const response = await app.inject({ method: "DELETE", url: "/api/cache/react" });
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "DELETE",
+            url: "/api/cache/react"
+        });
 
         expect(response.statusCode).toBe(200);
         expect(response.json()).toEqual({ success: true });

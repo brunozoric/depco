@@ -3,7 +3,12 @@ import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { EmailService } from "#api/services/abstractions/EmailService.js";
+import { UserService as UserServiceRegistration } from "#api/services/UserService.js";
+import { AuthService as AuthServiceRegistration } from "#api/services/AuthService.js";
+import { createAuthHook } from "#api/middleware/authHook.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { projects } from "#api/db/schema.js";
 import { UpgradeSessionService as UpgradeSessionServiceRegistration } from "#api/services/UpgradeSessionService.js";
@@ -44,6 +49,7 @@ function createMockUpgradeService(): UpgradeService.Interface {
 describe("upgrade session routes", () => {
     let app: FastifyInstance;
     let db: TestDb;
+    let token: string;
     const projectId = "p1";
 
     beforeEach(async () => {
@@ -64,7 +70,8 @@ describe("upgrade session routes", () => {
         container.registerInstance(WebSocketBroadcaster, {
             broadcast: vi.fn(),
             addClient: vi.fn(),
-            removeClient: vi.fn()
+            removeClient: vi.fn(),
+            closeConnectionsForUser: vi.fn()
         });
         container.registerInstance(GitService, createMockGitService());
         container.registerInstance(UpgradeService, createMockUpgradeService());
@@ -87,10 +94,16 @@ describe("upgrade session routes", () => {
             runStreaming: async () => ({ stdout: "", stderr: "", exitCode: 0 })
         });
         container.register(UpgradeSessionServiceRegistration).inSingletonScope();
+        container.registerInstance(EmailService, { send: vi.fn() });
+        container.register(UserServiceRegistration).inSingletonScope();
+        container.register(AuthServiceRegistration).inSingletonScope();
 
         app = Fastify();
+        app.addHook("onRequest", createAuthHook(container));
         await app.register(upgradeSessionRoutes, { container });
         await app.ready();
+
+        ({ token } = await createTestSession({ db }));
     });
 
     afterEach(async () => {
@@ -99,6 +112,7 @@ describe("upgrade session routes", () => {
 
     it("creates a session", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: `/api/projects/${projectId}/upgrade-sessions`,
             payload: {}
@@ -113,6 +127,7 @@ describe("upgrade session routes", () => {
 
     it("returns a session", async () => {
         const createResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: `/api/projects/${projectId}/upgrade-sessions`,
             payload: {}
@@ -120,6 +135,7 @@ describe("upgrade session routes", () => {
         const sessionId = createResponse.json().item.id;
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: `/api/projects/${projectId}/upgrade-sessions/${sessionId}`
         });
@@ -131,6 +147,7 @@ describe("upgrade session routes", () => {
 
     it("returns 404 for unknown session", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: `/api/projects/${projectId}/upgrade-sessions/nonexistent`
         });
@@ -142,6 +159,7 @@ describe("upgrade session routes", () => {
 
     it("execute advances the step", async () => {
         const createResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: `/api/projects/${projectId}/upgrade-sessions`,
             payload: {}
@@ -149,6 +167,7 @@ describe("upgrade session routes", () => {
         const sessionId = createResponse.json().item.id;
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: `/api/projects/${projectId}/upgrade-sessions/${sessionId}/steps/select-packages/execute`,
             payload: { packages: [{ name: "react", targetVersion: "19.0.0" }] }
@@ -165,6 +184,7 @@ describe("upgrade session routes", () => {
 
     it("execute returns 400 for wrong step", async () => {
         const createResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: `/api/projects/${projectId}/upgrade-sessions`,
             payload: {}
@@ -172,6 +192,7 @@ describe("upgrade session routes", () => {
         const sessionId = createResponse.json().item.id;
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: `/api/projects/${projectId}/upgrade-sessions/${sessionId}/steps/branch/execute`,
             payload: { create: false }
@@ -184,6 +205,7 @@ describe("upgrade session routes", () => {
 
     it("skip skips optional step", async () => {
         const createResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: `/api/projects/${projectId}/upgrade-sessions`,
             payload: {}
@@ -191,12 +213,14 @@ describe("upgrade session routes", () => {
         const sessionId = createResponse.json().item.id;
 
         await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: `/api/projects/${projectId}/upgrade-sessions/${sessionId}/steps/select-packages/execute`,
             payload: { packages: [{ name: "react", targetVersion: "19.0.0" }] }
         });
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: `/api/projects/${projectId}/upgrade-sessions/${sessionId}/steps/branch/skip`,
             payload: {}
@@ -211,6 +235,7 @@ describe("upgrade session routes", () => {
 
     it("aborts the session", async () => {
         const createResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: `/api/projects/${projectId}/upgrade-sessions`,
             payload: {}
@@ -218,6 +243,7 @@ describe("upgrade session routes", () => {
         const sessionId = createResponse.json().item.id;
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: `/api/projects/${projectId}/upgrade-sessions/${sessionId}/abort`,
             payload: {}

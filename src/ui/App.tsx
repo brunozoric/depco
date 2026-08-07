@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import {
     ActionIcon,
     AppShell,
+    Button,
     ColorSwatch,
     MantineProvider,
     Menu,
@@ -19,7 +20,13 @@ import { createJobStatusNotificationHandler } from "./shared/notifications/jobNo
 import { showConfigErrorToast } from "./shared/notifications/configErrorNotification.js";
 import { handleSnoozeExpired } from "./shared/notifications/snoozeNotifications.js";
 import { ContainerProvider, useContainer } from "#ui/shared/di/ContainerProvider.js";
+import { useFeature } from "#ui/shared/di/useFeature.js";
 import { navigate, useCurrentPath } from "#ui/shared/router/router.js";
+import { AuthGateway } from "#ui/features/auth/abstractions/AuthGateway.js";
+import { AuthRepository } from "#ui/features/auth/abstractions/AuthRepository.js";
+import { AuthFeature } from "#ui/features/auth/feature.js";
+import { LoginPageFeature } from "./presentation/auth/LoginPage/feature.js";
+import { LoginPage } from "./presentation/auth/LoginPage/LoginPage.js";
 import { PmSettingsGateway } from "#ui/features/settings/abstractions/PmSettingsGateway.js";
 import { AppSettingsGateway } from "#ui/features/appSettings/abstractions/AppSettingsGateway.js";
 import { HTTPClientFeature } from "#ui/httpClient/index.js";
@@ -121,9 +128,16 @@ import { TeamsPage } from "./presentation/teams/TeamsPage/components/TeamsPage.j
 import { TeamDetailFeature } from "./presentation/teams/TeamDetail/feature.js";
 import { TeamDetailProvider } from "./presentation/teams/TeamDetail/TeamDetailProvider.js";
 import { TeamDetailPage } from "./presentation/teams/TeamDetail/components/TeamDetailPage.js";
+import { UsersFeature } from "./features/users/feature.js";
+import { UsersUseCasesFeature } from "./presentation/users/useCases/feature.js";
+import { UserListFeature } from "./presentation/users/UserList/feature.js";
+import { UserListProvider } from "./presentation/users/UserList/UserListProvider.js";
+import { UserListPage } from "./presentation/users/UserList/components/UserListPage.js";
 
 const ALL_FEATURES: AnyFeature[] = [
     HTTPClientFeature,
+    AuthFeature,
+    LoginPageFeature,
     ProjectsFeature,
     UpgradesFeature,
     ProjectsUseCasesFeature,
@@ -179,7 +193,10 @@ const ALL_FEATURES: AnyFeature[] = [
     TeamsFeature,
     TeamsUseCasesFeature,
     TeamsPageFeature,
-    TeamDetailFeature
+    TeamDetailFeature,
+    UsersFeature,
+    UsersUseCasesFeature,
+    UserListFeature
 ];
 
 const UPGRADE_WIZARD_PATH_PATTERN = /^\/projects\/([^/]+)\/upgrade$/;
@@ -204,6 +221,75 @@ function WebSocketConnector(): null {
 
     return null;
 }
+
+// Restores the session on app mount by validating the cached token against
+// the server. Clears auth if the token is no longer valid. Renders nothing.
+function SessionRestorer(): null {
+    const container = useContainer();
+
+    useEffect(() => {
+        const authRepository = container.resolve(AuthRepository);
+        const token = authRepository.token;
+        if (!token) {
+            return;
+        }
+
+        const authGateway = container.resolve(AuthGateway);
+        authGateway
+            .getMe()
+            .then(user => {
+                authRepository.setAuth({ token, user });
+            })
+            .catch(() => {
+                authRepository.clearAuth();
+            });
+    }, [container]);
+
+    return null;
+}
+
+// Checks the URL for a magic-link token/email pair on app mount, verifies it,
+// and strips the params from the URL once handled. Renders nothing.
+function MagicLinkHandler(): null {
+    const container = useContainer();
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get("token");
+        const email = params.get("email");
+        if (!token || !email) {
+            return;
+        }
+
+        const { presenter } = LoginPageFeature.resolve(container);
+        void presenter.verifyMagicLink({ token, email });
+
+        const url = new URL(window.location.href);
+        url.searchParams.delete("token");
+        url.searchParams.delete("email");
+        window.history.replaceState(null, "", url.toString());
+    }, [container]);
+
+    return null;
+}
+
+// Gates the app shell behind authentication. Renders the login page when the
+// user is not authenticated, otherwise renders its children.
+const AuthGate = observer(function AuthGate({
+    children
+}: {
+    children: React.ReactNode;
+}): React.ReactNode {
+    const container = useContainer();
+    const authRepository = container.resolve(AuthRepository);
+    const { presenter } = useFeature(LoginPageFeature);
+
+    if (!authRepository.isAuthenticated) {
+        return <LoginPage presenter={presenter} />;
+    }
+
+    return children;
+});
 
 // Subscribes to job status events via EventBridge and shows toast notifications
 // for terminal job states. Renders nothing — it only manages the subscription.
@@ -305,6 +391,40 @@ const TeamFilterSelect = observer(function TeamFilterSelect(): React.ReactNode {
                 );
             }}
         />
+    );
+});
+
+// Shows the current user's display name in the header and offers a Logout
+// action in its dropdown. Renders nothing when no user is authenticated yet.
+const UserMenu = observer(function UserMenu(): React.ReactNode {
+    const container = useContainer();
+    const authRepository = container.resolve(AuthRepository);
+    const currentUser = authRepository.currentUser;
+
+    if (!currentUser) {
+        return null;
+    }
+
+    async function handleLogout(): Promise<void> {
+        const authGateway = container.resolve(AuthGateway);
+        try {
+            await authGateway.logout();
+        } finally {
+            authRepository.clearAuth();
+        }
+    }
+
+    return (
+        <Menu position="bottom-end" shadow="md" width={180}>
+            <Menu.Target>
+                <Button variant="subtle" size="xs">
+                    {currentUser.displayName}
+                </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+                <Menu.Item onClick={() => void handleLogout()}>Logout</Menu.Item>
+            </Menu.Dropdown>
+        </Menu>
     );
 });
 
@@ -421,6 +541,14 @@ function AppRoutes(): React.ReactNode {
         );
     }
 
+    if (path === "/users") {
+        return (
+            <UserListProvider>
+                {({ presenter }) => <UserListPage presenter={presenter} />}
+            </UserListProvider>
+        );
+    }
+
     if (path === "/packages") {
         return (
             <PackagesProvider>
@@ -504,91 +632,103 @@ export function App(): React.ReactNode {
 
     return (
         <ContainerProvider features={ALL_FEATURES}>
-            <WebSocketConnector />
-            <JobNotificationListener />
-            <SnoozeExpiryListener />
-            <ConfigErrorNotifier />
-            <TeamListLoader />
+            <SessionRestorer />
+            <MagicLinkHandler />
             <MantineProvider>
-                <Notifications position="top-right" />
-                <AppShell header={{ height: 60 }} padding="md">
-                    <AppShell.Header>
-                        <Group h="100%" px="md" justify="space-between">
-                            <Group gap="md">
-                                <Title order={3}>Dependency Manager</Title>
-                                <TeamFilterSelect />
+                <Notifications position="bottom-left" />
+                <AuthGate>
+                    <WebSocketConnector />
+                    <JobNotificationListener />
+                    <SnoozeExpiryListener />
+                    <ConfigErrorNotifier />
+                    <TeamListLoader />
+                    <AppShell header={{ height: 60 }} padding="md">
+                        <AppShell.Header>
+                            <Group h="100%" px="md" justify="space-between">
+                                <Group gap="md">
+                                    <Title order={3}>Dependency Manager</Title>
+                                    <TeamFilterSelect />
+                                </Group>
+                                <Group gap="xs">
+                                    <ActionIcon
+                                        variant="subtle"
+                                        size="lg"
+                                        onClick={() => navigate("/")}
+                                        aria-label="Home"
+                                    >
+                                        &#8962;
+                                    </ActionIcon>
+                                    <UserMenu />
+                                    <Menu position="bottom-end" shadow="md" width={200}>
+                                        <Menu.Target>
+                                            <ActionIcon
+                                                variant="subtle"
+                                                size="lg"
+                                                aria-label="Menu"
+                                            >
+                                                &#9776;
+                                            </ActionIcon>
+                                        </Menu.Target>
+                                        <Menu.Dropdown>
+                                            <Menu.Item onClick={() => navigate("/")}>
+                                                Dashboard
+                                            </Menu.Item>
+                                            <Menu.Item onClick={() => navigate("/projects")}>
+                                                Projects
+                                            </Menu.Item>
+                                            <Menu.Item onClick={() => navigate("/packages")}>
+                                                Packages
+                                            </Menu.Item>
+                                            <Menu.Divider />
+                                            <Menu.Item onClick={() => navigate("/vulnerabilities")}>
+                                                Vulnerabilities
+                                            </Menu.Item>
+                                            <Menu.Item onClick={() => navigate("/licenses")}>
+                                                Licenses
+                                            </Menu.Item>
+                                            <Menu.Item onClick={() => navigate("/trends")}>
+                                                Trends
+                                            </Menu.Item>
+                                            <Menu.Item onClick={() => setSbomDialogOpened(true)}>
+                                                SBOM Export
+                                            </Menu.Item>
+                                            <Menu.Divider />
+                                            <Menu.Item onClick={() => navigate("/teams")}>
+                                                Teams
+                                            </Menu.Item>
+                                            <Menu.Item onClick={() => navigate("/users")}>
+                                                Users
+                                            </Menu.Item>
+                                            <Menu.Item onClick={() => navigate("/jobs")}>
+                                                Jobs
+                                            </Menu.Item>
+                                            <Menu.Divider />
+                                            <Menu.Item onClick={() => navigate("/settings")}>
+                                                PM Settings
+                                            </Menu.Item>
+                                            <Menu.Item onClick={() => navigate("/settings/app")}>
+                                                Templates
+                                            </Menu.Item>
+                                            <Menu.Item onClick={() => navigate("/logs")}>
+                                                Logs
+                                            </Menu.Item>
+                                            <Menu.Item onClick={() => navigate("/backup")}>
+                                                Backup
+                                            </Menu.Item>
+                                        </Menu.Dropdown>
+                                    </Menu>
+                                </Group>
                             </Group>
-                            <Group gap="xs">
-                                <ActionIcon
-                                    variant="subtle"
-                                    size="lg"
-                                    onClick={() => navigate("/")}
-                                    aria-label="Home"
-                                >
-                                    &#8962;
-                                </ActionIcon>
-                                <Menu position="bottom-end" shadow="md" width={200}>
-                                    <Menu.Target>
-                                        <ActionIcon variant="subtle" size="lg" aria-label="Menu">
-                                            &#9776;
-                                        </ActionIcon>
-                                    </Menu.Target>
-                                    <Menu.Dropdown>
-                                        <Menu.Item onClick={() => navigate("/")}>
-                                            Dashboard
-                                        </Menu.Item>
-                                        <Menu.Item onClick={() => navigate("/projects")}>
-                                            Projects
-                                        </Menu.Item>
-                                        <Menu.Item onClick={() => navigate("/packages")}>
-                                            Packages
-                                        </Menu.Item>
-                                        <Menu.Divider />
-                                        <Menu.Item onClick={() => navigate("/vulnerabilities")}>
-                                            Vulnerabilities
-                                        </Menu.Item>
-                                        <Menu.Item onClick={() => navigate("/licenses")}>
-                                            Licenses
-                                        </Menu.Item>
-                                        <Menu.Item onClick={() => navigate("/trends")}>
-                                            Trends
-                                        </Menu.Item>
-                                        <Menu.Item onClick={() => setSbomDialogOpened(true)}>
-                                            SBOM Export
-                                        </Menu.Item>
-                                        <Menu.Divider />
-                                        <Menu.Item onClick={() => navigate("/teams")}>
-                                            Teams
-                                        </Menu.Item>
-                                        <Menu.Item onClick={() => navigate("/jobs")}>
-                                            Jobs
-                                        </Menu.Item>
-                                        <Menu.Divider />
-                                        <Menu.Item onClick={() => navigate("/settings")}>
-                                            PM Settings
-                                        </Menu.Item>
-                                        <Menu.Item onClick={() => navigate("/settings/app")}>
-                                            Templates
-                                        </Menu.Item>
-                                        <Menu.Item onClick={() => navigate("/logs")}>
-                                            Logs
-                                        </Menu.Item>
-                                        <Menu.Item onClick={() => navigate("/backup")}>
-                                            Backup
-                                        </Menu.Item>
-                                    </Menu.Dropdown>
-                                </Menu>
-                            </Group>
-                        </Group>
-                    </AppShell.Header>
-                    <AppShell.Main>
-                        <AppRoutes />
-                    </AppShell.Main>
-                </AppShell>
-                <SbomDialogContainer
-                    opened={sbomDialogOpened}
-                    onClose={() => setSbomDialogOpened(false)}
-                />
+                        </AppShell.Header>
+                        <AppShell.Main>
+                            <AppRoutes />
+                        </AppShell.Main>
+                    </AppShell>
+                    <SbomDialogContainer
+                        opened={sbomDialogOpened}
+                        onClose={() => setSbomDialogOpened(false)}
+                    />
+                </AuthGate>
             </MantineProvider>
         </ContainerProvider>
     );

@@ -3,6 +3,7 @@ import type { Container } from "@webiny/di";
 import { and, asc, desc, eq, inArray, like, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { registerRoute, sendList, sendError } from "#shared/routing/index.js";
+import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listLicensesRoute,
     getLicenseSummaryRoute,
@@ -373,22 +374,31 @@ export async function licenseRoutes(app: FastifyInstance, options: PluginOptions
         sendList(reply, items, items.length);
     });
 
-    registerRoute(app, scanProjectLicensesRoute, {}, async (request, reply) => {
-        const { projectId } = request.params;
+    registerRoute(
+        app,
+        scanProjectLicensesRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { projectId } = request.params;
 
-        const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
-        if (!project) {
-            sendError(reply, 404, "Project not found");
-            return;
+            const project = await db
+                .select()
+                .from(projects)
+                .where(eq(projects.id, projectId))
+                .get();
+            if (!project) {
+                sendError(reply, 404, "Project not found");
+                return;
+            }
+
+            const jobId = await jobWorker.enqueue({
+                referenceId: projectId,
+                referenceType: "project",
+                type: "scan"
+            });
+            reply.send({ jobId });
         }
-
-        const jobId = await jobWorker.enqueue({
-            referenceId: projectId,
-            referenceType: "project",
-            type: "scan"
-        });
-        reply.send({ jobId });
-    });
+    );
 
     registerRoute(app, listLicenseViolationsRoute, {}, async (request, reply) => {
         const conditions = buildViolationConditions(request.query);

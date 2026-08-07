@@ -77,7 +77,8 @@ describe("ChangelogJobExecutor", () => {
         const broadcaster: WebSocketBroadcaster.Interface = {
             broadcast: vi.fn(),
             addClient: vi.fn(),
-            removeClient: vi.fn()
+            removeClient: vi.fn(),
+            closeConnectionsForUser: vi.fn()
         };
 
         const executor = createExecutor({ db }, broadcaster);

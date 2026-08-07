@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { and, eq, gte, lte, sql, type SQL } from "drizzle-orm";
 import { registerRoute, sendOne, sendList, sendNone, sendError } from "#shared/routing/index.js";
+import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     createUpgradeJobRoute,
     listJobsRoute,
@@ -61,68 +62,78 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
     // {name, from, to} using the latest scan results, then enqueues a
     // dependency job. If `refreshTransient` is true, it's forwarded to the
     // worker, which chains a transient job after the dependency job completes.
-    registerRoute(app, createUpgradeJobRoute, {}, async (request, reply) => {
-        const { id } = request.params;
-        const body = request.body;
+    registerRoute(
+        app,
+        createUpgradeJobRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id } = request.params;
+            const body = request.body;
 
-        const project = await db.select().from(projects).where(eq(projects.id, id)).get();
-        if (!project) {
-            sendError(reply, 404, "Project not found");
-            return;
-        }
+            const project = await db.select().from(projects).where(eq(projects.id, id)).get();
+            if (!project) {
+                sendError(reply, 404, "Project not found");
+                return;
+            }
 
-        const scanned = await db
-            .select()
-            .from(scanResults)
-            .where(eq(scanResults.projectId, id))
-            .all();
-        const packagesWithFrom = body.packages.map(pkg => {
-            const found = scanned.find(dep => dep.name === pkg.name);
-            return {
-                name: pkg.name,
-                from: found?.currentVersion ?? "unknown",
-                to: pkg.targetVersion
-            };
-        });
-
-        try {
-            const jobId = await jobWorker.enqueue({
-                referenceId: id,
-                referenceType: "project",
-                type: "dependency",
-                packages: packagesWithFrom,
-                refreshTransient: body.refreshTransient === true
+            const scanned = await db
+                .select()
+                .from(scanResults)
+                .where(eq(scanResults.projectId, id))
+                .all();
+            const packagesWithFrom = body.packages.map(pkg => {
+                const found = scanned.find(dep => dep.name === pkg.name);
+                return {
+                    name: pkg.name,
+                    from: found?.currentVersion ?? "unknown",
+                    to: pkg.targetVersion
+                };
             });
 
-            sendOne(reply, { jobId });
-        } catch (error) {
-            sendError(reply, 403, (error as Error).message);
+            try {
+                const jobId = await jobWorker.enqueue({
+                    referenceId: id,
+                    referenceType: "project",
+                    type: "dependency",
+                    packages: packagesWithFrom,
+                    refreshTransient: body.refreshTransient === true
+                });
+
+                sendOne(reply, { jobId });
+            } catch (error) {
+                sendError(reply, 403, (error as Error).message);
+            }
         }
-    });
+    );
 
     // POST /api/projects/:id/jobs/transient — enqueue a standalone
     // transient (refresh) job.
-    registerRoute(app, createTransientJobRoute, {}, async (request, reply) => {
-        const { id } = request.params;
+    registerRoute(
+        app,
+        createTransientJobRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id } = request.params;
 
-        const project = await db.select().from(projects).where(eq(projects.id, id)).get();
-        if (!project) {
-            sendError(reply, 404, "Project not found");
-            return;
+            const project = await db.select().from(projects).where(eq(projects.id, id)).get();
+            if (!project) {
+                sendError(reply, 404, "Project not found");
+                return;
+            }
+
+            try {
+                const jobId = await jobWorker.enqueue({
+                    referenceId: id,
+                    referenceType: "project",
+                    type: "transient"
+                });
+
+                sendOne(reply, { jobId });
+            } catch (error) {
+                sendError(reply, 403, (error as Error).message);
+            }
         }
-
-        try {
-            const jobId = await jobWorker.enqueue({
-                referenceId: id,
-                referenceType: "project",
-                type: "transient"
-            });
-
-            sendOne(reply, { jobId });
-        } catch (error) {
-            sendError(reply, 403, (error as Error).message);
-        }
-    });
+    );
 
     // GET /api/projects/:id/jobs/:jobId — job status + logs.
     registerRoute(app, getJobRoute, {}, async (request, reply) => {
@@ -179,36 +190,46 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
     });
 
     // POST /api/jobs/:jobId/cancel — cancel or kill a job.
-    registerRoute(app, cancelJobRoute, {}, async (request, reply) => {
-        const { jobId } = request.params;
-        const job = await jobWorker.getJob(jobId);
-        if (!job) {
-            sendError(reply, 404, "Job not found");
-            return;
+    registerRoute(
+        app,
+        cancelJobRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { jobId } = request.params;
+            const job = await jobWorker.getJob(jobId);
+            if (!job) {
+                sendError(reply, 404, "Job not found");
+                return;
+            }
+            await jobWorker.cancelJob(jobId);
+            sendNone(reply);
         }
-        await jobWorker.cancelJob(jobId);
-        sendNone(reply);
-    });
+    );
 
     // DELETE /api/jobs — bulk delete jobs matching filters.
-    registerRoute(app, deleteJobsRoute, {}, async (request, reply) => {
-        const { status, type, referenceId, from, to } = request.body;
-        const where = buildJobConditions({ status, type, referenceId, from, to });
+    registerRoute(
+        app,
+        deleteJobsRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { status, type, referenceId, from, to } = request.body;
+            const where = buildJobConditions({ status, type, referenceId, from, to });
 
-        const countResult = (await db
-            .select({ count: sql<number>`COUNT(*)` })
-            .from(upgradeJobs)
-            .where(where)
-            .get()) as ICountRow | undefined;
+            const countResult = (await db
+                .select({ count: sql<number>`COUNT(*)` })
+                .from(upgradeJobs)
+                .where(where)
+                .get()) as ICountRow | undefined;
 
-        const deleted = countResult?.count ?? 0;
+            const deleted = countResult?.count ?? 0;
 
-        if (where) {
-            await db.delete(upgradeJobs).where(where).run();
-        } else {
-            await db.delete(upgradeJobs).run();
+            if (where) {
+                await db.delete(upgradeJobs).where(where).run();
+            } else {
+                await db.delete(upgradeJobs).run();
+            }
+
+            reply.send({ deleted });
         }
-
-        reply.send({ deleted });
-    });
+    );
 }

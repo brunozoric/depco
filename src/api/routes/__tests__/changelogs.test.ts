@@ -1,10 +1,15 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { CommandRunner } from "../../services/abstractions/CommandRunner.js";
+import { EmailService } from "../../services/abstractions/EmailService.js";
+import { UserService as UserServiceRegistration } from "../../services/UserService.js";
+import { AuthService as AuthServiceRegistration } from "../../services/AuthService.js";
+import { createAuthHook } from "../../middleware/authHook.js";
 import { FileConfigService } from "../../services/abstractions/FileConfigService.js";
 import { RegistryCacheService as RegistryCacheServiceReg } from "../../services/RegistryCacheService.js";
 import { ChangelogService as ChangelogServiceReg } from "../../services/ChangelogService.js";
@@ -95,6 +100,7 @@ describe("changelog routes", () => {
     let app: FastifyInstance;
     let db: Awaited<ReturnType<typeof createTestDb>>;
     let enqueuedJobs: JobWorker.CreateJobInput[];
+    let token: string;
 
     beforeEach(async () => {
         db = await createTestDb();
@@ -135,10 +141,16 @@ describe("changelog routes", () => {
             waitForJobs: async () => [],
             getRunningJobsForReference: async () => []
         });
+        container.registerInstance(EmailService, { send: vi.fn() });
+        container.register(UserServiceRegistration).inSingletonScope();
+        container.register(AuthServiceRegistration).inSingletonScope();
 
         app = Fastify();
+        app.addHook("onRequest", createAuthHook(container));
         await app.register(changelogRoutes, { container });
         await app.ready();
+
+        ({ token } = await createTestSession({ db }));
     });
 
     afterEach(async () => {
@@ -147,6 +159,7 @@ describe("changelog routes", () => {
 
     it("GET /api/changelogs/:packageName returns empty array when no changelogs exist", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/changelogs/react?from=18.0.0&to=19.0.0"
         });
@@ -177,6 +190,7 @@ describe("changelog routes", () => {
         });
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/changelogs/react?from=18.0.0&to=18.2.0"
         });
@@ -226,6 +240,7 @@ describe("changelog routes", () => {
         });
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/changelogs/react?from=18.0.0&to=18.1.5"
         });
@@ -248,6 +263,7 @@ describe("changelog routes", () => {
         });
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/changelogs/react?from=18.0.0&to=18.2.0"
         });
@@ -298,6 +314,7 @@ describe("changelog routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/changelogs/react?from=18.0.0&to=18.2.0"
         });
@@ -340,6 +357,7 @@ describe("changelog routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/changelogs/react?from=18.0.0&to=19.0.0"
         });
@@ -377,6 +395,7 @@ describe("changelog routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/changelogs/react?from=18.0.0&to=18.2.0"
         });
@@ -398,6 +417,7 @@ describe("changelog routes", () => {
         });
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/changelogs/react/re-resolve",
             payload: { from: "18.0.0", to: "18.2.0" }
@@ -443,6 +463,7 @@ describe("changelog routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/changelogs/react/re-resolve",
             payload: { from: "18.0.0", to: "18.2.0" }
@@ -477,6 +498,7 @@ describe("changelog routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/changelogs/react/re-resolve",
             payload: { from: "18.0.0", to: "19.0.0" }
@@ -515,6 +537,7 @@ describe("changelog routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/changelogs/react/re-resolve",
             payload: { from: "18.0.0", to: "18.2.0" }
@@ -549,6 +572,7 @@ describe("changelog routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/changelogs/react/re-resolve",
             payload: { from: "18.0.0", to: "18.2.0" }

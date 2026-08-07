@@ -5,7 +5,12 @@ import { eq } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { EmailService } from "#api/services/abstractions/EmailService.js";
+import { UserService as UserServiceRegistration } from "#api/services/UserService.js";
+import { AuthService as AuthServiceRegistration } from "#api/services/AuthService.js";
+import { createAuthHook } from "#api/middleware/authHook.js";
 import { CommandRunner } from "#api/services/abstractions/CommandRunner.js";
 import { VulnerabilityService } from "#api/services/abstractions/VulnerabilityService.js";
 import type {
@@ -31,6 +36,7 @@ type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 interface IRouteTestContext {
     app: FastifyInstance;
     db: TestDb;
+    token: string;
 }
 
 function makeVulnerability(overrides: Partial<IVulnerability> = {}): IVulnerability {
@@ -174,12 +180,18 @@ async function createTestContext(): Promise<IRouteTestContext> {
     container.register(PackageManagerServiceImpl).inSingletonScope();
     container.register(OsvCacheServiceImpl).inSingletonScope();
     container.register(VulnerabilityServiceImpl).inSingletonScope();
+    container.registerInstance(EmailService, { send: vi.fn() });
+    container.register(UserServiceRegistration).inSingletonScope();
+    container.register(AuthServiceRegistration).inSingletonScope();
 
     const app = Fastify();
+    app.addHook("onRequest", createAuthHook(container));
     await app.register(vulnerabilityRoutes, { container });
     await app.ready();
 
-    return { app, db };
+    const { token } = await createTestSession({ db });
+
+    return { app, db, token };
 }
 
 async function insertTestProject(db: TestDb, id: string): Promise<void> {
@@ -273,6 +285,7 @@ describe("vulnerability routes", () => {
     let db: TestDb;
     let vulnerabilityService: VulnerabilityService.Interface;
     let osvCacheService: OsvCacheService.Interface;
+    let token: string;
 
     beforeEach(async () => {
         db = await createTestDb();
@@ -282,10 +295,16 @@ describe("vulnerability routes", () => {
         container.registerInstance(DatabaseClient, { db });
         container.registerInstance(VulnerabilityService, vulnerabilityService);
         container.registerInstance(OsvCacheService, osvCacheService);
+        container.registerInstance(EmailService, { send: vi.fn() });
+        container.register(UserServiceRegistration).inSingletonScope();
+        container.register(AuthServiceRegistration).inSingletonScope();
 
         app = Fastify();
+        app.addHook("onRequest", createAuthHook(container));
         await app.register(vulnerabilityRoutes, { container });
         await app.ready();
+
+        ({ token } = await createTestSession({ db }));
     });
 
     afterEach(async () => {
@@ -303,7 +322,11 @@ describe("vulnerability routes", () => {
                 total: items.length
             });
 
-            const response = await app.inject({ method: "GET", url: "/api/vulnerabilities" });
+            const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "GET",
+                url: "/api/vulnerabilities"
+            });
 
             expect(response.statusCode).toBe(200);
             const body = response.json();
@@ -318,7 +341,11 @@ describe("vulnerability routes", () => {
             const items = [makeVulnerability({ projectId: "missing-project" })];
             vi.mocked(vulnerabilityService.getAll).mockResolvedValue(items);
 
-            const response = await app.inject({ method: "GET", url: "/api/vulnerabilities" });
+            const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "GET",
+                url: "/api/vulnerabilities"
+            });
 
             expect(response.statusCode).toBe(200);
             const body = response.json();
@@ -329,6 +356,7 @@ describe("vulnerability routes", () => {
             vi.mocked(vulnerabilityService.getAll).mockResolvedValue([]);
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/vulnerabilities?severity=critical&packageName=lodash&source=osv"
             });
@@ -360,6 +388,7 @@ describe("vulnerability routes", () => {
             vi.mocked(vulnerabilityService.getAll).mockResolvedValue([]);
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: `/api/vulnerabilities?teamId=${teamId}`
             });
@@ -391,6 +420,7 @@ describe("vulnerability routes", () => {
             vi.mocked(vulnerabilityService.getAll).mockResolvedValue([]);
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: `/api/vulnerabilities?teamId=${teamId}&projectIds=proj-b,proj-c`
             });
@@ -409,6 +439,7 @@ describe("vulnerability routes", () => {
                 .run();
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: `/api/vulnerabilities?teamId=${teamId}`
             });
@@ -434,6 +465,7 @@ describe("vulnerability routes", () => {
                 .run();
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: `/api/vulnerabilities?teamId=${teamId}&projectIds=proj-b`
             });
@@ -468,6 +500,7 @@ describe("vulnerability routes", () => {
             vi.mocked(vulnerabilityService.getSummary).mockResolvedValue(summary);
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/vulnerabilities/summary"
             });
@@ -491,6 +524,7 @@ describe("vulnerability routes", () => {
             vi.mocked(vulnerabilityService.getSummary).mockResolvedValue(summary);
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/vulnerabilities/summary"
             });
@@ -522,6 +556,7 @@ describe("vulnerability routes", () => {
             vi.mocked(vulnerabilityService.getSummary).mockResolvedValue(summary);
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/vulnerabilities/summary"
             });
@@ -546,6 +581,7 @@ describe("vulnerability routes", () => {
             });
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/vulnerabilities/proj-1"
             });
@@ -562,6 +598,7 @@ describe("vulnerability routes", () => {
             vi.mocked(vulnerabilityService.getLatest).mockResolvedValue([]);
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/vulnerabilities/proj-1?severity=low&source=both"
             });
@@ -576,10 +613,11 @@ describe("vulnerability routes", () => {
 
     describe("GET /api/vulnerabilities/:projectId (sorting and pagination)", () => {
         it("returns paginated results when page and pageSize are provided", async () => {
-            const { app: testApp, db } = await createTestContext();
+            const { app: testApp, db, token: testToken } = await createTestContext();
             await seedVulnerabilities(db, 5, "proj-page");
 
             const response = await testApp.inject({
+                headers: { authorization: `Bearer ${testToken}` },
                 method: "GET",
                 url: "/api/vulnerabilities/proj-page?page=1&pageSize=2"
             });
@@ -593,7 +631,7 @@ describe("vulnerability routes", () => {
         });
 
         it("sorts by packageName ascending", async () => {
-            const { app: testApp, db } = await createTestContext();
+            const { app: testApp, db, token: testToken } = await createTestContext();
             const projectId = "proj-sort";
             await insertTestProject(db, projectId);
             await db.insert(vulnerabilities).values([
@@ -628,6 +666,7 @@ describe("vulnerability routes", () => {
             ]);
 
             const response = await testApp.inject({
+                headers: { authorization: `Bearer ${testToken}` },
                 method: "GET",
                 url: `/api/vulnerabilities/${projectId}?sortBy=packageName&sortOrder=asc`
             });
@@ -640,7 +679,7 @@ describe("vulnerability routes", () => {
         });
 
         it("defaults to severity desc when no sort params provided", async () => {
-            const { app: testApp, db } = await createTestContext();
+            const { app: testApp, db, token: testToken } = await createTestContext();
             const projectId = "proj-default-sort";
             await insertTestProject(db, projectId);
             await db.insert(vulnerabilities).values([
@@ -675,6 +714,7 @@ describe("vulnerability routes", () => {
             ]);
 
             const response = await testApp.inject({
+                headers: { authorization: `Bearer ${testToken}` },
                 method: "GET",
                 url: `/api/vulnerabilities/${projectId}`
             });
@@ -709,6 +749,7 @@ describe("vulnerability routes", () => {
             vi.mocked(vulnerabilityService.scan).mockResolvedValue(scanResult);
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: `/api/vulnerabilities/${projectId}/scan`
             });
@@ -726,6 +767,7 @@ describe("vulnerability routes", () => {
 
         it("returns 404 when the project does not exist", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/vulnerabilities/does-not-exist/scan"
             });
@@ -747,6 +789,7 @@ describe("vulnerability routes", () => {
                 .run();
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: `/api/vulnerabilities/${projectId}/scan`
             });
@@ -761,6 +804,7 @@ describe("vulnerability routes", () => {
             vi.mocked(vulnerabilityService.forceOsvRefresh).mockResolvedValue(5);
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/vulnerabilities/osv/refresh",
                 payload: { packageName: "lodash" }
@@ -778,6 +822,7 @@ describe("vulnerability routes", () => {
             vi.mocked(vulnerabilityService.forceOsvRefresh).mockResolvedValue(42);
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/vulnerabilities/osv/refresh",
                 payload: { all: true }
@@ -791,10 +836,11 @@ describe("vulnerability routes", () => {
 
     describe("PATCH /api/vulnerabilities/bulk", () => {
         it("dismisses selected vulnerabilities", async () => {
-            const { app: testApp, db } = await createTestContext();
+            const { app: testApp, db, token: testToken } = await createTestContext();
             const vulnerabilityIds = await seedVulnerabilities(db, 3);
 
             const response = await testApp.inject({
+                headers: { authorization: `Bearer ${testToken}` },
                 method: "PATCH",
                 url: "/api/vulnerabilities/bulk",
                 payload: { ids: [vulnerabilityIds[0], vulnerabilityIds[1]], action: "dismiss" }
@@ -807,10 +853,11 @@ describe("vulnerability routes", () => {
         });
 
         it("snoozes with required snoozeDays", async () => {
-            const { app: testApp, db } = await createTestContext();
+            const { app: testApp, db, token: testToken } = await createTestContext();
             const vulnerabilityIds = await seedVulnerabilities(db, 2);
 
             const response = await testApp.inject({
+                headers: { authorization: `Bearer ${testToken}` },
                 method: "PATCH",
                 url: "/api/vulnerabilities/bulk",
                 payload: { ids: [vulnerabilityIds[0]], action: "snooze", snoozeDays: 30 }
@@ -823,10 +870,11 @@ describe("vulnerability routes", () => {
         });
 
         it("rejects snooze without snoozeDays", async () => {
-            const { app: testApp, db } = await createTestContext();
+            const { app: testApp, db, token: testToken } = await createTestContext();
             const vulnerabilityIds = await seedVulnerabilities(db, 1);
 
             const response = await testApp.inject({
+                headers: { authorization: `Bearer ${testToken}` },
                 method: "PATCH",
                 url: "/api/vulnerabilities/bulk",
                 payload: { ids: [vulnerabilityIds[0]], action: "snooze" }
@@ -838,9 +886,10 @@ describe("vulnerability routes", () => {
         });
 
         it("rejects empty ids array", async () => {
-            const { app: testApp } = await createTestContext();
+            const { app: testApp, token: testToken } = await createTestContext();
 
             const response = await testApp.inject({
+                headers: { authorization: `Bearer ${testToken}` },
                 method: "PATCH",
                 url: "/api/vulnerabilities/bulk",
                 payload: { ids: [], action: "dismiss" }
@@ -852,15 +901,17 @@ describe("vulnerability routes", () => {
         });
 
         it("undismisses selected vulnerabilities", async () => {
-            const { app: testApp, db } = await createTestContext();
+            const { app: testApp, db, token: testToken } = await createTestContext();
             const vulnerabilityIds = await seedVulnerabilities(db, 2);
             await testApp.inject({
+                headers: { authorization: `Bearer ${testToken}` },
                 method: "PATCH",
                 url: "/api/vulnerabilities/bulk",
                 payload: { ids: vulnerabilityIds, action: "dismiss" }
             });
 
             const response = await testApp.inject({
+                headers: { authorization: `Bearer ${testToken}` },
                 method: "PATCH",
                 url: "/api/vulnerabilities/bulk",
                 payload: { ids: vulnerabilityIds, action: "undismiss" }
@@ -875,13 +926,14 @@ describe("vulnerability routes", () => {
 
     describe("POST /api/vulnerabilities/bulk/rescan", () => {
         it("queues scans for unique projects of selected vulnerabilities", async () => {
-            const { app: testApp, db } = await createTestContext();
+            const { app: testApp, db, token: testToken } = await createTestContext();
             const vulnerabilityIds = await seedVulnerabilitiesAcrossProjects(db, {
                 "project-1": 2,
                 "project-2": 1
             });
 
             const response = await testApp.inject({
+                headers: { authorization: `Bearer ${testToken}` },
                 method: "POST",
                 url: "/api/vulnerabilities/bulk/rescan",
                 payload: { ids: vulnerabilityIds }
@@ -894,9 +946,10 @@ describe("vulnerability routes", () => {
         });
 
         it("rejects an empty ids array", async () => {
-            const { app: testApp } = await createTestContext();
+            const { app: testApp, token: testToken } = await createTestContext();
 
             const response = await testApp.inject({
+                headers: { authorization: `Bearer ${testToken}` },
                 method: "POST",
                 url: "/api/vulnerabilities/bulk/rescan",
                 payload: { ids: [] }
@@ -910,10 +963,11 @@ describe("vulnerability routes", () => {
 
     describe("GET /api/vulnerabilities/export", () => {
         it("exports as JSON with correct content-disposition", async () => {
-            const { app: testApp, db } = await createTestContext();
+            const { app: testApp, db, token: testToken } = await createTestContext();
             await seedVulnerabilities(db, 3);
 
             const response = await testApp.inject({
+                headers: { authorization: `Bearer ${testToken}` },
                 method: "GET",
                 url: "/api/vulnerabilities/export?format=json"
             });
@@ -928,10 +982,11 @@ describe("vulnerability routes", () => {
         });
 
         it("exports as CSV with header row and quoted fields", async () => {
-            const { app: testApp, db } = await createTestContext();
+            const { app: testApp, db, token: testToken } = await createTestContext();
             await seedVulnerabilities(db, 2);
 
             const response = await testApp.inject({
+                headers: { authorization: `Bearer ${testToken}` },
                 method: "GET",
                 url: "/api/vulnerabilities/export?format=csv"
             });
@@ -948,10 +1003,11 @@ describe("vulnerability routes", () => {
         });
 
         it("exports only selected ids when ids param provided", async () => {
-            const { app: testApp, db } = await createTestContext();
+            const { app: testApp, db, token: testToken } = await createTestContext();
             const vulnerabilityIds = await seedVulnerabilities(db, 5);
 
             const response = await testApp.inject({
+                headers: { authorization: `Bearer ${testToken}` },
                 method: "GET",
                 url: `/api/vulnerabilities/export?format=json&ids=${vulnerabilityIds[0]},${vulnerabilityIds[1]}`
             });
@@ -962,10 +1018,11 @@ describe("vulnerability routes", () => {
         });
 
         it("applies filters to export", async () => {
-            const { app: testApp, db } = await createTestContext();
+            const { app: testApp, db, token: testToken } = await createTestContext();
             await seedVulnerabilitiesWithSeverities(db, { critical: 2, low: 3 });
 
             const response = await testApp.inject({
+                headers: { authorization: `Bearer ${testToken}` },
                 method: "GET",
                 url: "/api/vulnerabilities/export?format=json&severity=critical"
             });
@@ -982,6 +1039,7 @@ describe("vulnerability routes", () => {
             vi.mocked(vulnerabilityService.getById).mockResolvedValue(detail);
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/vulnerabilities/some-id/detail"
             });
@@ -1004,6 +1062,7 @@ describe("vulnerability routes", () => {
             vi.mocked(osvCacheService.getEnrichedDetail).mockResolvedValue(enriched);
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/vulnerabilities/some-id/detail"
             });
@@ -1019,6 +1078,7 @@ describe("vulnerability routes", () => {
             vi.mocked(vulnerabilityService.getById).mockResolvedValue(null);
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/vulnerabilities/missing-id/detail"
             });
@@ -1033,6 +1093,7 @@ describe("vulnerability routes", () => {
             vi.mocked(vulnerabilityService.getLatest).mockResolvedValue([]);
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/vulnerabilities/some-id/detail"
             });
@@ -1045,7 +1106,7 @@ describe("vulnerability routes", () => {
 
     describe("dependencyType filtering", () => {
         it("list route returns only direct dependencies when dependencyType=direct", async () => {
-            const { app, db } = await createTestContext();
+            const { app, db, token } = await createTestContext();
             try {
                 await insertTestProject(db, "proj-1");
 
@@ -1065,6 +1126,7 @@ describe("vulnerability routes", () => {
                 ]);
 
                 const response = await app.inject({
+                    headers: { authorization: `Bearer ${token}` },
                     method: "GET",
                     url: "/api/vulnerabilities?dependencyType=direct"
                 });
@@ -1080,7 +1142,7 @@ describe("vulnerability routes", () => {
         });
 
         it("list route returns only transitive dependencies when dependencyType=transitive", async () => {
-            const { app, db } = await createTestContext();
+            const { app, db, token } = await createTestContext();
             try {
                 await insertTestProject(db, "proj-1");
 
@@ -1100,6 +1162,7 @@ describe("vulnerability routes", () => {
                 ]);
 
                 const response = await app.inject({
+                    headers: { authorization: `Bearer ${token}` },
                     method: "GET",
                     url: "/api/vulnerabilities?dependencyType=transitive"
                 });
@@ -1115,7 +1178,7 @@ describe("vulnerability routes", () => {
         });
 
         it("list route returns all when no dependencyType specified", async () => {
-            const { app, db } = await createTestContext();
+            const { app, db, token } = await createTestContext();
             try {
                 await insertTestProject(db, "proj-1");
 
@@ -1135,6 +1198,7 @@ describe("vulnerability routes", () => {
                 ]);
 
                 const response = await app.inject({
+                    headers: { authorization: `Bearer ${token}` },
                     method: "GET",
                     url: "/api/vulnerabilities"
                 });
@@ -1148,7 +1212,7 @@ describe("vulnerability routes", () => {
         });
 
         it("export route filters by dependencyType=direct", async () => {
-            const { app, db } = await createTestContext();
+            const { app, db, token } = await createTestContext();
             try {
                 await insertTestProject(db, "proj-1");
 
@@ -1168,6 +1232,7 @@ describe("vulnerability routes", () => {
                 ]);
 
                 const response = await app.inject({
+                    headers: { authorization: `Bearer ${token}` },
                     method: "GET",
                     url: "/api/vulnerabilities/export?format=json&dependencyType=direct"
                 });
@@ -1182,7 +1247,7 @@ describe("vulnerability routes", () => {
         });
 
         it("export route filters by dependencyType=transitive", async () => {
-            const { app, db } = await createTestContext();
+            const { app, db, token } = await createTestContext();
             try {
                 await insertTestProject(db, "proj-1");
 
@@ -1202,6 +1267,7 @@ describe("vulnerability routes", () => {
                 ]);
 
                 const response = await app.inject({
+                    headers: { authorization: `Bearer ${token}` },
                     method: "GET",
                     url: "/api/vulnerabilities/export?format=json&dependencyType=transitive"
                 });
@@ -1216,7 +1282,7 @@ describe("vulnerability routes", () => {
         });
 
         it("summary route computes transitiveCount and directCount from stored dependencyKind values", async () => {
-            const { app, db } = await createTestContext();
+            const { app, db, token } = await createTestContext();
             try {
                 await insertTestProject(db, "proj-1");
 
@@ -1248,6 +1314,7 @@ describe("vulnerability routes", () => {
                 ]);
 
                 const response = await app.inject({
+                    headers: { authorization: `Bearer ${token}` },
                     method: "GET",
                     url: "/api/vulnerabilities/summary"
                 });

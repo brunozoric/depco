@@ -5,6 +5,7 @@ import { join } from "path";
 import { eq, and, sql, like, type SQL } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import { registerRoute, sendOne, sendList, sendNone, sendError } from "#shared/routing/index.js";
+import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     createProjectRoute,
     listProjectsRoute,
@@ -61,33 +62,38 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
     // POST /api/projects — register project (name derived from package.json,
     // package manager detected via lockfile presence, version detected via
     // the detected package manager's CLI in the project directory).
-    registerRoute(app, createProjectRoute, {}, async (request, reply) => {
-        const { path: projectPath } = request.body;
+    registerRoute(
+        app,
+        createProjectRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { path: projectPath } = request.body;
 
-        let registered;
-        try {
-            registered = await registerProjectHelper({
-                projectPath,
-                databaseClient,
-                packageManagerService
-            });
-        } catch (error) {
-            sendError(reply, 400, (error as Error).message);
-            return;
+            let registered;
+            try {
+                registered = await registerProjectHelper({
+                    projectPath,
+                    databaseClient,
+                    packageManagerService
+                });
+            } catch (error) {
+                sendError(reply, 400, (error as Error).message);
+                return;
+            }
+
+            void securityService.check(registered.id, projectPath);
+
+            sendOne(
+                reply,
+                {
+                    ...registered,
+                    lastScannedAt: null,
+                    hasNodeModules: existsSync(join(registered.path, "node_modules"))
+                },
+                201
+            );
         }
-
-        void securityService.check(registered.id, projectPath);
-
-        sendOne(
-            reply,
-            {
-                ...registered,
-                lastScannedAt: null,
-                hasNodeModules: existsSync(join(registered.path, "node_modules"))
-            },
-            201
-        );
-    });
+    );
 
     // GET /api/projects — list all projects along with their latest security status.
     registerRoute(app, listProjectsRoute, {}, async (_request, reply) => {
@@ -140,98 +146,115 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
     });
 
     // POST /api/projects/import — add projects from a list of paths.
-    registerRoute(app, importProjectsRoute, {}, async (request, reply) => {
-        const results: { path: string; status: "added" | "skipped" | "failed"; error?: string }[] =
-            [];
+    registerRoute(
+        app,
+        importProjectsRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const results: {
+                path: string;
+                status: "added" | "skipped" | "failed";
+                error?: string;
+            }[] = [];
 
-        for (const { path: projectPath } of request.body.items) {
+            for (const { path: projectPath } of request.body.items) {
+                const existing = await db
+                    .select()
+                    .from(projects)
+                    .where(eq(projects.path, projectPath))
+                    .get();
+
+                if (existing) {
+                    results.push({ path: projectPath, status: "skipped" });
+                    continue;
+                }
+
+                try {
+                    const registered = await registerProjectHelper({
+                        projectPath,
+                        databaseClient,
+                        packageManagerService
+                    });
+
+                    void securityService.check(registered.id, projectPath);
+                    void jobWorker.enqueue({
+                        referenceId: registered.id,
+                        referenceType: "project",
+                        type: "scan"
+                    });
+
+                    results.push({ path: projectPath, status: "added" });
+                } catch (error) {
+                    results.push({
+                        path: projectPath,
+                        status: "failed",
+                        error: (error as Error).message
+                    });
+                }
+            }
+
+            sendList(reply, results, results.length);
+        }
+    );
+
+    // POST /api/projects/clone — validate URL, extract repo name, enqueue a clone job.
+    registerRoute(
+        app,
+        cloneProjectRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { url, destination, folderName } = request.body;
+
+            if (!url.startsWith("https://") && !url.startsWith("git@")) {
+                sendError(reply, 400, "Only https:// and git@ URLs are supported");
+                return;
+            }
+
+            const repoName = extractRepoName(url);
+            if (!repoName) {
+                sendError(reply, 400, "Could not extract repository name from URL");
+                return;
+            }
+
+            const targetFolder = folderName ?? repoName;
+
+            if (
+                targetFolder.includes("/") ||
+                targetFolder.includes("\\") ||
+                targetFolder.includes("..")
+            ) {
+                sendError(reply, 400, "Folder name must not contain path separators or '..'");
+                return;
+            }
+
+            const finalPath = join(destination, targetFolder);
+
+            if (!existsSync(destination)) {
+                sendError(reply, 400, `Destination directory does not exist: ${destination}`);
+                return;
+            }
+
             const existing = await db
                 .select()
                 .from(projects)
-                .where(eq(projects.path, projectPath))
+                .where(eq(projects.path, finalPath))
                 .get();
 
             if (existing) {
-                results.push({ path: projectPath, status: "skipped" });
-                continue;
+                sendError(reply, 409, `A project is already registered at ${finalPath}`);
+                return;
             }
 
-            try {
-                const registered = await registerProjectHelper({
-                    projectPath,
-                    databaseClient,
-                    packageManagerService
-                });
+            const jobId = await jobWorker.enqueue({
+                referenceId: "clone",
+                referenceType: "project",
+                type: "clone",
+                packages: JSON.stringify({ url, destination: finalPath })
+            });
 
-                void securityService.check(registered.id, projectPath);
-                void jobWorker.enqueue({
-                    referenceId: registered.id,
-                    referenceType: "project",
-                    type: "scan"
-                });
-
-                results.push({ path: projectPath, status: "added" });
-            } catch (error) {
-                results.push({
-                    path: projectPath,
-                    status: "failed",
-                    error: (error as Error).message
-                });
-            }
+            sendOne(reply, { jobId });
         }
-
-        sendList(reply, results, results.length);
-    });
-
-    // POST /api/projects/clone — validate URL, extract repo name, enqueue a clone job.
-    registerRoute(app, cloneProjectRoute, {}, async (request, reply) => {
-        const { url, destination, folderName } = request.body;
-
-        if (!url.startsWith("https://") && !url.startsWith("git@")) {
-            sendError(reply, 400, "Only https:// and git@ URLs are supported");
-            return;
-        }
-
-        const repoName = extractRepoName(url);
-        if (!repoName) {
-            sendError(reply, 400, "Could not extract repository name from URL");
-            return;
-        }
-
-        const targetFolder = folderName ?? repoName;
-
-        if (
-            targetFolder.includes("/") ||
-            targetFolder.includes("\\") ||
-            targetFolder.includes("..")
-        ) {
-            sendError(reply, 400, "Folder name must not contain path separators or '..'");
-            return;
-        }
-
-        const finalPath = join(destination, targetFolder);
-
-        if (!existsSync(destination)) {
-            sendError(reply, 400, `Destination directory does not exist: ${destination}`);
-            return;
-        }
-
-        const existing = await db.select().from(projects).where(eq(projects.path, finalPath)).get();
-
-        if (existing) {
-            sendError(reply, 409, `A project is already registered at ${finalPath}`);
-            return;
-        }
-
-        const jobId = await jobWorker.enqueue({
-            referenceId: "clone",
-            referenceType: "project",
-            type: "clone",
-            packages: JSON.stringify({ url, destination: finalPath })
-        });
-
-        sendOne(reply, { jobId });
-    });
+    );
 
     // GET /api/projects/:id
     registerRoute(app, getProjectRoute, {}, async (request, reply) => {
@@ -251,53 +274,63 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
     });
 
     // DELETE /api/projects/:id — cascade delete with 409 if a job is running.
-    registerRoute(app, deleteProjectRoute, {}, async (request, reply) => {
-        const { id } = request.params;
+    registerRoute(
+        app,
+        deleteProjectRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id } = request.params;
 
-        const runningJob = await db
-            .select()
-            .from(upgradeJobs)
-            .where(and(eq(upgradeJobs.referenceId, id), eq(upgradeJobs.status, "running")))
-            .get();
+            const runningJob = await db
+                .select()
+                .from(upgradeJobs)
+                .where(and(eq(upgradeJobs.referenceId, id), eq(upgradeJobs.status, "running")))
+                .get();
 
-        if (runningJob) {
-            sendError(reply, 409, "Cannot delete project with running jobs");
-            return;
+            if (runningJob) {
+                sendError(reply, 409, "Cannot delete project with running jobs");
+                return;
+            }
+
+            await scanSchedulerService.unscheduleProject(id);
+
+            await db.delete(scanResults).where(eq(scanResults.projectId, id)).run();
+            await db.delete(securityChecks).where(eq(securityChecks.projectId, id)).run();
+            await db.delete(upgradeJobs).where(eq(upgradeJobs.referenceId, id)).run();
+            await db.delete(projects).where(eq(projects.id, id)).run();
+
+            sendNone(reply, 204);
         }
-
-        await scanSchedulerService.unscheduleProject(id);
-
-        await db.delete(scanResults).where(eq(scanResults.projectId, id)).run();
-        await db.delete(securityChecks).where(eq(securityChecks.projectId, id)).run();
-        await db.delete(upgradeJobs).where(eq(upgradeJobs.referenceId, id)).run();
-        await db.delete(projects).where(eq(projects.id, id)).run();
-
-        sendNone(reply, 204);
-    });
+    );
 
     // POST /api/projects/:id/scan — enqueues an async scan job.
     // `?force=true` bypasses the registry cache.
-    registerRoute(app, scanProjectAsyncRoute, {}, async (request, reply) => {
-        const project = await db
-            .select()
-            .from(projects)
-            .where(eq(projects.id, request.params.id))
-            .get();
-        if (!project) {
-            sendError(reply, 404, "Project not found");
-            return;
+    registerRoute(
+        app,
+        scanProjectAsyncRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const project = await db
+                .select()
+                .from(projects)
+                .where(eq(projects.id, request.params.id))
+                .get();
+            if (!project) {
+                sendError(reply, 404, "Project not found");
+                return;
+            }
+
+            const force = request.query.force === "true";
+            const jobId = await jobWorker.enqueue({
+                referenceId: project.id,
+                referenceType: "project",
+                type: "scan",
+                packages: JSON.stringify({ force })
+            });
+
+            sendOne(reply, { jobId });
         }
-
-        const force = request.query.force === "true";
-        const jobId = await jobWorker.enqueue({
-            referenceId: project.id,
-            referenceType: "project",
-            type: "scan",
-            packages: JSON.stringify({ force })
-        });
-
-        sendOne(reply, { jobId });
-    });
+    );
 
     // GET /api/projects/:id/dependencies — from the scan_results table, empty array on miss.
     registerRoute(app, getProjectDependenciesRoute, {}, async (request, reply) => {
@@ -413,20 +446,25 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
     });
 
     // POST /api/projects/:id/security — run a fresh security check.
-    registerRoute(app, checkProjectSecurityRoute, {}, async (request, reply) => {
-        const project = await db
-            .select()
-            .from(projects)
-            .where(eq(projects.id, request.params.id))
-            .get();
-        if (!project) {
-            sendError(reply, 404, "Project not found");
-            return;
-        }
+    registerRoute(
+        app,
+        checkProjectSecurityRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const project = await db
+                .select()
+                .from(projects)
+                .where(eq(projects.id, request.params.id))
+                .get();
+            if (!project) {
+                sendError(reply, 404, "Project not found");
+                return;
+            }
 
-        const result = await securityService.check(project.id, project.path);
-        sendOne(reply, result);
-    });
+            const result = await securityService.check(project.id, project.path);
+            sendOne(reply, result);
+        }
+    );
 
     // GET /api/projects/:id/teams — teams assigned to a project.
     registerRoute(app, getProjectTeamsRoute, {}, async (request, reply) => {
@@ -443,34 +481,39 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
     });
 
     // PUT /api/projects/:id/teams — replace a project's team assignments.
-    registerRoute(app, setProjectTeamsRoute, {}, async (request, reply) => {
-        const { id } = request.params;
-        const { teamIds } = request.body;
+    registerRoute(
+        app,
+        setProjectTeamsRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id } = request.params;
+            const { teamIds } = request.body;
 
-        const project = await db.select().from(projects).where(eq(projects.id, id)).get();
-        if (!project) {
-            sendError(reply, 404, "Project not found");
-            return;
-        }
-
-        const uniqueTeamIds = [...new Set(teamIds)];
-
-        db.transaction(tx => {
-            tx.delete(teamProjects).where(eq(teamProjects.projectId, id)).run();
-
-            if (uniqueTeamIds.length > 0) {
-                tx.insert(teamProjects)
-                    .values(
-                        uniqueTeamIds.map(teamId => ({
-                            id: generateId(),
-                            teamId,
-                            projectId: id
-                        }))
-                    )
-                    .run();
+            const project = await db.select().from(projects).where(eq(projects.id, id)).get();
+            if (!project) {
+                sendError(reply, 404, "Project not found");
+                return;
             }
-        });
 
-        sendNone(reply);
-    });
+            const uniqueTeamIds = [...new Set(teamIds)];
+
+            db.transaction(tx => {
+                tx.delete(teamProjects).where(eq(teamProjects.projectId, id)).run();
+
+                if (uniqueTeamIds.length > 0) {
+                    tx.insert(teamProjects)
+                        .values(
+                            uniqueTeamIds.map(teamId => ({
+                                id: generateId(),
+                                teamId,
+                                projectId: id
+                            }))
+                        )
+                        .run();
+                }
+            });
+
+            sendNone(reply);
+        }
+    );
 }

@@ -1,9 +1,14 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { EmailService } from "../../services/abstractions/EmailService.js";
+import { UserService as UserServiceRegistration } from "../../services/UserService.js";
+import { AuthService as AuthServiceRegistration } from "../../services/AuthService.js";
+import { createAuthHook } from "../../middleware/authHook.js";
 import { generateId } from "@webiny/stdlib";
 import {
     projects,
@@ -104,6 +109,7 @@ async function insertChangelog(db: TestDb, packageName: string, version: string)
 describe("packages routes", () => {
     let app: FastifyInstance;
     let db: TestDb;
+    let token: string;
 
     beforeEach(async () => {
         db = await createTestDb();
@@ -125,10 +131,16 @@ describe("packages routes", () => {
             clearAll: async () => {},
             clearPackage: async () => {}
         });
+        container.registerInstance(EmailService, { send: vi.fn() });
+        container.register(UserServiceRegistration).inSingletonScope();
+        container.register(AuthServiceRegistration).inSingletonScope();
 
         app = Fastify();
+        app.addHook("onRequest", createAuthHook(container));
         await app.register(packagesRoutes, { container });
         await app.ready();
+
+        ({ token } = await createTestSession({ db }));
     });
 
     afterEach(async () => {
@@ -136,7 +148,11 @@ describe("packages routes", () => {
     });
 
     it("returns empty list when there are no scan results", async () => {
-        const response = await app.inject({ method: "GET", url: "/api/packages" });
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "GET",
+            url: "/api/packages"
+        });
 
         expect(response.statusCode).toBe(200);
         const json = response.json();
@@ -163,7 +179,11 @@ describe("packages routes", () => {
             upgradeType: "major"
         });
 
-        const response = await app.inject({ method: "GET", url: "/api/packages" });
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "GET",
+            url: "/api/packages"
+        });
 
         expect(response.statusCode).toBe(200);
         const json = response.json();
@@ -204,7 +224,11 @@ describe("packages routes", () => {
             registryResolved: true
         });
 
-        const response = await app.inject({ method: "GET", url: "/api/packages" });
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "GET",
+            url: "/api/packages"
+        });
 
         expect(response.statusCode).toBe(200);
         const json = response.json();
@@ -232,7 +256,11 @@ describe("packages routes", () => {
             registryResolved: false
         });
 
-        const response = await app.inject({ method: "GET", url: "/api/packages" });
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "GET",
+            url: "/api/packages"
+        });
 
         expect(response.statusCode).toBe(200);
         const json = response.json();
@@ -256,7 +284,11 @@ describe("packages routes", () => {
             upgradeType: "patch"
         });
 
-        const response = await app.inject({ method: "GET", url: "/api/packages?search=rea" });
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "GET",
+            url: "/api/packages?search=rea"
+        });
 
         expect(response.statusCode).toBe(200);
         const json = response.json();
@@ -282,6 +314,7 @@ describe("packages routes", () => {
         });
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/packages?upgradeType=patch"
         });
@@ -312,6 +345,7 @@ describe("packages routes", () => {
         });
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/packages?dependencyKind=transitive"
         });
@@ -342,6 +376,7 @@ describe("packages routes", () => {
         });
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/packages?dependencyKind=all"
         });
@@ -370,6 +405,7 @@ describe("packages routes", () => {
         });
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: `/api/packages?projectId=${projectAId}`
         });
@@ -409,6 +445,7 @@ describe("packages routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: `/api/packages?teamId=${teamId}`
         });
@@ -439,6 +476,7 @@ describe("packages routes", () => {
         await insertChangelog(db, "react", "18.2.0");
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/packages?hasChangelog=true"
         });

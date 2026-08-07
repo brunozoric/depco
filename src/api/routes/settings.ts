@@ -3,6 +3,7 @@ import type { Container } from "@webiny/di";
 import { eq, and } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import { registerRoute, sendList, sendOne, sendError } from "#shared/routing/index.js";
+import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listSecuritySettingsRoute,
     createSecuritySettingRoute,
@@ -160,79 +161,26 @@ export async function settingsRoutes(app: FastifyInstance, options: PluginOption
         });
     });
 
-    registerRoute(app, createSecuritySettingRoute, {}, async (request, reply) => {
-        const { packageManager, fieldName, expectedValue } = request.body;
+    registerRoute(
+        app,
+        createSecuritySettingRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { packageManager, fieldName, expectedValue } = request.body;
 
-        const fields =
-            SECURITY_FIELD_REGISTRY[packageManager as keyof typeof SECURITY_FIELD_REGISTRY];
-        if (!fields) {
-            sendError(reply, 400, `Unknown package manager: ${packageManager}`);
-            return;
-        }
+            const fields =
+                SECURITY_FIELD_REGISTRY[packageManager as keyof typeof SECURITY_FIELD_REGISTRY];
+            if (!fields) {
+                sendError(reply, 400, `Unknown package manager: ${packageManager}`);
+                return;
+            }
 
-        const fieldDef = fields.find(f => f.fieldName === fieldName);
-        if (!fieldDef) {
-            sendError(reply, 400, `Unknown field "${fieldName}" for ${packageManager}`);
-            return;
-        }
+            const fieldDef = fields.find(f => f.fieldName === fieldName);
+            if (!fieldDef) {
+                sendError(reply, 400, `Unknown field "${fieldName}" for ${packageManager}`);
+                return;
+            }
 
-        const validation = fieldDef.expectedValueSchema.safeParse(expectedValue);
-        if (!validation.success) {
-            sendError(reply, 400, validation.error.issues[0]?.message ?? "Invalid expected value");
-            return;
-        }
-
-        const existing = await databaseClient.db
-            .select()
-            .from(pmSecuritySettings)
-            .where(
-                and(
-                    eq(pmSecuritySettings.packageManager, packageManager),
-                    eq(pmSecuritySettings.fieldName, fieldName)
-                )
-            )
-            .get();
-
-        if (existing) {
-            sendError(reply, 409, `Setting "${fieldName}" already exists for ${packageManager}`);
-            return;
-        }
-
-        const row = {
-            id: generateId(),
-            packageManager,
-            configFile: fieldDef.configFile,
-            fieldName,
-            expectedValue,
-            enabled: 1 as const
-        };
-
-        await databaseClient.db.insert(pmSecuritySettings).values(row).run();
-        sendOne(reply, toResponse(row), 201);
-    });
-
-    registerRoute(app, updateSecuritySettingRoute, {}, async (request, reply) => {
-        const { id } = request.params;
-        const { expectedValue } = request.body;
-
-        const existing = await databaseClient.db
-            .select()
-            .from(pmSecuritySettings)
-            .where(eq(pmSecuritySettings.id, id))
-            .get();
-
-        if (!existing) {
-            sendError(reply, 404, "Setting not found");
-            return;
-        }
-
-        const fields =
-            SECURITY_FIELD_REGISTRY[
-                existing.packageManager as keyof typeof SECURITY_FIELD_REGISTRY
-            ];
-        const fieldDef = fields?.find(f => f.fieldName === existing.fieldName);
-
-        if (fieldDef) {
             const validation = fieldDef.expectedValueSchema.safeParse(expectedValue);
             if (!validation.success) {
                 sendError(
@@ -242,71 +190,152 @@ export async function settingsRoutes(app: FastifyInstance, options: PluginOption
                 );
                 return;
             }
+
+            const existing = await databaseClient.db
+                .select()
+                .from(pmSecuritySettings)
+                .where(
+                    and(
+                        eq(pmSecuritySettings.packageManager, packageManager),
+                        eq(pmSecuritySettings.fieldName, fieldName)
+                    )
+                )
+                .get();
+
+            if (existing) {
+                sendError(
+                    reply,
+                    409,
+                    `Setting "${fieldName}" already exists for ${packageManager}`
+                );
+                return;
+            }
+
+            const row = {
+                id: generateId(),
+                packageManager,
+                configFile: fieldDef.configFile,
+                fieldName,
+                expectedValue,
+                enabled: 1 as const
+            };
+
+            await databaseClient.db.insert(pmSecuritySettings).values(row).run();
+            sendOne(reply, toResponse(row), 201);
         }
+    );
 
-        await databaseClient.db
-            .update(pmSecuritySettings)
-            .set({ expectedValue })
-            .where(eq(pmSecuritySettings.id, id))
-            .run();
+    registerRoute(
+        app,
+        updateSecuritySettingRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id } = request.params;
+            const { expectedValue } = request.body;
 
-        sendOne(reply, toResponse({ ...existing, expectedValue }));
-    });
+            const existing = await databaseClient.db
+                .select()
+                .from(pmSecuritySettings)
+                .where(eq(pmSecuritySettings.id, id))
+                .get();
 
-    registerRoute(app, toggleSecuritySettingRoute, {}, async (request, reply) => {
-        const { id } = request.params;
+            if (!existing) {
+                sendError(reply, 404, "Setting not found");
+                return;
+            }
 
-        const existing = await databaseClient.db
-            .select()
-            .from(pmSecuritySettings)
-            .where(eq(pmSecuritySettings.id, id))
-            .get();
+            const fields =
+                SECURITY_FIELD_REGISTRY[
+                    existing.packageManager as keyof typeof SECURITY_FIELD_REGISTRY
+                ];
+            const fieldDef = fields?.find(f => f.fieldName === existing.fieldName);
 
-        if (!existing) {
-            sendError(reply, 404, "Setting not found");
-            return;
+            if (fieldDef) {
+                const validation = fieldDef.expectedValueSchema.safeParse(expectedValue);
+                if (!validation.success) {
+                    sendError(
+                        reply,
+                        400,
+                        validation.error.issues[0]?.message ?? "Invalid expected value"
+                    );
+                    return;
+                }
+            }
+
+            await databaseClient.db
+                .update(pmSecuritySettings)
+                .set({ expectedValue })
+                .where(eq(pmSecuritySettings.id, id))
+                .run();
+
+            sendOne(reply, toResponse({ ...existing, expectedValue }));
         }
+    );
 
-        const newEnabled = existing.enabled === 1 ? 0 : 1;
-        await databaseClient.db
-            .update(pmSecuritySettings)
-            .set({ enabled: newEnabled })
-            .where(eq(pmSecuritySettings.id, id))
-            .run();
+    registerRoute(
+        app,
+        toggleSecuritySettingRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id } = request.params;
 
-        sendOne(reply, toResponse({ ...existing, enabled: newEnabled }));
-    });
+            const existing = await databaseClient.db
+                .select()
+                .from(pmSecuritySettings)
+                .where(eq(pmSecuritySettings.id, id))
+                .get();
 
-    registerRoute(app, resetSecuritySettingsRoute, {}, async (request, reply) => {
-        const { packageManager } = request.body;
+            if (!existing) {
+                sendError(reply, 404, "Setting not found");
+                return;
+            }
 
-        const fields =
-            SECURITY_FIELD_REGISTRY[packageManager as keyof typeof SECURITY_FIELD_REGISTRY];
-        if (!fields) {
-            sendError(reply, 400, `Unknown package manager: ${packageManager}`);
-            return;
+            const newEnabled = existing.enabled === 1 ? 0 : 1;
+            await databaseClient.db
+                .update(pmSecuritySettings)
+                .set({ enabled: newEnabled })
+                .where(eq(pmSecuritySettings.id, id))
+                .run();
+
+            sendOne(reply, toResponse({ ...existing, enabled: newEnabled }));
         }
+    );
 
-        await databaseClient.db
-            .delete(pmSecuritySettings)
-            .where(eq(pmSecuritySettings.packageManager, packageManager))
-            .run();
+    registerRoute(
+        app,
+        resetSecuritySettingsRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { packageManager } = request.body;
 
-        const rows = fields.map(field => ({
-            id: generateId(),
-            packageManager,
-            configFile: field.configFile,
-            fieldName: field.fieldName,
-            expectedValue: field.defaultExpectedValue,
-            enabled: 1 as const
-        }));
+            const fields =
+                SECURITY_FIELD_REGISTRY[packageManager as keyof typeof SECURITY_FIELD_REGISTRY];
+            if (!fields) {
+                sendError(reply, 400, `Unknown package manager: ${packageManager}`);
+                return;
+            }
 
-        if (rows.length > 0) {
-            await databaseClient.db.insert(pmSecuritySettings).values(rows).run();
+            await databaseClient.db
+                .delete(pmSecuritySettings)
+                .where(eq(pmSecuritySettings.packageManager, packageManager))
+                .run();
+
+            const rows = fields.map(field => ({
+                id: generateId(),
+                packageManager,
+                configFile: field.configFile,
+                fieldName: field.fieldName,
+                expectedValue: field.defaultExpectedValue,
+                enabled: 1 as const
+            }));
+
+            if (rows.length > 0) {
+                await databaseClient.db.insert(pmSecuritySettings).values(rows).run();
+            }
+
+            sendList(reply, rows.map(toResponse), rows.length);
         }
-
-        sendList(reply, rows.map(toResponse), rows.length);
-    });
+    );
 
     registerRoute(app, listPmSettingsRoute, {}, async (_request, reply) => {
         const fileConfigService = container.resolve(FileConfigService);
@@ -356,54 +385,59 @@ export async function settingsRoutes(app: FastifyInstance, options: PluginOption
         reply.send({ items, configSource, fileManagedPms });
     });
 
-    registerRoute(app, updatePmConfigRoute, {}, async (request, reply) => {
-        const { pm } = request.params;
-        const fileConfigService = container.resolve(FileConfigService);
+    registerRoute(
+        app,
+        updatePmConfigRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { pm } = request.params;
+            const fileConfigService = container.resolve(FileConfigService);
 
-        const settings: FileConfigService.PmSettings = {};
-        if (request.body.installFlags !== undefined) {
-            settings.installFlags = request.body.installFlags;
-        }
-        if (request.body.registryUrl !== undefined) {
-            // Empty string means "clear it" — convert to undefined so
-            // writeGlobalPmSettings omits the key from the file entirely,
-            // rather than persisting an invalid `registryUrl: ""`.
-            settings.registryUrl =
-                request.body.registryUrl === "" ? undefined : request.body.registryUrl;
-        }
-        if (request.body.upgradeStrategy !== undefined) {
-            settings.upgradeStrategy =
-                request.body.upgradeStrategy === "" ? undefined : request.body.upgradeStrategy;
-        }
-
-        await fileConfigService.writeGlobalPmSettings(pm, settings);
-
-        const fileConfigResult = await fileConfigService.readGlobalConfig();
-        const allPmSettings = fileConfigResult.config?.pmSettings;
-        const registry = INSTALL_FLAG_REGISTRY[pm];
-        const fileConfig = allPmSettings?.[pm];
-
-        const installFlags: InstallFlagItemResponse[] = registry.map(flag => {
-            const fileValue = fileConfig?.installFlags?.[flag.flag];
-            return {
-                flag: flag.flag,
-                label: flag.label,
-                description: flag.description,
-                enabled: fileValue ?? flag.defaultEnabled,
-                defaultEnabled: flag.defaultEnabled,
-                isFileManaged: fileValue !== undefined
-            };
-        });
-
-        const item: PmConfigItemResponse = {
-            packageManager: pm,
-            installFlags,
-            general: {
-                registryUrl: fileConfig?.registryUrl ?? null,
-                upgradeStrategy: fileConfig?.upgradeStrategy ?? null
+            const settings: FileConfigService.PmSettings = {};
+            if (request.body.installFlags !== undefined) {
+                settings.installFlags = request.body.installFlags;
             }
-        };
+            if (request.body.registryUrl !== undefined) {
+                // Empty string means "clear it" — convert to undefined so
+                // writeGlobalPmSettings omits the key from the file entirely,
+                // rather than persisting an invalid `registryUrl: ""`.
+                settings.registryUrl =
+                    request.body.registryUrl === "" ? undefined : request.body.registryUrl;
+            }
+            if (request.body.upgradeStrategy !== undefined) {
+                settings.upgradeStrategy =
+                    request.body.upgradeStrategy === "" ? undefined : request.body.upgradeStrategy;
+            }
 
-        sendOne(reply, item);
-    });
+            await fileConfigService.writeGlobalPmSettings(pm, settings);
+
+            const fileConfigResult = await fileConfigService.readGlobalConfig();
+            const allPmSettings = fileConfigResult.config?.pmSettings;
+            const registry = INSTALL_FLAG_REGISTRY[pm];
+            const fileConfig = allPmSettings?.[pm];
+
+            const installFlags: InstallFlagItemResponse[] = registry.map(flag => {
+                const fileValue = fileConfig?.installFlags?.[flag.flag];
+                return {
+                    flag: flag.flag,
+                    label: flag.label,
+                    description: flag.description,
+                    enabled: fileValue ?? flag.defaultEnabled,
+                    defaultEnabled: flag.defaultEnabled,
+                    isFileManaged: fileValue !== undefined
+                };
+            });
+
+            const item: PmConfigItemResponse = {
+                packageManager: pm,
+                installFlags,
+                general: {
+                    registryUrl: fileConfig?.registryUrl ?? null,
+                    upgradeStrategy: fileConfig?.upgradeStrategy ?? null
+                }
+            };
+
+            sendOne(reply, item);
+        }
+    );
 }

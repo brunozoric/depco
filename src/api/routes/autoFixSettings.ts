@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute } from "#shared/routing/index.js";
+import { requirePermission } from "#api/middleware/requirePermission.js";
 import { getAutoFixSettingsRoute, updateAutoFixSettingsRoute } from "#shared/routes/index.js";
 import { AutoFixSettingsService } from "#api/services/abstractions/AutoFixSettingsService.js";
 
@@ -47,10 +48,15 @@ export async function autoFixSettingsRoutes(
         reply.send(settings);
     });
 
-    registerRoute(app, updateAutoFixSettingsRoute, {}, async (request, reply) => {
-        const { projectId } = request.params;
-        const input = buildUpdateSettingsInput(request.body);
-        const settings = await autoFixSettingsService.updateSettings(projectId, input);
-        reply.send(settings);
-    });
+    registerRoute(
+        app,
+        updateAutoFixSettingsRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { projectId } = request.params;
+            const input = buildUpdateSettingsInput(request.body);
+            const settings = await autoFixSettingsService.updateSettings(projectId, input);
+            reply.send(settings);
+        }
+    );
 }

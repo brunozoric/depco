@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendError } from "#shared/routing/index.js";
+import { requirePermission } from "#api/middleware/requirePermission.js";
 import { listAppSettingsRoute, upsertAppSettingRoute } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { EncryptionService } from "#api/services/abstractions/EncryptionService.js";
@@ -92,28 +93,33 @@ export async function appSettingsRoutes(
         });
     });
 
-    registerRoute(app, upsertAppSettingRoute, {}, async (request, reply) => {
-        const { key } = request.params;
-        const { value } = request.body;
+    registerRoute(
+        app,
+        upsertAppSettingRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { key } = request.params;
+            const { value } = request.body;
 
-        let storedValue = value;
-        if (TOKEN_KEYS.has(key)) {
-            if (!encryptionService.isAvailable()) {
-                sendError(reply, 400, "ENCRYPTION_KEY not configured — cannot store tokens");
-                return;
+            let storedValue = value;
+            if (TOKEN_KEYS.has(key)) {
+                if (!encryptionService.isAvailable()) {
+                    sendError(reply, 400, "ENCRYPTION_KEY not configured — cannot store tokens");
+                    return;
+                }
+                storedValue = await encryptionService.encrypt(value);
             }
-            storedValue = await encryptionService.encrypt(value);
+
+            await db
+                .insert(appSettings)
+                .values({ key, value: storedValue })
+                .onConflictDoUpdate({
+                    target: appSettings.key,
+                    set: { value: storedValue }
+                })
+                .run();
+
+            sendOne(reply, { key, value: TOKEN_KEYS.has(key) ? "••••••••" : value });
         }
-
-        await db
-            .insert(appSettings)
-            .values({ key, value: storedValue })
-            .onConflictDoUpdate({
-                target: appSettings.key,
-                set: { value: storedValue }
-            })
-            .run();
-
-        sendOne(reply, { key, value: TOKEN_KEYS.has(key) ? "••••••••" : value });
-    });
+    );
 }

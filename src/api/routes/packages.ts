@@ -3,6 +3,7 @@ import type { Container } from "@webiny/di";
 import semver from "semver";
 import { eq, sql, type SQL } from "drizzle-orm";
 import { registerRoute, sendOne } from "#shared/routing/index.js";
+import { requirePermission } from "#api/middleware/requirePermission.js";
 import { listPackagesRoute, rescanPackageRoute } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { RegistryCacheService } from "../services/abstractions/RegistryCacheService.js";
@@ -168,66 +169,75 @@ export async function packagesRoutes(app: FastifyInstance, options: PluginOption
 
     const registryCacheService = container.resolve(RegistryCacheService);
 
-    registerRoute(app, rescanPackageRoute, {}, async (request, reply) => {
-        const { packageName } = request.params;
+    registerRoute(
+        app,
+        rescanPackageRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { packageName } = request.params;
 
-        const rows = await db
-            .select()
-            .from(scanResults)
-            .where(eq(scanResults.name, packageName))
-            .all();
+            const rows = await db
+                .select()
+                .from(scanResults)
+                .where(eq(scanResults.name, packageName))
+                .all();
 
-        if (rows.length === 0) {
-            sendOne(reply, { updated: 0 });
-            return;
-        }
-
-        const packageManager =
-            (
-                await db.all<{ package_manager: string }>(
-                    sql`SELECT p.package_manager FROM projects p
-                        JOIN scan_results sr ON sr.project_id = p.id
-                        WHERE sr.name = ${packageName} LIMIT 1`
-                )
-            )[0]?.package_manager ?? "npm";
-
-        const info = await registryCacheService.getPackageInfo(packageName, packageManager, true);
-
-        let updated = 0;
-        for (const row of rows) {
-            const resolvedLatest =
-                semver.valid(info.latestVersion) &&
-                semver.valid(row.currentVersion) &&
-                semver.lt(info.latestVersion, row.currentVersion)
-                    ? row.currentVersion
-                    : info.latestVersion;
-
-            let upgradeType: string = "none";
-            if (row.currentVersion !== resolvedLatest) {
-                const diff = semver.diff(row.currentVersion, resolvedLatest);
-                if (diff && semver.gt(resolvedLatest, row.currentVersion)) {
-                    if (diff === "major" || diff === "premajor") {
-                        upgradeType = "major";
-                    } else if (diff === "minor" || diff === "preminor") {
-                        upgradeType = "minor";
-                    } else {
-                        upgradeType = "patch";
-                    }
-                }
+            if (rows.length === 0) {
+                sendOne(reply, { updated: 0 });
+                return;
             }
 
-            await db
-                .update(scanResults)
-                .set({
-                    latestVersion: resolvedLatest,
-                    upgradeType,
-                    scannedAt: Date.now()
-                })
-                .where(eq(scanResults.id, row.id))
-                .run();
-            updated++;
-        }
+            const packageManager =
+                (
+                    await db.all<{ package_manager: string }>(
+                        sql`SELECT p.package_manager FROM projects p
+                            JOIN scan_results sr ON sr.project_id = p.id
+                            WHERE sr.name = ${packageName} LIMIT 1`
+                    )
+                )[0]?.package_manager ?? "npm";
 
-        sendOne(reply, { updated });
-    });
+            const info = await registryCacheService.getPackageInfo(
+                packageName,
+                packageManager,
+                true
+            );
+
+            let updated = 0;
+            for (const row of rows) {
+                const resolvedLatest =
+                    semver.valid(info.latestVersion) &&
+                    semver.valid(row.currentVersion) &&
+                    semver.lt(info.latestVersion, row.currentVersion)
+                        ? row.currentVersion
+                        : info.latestVersion;
+
+                let upgradeType: string = "none";
+                if (row.currentVersion !== resolvedLatest) {
+                    const diff = semver.diff(row.currentVersion, resolvedLatest);
+                    if (diff && semver.gt(resolvedLatest, row.currentVersion)) {
+                        if (diff === "major" || diff === "premajor") {
+                            upgradeType = "major";
+                        } else if (diff === "minor" || diff === "preminor") {
+                            upgradeType = "minor";
+                        } else {
+                            upgradeType = "patch";
+                        }
+                    }
+                }
+
+                await db
+                    .update(scanResults)
+                    .set({
+                        latestVersion: resolvedLatest,
+                        upgradeType,
+                        scannedAt: Date.now()
+                    })
+                    .where(eq(scanResults.id, row.id))
+                    .run();
+                updated++;
+            }
+
+            sendOne(reply, { updated });
+        }
+    );
 }

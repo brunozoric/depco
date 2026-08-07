@@ -82,7 +82,8 @@ function createStubBroadcaster(): WebSocketBroadcaster.Interface {
     return {
         broadcast: vi.fn(),
         addClient: vi.fn(),
-        removeClient: vi.fn()
+        removeClient: vi.fn(),
+        closeConnectionsForUser: vi.fn()
     };
 }
 

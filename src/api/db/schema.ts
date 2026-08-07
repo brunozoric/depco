@@ -421,3 +421,36 @@ export const teamProjects = sqliteTable(
         uniqueTeamProject: unique().on(table.teamId, table.projectId)
     })
 );
+
+export const users = sqliteTable("users", {
+    id: text("id").primaryKey().notNull(),
+    email: text("email").notNull().unique(),
+    passwordHash: text("password_hash").notNull(),
+    displayName: text("display_name").notNull(),
+    permission: text("permission").notNull().default("read-only"),
+    isActive: integer("is_active").notNull().default(1),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull()
+});
+
+export const sessions = sqliteTable("sessions", {
+    id: text("id").primaryKey().notNull(),
+    userId: text("user_id")
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull().unique(),
+    expiresAt: integer("expires_at").notNull(),
+    createdAt: integer("created_at").notNull()
+});
+
+export const loginCodes = sqliteTable("login_codes", {
+    id: text("id").primaryKey().notNull(),
+    userId: text("user_id")
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
+    code: text("code").notNull(),
+    type: text("type").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    usedAt: integer("used_at"),
+    createdAt: integer("created_at").notNull()
+});

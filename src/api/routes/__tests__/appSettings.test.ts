@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { join } from "node:path";
 import { writeFile, rm } from "node:fs/promises";
 import Fastify from "fastify";
@@ -7,9 +7,14 @@ import { ConsoleLoggerConfig, ConsoleLoggerFeature } from "@webiny/stdlib";
 import { DirectoryToolFeature, FileToolFeature, JsonFileToolFeature } from "@webiny/stdlib/node";
 import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { registerEncryption } from "#testing/helpers/registerEncryption.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { FileConfigService } from "#api/services/FileConfigService.js";
+import { EmailService } from "#api/services/abstractions/EmailService.js";
+import { UserService as UserServiceRegistration } from "#api/services/UserService.js";
+import { AuthService as AuthServiceRegistration } from "#api/services/AuthService.js";
+import { createAuthHook } from "#api/middleware/authHook.js";
 import { appSettingsRoutes } from "../appSettings.js";
 import { appSettings } from "#api/db/schema.js";
 
@@ -18,6 +23,7 @@ type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 describe("app settings routes", () => {
     let app: FastifyInstance;
     let db: TestDb;
+    let token: string;
 
     beforeEach(async () => {
         db = await createTestDb();
@@ -32,9 +38,15 @@ describe("app settings routes", () => {
         JsonFileToolFeature.register(container);
         registerEncryption(container);
         container.register(FileConfigService).inSingletonScope();
+        container.registerInstance(EmailService, { send: vi.fn() });
+        container.register(UserServiceRegistration).inSingletonScope();
+        container.register(AuthServiceRegistration).inSingletonScope();
         app = Fastify();
+        app.addHook("onRequest", createAuthHook(container));
         await app.register(appSettingsRoutes, { container });
         await app.ready();
+
+        ({ token } = await createTestSession({ db }));
     });
 
     afterEach(async () => {
@@ -42,7 +54,11 @@ describe("app settings routes", () => {
     });
 
     it("GET /api/settings/app returns empty list when no settings exist", async () => {
-        const response = await app.inject({ method: "GET", url: "/api/settings/app" });
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "GET",
+            url: "/api/settings/app"
+        });
         expect(response.statusCode).toBe(200);
         const body = response.json();
         expect(body.items).toEqual([]);
@@ -51,6 +67,7 @@ describe("app settings routes", () => {
 
     it("PUT /api/settings/app/:key creates a new setting", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "PUT",
             url: "/api/settings/app/upgrade.branchTemplate",
             payload: { value: "my-branch-${YYYY}" }
@@ -68,6 +85,7 @@ describe("app settings routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "PUT",
             url: "/api/settings/app/upgrade.branchTemplate",
             payload: { value: "new-value" }
@@ -86,7 +104,11 @@ describe("app settings routes", () => {
             ])
             .run();
 
-        const response = await app.inject({ method: "GET", url: "/api/settings/app" });
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "GET",
+            url: "/api/settings/app"
+        });
         const body = response.json();
         expect(body.items).toHaveLength(2);
         expect(body.total).toBe(2);
@@ -94,6 +116,7 @@ describe("app settings routes", () => {
 
     it("returns configSource db and empty fileManaged when no global config file", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/settings/app"
         });
@@ -117,6 +140,7 @@ describe("app settings routes", () => {
 
         try {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/settings/app"
             });
@@ -142,6 +166,7 @@ describe("app settings routes", () => {
             await db.insert(appSettings).values({ key: "log_level", value: "warn" }).run();
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/settings/app"
             });
@@ -164,6 +189,7 @@ describe("app settings routes", () => {
 
         try {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/settings/app"
             });

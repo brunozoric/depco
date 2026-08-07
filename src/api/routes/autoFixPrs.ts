@@ -3,6 +3,7 @@ import type { Container } from "@webiny/di";
 import { and, eq, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { registerRoute, sendList, sendError } from "#shared/routing/index.js";
+import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listAutoFixPullRequestsRoute,
     getProjectAutoFixPullRequestsRoute,
@@ -95,11 +96,16 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
     // "pull-requests" segment here sits one level deeper than that route's
     // ":projectId" segment, but keeping fixed-prefix routes grouped together
     // up front avoids any ambiguity as routes are added.
-    registerRoute(app, deleteAutoFixPullRequestRoute, {}, async (request, reply) => {
-        const { id } = request.params;
-        await db.delete(autoFixPullRequests).where(eq(autoFixPullRequests.id, id)).run();
-        reply.send({ deleted: true });
-    });
+    registerRoute(
+        app,
+        deleteAutoFixPullRequestRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id } = request.params;
+            await db.delete(autoFixPullRequests).where(eq(autoFixPullRequests.id, id)).run();
+            reply.send({ deleted: true });
+        }
+    );
 
     registerRoute(app, getProjectAutoFixPullRequestsRoute, {}, async (request, reply) => {
         const { projectId } = request.params;
@@ -116,20 +122,29 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
         sendList(reply, items, items.length);
     });
 
-    registerRoute(app, generateAutoFixPrRoute, {}, async (request, reply) => {
-        const { projectId } = request.params;
+    registerRoute(
+        app,
+        generateAutoFixPrRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { projectId } = request.params;
 
-        const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
-        if (!project) {
-            sendError(reply, 404, "Project not found");
-            return;
+            const project = await db
+                .select()
+                .from(projects)
+                .where(eq(projects.id, projectId))
+                .get();
+            if (!project) {
+                sendError(reply, 404, "Project not found");
+                return;
+            }
+
+            const jobId = await jobWorker.enqueue({
+                referenceId: projectId,
+                referenceType: "project",
+                type: "auto-fix-pr"
+            });
+            reply.send({ jobId });
         }
-
-        const jobId = await jobWorker.enqueue({
-            referenceId: projectId,
-            referenceType: "project",
-            type: "auto-fix-pr"
-        });
-        reply.send({ jobId });
-    });
+    );
 }

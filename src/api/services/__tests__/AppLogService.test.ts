@@ -19,7 +19,12 @@ describe("AppLogService", () => {
 
     beforeEach(async () => {
         db = await createTestDb();
-        broadcaster = { broadcast: vi.fn(), addClient: vi.fn(), removeClient: vi.fn() };
+        broadcaster = {
+            broadcast: vi.fn(),
+            addClient: vi.fn(),
+            removeClient: vi.fn(),
+            closeConnectionsForUser: vi.fn()
+        };
 
         const container = createContainer();
         container.registerInstance(DatabaseClient, { db });

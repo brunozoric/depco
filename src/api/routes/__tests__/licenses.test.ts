@@ -1,12 +1,17 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { eq } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { JobWorker } from "../../services/abstractions/JobWorker.js";
+import { EmailService } from "../../services/abstractions/EmailService.js";
+import { UserService as UserServiceRegistration } from "../../services/UserService.js";
+import { AuthService as AuthServiceRegistration } from "../../services/AuthService.js";
+import { createAuthHook } from "../../middleware/authHook.js";
 import {
     projects,
     licenses,
@@ -24,6 +29,7 @@ interface IRouteTestContext {
     app: FastifyInstance;
     db: TestDb;
     enqueuedJobs: JobWorker.CreateJobInput[];
+    token: string;
 }
 
 async function insertTestProject(db: TestDb, id: string, name = id): Promise<void> {
@@ -70,24 +76,33 @@ async function createTestContext(): Promise<IRouteTestContext> {
         getRunningJobsForReference: async () => []
     });
 
+    container.registerInstance(EmailService, { send: vi.fn() });
+    container.register(UserServiceRegistration).inSingletonScope();
+    container.register(AuthServiceRegistration).inSingletonScope();
+
     const app = Fastify();
+    app.addHook("onRequest", createAuthHook(container));
     await app.register(licenseRoutes, { container });
     await app.register(licensePolicyRoutes, { container });
     await app.ready();
 
-    return { app, db, enqueuedJobs };
+    const { token } = await createTestSession({ db });
+
+    return { app, db, enqueuedJobs, token };
 }
 
 describe("license routes", () => {
     let app: FastifyInstance;
     let db: TestDb;
     let enqueuedJobs: JobWorker.CreateJobInput[];
+    let token: string;
 
     beforeEach(async () => {
         const context = await createTestContext();
         app = context.app;
         db = context.db;
         enqueuedJobs = context.enqueuedJobs;
+        token = context.token;
     });
 
     afterEach(async () => {
@@ -95,7 +110,11 @@ describe("license routes", () => {
     });
 
     it("GET /api/licenses returns empty initially", async () => {
-        const response = await app.inject({ method: "GET", url: "/api/licenses" });
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "GET",
+            url: "/api/licenses"
+        });
 
         expect(response.statusCode).toBe(200);
         expect(response.json()).toEqual({ items: [], total: 0 });
@@ -156,6 +175,7 @@ describe("license routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: `/api/licenses?teamId=${teamId}`
         });
@@ -172,6 +192,7 @@ describe("license routes", () => {
     describe("license policy CRUD", () => {
         it("POST /api/license-policies creates a rule, GET returns it", async () => {
             const createResponse = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/license-policies",
                 payload: {
@@ -199,6 +220,7 @@ describe("license routes", () => {
             expect(typeof created.updatedAt).toBe("number");
 
             const listResponse = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/license-policies"
             });
@@ -240,6 +262,7 @@ describe("license routes", () => {
                 .run();
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/license-policies?projectId=proj-1"
             });
@@ -252,6 +275,7 @@ describe("license routes", () => {
 
         it("PUT /api/license-policies/:id updates a rule", async () => {
             const createResponse = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/license-policies",
                 payload: {
@@ -263,6 +287,7 @@ describe("license routes", () => {
             const created = createResponse.json();
 
             const updateResponse = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: `/api/license-policies/${created.id}`,
                 payload: {
@@ -284,6 +309,7 @@ describe("license routes", () => {
 
         it("PUT /api/license-policies/:id returns 404 when rule does not exist", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: `/api/license-policies/${generateId()}`,
                 payload: { action: "warn" }
@@ -341,6 +367,7 @@ describe("license routes", () => {
                 .run();
 
             const deleteResponse = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "DELETE",
                 url: `/api/license-policies/${ruleId}`
             });
@@ -449,7 +476,11 @@ describe("license routes", () => {
                 ])
                 .run();
 
-            const response = await app.inject({ method: "GET", url: "/api/licenses/summary" });
+            const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "GET",
+                url: "/api/licenses/summary"
+            });
 
             expect(response.statusCode).toBe(200);
             const body = response.json();
@@ -494,6 +525,7 @@ describe("license routes", () => {
             await insertTestProject(db, "proj-1");
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/licenses/proj-1/scan"
             });
@@ -511,6 +543,7 @@ describe("license routes", () => {
 
         it("returns 404 when the project does not exist", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/licenses/missing-project/scan"
             });

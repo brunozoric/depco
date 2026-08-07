@@ -77,7 +77,8 @@ describe("ScanJobExecutor", () => {
         broadcaster = {
             broadcast: vi.fn(),
             addClient: vi.fn(),
-            removeClient: vi.fn()
+            removeClient: vi.fn(),
+            closeConnectionsForUser: vi.fn()
         };
         eventBus = {
             on: vi.fn(),

@@ -21,3 +21,5 @@ export * from "./autoFix.js";
 export * from "./dependencyGraph.js";
 export * from "./sbom.js";
 export * from "./teams.js";
+export * from "./users.js";
+export * from "./auth.js";

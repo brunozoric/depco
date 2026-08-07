@@ -1,11 +1,16 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { generateId } from "@webiny/stdlib";
 import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { appLogs } from "#api/db/schema.js";
+import { EmailService } from "../../services/abstractions/EmailService.js";
+import { UserService as UserServiceRegistration } from "../../services/UserService.js";
+import { AuthService as AuthServiceRegistration } from "../../services/AuthService.js";
+import { createAuthHook } from "../../middleware/authHook.js";
 import { logsRoutes } from "../logs.js";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
@@ -39,16 +44,23 @@ async function insertLog(db: TestDb, overrides: ILogOverrides = {}): Promise<str
 describe("logs routes", () => {
     let app: FastifyInstance;
     let db: TestDb;
+    let token: string;
 
     beforeEach(async () => {
         db = await createTestDb();
 
         const container = createContainer();
         container.registerInstance(DatabaseClient, { db });
+        container.registerInstance(EmailService, { send: vi.fn() });
+        container.register(UserServiceRegistration).inSingletonScope();
+        container.register(AuthServiceRegistration).inSingletonScope();
 
         app = Fastify();
+        app.addHook("onRequest", createAuthHook(container));
         await app.register(logsRoutes, { container });
         await app.ready();
+
+        ({ token } = await createTestSession({ db }));
     });
 
     afterEach(async () => {
@@ -59,7 +71,11 @@ describe("logs routes", () => {
         await insertLog(db);
         await insertLog(db, { level: "warn", message: "warning msg" });
 
-        const response = await app.inject({ method: "GET", url: "/api/logs" });
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "GET",
+            url: "/api/logs"
+        });
 
         expect(response.statusCode).toBe(200);
         const json = response.json();
@@ -72,6 +88,7 @@ describe("logs routes", () => {
         await insertLog(db, { level: "warn" });
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/logs?level=error"
         });
@@ -86,6 +103,7 @@ describe("logs routes", () => {
         await insertLog(db, { source: "install" });
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/logs?source=scan"
         });
@@ -102,6 +120,7 @@ describe("logs routes", () => {
         await insertLog(db, { createdAt: recent });
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: `/api/logs?from=${recent - 1}`
         });
@@ -116,6 +135,7 @@ describe("logs routes", () => {
         }
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/logs?limit=2&offset=2"
         });
@@ -129,7 +149,11 @@ describe("logs routes", () => {
         await insertLog(db, { message: "first", createdAt: 1000 });
         await insertLog(db, { message: "second", createdAt: 2000 });
 
-        const response = await app.inject({ method: "GET", url: "/api/logs" });
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "GET",
+            url: "/api/logs"
+        });
 
         const json = response.json();
         expect(json.items[0].message).toBe("second");
@@ -141,6 +165,7 @@ describe("logs routes", () => {
         await insertLog(db);
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "DELETE",
             url: "/api/logs",
             payload: {}
@@ -159,6 +184,7 @@ describe("logs routes", () => {
         await insertLog(db, { level: "warn" });
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "DELETE",
             url: "/api/logs",
             payload: { level: "error" }

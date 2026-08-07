@@ -3,6 +3,7 @@ import type { Container } from "@webiny/di";
 import { eq } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import { registerRoute, sendOne, sendNone } from "#shared/routing/index.js";
+import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listScanSchedulesRoute,
     upsertScanScheduleRoute,
@@ -56,60 +57,70 @@ export async function scanScheduleRoutes(
         reply.send({ items, globalDefault });
     });
 
-    registerRoute(app, upsertScanScheduleRoute, {}, async (request, reply) => {
-        const { projectId } = request.params;
-        const { interval } = request.body;
-        const now = Date.now();
+    registerRoute(
+        app,
+        upsertScanScheduleRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { projectId } = request.params;
+            const { interval } = request.body;
+            const now = Date.now();
 
-        const existing = await db
-            .select()
-            .from(scanSchedules)
-            .where(eq(scanSchedules.projectId, projectId))
-            .get();
-
-        if (existing) {
-            await db
-                .update(scanSchedules)
-                .set({ interval, updatedAt: now })
+            const existing = await db
+                .select()
+                .from(scanSchedules)
                 .where(eq(scanSchedules.projectId, projectId))
-                .run();
+                .get();
 
-            await scheduler.scheduleProject(projectId);
+            if (existing) {
+                await db
+                    .update(scanSchedules)
+                    .set({ interval, updatedAt: now })
+                    .where(eq(scanSchedules.projectId, projectId))
+                    .run();
 
-            sendOne(reply, {
-                ...existing,
-                interval,
-                updatedAt: now,
-                enabled: existing.enabled === 1
-            });
-        } else {
-            const id = generateId();
-            const row = {
-                id,
-                projectId,
-                interval,
-                lastRunAt: null,
-                nextRunAt: null,
-                enabled: 1,
-                createdAt: now,
-                updatedAt: now
-            };
+                await scheduler.scheduleProject(projectId);
 
-            await db.insert(scanSchedules).values(row).run();
-            await scheduler.scheduleProject(projectId);
+                sendOne(reply, {
+                    ...existing,
+                    interval,
+                    updatedAt: now,
+                    enabled: existing.enabled === 1
+                });
+            } else {
+                const id = generateId();
+                const row = {
+                    id,
+                    projectId,
+                    interval,
+                    lastRunAt: null,
+                    nextRunAt: null,
+                    enabled: 1,
+                    createdAt: now,
+                    updatedAt: now
+                };
 
-            sendOne(reply, { ...row, enabled: true });
+                await db.insert(scanSchedules).values(row).run();
+                await scheduler.scheduleProject(projectId);
+
+                sendOne(reply, { ...row, enabled: true });
+            }
         }
-    });
+    );
 
-    registerRoute(app, deleteScanScheduleRoute, {}, async (request, reply) => {
-        const { projectId } = request.params;
+    registerRoute(
+        app,
+        deleteScanScheduleRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { projectId } = request.params;
 
-        await db.delete(scanSchedules).where(eq(scanSchedules.projectId, projectId)).run();
+            await db.delete(scanSchedules).where(eq(scanSchedules.projectId, projectId)).run();
 
-        await scheduler.scheduleProject(projectId);
-        sendNone(reply, 204);
-    });
+            await scheduler.scheduleProject(projectId);
+            sendNone(reply, 204);
+        }
+    );
 
     registerRoute(app, getScanScheduleDefaultRoute, {}, async (_request, reply) => {
         const row = await db
@@ -121,19 +132,24 @@ export async function scanScheduleRoutes(
         sendOne(reply, { interval: row?.value ?? "disabled" });
     });
 
-    registerRoute(app, upsertScanScheduleDefaultRoute, {}, async (request, reply) => {
-        const { interval } = request.body;
+    registerRoute(
+        app,
+        upsertScanScheduleDefaultRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { interval } = request.body;
 
-        await db
-            .insert(appSettings)
-            .values({ key: SCAN_SCHEDULE_DEFAULT_KEY, value: interval })
-            .onConflictDoUpdate({
-                target: appSettings.key,
-                set: { value: interval }
-            })
-            .run();
+            await db
+                .insert(appSettings)
+                .values({ key: SCAN_SCHEDULE_DEFAULT_KEY, value: interval })
+                .onConflictDoUpdate({
+                    target: appSettings.key,
+                    set: { value: interval }
+                })
+                .run();
 
-        await scheduler.onGlobalDefaultChanged();
-        sendOne(reply, { interval });
-    });
+            await scheduler.onGlobalDefaultChanged();
+            sendOne(reply, { interval });
+        }
+    );
 }
