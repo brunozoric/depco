@@ -6,7 +6,7 @@ import { generateId } from "@webiny/stdlib";
 import type { JobExecutor } from "./abstractions/JobExecutor.js";
 import { PackageScanJobExecutor as Abstraction } from "./abstractions/PackageScanJobExecutor.js";
 import { ScanService } from "../Scan/index.js";
-import { PackageManagerService } from "../abstractions/PackageManagerService.js";
+import { PackageManagerService } from "../PackageManager/index.js";
 import { SecurityService } from "../Security/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";

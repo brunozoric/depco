@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import { zipSync, unzipSync, strToU8, strFromU8 } from "fflate";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { PackageManagerService } from "../services/abstractions/PackageManagerService.js";
+import { PackageManagerService } from "../services/PackageManager/index.js";
 import { registerProject } from "../services/registerProject.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ChangelogFileResolver } from "../ChangelogFileResolver.js";
+import { ChangelogFileResolver } from "../resolvers/ChangelogFileResolver.js";
 import type { CommandRunner } from "../../CommandRunner/index.js";
 
 type RunHandler = CommandRunner.Interface["run"];

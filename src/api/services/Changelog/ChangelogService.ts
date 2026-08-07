@@ -2,7 +2,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { ChangelogService as Abstraction } from "./abstractions/ChangelogService.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { changelogs, dependencies, dependencyVersions } from "#api/db/schema.js";
-import { ChangelogResolver } from "./changelogResolvers/abstractions/ChangelogResolver.js";
+import { ChangelogResolver } from "./abstractions/ChangelogResolver.js";
 
 // Numeric (major.minor.patch[...]) comparison used to order/filter stored
 // changelog rows by version range. Non-numeric trailing parts (prerelease

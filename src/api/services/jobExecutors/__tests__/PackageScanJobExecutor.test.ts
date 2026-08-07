@@ -13,7 +13,7 @@ import { FileConfigService } from "../../FileConfig/index.js";
 import { ScanService as ScanServiceReg } from "../../ScanService.js";
 import { PackageManagerService as PackageManagerServiceReg } from "../../PackageManagerService.js";
 import { AuditParserService as AuditParserServiceReg } from "../../AuditParserService.js";
-import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../packageManagers/PackageManagerDriverRegistry.js";
+import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../PackageManager/PackageManagerDriverRegistry.js";
 import { RegistryCacheService as RegistryCacheServiceReg } from "../../RegistryCacheService.js";
 import { LockfileParserService } from "../../abstractions/LockfileParserService.js";
 import { SecurityService as SecurityServiceReg } from "../../SecurityService.js";

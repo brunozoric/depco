@@ -12,10 +12,7 @@ import { SecurityFeature } from "./services/Security/index.js";
 import { RegistryCacheFeature } from "./services/RegistryCache/index.js";
 import { ScanFeature } from "./services/Scan/index.js";
 import { UpgradeFeature } from "./services/Upgrade/index.js";
-import { ChangelogService } from "./services/ChangelogService.js";
-import { GitHubReleasesResolver } from "./services/changelogResolvers/GitHubReleasesResolver.js";
-import { ChangelogFileResolver } from "./services/changelogResolvers/ChangelogFileResolver.js";
-import { NpmReadmeResolver } from "./services/changelogResolvers/NpmReadmeResolver.js";
+import { ChangelogFeature } from "./services/Changelog/index.js";
 import { ChangelogJobExecutor } from "./services/jobExecutors/ChangelogJobExecutor.js";
 import { DependencyJobExecutor } from "./services/jobExecutors/DependencyJobExecutor.js";
 import { TransientJobExecutor } from "./services/jobExecutors/TransientJobExecutor.js";
@@ -29,11 +26,11 @@ import { PackageScanJobExecutor } from "./services/jobExecutors/PackageScanJobEx
 import { VulnerabilityScanJobExecutor } from "./services/jobExecutors/VulnerabilityScanJobExecutor.js";
 import { LicenseScanJobExecutor } from "./services/jobExecutors/LicenseScanJobExecutor.js";
 import { GraphRefreshJobExecutor } from "./services/jobExecutors/GraphRefreshJobExecutor.js";
-import { PackageManagerService } from "./services/PackageManagerService.js";
+
 import { VulnerabilityFeature } from "./services/Vulnerability/index.js";
 import { LicenseFeature } from "./services/License/index.js";
 
-import { PackageManagerDriverFeature } from "./services/packageManagers/feature.js";
+import { PackageManagerFeature } from "./services/PackageManager/index.js";
 import { JobExecutorRegistry } from "./services/jobExecutors/JobExecutorRegistry.js";
 import { JobWorker } from "./services/JobWorker.js";
 import { JobWorker as JobWorkerAbstraction } from "./services/abstractions/JobWorker.js";
@@ -60,12 +57,9 @@ import { AutoFixFeature } from "./services/AutoFix/index.js";
 
 import { LockfileParserService } from "./services/LockfileParserService.js";
 import { DependencyGraphService } from "./services/DependencyGraphService.js";
-import { SbomService } from "./services/SbomService.js";
+import { SbomFeature } from "./services/Sbom/index.js";
 import { DependencyChangeFeature } from "./services/DependencyChange/index.js";
 import { EncryptionFeature } from "./services/Encryption/index.js";
-import { SbomFormatterRegistry } from "#api/services/sbomFormatters/SbomFormatterRegistry.js";
-import { CycloneDxFormatter } from "#api/services/sbomFormatters/CycloneDxFormatter.js";
-import { SpdxFormatter } from "#api/services/sbomFormatters/SpdxFormatter.js";
 import { UserService } from "./services/UserService.js";
 import { AuthService } from "./services/AuthService.js";
 import { EmailFeature } from "./services/Email/index.js";
@@ -86,9 +80,7 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
         RegistryCacheFeature.register(container);
         ScanFeature.register(container);
         UpgradeFeature.register(container);
-        container.register(GitHubReleasesResolver);
-        container.register(ChangelogFileResolver);
-        container.register(NpmReadmeResolver);
+        ChangelogFeature.register(container);
         container.register(ChangelogJobExecutor);
         container.register(DependencyJobExecutor);
         container.register(TransientJobExecutor);
@@ -102,12 +94,10 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
         container.register(VulnerabilityScanJobExecutor);
         container.register(LicenseScanJobExecutor);
         container.register(GraphRefreshJobExecutor);
-        container.register(ChangelogService).inSingletonScope();
         GitFeature.register(container);
-        PackageManagerDriverFeature.register(container);
+        PackageManagerFeature.register(container);
         VulnerabilityFeature.register(container);
         LicenseFeature.register(container);
-        container.register(PackageManagerService).inSingletonScope();
         container.register(JobExecutorRegistry).inSingletonScope();
         container.register(JobWorker).inSingletonScope();
         // ScanJobExecutor needs to enqueue/await child jobs via JobWorker, but
@@ -125,12 +115,9 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
         AppLogFeature.register(container);
         ErrorReporterFeature.register(container);
         // ForgeService registered via GitFeature
-        container.register(SbomService).inSingletonScope();
+        SbomFeature.register(container);
         DependencyChangeFeature.register(container);
         ScanSchedulerFeature.register(container);
-        container.register(CycloneDxFormatter);
-        container.register(SpdxFormatter);
-        container.register(SbomFormatterRegistry).inSingletonScope();
         // "error" suppresses ConsoleLogger's default "debug" verbosity — in
         // particular FileTool.readFile's warn() when a config file is absent,
         // which is the common, expected case for global/project config lookups.

@@ -2,12 +2,12 @@ import { eq } from "drizzle-orm";
 import { RegistryCacheService as Abstraction } from "./abstractions/RegistryCacheService.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { CommandRunner } from "../CommandRunner/index.js";
-import { PackageManagerDriverRegistry } from "../packageManagers/abstractions/PackageManagerDriverRegistry.js";
-import type { PackageManagerDriver } from "../packageManagers/abstractions/PackageManagerDriver.js";
+import { PackageManagerDriverRegistry } from "../PackageManager/abstractions/PackageManagerDriverRegistry.js";
+import type { PackageManagerDriver } from "../PackageManager/abstractions/PackageManagerDriver.js";
 import { FileConfigService } from "../FileConfig/index.js";
 import { registryCache } from "#api/db/schema.js";
 
-import { parseLicense } from "../packageManagers/parseLicense.js";
+import { parseLicense } from "../PackageManager/parseLicense.js";
 
 const TTL_MS = 30 * 60 * 1000;
 

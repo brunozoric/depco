@@ -4,7 +4,7 @@ import { CommandRunner } from "../../CommandRunner/index.js";
 import { FileConfigService } from "../../FileConfig/index.js";
 import { UpgradeService } from "../abstractions/UpgradeService.js";
 import { UpgradeService as UpgradeServiceRegistration } from "../UpgradeService.js";
-import { PackageManagerDriverRegistry as RegistryRegistration } from "../../packageManagers/PackageManagerDriverRegistry.js";
+import { PackageManagerDriverRegistry as RegistryRegistration } from "../../PackageManager/PackageManagerDriverRegistry.js";
 
 function createMockCommandRunner(): CommandRunner.Interface {
     return {

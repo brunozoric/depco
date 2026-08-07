@@ -1,6 +1,6 @@
-import { ChangelogResolver as Abstraction } from "./abstractions/ChangelogResolver.js";
-import { RegistryCacheService } from "../RegistryCache/index.js";
-import { parseVersionSections } from "./parseVersionSections.js";
+import { ChangelogResolver as Abstraction } from "../abstractions/ChangelogResolver.js";
+import { RegistryCacheService } from "../../RegistryCache/index.js";
+import { parseVersionSections } from "../parseVersionSections.js";
 
 class NpmReadmeResolverImpl implements Abstraction.Interface {
     public readonly name = "npm-readme";

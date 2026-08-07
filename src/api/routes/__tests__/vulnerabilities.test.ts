@@ -27,7 +27,7 @@ import { VulnerabilityService as VulnerabilityServiceImpl } from "#api/services/
 import { PackageManagerService as PackageManagerServiceImpl } from "#api/services/PackageManagerService.js";
 import { AuditParserService as AuditParserServiceImpl } from "#api/services/Vulnerability/AuditParserService.js";
 import { OsvCacheService as OsvCacheServiceImpl } from "#api/services/Vulnerability/OsvCacheService.js";
-import { PackageManagerDriverRegistry as PackageManagerDriverRegistryImpl } from "#api/services/packageManagers/PackageManagerDriverRegistry.js";
+import { PackageManagerDriverRegistry as PackageManagerDriverRegistryImpl } from "#api/services/PackageManager/PackageManagerDriverRegistry.js";
 import { projects, vulnerabilities, teams, teamProjects } from "#api/db/schema.js";
 import { vulnerabilityRoutes } from "../vulnerabilities.js";
 

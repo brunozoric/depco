@@ -4,7 +4,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { getChangelogsRoute, reResolveChangelogsRoute } from "#shared/routes/index.js";
-import { ChangelogService } from "#api/services/abstractions/ChangelogService.js";
+import { ChangelogService } from "#api/services/Changelog/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { JobWorker } from "#api/services/abstractions/JobWorker.js";
 import { upgradeJobs } from "#api/db/schema.js";

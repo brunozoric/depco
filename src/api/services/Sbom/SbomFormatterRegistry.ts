@@ -1,5 +1,5 @@
-import { SbomFormatterRegistry as Abstraction } from "../abstractions/SbomFormatterRegistry.js";
-import { SbomFormatter } from "../abstractions/SbomFormatter.js";
+import { SbomFormatterRegistry as Abstraction } from "./abstractions/SbomFormatterRegistry.js";
+import { SbomFormatter } from "./abstractions/SbomFormatter.js";
 
 class SbomFormatterRegistryImpl implements Abstraction.Interface {
     public constructor(private readonly formatters: SbomFormatter.Interface[]) {}

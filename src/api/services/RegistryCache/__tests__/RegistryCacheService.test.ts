@@ -12,7 +12,7 @@ import { registryCache } from "#api/db/schema.js";
 import { CommandRunner } from "../../CommandRunner/index.js";
 import { RegistryCacheService } from "../abstractions/RegistryCacheService.js";
 import { RegistryCacheService as RegistryCacheServiceRegistration } from "../RegistryCacheService.js";
-import { PackageManagerDriverRegistry as RegistryRegistration } from "../../packageManagers/PackageManagerDriverRegistry.js";
+import { PackageManagerDriverRegistry as RegistryRegistration } from "../../PackageManager/PackageManagerDriverRegistry.js";
 import { FileConfigService as FileConfigServiceRegistration } from "../../FileConfig/FileConfigService.js";
 
 function createMockCommandRunner(): CommandRunner.Interface {

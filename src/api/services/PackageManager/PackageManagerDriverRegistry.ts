@@ -1,9 +1,9 @@
 import { PackageManagerDriverRegistry as Abstraction } from "./abstractions/PackageManagerDriverRegistry.js";
 import type { PackageManagerDriver } from "./abstractions/PackageManagerDriver.js";
-import { YarnDriver } from "./YarnDriver.js";
-import { NpmDriver } from "./NpmDriver.js";
-import { PnpmDriver } from "./PnpmDriver.js";
-import { BunDriver } from "./BunDriver.js";
+import { YarnDriver } from "./drivers/YarnDriver.js";
+import { NpmDriver } from "./drivers/NpmDriver.js";
+import { PnpmDriver } from "./drivers/PnpmDriver.js";
+import { BunDriver } from "./drivers/BunDriver.js";
 
 class PackageManagerDriverRegistryImpl implements Abstraction.Interface {
     private readonly drivers = new Map<string, PackageManagerDriver.Interface>();

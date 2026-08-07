@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { SbomService as Abstraction } from "./abstractions/SbomService.js";
-import type { DependencyKind } from "./Scan/index.js";
+import type { DependencyKind } from "../Scan/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import {
     projects,

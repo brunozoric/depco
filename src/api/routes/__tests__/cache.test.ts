@@ -10,7 +10,7 @@ import { registryCache } from "#api/db/schema.js";
 import { CommandRunner } from "../../services/CommandRunner/index.js";
 import { FileConfigService } from "../../services/FileConfig/index.js";
 import { RegistryCacheService as RegistryCacheServiceReg } from "../../services/RegistryCache/RegistryCacheService.js";
-import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../services/packageManagers/PackageManagerDriverRegistry.js";
+import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../services/PackageManager/PackageManagerDriverRegistry.js";
 import { EmailService } from "../../services/Email/index.js";
 import { UserService as UserServiceRegistration } from "../../services/UserService.js";
 import { AuthService as AuthServiceRegistration } from "../../services/AuthService.js";

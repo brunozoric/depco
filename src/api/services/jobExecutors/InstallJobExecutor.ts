@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { JobExecutor } from "./abstractions/JobExecutor.js";
 import { InstallJobExecutor as Abstraction } from "./abstractions/InstallJobExecutor.js";
-import { PackageManagerDriverRegistry } from "../packageManagers/abstractions/PackageManagerDriverRegistry.js";
+import { PackageManagerDriverRegistry } from "../PackageManager/abstractions/PackageManagerDriverRegistry.js";
 import { CommandRunner } from "../CommandRunner/index.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { FileConfigService } from "../FileConfig/index.js";

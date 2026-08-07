@@ -10,7 +10,7 @@ import { CommandRunner } from "../../CommandRunner/index.js";
 import { SecurityService as SecurityServiceReg } from "../../SecurityService.js";
 import { PackageManagerService as PackageManagerServiceReg } from "../../PackageManagerService.js";
 import { AuditParserService as AuditParserServiceReg } from "../../AuditParserService.js";
-import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../packageManagers/PackageManagerDriverRegistry.js";
+import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../PackageManager/PackageManagerDriverRegistry.js";
 import { projects } from "#api/db/schema.js";
 import { CloneJobExecutor } from "../abstractions/CloneJobExecutor.js";
 import { CloneJobExecutor as CloneJobExecutorRegistration } from "../CloneJobExecutor.js";

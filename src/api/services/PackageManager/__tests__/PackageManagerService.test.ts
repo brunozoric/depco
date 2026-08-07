@@ -3,11 +3,11 @@ import { mkdirSync, writeFileSync, rmSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import { createContainer } from "#shared/index.js";
-import { CommandRunner } from "../CommandRunner/index.js";
+import { CommandRunner } from "../../CommandRunner/index.js";
 import { PackageManagerService } from "../abstractions/PackageManagerService.js";
 import { PackageManagerService as PackageManagerServiceRegistration } from "../PackageManagerService.js";
-import { PackageManagerDriverRegistry as RegistryRegistration } from "../packageManagers/PackageManagerDriverRegistry.js";
-import { AuditParserService as AuditParserServiceRegistration } from "../AuditParserService.js";
+import { PackageManagerDriverRegistry as RegistryRegistration } from "../PackageManagerDriverRegistry.js";
+import { AuditParserService as AuditParserServiceRegistration } from "../../Vulnerability/AuditParserService.js";
 
 function createMockCommandRunner(): CommandRunner.Interface {
     return {

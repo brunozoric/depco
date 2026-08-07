@@ -5,15 +5,15 @@ import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { changelogs, dependencies, dependencyVersions } from "#api/db/schema.js";
-import { CommandRunner } from "../CommandRunner/index.js";
-import { FileConfigService } from "../FileConfig/index.js";
-import { RegistryCacheService as RegistryCacheServiceRegistration } from "../RegistryCacheService.js";
-import { PackageManagerDriverRegistry as RegistryRegistration } from "../packageManagers/PackageManagerDriverRegistry.js";
+import { CommandRunner } from "../../CommandRunner/index.js";
+import { FileConfigService } from "../../FileConfig/index.js";
+import { RegistryCacheService as RegistryCacheServiceRegistration } from "../../RegistryCache/RegistryCacheService.js";
+import { PackageManagerDriverRegistry as RegistryRegistration } from "../../PackageManager/PackageManagerDriverRegistry.js";
 import { ChangelogService } from "../abstractions/ChangelogService.js";
 import { ChangelogService as ChangelogServiceRegistration } from "../ChangelogService.js";
-import { GitHubReleasesResolver } from "../changelogResolvers/GitHubReleasesResolver.js";
-import { ChangelogFileResolver } from "../changelogResolvers/ChangelogFileResolver.js";
-import { NpmReadmeResolver } from "../changelogResolvers/NpmReadmeResolver.js";
+import { GitHubReleasesResolver } from "../resolvers/GitHubReleasesResolver.js";
+import { ChangelogFileResolver } from "../resolvers/ChangelogFileResolver.js";
+import { NpmReadmeResolver } from "../resolvers/NpmReadmeResolver.js";
 
 function createStubFileConfigService(): FileConfigService.Interface {
     return {

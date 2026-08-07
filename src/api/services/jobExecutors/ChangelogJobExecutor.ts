@@ -5,7 +5,7 @@ import { ChangelogJobExecutor as Abstraction } from "./abstractions/ChangelogJob
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { changelogs, dependencies, dependencyVersions } from "#api/db/schema.js";
-import { ChangelogResolver } from "../changelogResolvers/abstractions/ChangelogResolver.js";
+import { ChangelogResolver } from "../Changelog/index.js";
 import { compareVersions } from "../ChangelogService.js";
 
 const changelogPackagesSchema = z.object({

@@ -24,7 +24,7 @@ import {
 } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { SecurityService } from "../services/Security/index.js";
-import { PackageManagerService } from "../services/abstractions/PackageManagerService.js";
+import { PackageManagerService } from "../services/PackageManager/index.js";
 import { JobWorker } from "../services/abstractions/JobWorker.js";
 import { ScanSchedulerService } from "../services/ScanScheduler/index.js";
 import { registerProject as registerProjectHelper } from "../services/registerProject.js";
