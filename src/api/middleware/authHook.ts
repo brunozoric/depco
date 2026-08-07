@@ -1,7 +1,7 @@
 import { createHash } from "crypto";
 import type { FastifyRequest, FastifyReply } from "fastify";
 import type { Container } from "@webiny/di";
-import { AuthService } from "#api/services/abstractions/AuthService.js";
+import { AuthService } from "#api/services/Auth/index.js";
 
 export interface IAuthenticatedRequest extends FastifyRequest {
     user: AuthService.SessionUser;

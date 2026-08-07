@@ -5,7 +5,7 @@ import { tmpdir } from "os";
 import { createContainer } from "#shared/index.js";
 import { CommandRunner } from "../CommandRunner/index.js";
 import { RegistryCacheService } from "../RegistryCache/index.js";
-import { LockfileParserService } from "../../abstractions/LockfileParserService.js";
+import { LockfileParserService } from "../../DependencyGraph/index.js";
 import { ScanService } from "../abstractions/ScanService.js";
 import { ScanService as ScanServiceRegistration } from "../ScanService.js";
 import { PackageManagerDriverRegistry as RegistryRegistration } from "../../PackageManager/PackageManagerDriverRegistry.js";

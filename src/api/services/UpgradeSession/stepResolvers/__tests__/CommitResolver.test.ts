@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { CommitResolver } from "../CommitResolver.js";
 import { createDefaultSteps, StepResolver, STEP_ORDER } from "../abstractions/StepResolver.js";
-import { GitService } from "../../Git/index.js";
+import { GitService } from "../../../Git/index.js";
 
 function createResolver(overrides: Partial<GitService.Interface> = {}): StepResolver.Interface {
     const gitService: GitService.Interface = {

@@ -4,7 +4,7 @@ import semver from "semver";
 import { ScanService as Abstraction } from "./abstractions/ScanService.js";
 import { CommandRunner } from "../CommandRunner/index.js";
 import { RegistryCacheService } from "../RegistryCache/index.js";
-import { LockfileParserService } from "../abstractions/LockfileParserService.js";
+import { LockfileParserService } from "../DependencyGraph/index.js";
 import { PackageManagerDriverRegistry } from "../PackageManager/abstractions/PackageManagerDriverRegistry.js";
 import { classifyUpgrade } from "#shared/versions/types.js";
 

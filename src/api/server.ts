@@ -16,7 +16,7 @@ import { ScanSchedulerService } from "./services/ScanScheduler/index.js";
 import { EventBus } from "./services/EventBus/index.js";
 import { VulnerabilityService } from "./services/Vulnerability/index.js";
 import { AutoFixSettingsService } from "./services/AutoFix/index.js";
-import { AuthService } from "./services/abstractions/AuthService.js";
+import { AuthService } from "./services/Auth/index.js";
 import { WebSocketBroadcaster } from "./websocket/abstractions/WebSocketBroadcaster.js";
 import { createAuthHook } from "./middleware/authHook.js";
 import { createDatabaseClient } from "./db/client.js";

@@ -8,7 +8,7 @@ import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { loginCodes, sessions } from "#api/db/schema.js";
 import { EmailService } from "#api/services/Email/index.js";
-import { UserService } from "#api/services/abstractions/UserService.js";
+import { UserService } from "#api/services/Auth/index.js";
 import { UserService as UserServiceRegistration } from "#api/services/UserService.js";
 import { AuthService as AuthServiceRegistration } from "#api/services/AuthService.js";
 import { createAuthHook } from "#api/middleware/authHook.js";

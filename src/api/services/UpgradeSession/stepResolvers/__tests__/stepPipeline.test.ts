@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildStepOrder, createSessionSteps, toSlug } from "../stepPipeline.js";
-import type { IResolvedStepHook } from "../../StepHook/index.js";
+import type { IResolvedStepHook } from "../../../StepHook/index.js";
 
 describe("toSlug", () => {
     it("kebab-cases a name", () => {

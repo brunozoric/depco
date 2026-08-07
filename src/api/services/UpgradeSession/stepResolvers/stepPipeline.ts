@@ -1,6 +1,6 @@
 import { STEP_ORDER } from "./abstractions/StepResolver.js";
 import type { IStepState } from "./abstractions/StepResolver.js";
-import type { IResolvedStepHook } from "../StepHook/index.js";
+import type { IResolvedStepHook } from "../../StepHook/index.js";
 
 export function toSlug(name: string): string {
     return name

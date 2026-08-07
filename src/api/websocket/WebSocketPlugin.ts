@@ -3,7 +3,7 @@ import type { FastifyInstance, FastifyPluginOptions, FastifyRequest } from "fast
 import type { Container } from "@webiny/di";
 import fastifyWebsocket from "@fastify/websocket";
 import { WebSocketBroadcaster } from "./abstractions/WebSocketBroadcaster.js";
-import { AuthService } from "#api/services/abstractions/AuthService.js";
+import { AuthService } from "#api/services/Auth/index.js";
 
 interface PluginOptions extends FastifyPluginOptions {
     container: Container;

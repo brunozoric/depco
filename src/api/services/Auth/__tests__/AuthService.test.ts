@@ -7,7 +7,7 @@ import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
 import { loginCodes, sessions } from "#api/db/schema.js";
 import { UserService } from "../abstractions/UserService.js";
 import { UserService as UserServiceRegistration } from "../UserService.js";
-import { EmailService } from "../Email/index.js";
+import { EmailService } from "../../Email/index.js";
 import { AuthService } from "../abstractions/AuthService.js";
 import { AuthService as AuthServiceRegistration } from "../AuthService.js";
 

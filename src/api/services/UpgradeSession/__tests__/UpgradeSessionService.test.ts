@@ -6,17 +6,17 @@ import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroad
 import { projects } from "#api/db/schema.js";
 import { UpgradeSessionService } from "../abstractions/UpgradeSessionService.js";
 import { UpgradeSessionService as UpgradeSessionServiceRegistration } from "../UpgradeSessionService.js";
-import { ErrorReporter } from "../ErrorReporter/index.js";
+import { ErrorReporter } from "../../ErrorReporter/index.js";
 import { UpgradeSessionStepResolverRegistry } from "../stepResolvers/StepResolverRegistry.js";
 import { SelectPackagesResolver } from "../stepResolvers/SelectPackagesResolver.js";
 import { BranchResolver } from "../stepResolvers/BranchResolver.js";
 import { UpgradeResolver } from "../stepResolvers/UpgradeResolver.js";
 import { RefreshTransientResolver } from "../stepResolvers/RefreshTransientResolver.js";
 import { CommitResolver } from "../stepResolvers/CommitResolver.js";
-import { StepHookService } from "../StepHook/index.js";
-import { CommandRunner } from "../CommandRunner/index.js";
-import { GitService } from "../Git/index.js";
-import { UpgradeService } from "../Upgrade/index.js";
+import { StepHookService } from "../../StepHook/index.js";
+import { CommandRunner } from "../../CommandRunner/index.js";
+import { GitService } from "../../Git/index.js";
+import { UpgradeService } from "../../Upgrade/index.js";
 
 function createMockGitService(): GitService.Interface {
     return {

@@ -10,9 +10,9 @@ import { UpgradeSessionStepResolverRegistry } from "./stepResolvers/abstractions
 import type { ICustomStepConfig } from "./stepResolvers/abstractions/CustomStepConfig.js";
 import { CustomStepResolver } from "./stepResolvers/CustomStepResolver.js";
 import { buildStepOrder, createSessionSteps, toSlug } from "./stepResolvers/stepPipeline.js";
-import { ErrorReporter } from "./ErrorReporter/index.js";
-import { StepHookService } from "./StepHook/index.js";
-import { CommandRunner } from "./CommandRunner/index.js";
+import { ErrorReporter } from "../ErrorReporter/index.js";
+import { StepHookService } from "../StepHook/index.js";
+import { CommandRunner } from "../CommandRunner/index.js";
 
 interface IUpgradeSessionSqlRow {
     id: string;

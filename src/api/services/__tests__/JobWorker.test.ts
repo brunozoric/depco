@@ -31,7 +31,7 @@ import { JobWorker } from "../abstractions/JobWorker.js";
 import { JobWorker as JobWorkerRegistration } from "../JobWorker.js";
 import { JobWorkerProvider } from "../abstractions/JobWorkerProvider.js";
 import { JobExecutorRegistry as JobExecutorRegistryRegistration } from "../jobExecutors/JobExecutorRegistry.js";
-import { LockfileParserService } from "../abstractions/LockfileParserService.js";
+import { LockfileParserService } from "../DependencyGraph/index.js";
 import { DependencyGraphService as DependencyGraphServiceRegistration } from "../DependencyGraphService.js";
 import { DependencyChangeService as DependencyChangeServiceRegistration } from "../DependencyChangeService.js";
 import { FileConfigService as FileConfigServiceRegistration } from "../FileConfigService.js";

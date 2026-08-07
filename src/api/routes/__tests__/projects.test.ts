@@ -34,7 +34,7 @@ import { JobWorker } from "../../services/abstractions/JobWorker.js";
 import { JobWorkerProvider } from "../../services/abstractions/JobWorkerProvider.js";
 import { JobExecutorRegistry as JobExecutorRegistryReg } from "../../services/jobExecutors/JobExecutorRegistry.js";
 import { LockfileParserService as LockfileParserServiceReg } from "../../services/LockfileParserService.js";
-import { DependencyGraphService as DependencyGraphServiceReg } from "../../services/DependencyGraphService.js";
+import { DependencyGraphService as DependencyGraphServiceReg } from "../../services/DependencyGraph/DependencyGraphService.js";
 import { DependencyChangeService as DependencyChangeServiceReg } from "../../services/DependencyChange/DependencyChangeService.js";
 import { WebSocketBroadcaster as WebSocketBroadcasterReg } from "#api/websocket/WebSocketBroadcaster.js";
 import { FileConfigService as FileConfigServiceReg } from "../../services/FileConfig/FileConfigService.js";

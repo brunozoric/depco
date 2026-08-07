@@ -37,15 +37,7 @@ import { JobWorker as JobWorkerAbstraction } from "./services/abstractions/JobWo
 import { JobWorkerProvider } from "./services/abstractions/JobWorkerProvider.js";
 import { WebSocketBroadcaster } from "./websocket/WebSocketBroadcaster.js";
 import { GitFeature } from "./services/Git/index.js";
-import { UpgradeSessionService } from "./services/UpgradeSessionService.js";
-import { UpgradeSessionStepResolverRegistry } from "./services/stepResolvers/StepResolverRegistry.js";
-import { SelectPackagesResolver } from "./services/stepResolvers/SelectPackagesResolver.js";
-import { BranchResolver } from "./services/stepResolvers/BranchResolver.js";
-import { UpgradeResolver } from "./services/stepResolvers/UpgradeResolver.js";
-import { RefreshTransientResolver } from "./services/stepResolvers/RefreshTransientResolver.js";
-import { CommitResolver } from "./services/stepResolvers/CommitResolver.js";
-import { PushResolver } from "./services/stepResolvers/PushResolver.js";
-import { PrResolver } from "./services/stepResolvers/PrResolver.js";
+import { UpgradeSessionFeature } from "./services/UpgradeSession/index.js";
 import { AppLogFeature } from "./services/AppLog/index.js";
 import { ErrorReporterFeature } from "./services/ErrorReporter/index.js";
 import { ScanSchedulerFeature } from "./services/ScanScheduler/index.js";
@@ -55,13 +47,12 @@ import { FileConfigFeature } from "./services/FileConfig/index.js";
 import { PackageJsonFeature } from "./services/PackageJson/index.js";
 import { AutoFixFeature } from "./services/AutoFix/index.js";
 
-import { LockfileParserService } from "./services/LockfileParserService.js";
-import { DependencyGraphService } from "./services/DependencyGraphService.js";
+import { DependencyGraphFeature } from "./services/DependencyGraph/index.js";
 import { SbomFeature } from "./services/Sbom/index.js";
 import { DependencyChangeFeature } from "./services/DependencyChange/index.js";
 import { EncryptionFeature } from "./services/Encryption/index.js";
-import { UserService } from "./services/UserService.js";
-import { AuthService } from "./services/AuthService.js";
+
+import { AuthFeature } from "./services/Auth/index.js";
 import { EmailFeature } from "./services/Email/index.js";
 
 interface IApiFeatureContext {
@@ -132,22 +123,9 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
         PackageJsonFeature.register(container);
         StepHookFeature.register(container);
         AutoFixFeature.register(container);
-        container.register(LockfileParserService).inSingletonScope();
-        container.register(DependencyGraphService).inSingletonScope();
-
-        container.register(SelectPackagesResolver);
-        container.register(BranchResolver);
-        container.register(UpgradeResolver);
-        container.register(RefreshTransientResolver);
-        container.register(CommitResolver);
-        container.register(PushResolver);
-        container.register(PrResolver);
-
-        container.register(UpgradeSessionStepResolverRegistry);
-        container.register(UpgradeSessionService).inSingletonScope();
-
-        container.register(UserService).inSingletonScope();
+        DependencyGraphFeature.register(container);
+        UpgradeSessionFeature.register(container);
         EmailFeature.register(container);
-        container.register(AuthService).inSingletonScope();
+        AuthFeature.register(container);
     }
 });

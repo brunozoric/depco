@@ -15,7 +15,7 @@ import { PackageManagerService as PackageManagerServiceReg } from "../../Package
 import { AuditParserService as AuditParserServiceReg } from "../../AuditParserService.js";
 import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../PackageManager/PackageManagerDriverRegistry.js";
 import { RegistryCacheService as RegistryCacheServiceReg } from "../../RegistryCacheService.js";
-import { LockfileParserService } from "../../abstractions/LockfileParserService.js";
+import { LockfileParserService } from "../../DependencyGraph/index.js";
 import { SecurityService as SecurityServiceReg } from "../../SecurityService.js";
 
 import {

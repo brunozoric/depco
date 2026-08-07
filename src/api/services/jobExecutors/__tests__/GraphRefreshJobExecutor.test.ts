@@ -3,7 +3,7 @@ import { mkdirSync, rmSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import { createContainer } from "#shared/index.js";
-import { DependencyGraphService } from "../../abstractions/DependencyGraphService.js";
+import { DependencyGraphService } from "../../DependencyGraph/index.js";
 import { GraphRefreshJobExecutor } from "../abstractions/GraphRefreshJobExecutor.js";
 import { GraphRefreshJobExecutor as GraphRefreshJobExecutorRegistration } from "../GraphRefreshJobExecutor.js";
 import type { JobExecutor } from "../abstractions/JobExecutor.js";

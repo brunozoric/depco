@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { PushResolver } from "../PushResolver.js";
 import { StepResolver } from "../abstractions/StepResolver.js";
-import { GitService } from "../../Git/index.js";
+import { GitService } from "../../../Git/index.js";
 import type { IStepContext, IStepState } from "../abstractions/StepResolver.js";
 
 function createMockGitService(): GitService.Interface {

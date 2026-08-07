@@ -3,7 +3,7 @@ import { eq, and, lt, isNull } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import { AuthService as Abstraction } from "./abstractions/AuthService.js";
 import { UserService } from "./abstractions/UserService.js";
-import { EmailService } from "./Email/index.js";
+import { EmailService } from "../Email/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { users, sessions, loginCodes } from "#api/db/schema.js";
 import { HttpError } from "#api/errors/HttpError.js";
