@@ -3,6 +3,7 @@ import { createContainer } from "#shared/index.js";
 import { WebSocketListener } from "../abstractions/WebSocketListener.js";
 import { WebSocketListener as WebSocketListenerRegistration } from "../WebSocketListener.js";
 import { EventBridge } from "../../events/abstractions/EventBridge.js";
+import { AuthRepository } from "../../features/auth/abstractions/AuthRepository.js";
 import "../../events/eventMap.js";
 
 type MockListener = (event: { data?: string }) => void;
@@ -55,9 +56,23 @@ function createFakeEventBridge() {
 
 type FakeEventBridge = ReturnType<typeof createFakeEventBridge>;
 
-function resolveListener(eventBridge: FakeEventBridge): WebSocketListener.Interface {
+function createFakeAuthRepository(token: string | null = null): AuthRepository.Interface {
+    return {
+        token,
+        currentUser: null,
+        isAuthenticated: token !== null,
+        setAuth: vi.fn(),
+        clearAuth: vi.fn()
+    } as unknown as AuthRepository.Interface;
+}
+
+function resolveListener(
+    eventBridge: FakeEventBridge,
+    authRepository: AuthRepository.Interface = createFakeAuthRepository()
+): WebSocketListener.Interface {
     const container = createContainer();
     container.registerInstance(EventBridge, eventBridge as unknown as EventBridge.Interface);
+    container.registerInstance(AuthRepository, authRepository);
     container.register(WebSocketListenerRegistration).inSingletonScope();
     return container.resolve(WebSocketListener);
 }
@@ -87,6 +102,23 @@ describe("WebSocketListener", () => {
 
         expect((listener as unknown as { on?: unknown }).on).toBeUndefined();
         expect((listener as unknown as { off?: unknown }).off).toBeUndefined();
+    });
+
+    it("connects without a token query param when unauthenticated", () => {
+        const listener = resolveListener(createFakeEventBridge(), createFakeAuthRepository(null));
+        listener.connect();
+
+        expect(MockWebSocket.instances[0]?.url).not.toContain("token=");
+    });
+
+    it("appends the auth token as a query param when connecting", () => {
+        const listener = resolveListener(
+            createFakeEventBridge(),
+            createFakeAuthRepository("secret-token")
+        );
+        listener.connect();
+
+        expect(MockWebSocket.instances[0]?.url).toContain("?token=secret-token");
     });
 
     it("emits through the EventBridge when a message arrives", () => {

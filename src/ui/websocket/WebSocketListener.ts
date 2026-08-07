@@ -1,6 +1,7 @@
 import { WebSocketListener as Abstraction } from "./abstractions/WebSocketListener.js";
 import { EventBridge } from "../events/abstractions/EventBridge.js";
 import type { EventName } from "../events/abstractions/EventBridge.js";
+import { AuthRepository } from "../features/auth/abstractions/AuthRepository.js";
 import "../events/eventMap.js";
 
 interface WSMessage {
@@ -17,7 +18,10 @@ class WebSocketListenerImpl implements Abstraction.Interface {
     private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     private manuallyDisconnected = false;
 
-    public constructor(private readonly eventBridge: EventBridge.Interface) {}
+    public constructor(
+        private readonly eventBridge: EventBridge.Interface,
+        private readonly authRepository: AuthRepository.Interface
+    ) {}
 
     public connect(): void {
         this.manuallyDisconnected = false;
@@ -56,11 +60,14 @@ class WebSocketListenerImpl implements Abstraction.Interface {
     }
 
     private buildUrl(): string {
+        const token = this.authRepository.token;
+        const query = token ? `?token=${encodeURIComponent(token)}` : "";
+
         if (typeof window !== "undefined" && window.location) {
             const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-            return `${protocol}//${window.location.host}/ws`;
+            return `${protocol}//${window.location.host}/ws${query}`;
         }
-        return "ws://localhost:3001/ws";
+        return `ws://localhost:3001/ws${query}`;
     }
 
     private scheduleReconnect(): void {
@@ -95,5 +102,5 @@ class WebSocketListenerImpl implements Abstraction.Interface {
 
 export const WebSocketListener = Abstraction.createImplementation({
     implementation: WebSocketListenerImpl,
-    dependencies: [EventBridge]
+    dependencies: [EventBridge, AuthRepository]
 });

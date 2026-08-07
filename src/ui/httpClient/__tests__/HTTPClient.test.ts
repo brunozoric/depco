@@ -4,10 +4,22 @@ import { createContainer } from "#shared/index.js";
 import { defineRoute } from "#shared/routing/index.js";
 import { HTTPClient } from "../abstractions/HTTPClient.js";
 import { HTTPClient as HTTPClientRegistration } from "../HTTPClient.js";
+import { AuthRepository } from "../../features/auth/abstractions/AuthRepository.js";
+
+function createFakeAuthRepository(token: string | null = null): AuthRepository.Interface {
+    return {
+        token,
+        currentUser: null,
+        isAuthenticated: token !== null,
+        setAuth: vi.fn(),
+        clearAuth: vi.fn()
+    } as unknown as AuthRepository.Interface;
+}
 
 describe("HTTPClient", () => {
     it("resolves from DI container", () => {
         const container = createContainer();
+        container.registerInstance(AuthRepository, createFakeAuthRepository());
         container.register(HTTPClientRegistration);
 
         const client = container.resolve(HTTPClient);
@@ -40,8 +52,9 @@ describe("HTTPClient#request", () => {
         vi.unstubAllGlobals();
     });
 
-    function createClient() {
+    function createClient(authRepository: AuthRepository.Interface = createFakeAuthRepository()) {
         const container = createContainer();
+        container.registerInstance(AuthRepository, authRepository);
         container.register(HTTPClientRegistration);
         return container.resolve(HTTPClient);
     }
@@ -165,5 +178,49 @@ describe("HTTPClient#request", () => {
         await expect(client.request(getRoute, { params: { id: "p1" } })).rejects.toThrow(
             "GET /api/projects/p1 failed: 500"
         );
+    });
+
+    it("adds an Authorization header when a token is present", async () => {
+        const fetchMock = vi
+            .fn()
+            .mockResolvedValue(
+                new Response(JSON.stringify({ item: { id: "p1", name: "test" } }), { status: 200 })
+            );
+        vi.stubGlobal("fetch", fetchMock);
+
+        const client = createClient(createFakeAuthRepository("secret-token"));
+        await client.request(getRoute, { params: { id: "p1" } });
+
+        expect(fetchMock).toHaveBeenCalledWith("/api/projects/p1", {
+            method: "GET",
+            headers: { Authorization: "Bearer secret-token" }
+        });
+    });
+
+    it("does not add an Authorization header when there is no token", async () => {
+        const fetchMock = vi
+            .fn()
+            .mockResolvedValue(
+                new Response(JSON.stringify({ item: { id: "p1", name: "test" } }), { status: 200 })
+            );
+        vi.stubGlobal("fetch", fetchMock);
+
+        const client = createClient();
+        await client.request(getRoute, { params: { id: "p1" } });
+
+        expect(fetchMock).toHaveBeenCalledWith("/api/projects/p1", { method: "GET" });
+    });
+
+    it("clears auth and throws when the response is 401", async () => {
+        const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 401 }));
+        vi.stubGlobal("fetch", fetchMock);
+
+        const authRepository = createFakeAuthRepository("secret-token");
+        const client = createClient(authRepository);
+
+        await expect(client.request(getRoute, { params: { id: "p1" } })).rejects.toThrow(
+            "GET /api/projects/p1 failed: 401"
+        );
+        expect(authRepository.clearAuth).toHaveBeenCalledOnce();
     });
 });

@@ -1,8 +1,11 @@
 import type { RouteDefinition, HTTPMethod, IRequestArgs } from "#shared/routing/index.js";
 import { interpolatePath } from "#shared/routing/index.js";
 import { HTTPClient as Abstraction } from "./abstractions/HTTPClient.js";
+import { AuthRepository } from "../features/auth/abstractions/AuthRepository.js";
 
 class HTTPClientImpl implements Abstraction.Interface {
+    public constructor(private readonly authRepository: AuthRepository.Interface) {}
+
     public async request<
         TPath extends string,
         TParams,
@@ -37,14 +40,28 @@ class HTTPClientImpl implements Abstraction.Interface {
         }
 
         const body = (args as { body?: unknown }).body;
-        const init: RequestInit = { method: route.method };
+        const headers: Record<string, string> = {};
         if (route.method !== "GET" && body !== undefined) {
-            init.headers = { "Content-Type": "application/json" };
+            headers["Content-Type"] = "application/json";
+        }
+        const token = this.authRepository.token;
+        if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        const init: RequestInit = { method: route.method };
+        if (Object.keys(headers).length > 0) {
+            init.headers = headers;
+        }
+        if (route.method !== "GET" && body !== undefined) {
             init.body = JSON.stringify(body);
         }
 
         const response = await fetch(url, init);
         if (!response.ok) {
+            if (response.status === 401) {
+                this.authRepository.clearAuth();
+            }
             throw new Error(`${route.method} ${url} failed: ${response.status}`);
         }
 
@@ -59,5 +76,5 @@ class HTTPClientImpl implements Abstraction.Interface {
 
 export const HTTPClient = Abstraction.createImplementation({
     implementation: HTTPClientImpl,
-    dependencies: []
+    dependencies: [AuthRepository]
 });
