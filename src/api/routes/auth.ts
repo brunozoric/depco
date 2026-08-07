@@ -33,47 +33,75 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
     const authService = container.resolve(AuthService);
     const userService = container.resolve(UserService);
 
-    registerRoute(app, loginRoute, {}, async (request, reply) => {
-        try {
-            await authService.login(request.body);
+    registerRoute(
+        app,
+        loginRoute,
+        {
+            config: { rateLimit: { max: 10, timeWindow: "15 minutes" } }
+        },
+        async (request, reply) => {
+            try {
+                await authService.login(request.body);
+                sendNone(reply);
+            } catch (error) {
+                const [statusCode, message] = toStatusAndMessage(error, "Login failed");
+                sendError(reply, statusCode, message);
+            }
+        }
+    );
+
+    registerRoute(
+        app,
+        verifyCodeRoute,
+        {
+            config: { rateLimit: { max: 5, timeWindow: "15 minutes" } }
+        },
+        async (request, reply) => {
+            try {
+                const result = await authService.verifyCode(request.body);
+                sendOne(reply, result, 200);
+            } catch (error) {
+                const [statusCode, message] = toStatusAndMessage(error, "Verification failed");
+                sendError(reply, statusCode, message);
+            }
+        }
+    );
+
+    registerRoute(
+        app,
+        magicLinkRoute,
+        {
+            config: { rateLimit: { max: 5, timeWindow: "15 minutes" } }
+        },
+        async (request, reply) => {
+            const baseUrl = `${request.protocol}://${request.hostname}`;
+            try {
+                await authService.requestMagicLink({ ...request.body, baseUrl });
+            } catch {
+                // Silently swallow all errors — the spec requires always
+                // returning success to prevent user enumeration. Errors are
+                // logged inside AuthService.
+            }
             sendNone(reply);
-        } catch (error) {
-            const [statusCode, message] = toStatusAndMessage(error, "Login failed");
-            sendError(reply, statusCode, message);
         }
-    });
+    );
 
-    registerRoute(app, verifyCodeRoute, {}, async (request, reply) => {
-        try {
-            const result = await authService.verifyCode(request.body);
-            sendOne(reply, result, 200);
-        } catch (error) {
-            const [statusCode, message] = toStatusAndMessage(error, "Verification failed");
-            sendError(reply, statusCode, message);
+    registerRoute(
+        app,
+        verifyMagicLinkRoute,
+        {
+            config: { rateLimit: { max: 10, timeWindow: "15 minutes" } }
+        },
+        async (request, reply) => {
+            try {
+                const result = await authService.verifyMagicLink(request.body);
+                sendOne(reply, result, 200);
+            } catch (error) {
+                const [statusCode, message] = toStatusAndMessage(error, "Verification failed");
+                sendError(reply, statusCode, message);
+            }
         }
-    });
-
-    registerRoute(app, magicLinkRoute, {}, async (request, reply) => {
-        const baseUrl = `${request.protocol}://${request.hostname}`;
-        try {
-            await authService.requestMagicLink({ ...request.body, baseUrl });
-        } catch {
-            // Silently swallow all errors — the spec requires always
-            // returning success to prevent user enumeration. Errors are
-            // logged inside AuthService.
-        }
-        sendNone(reply);
-    });
-
-    registerRoute(app, verifyMagicLinkRoute, {}, async (request, reply) => {
-        try {
-            const result = await authService.verifyMagicLink(request.body);
-            sendOne(reply, result, 200);
-        } catch (error) {
-            const [statusCode, message] = toStatusAndMessage(error, "Verification failed");
-            sendError(reply, statusCode, message);
-        }
-    });
+    );
 
     registerRoute(app, getMeRoute, {}, async (request, reply) => {
         const { user } = request as IAuthenticatedRequest;
