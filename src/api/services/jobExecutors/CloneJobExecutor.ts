@@ -4,7 +4,7 @@ import type { JobExecutor } from "./abstractions/JobExecutor.js";
 import { CloneJobExecutor as Abstraction } from "./abstractions/CloneJobExecutor.js";
 import { CommandRunner } from "../CommandRunner/index.js";
 import { PackageManagerService } from "../abstractions/PackageManagerService.js";
-import { SecurityService } from "../abstractions/SecurityService.js";
+import { SecurityService } from "../Security/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { registerProject } from "../registerProject.js";
 import { upgradeJobs } from "#api/db/schema.js";

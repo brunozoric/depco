@@ -8,7 +8,7 @@ import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { registryCache } from "#api/db/schema.js";
 import { CommandRunner } from "../../services/CommandRunner/index.js";
-import { FileConfigService } from "../../services/abstractions/FileConfigService.js";
+import { FileConfigService } from "../../services/FileConfig/index.js";
 import { RegistryCacheService as RegistryCacheServiceReg } from "../../services/RegistryCacheService.js";
 import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../services/packageManagers/PackageManagerDriverRegistry.js";
 import { EmailService } from "../../services/Email/index.js";

@@ -18,7 +18,7 @@ import { UserService as UserServiceRegistration } from "../../services/UserServi
 import { AuthService as AuthServiceRegistration } from "../../services/AuthService.js";
 import { createAuthHook } from "../../middleware/authHook.js";
 import { CommandRunner } from "../../services/CommandRunner/index.js";
-import { SecurityService as SecurityServiceReg } from "../../services/SecurityService.js";
+import { SecurityService as SecurityServiceReg } from "../../services/Security/SecurityService.js";
 import { ScanService as ScanServiceReg } from "../../services/ScanService.js";
 import { PackageManagerService as PackageManagerServiceReg } from "../../services/PackageManagerService.js";
 import { AuditParserService as AuditParserServiceReg } from "../../services/AuditParserService.js";
@@ -37,7 +37,7 @@ import { LockfileParserService as LockfileParserServiceReg } from "../../service
 import { DependencyGraphService as DependencyGraphServiceReg } from "../../services/DependencyGraphService.js";
 import { DependencyChangeService as DependencyChangeServiceReg } from "../../services/DependencyChangeService.js";
 import { WebSocketBroadcaster as WebSocketBroadcasterReg } from "#api/websocket/WebSocketBroadcaster.js";
-import { FileConfigService as FileConfigServiceReg } from "../../services/FileConfigService.js";
+import { FileConfigService as FileConfigServiceReg } from "../../services/FileConfig/FileConfigService.js";
 import { GitService as GitServiceReg } from "../../services/GitService.js";
 import { registerEncryption } from "#testing/helpers/registerEncryption.js";
 import { ForgeService as ForgeServiceReg } from "../../services/ForgeService.js";

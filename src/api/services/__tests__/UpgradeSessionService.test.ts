@@ -13,7 +13,7 @@ import { BranchResolver } from "../stepResolvers/BranchResolver.js";
 import { UpgradeResolver } from "../stepResolvers/UpgradeResolver.js";
 import { RefreshTransientResolver } from "../stepResolvers/RefreshTransientResolver.js";
 import { CommitResolver } from "../stepResolvers/CommitResolver.js";
-import { StepHookService } from "../abstractions/StepHookService.js";
+import { StepHookService } from "../StepHook/index.js";
 import { CommandRunner } from "../CommandRunner/index.js";
 import { GitService } from "../abstractions/GitService.js";
 import { UpgradeService } from "../abstractions/UpgradeService.js";

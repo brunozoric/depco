@@ -2,7 +2,7 @@ import { eq, and, asc } from "drizzle-orm";
 import { StepHookService as Abstraction } from "./abstractions/StepHookService.js";
 import type { IResolvedStepHook } from "./abstractions/StepHookService.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { FileConfigService } from "./abstractions/FileConfigService.js";
+import { FileConfigService } from "../FileConfig/index.js";
 import { projectStepHooks } from "#api/db/schema.js";
 
 class StepHookServiceImpl implements Abstraction.Interface {

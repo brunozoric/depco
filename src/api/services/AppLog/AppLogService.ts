@@ -3,7 +3,7 @@ import { generateId } from "@webiny/stdlib";
 import { AppLogService as Abstraction } from "./abstractions/AppLogService.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
-import { FileConfigService } from "../abstractions/FileConfigService.js";
+import { FileConfigService } from "../FileConfig/index.js";
 import { appLogs, appSettings } from "#api/db/schema.js";
 
 const LEVEL_PRIORITY: Record<string, number> = {

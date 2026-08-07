@@ -7,7 +7,7 @@ import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
-import { FileConfigService as FileConfigServiceRegistration } from "#api/services/FileConfigService.js";
+import { FileConfigService as FileConfigServiceRegistration } from "#api/services/FileConfig/FileConfigService.js";
 import { AppLogService } from "../abstractions/AppLogService.js";
 import { AppLogService as AppLogServiceRegistration } from "../AppLogService.js";
 import { appLogs, appSettings } from "#api/db/schema.js";

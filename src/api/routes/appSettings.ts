@@ -5,7 +5,7 @@ import { requirePermission } from "#api/middleware/requirePermission.js";
 import { listAppSettingsRoute, upsertAppSettingRoute } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { EncryptionService } from "#api/services/Encryption/index.js";
-import { FileConfigService } from "#api/services/abstractions/FileConfigService.js";
+import { FileConfigService } from "#api/services/FileConfig/index.js";
 import { appSettings } from "#api/db/schema.js";
 
 const TOKEN_KEYS = new Set(["github_token", "gitlab_token"]);

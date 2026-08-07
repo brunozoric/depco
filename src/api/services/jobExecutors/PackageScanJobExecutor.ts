@@ -7,7 +7,7 @@ import type { JobExecutor } from "./abstractions/JobExecutor.js";
 import { PackageScanJobExecutor as Abstraction } from "./abstractions/PackageScanJobExecutor.js";
 import { ScanService } from "../abstractions/ScanService.js";
 import { PackageManagerService } from "../abstractions/PackageManagerService.js";
-import { SecurityService } from "../abstractions/SecurityService.js";
+import { SecurityService } from "../Security/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { ErrorReporter } from "../ErrorReporter/index.js";

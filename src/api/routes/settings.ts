@@ -17,7 +17,7 @@ import { SECURITY_FIELD_REGISTRY } from "#shared/security/index.js";
 import type { PackageManagerId } from "#shared/security/index.js";
 import { INSTALL_FLAG_REGISTRY } from "#shared/install/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { FileConfigService } from "#api/services/abstractions/FileConfigService.js";
+import { FileConfigService } from "#api/services/FileConfig/index.js";
 import { pmSecuritySettings } from "#api/db/schema.js";
 
 interface PluginOptions extends FastifyPluginOptions {

@@ -4,7 +4,7 @@ import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { CommandRunner } from "./CommandRunner/index.js";
 import { PackageManagerDriverRegistry } from "./packageManagers/abstractions/PackageManagerDriverRegistry.js";
 import type { PackageManagerDriver } from "./packageManagers/abstractions/PackageManagerDriver.js";
-import { FileConfigService } from "./abstractions/FileConfigService.js";
+import { FileConfigService } from "./FileConfig/index.js";
 import { registryCache } from "#api/db/schema.js";
 
 import { parseLicense } from "./packageManagers/parseLicense.js";

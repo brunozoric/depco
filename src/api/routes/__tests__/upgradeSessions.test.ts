@@ -21,7 +21,7 @@ import { RefreshTransientResolver } from "#api/services/stepResolvers/RefreshTra
 import { CommitResolver } from "#api/services/stepResolvers/CommitResolver.js";
 import { GitService } from "#api/services/abstractions/GitService.js";
 import { UpgradeService } from "#api/services/abstractions/UpgradeService.js";
-import { StepHookService } from "#api/services/abstractions/StepHookService.js";
+import { StepHookService } from "#api/services/StepHook/index.js";
 import { CommandRunner } from "#api/services/CommandRunner/index.js";
 import { upgradeSessionRoutes } from "../upgradeSessions.js";
 

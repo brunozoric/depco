@@ -4,7 +4,7 @@ import { InstallJobExecutor as Abstraction } from "./abstractions/InstallJobExec
 import { PackageManagerDriverRegistry } from "../packageManagers/abstractions/PackageManagerDriverRegistry.js";
 import { CommandRunner } from "../CommandRunner/index.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
-import { FileConfigService } from "../abstractions/FileConfigService.js";
+import { FileConfigService } from "../FileConfig/index.js";
 
 class InstallJobExecutorImpl implements JobExecutor.Interface {
     public readonly type = "install";

@@ -9,7 +9,7 @@ import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { CommandRunner } from "../../CommandRunner/index.js";
 import { ErrorReporter } from "../../ErrorReporter/index.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
-import { FileConfigService } from "../../abstractions/FileConfigService.js";
+import { FileConfigService } from "../../FileConfig/index.js";
 import { ScanService as ScanServiceReg } from "../../ScanService.js";
 import { PackageManagerService as PackageManagerServiceReg } from "../../PackageManagerService.js";
 import { AuditParserService as AuditParserServiceReg } from "../../AuditParserService.js";

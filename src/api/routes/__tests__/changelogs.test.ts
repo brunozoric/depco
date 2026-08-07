@@ -10,7 +10,7 @@ import { EmailService } from "../../services/Email/index.js";
 import { UserService as UserServiceRegistration } from "../../services/UserService.js";
 import { AuthService as AuthServiceRegistration } from "../../services/AuthService.js";
 import { createAuthHook } from "../../middleware/authHook.js";
-import { FileConfigService } from "../../services/abstractions/FileConfigService.js";
+import { FileConfigService } from "../../services/FileConfig/index.js";
 import { RegistryCacheService as RegistryCacheServiceReg } from "../../services/RegistryCacheService.js";
 import { ChangelogService as ChangelogServiceReg } from "../../services/ChangelogService.js";
 import { GitHubReleasesResolver } from "../../services/changelogResolvers/GitHubReleasesResolver.js";

@@ -15,7 +15,7 @@ import { UserService as UserServiceRegistration } from "#api/services/UserServic
 import { AuthService as AuthServiceRegistration } from "#api/services/AuthService.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
 import { projects, projectStepHooks } from "#api/db/schema.js";
-import { FileConfigService } from "../../services/FileConfigService.js";
+import { FileConfigService } from "../../services/FileConfig/FileConfigService.js";
 import { PackageJsonService } from "../../services/PackageJson/PackageJsonService.js";
 import { stepHooksRoutes } from "../stepHooks.js";
 

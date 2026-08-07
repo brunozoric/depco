@@ -11,7 +11,7 @@ import type { ICustomStepConfig } from "./stepResolvers/abstractions/CustomStepC
 import { CustomStepResolver } from "./stepResolvers/CustomStepResolver.js";
 import { buildStepOrder, createSessionSteps, toSlug } from "./stepResolvers/stepPipeline.js";
 import { ErrorReporter } from "./ErrorReporter/index.js";
-import { StepHookService } from "./abstractions/StepHookService.js";
+import { StepHookService } from "./StepHook/index.js";
 import { CommandRunner } from "./CommandRunner/index.js";
 
 interface IUpgradeSessionSqlRow {

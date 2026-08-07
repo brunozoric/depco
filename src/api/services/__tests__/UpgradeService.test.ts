@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { CommandRunner } from "../CommandRunner/index.js";
-import { FileConfigService } from "../abstractions/FileConfigService.js";
+import { FileConfigService } from "../FileConfig/index.js";
 import { UpgradeService } from "../abstractions/UpgradeService.js";
 import { UpgradeService as UpgradeServiceRegistration } from "../UpgradeService.js";
 import { PackageManagerDriverRegistry as RegistryRegistration } from "../packageManagers/PackageManagerDriverRegistry.js";

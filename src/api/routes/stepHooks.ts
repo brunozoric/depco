@@ -11,7 +11,7 @@ import {
     deleteStepHookRoute
 } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { FileConfigService } from "#api/services/abstractions/FileConfigService.js";
+import { FileConfigService } from "#api/services/FileConfig/index.js";
 import { PackageJsonService } from "#api/services/PackageJson/index.js";
 import { projects, projectStepHooks } from "#api/db/schema.js";
 
