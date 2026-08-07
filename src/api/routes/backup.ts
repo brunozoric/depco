@@ -165,7 +165,10 @@ export async function backupRoutes(app: FastifyInstance, options: PluginOptions)
 
     app.post(
         "/api/projects/backup",
-        { preHandler: [requirePermission("full")] },
+        {
+            preHandler: [requirePermission("full")],
+            config: { rateLimit: { max: 10, timeWindow: "1 minute" } }
+        },
         async (request, reply) => {
             const rawBody = request.body as Buffer;
             const unzipped = unzipSync(new Uint8Array(rawBody));
