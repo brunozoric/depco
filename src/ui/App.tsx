@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import {
     ActionIcon,
     AppShell,
+    Button,
     ColorSwatch,
     MantineProvider,
     Menu,
@@ -127,6 +128,11 @@ import { TeamsPage } from "./presentation/teams/TeamsPage/components/TeamsPage.j
 import { TeamDetailFeature } from "./presentation/teams/TeamDetail/feature.js";
 import { TeamDetailProvider } from "./presentation/teams/TeamDetail/TeamDetailProvider.js";
 import { TeamDetailPage } from "./presentation/teams/TeamDetail/components/TeamDetailPage.js";
+import { UsersFeature } from "./features/users/feature.js";
+import { UsersUseCasesFeature } from "./presentation/users/useCases/feature.js";
+import { UserListFeature } from "./presentation/users/UserList/feature.js";
+import { UserListProvider } from "./presentation/users/UserList/UserListProvider.js";
+import { UserListPage } from "./presentation/users/UserList/components/UserListPage.js";
 
 const ALL_FEATURES: AnyFeature[] = [
     HTTPClientFeature,
@@ -187,7 +193,10 @@ const ALL_FEATURES: AnyFeature[] = [
     TeamsFeature,
     TeamsUseCasesFeature,
     TeamsPageFeature,
-    TeamDetailFeature
+    TeamDetailFeature,
+    UsersFeature,
+    UsersUseCasesFeature,
+    UserListFeature
 ];
 
 const UPGRADE_WIZARD_PATH_PATTERN = /^\/projects\/([^/]+)\/upgrade$/;
@@ -385,6 +394,40 @@ const TeamFilterSelect = observer(function TeamFilterSelect(): React.ReactNode {
     );
 });
 
+// Shows the current user's display name in the header and offers a Logout
+// action in its dropdown. Renders nothing when no user is authenticated yet.
+const UserMenu = observer(function UserMenu(): React.ReactNode {
+    const container = useContainer();
+    const authRepository = container.resolve(AuthRepository);
+    const currentUser = authRepository.currentUser;
+
+    if (!currentUser) {
+        return null;
+    }
+
+    async function handleLogout(): Promise<void> {
+        const authGateway = container.resolve(AuthGateway);
+        try {
+            await authGateway.logout();
+        } finally {
+            authRepository.clearAuth();
+        }
+    }
+
+    return (
+        <Menu position="bottom-end" shadow="md" width={180}>
+            <Menu.Target>
+                <Button variant="subtle" size="xs">
+                    {currentUser.displayName}
+                </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+                <Menu.Item onClick={() => void handleLogout()}>Logout</Menu.Item>
+            </Menu.Dropdown>
+        </Menu>
+    );
+});
+
 function SbomDialogContainer({
     opened,
     onClose
@@ -498,6 +541,14 @@ function AppRoutes(): React.ReactNode {
         );
     }
 
+    if (path === "/users") {
+        return (
+            <UserListProvider>
+                {({ presenter }) => <UserListPage presenter={presenter} />}
+            </UserListProvider>
+        );
+    }
+
     if (path === "/packages") {
         return (
             <PackagesProvider>
@@ -607,6 +658,7 @@ export function App(): React.ReactNode {
                                     >
                                         &#8962;
                                     </ActionIcon>
+                                    <UserMenu />
                                     <Menu position="bottom-end" shadow="md" width={200}>
                                         <Menu.Target>
                                             <ActionIcon
@@ -643,6 +695,9 @@ export function App(): React.ReactNode {
                                             <Menu.Divider />
                                             <Menu.Item onClick={() => navigate("/teams")}>
                                                 Teams
+                                            </Menu.Item>
+                                            <Menu.Item onClick={() => navigate("/users")}>
+                                                Users
                                             </Menu.Item>
                                             <Menu.Item onClick={() => navigate("/jobs")}>
                                                 Jobs
