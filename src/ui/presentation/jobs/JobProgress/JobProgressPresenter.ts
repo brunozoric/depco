@@ -14,6 +14,7 @@ class JobProgressPresenterImpl implements Abstraction.Interface {
     private readonly handleJobStatus: EventBridge.Callback<"job:status">;
     private readonly handleJobLog: EventBridge.Callback<"job:log">;
     private readonly handleJobProgress: EventBridge.Callback<"job:progress">;
+    private readonly handleReconnect: EventBridge.Callback<"ws:reconnected">;
 
     public constructor(
         private readonly getJobUseCase: GetJobUseCase.Interface,
@@ -37,6 +38,12 @@ class JobProgressPresenterImpl implements Abstraction.Interface {
             runInAction(() => {
                 this.upgradesRepository.appendJobLog(this.currentReferenceId!, data.line);
             });
+        };
+
+        this.handleReconnect = () => {
+            if (this.currentReferenceId && this.currentJobId) {
+                void this.refreshActiveJob(this.currentReferenceId, this.currentJobId);
+            }
         };
 
         this.handleJobProgress = data => {
@@ -96,6 +103,7 @@ class JobProgressPresenterImpl implements Abstraction.Interface {
         this.eventBridge.on("job:status", this.handleJobStatus);
         this.eventBridge.on("job:log", this.handleJobLog);
         this.eventBridge.on("job:progress", this.handleJobProgress);
+        this.eventBridge.on("ws:reconnected", this.handleReconnect);
 
         await this.getJobUseCase.execute(referenceId, jobId);
     };
@@ -105,6 +113,7 @@ class JobProgressPresenterImpl implements Abstraction.Interface {
             this.eventBridge.off("job:status", this.handleJobStatus);
             this.eventBridge.off("job:log", this.handleJobLog);
             this.eventBridge.off("job:progress", this.handleJobProgress);
+            this.eventBridge.off("ws:reconnected", this.handleReconnect);
         }
         this.tracking = false;
         this.currentJobId = null;
@@ -118,16 +127,18 @@ class JobProgressPresenterImpl implements Abstraction.Interface {
     private refreshActiveJob = async (
         referenceId: string,
         jobId: string,
-        status: string
+        status?: string
     ): Promise<void> => {
         await this.getJobUseCase.execute(referenceId, jobId);
 
+        const resolvedStatus = status ?? this.upgradesRepository.getActiveJob(referenceId)?.status;
+
         runInAction(() => {
             if (
-                status === "completed" ||
-                status === "failed" ||
-                status === "cancelled" ||
-                status === "interrupted"
+                resolvedStatus === "completed" ||
+                resolvedStatus === "failed" ||
+                resolvedStatus === "cancelled" ||
+                resolvedStatus === "interrupted"
             ) {
                 this.untrackJob();
             }

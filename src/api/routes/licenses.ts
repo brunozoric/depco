@@ -162,6 +162,13 @@ async function buildLicenseSummary(
         .all();
     const projectNameById = new Map(projectRows.map(row => [row.id, row.name]));
 
+    const uniquePackages = new Map<string, (typeof allLicenses)[number]>();
+    for (const license of allLicenses) {
+        if (!uniquePackages.has(license.packageName)) {
+            uniquePackages.set(license.packageName, license);
+        }
+    }
+
     const riskTierCounts: IRiskTierCounts = {
         permissive: 0,
         "weak-copyleft": 0,
@@ -169,27 +176,33 @@ async function buildLicenseSummary(
         proprietary: 0,
         unknown: 0
     };
-    for (const license of allLicenses) {
+    for (const license of uniquePackages.values()) {
         if (license.riskTier in riskTierCounts) {
             riskTierCounts[license.riskTier as keyof IRiskTierCounts] += 1;
         }
     }
 
+    const deniedPackageNames = new Set<string>();
     const violationCounts: IViolationActionCounts = { warn: 0, deny: 0 };
-    const deniedLicenseIds = new Set<string>();
+    const seenViolationPackages = new Map<string, string>();
     for (const violation of allViolations) {
+        const existing = seenViolationPackages.get(violation.packageName);
+        if (existing === violation.action) {
+            continue;
+        }
+        seenViolationPackages.set(violation.packageName, violation.action);
         if (violation.action === "warn") {
             violationCounts.warn += 1;
         } else if (violation.action === "deny") {
             violationCounts.deny += 1;
-            deniedLicenseIds.add(violation.licenseId);
+            deniedPackageNames.add(violation.packageName);
         }
     }
 
-    const totalPackages = allLicenses.length;
+    const totalPackages = uniquePackages.size;
     const compliantPercent =
         totalPackages > 0
-            ? Math.round(((totalPackages - deniedLicenseIds.size) / totalPackages) * 100)
+            ? Math.round(((totalPackages - deniedPackageNames.size) / totalPackages) * 100)
             : 100;
 
     const summaryByProject = new Map<string, ILicenseProjectSummary>();

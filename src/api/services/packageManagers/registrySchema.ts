@@ -3,16 +3,14 @@ import { normalizeRepoUrl, extractRepoDirectory } from "./normalizeRepoUrl.js";
 import { parseLicense } from "./parseLicense.js";
 import type { IRegistryPackageInfo } from "./abstractions/PackageManagerDriver.js";
 
-const registryOutputSchema = z
-    .object({
-        "dist-tags": z.record(z.string(), z.string()).optional().default({}),
-        versions: z.array(z.string()).optional().default([]),
-        time: z.record(z.string(), z.string()).optional().default({}),
-        repository: z.unknown().optional(),
-        readme: z.string().optional(),
-        license: z.unknown().optional()
-    })
-    .passthrough();
+const registryOutputSchema = z.looseObject({
+    "dist-tags": z.record(z.string(), z.string()).optional().default({}),
+    versions: z.array(z.string()).optional().default([]),
+    time: z.record(z.string(), z.string()).optional().default({}),
+    repository: z.unknown().optional(),
+    readme: z.string().optional(),
+    license: z.unknown().optional()
+});
 
 export function parseRegistryOutput(stdout: string): IRegistryPackageInfo {
     const raw = registryOutputSchema.parse(JSON.parse(stdout));

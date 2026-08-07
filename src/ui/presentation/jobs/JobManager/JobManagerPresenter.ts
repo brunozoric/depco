@@ -25,6 +25,7 @@ class JobManagerPresenterImpl implements Abstraction.Interface {
 
     private readonly handleJobStatus: EventBridge.Callback<"job:status">;
     private readonly handleJobProgress: EventBridge.Callback<"job:progress">;
+    private readonly handleReconnect: EventBridge.Callback<"ws:reconnected">;
 
     public constructor(
         private readonly loadAllJobsUseCase: LoadAllJobsUseCase.Interface,
@@ -55,6 +56,11 @@ class JobManagerPresenterImpl implements Abstraction.Interface {
             });
         };
         this.eventBridge.on("job:progress", this.handleJobProgress);
+
+        this.handleReconnect = () => {
+            this.debouncedRefresh();
+        };
+        this.eventBridge.on("ws:reconnected", this.handleReconnect);
     }
 
     private debouncedRefresh(): void {
@@ -195,6 +201,7 @@ class JobManagerPresenterImpl implements Abstraction.Interface {
     public dispose = (): void => {
         this.eventBridge.off("job:status", this.handleJobStatus);
         this.eventBridge.off("job:progress", this.handleJobProgress);
+        this.eventBridge.off("ws:reconnected", this.handleReconnect);
         if (this.refreshTimer) {
             clearTimeout(this.refreshTimer);
         }

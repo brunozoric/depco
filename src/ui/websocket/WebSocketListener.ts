@@ -35,7 +35,11 @@ class WebSocketListenerImpl implements Abstraction.Interface {
         const socket = new WebSocket(this.buildUrl());
 
         socket.addEventListener("open", () => {
+            const isReconnect = this.reconnectAttempts > 0;
             this.reconnectAttempts = 0;
+            if (isReconnect) {
+                this.eventBridge.emit("ws:reconnected", {} as never);
+            }
         });
 
         socket.addEventListener("message", event => {

@@ -86,7 +86,7 @@ export async function createServer(): Promise<FastifyInstance> {
     const scanScheduler = container.resolve(ScanSchedulerService);
     await scanScheduler.init();
 
-    const app = Fastify({ logger: { level: "error" } });
+    const app = Fastify({ logger: { level: "warn" } });
     await app.register(fastifyCompress);
     await app.register(fastifyRateLimit, { max: 100, timeWindow: "1 minute" });
 
