@@ -6,7 +6,8 @@ import type { LicensePolicyService } from "#api/services/License/index.js";
 import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
 
 async function createService(databaseClient: DatabaseClient.Interface) {
-    const { LicensePolicyServiceImpl } = await import("#api/services/LicensePolicyService.js");
+    const { LicensePolicyServiceImpl } =
+        await import("#api/services/License/LicensePolicyService.js");
     return new LicensePolicyServiceImpl(databaseClient);
 }
 

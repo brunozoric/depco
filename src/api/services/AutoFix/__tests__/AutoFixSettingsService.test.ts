@@ -4,7 +4,8 @@ import { projects } from "#api/db/schema.js";
 import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
 
 async function createService(databaseClient: DatabaseClient.Interface) {
-    const { AutoFixSettingsServiceImpl } = await import("#api/services/AutoFixSettingsService.js");
+    const { AutoFixSettingsServiceImpl } =
+        await import("#api/services/AutoFix/AutoFixSettingsService.js");
     return new AutoFixSettingsServiceImpl(databaseClient);
 }
 

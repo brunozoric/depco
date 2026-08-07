@@ -45,7 +45,8 @@ async function seedScanResult(db: TestDb, projectId: string, packageName: string
 }
 
 async function createService(registryCache: RegistryCacheService.Interface, db: TestDb) {
-    const { LicenseCheckerService } = await import("#api/services/LicenseCheckerService.js");
+    const { LicenseCheckerService } =
+        await import("#api/services/License/LicenseCheckerService.js");
     const container = (await import("#shared/index.js")).createContainer();
     container.registerInstance(
         (await import("#api/services/RegistryCache/index.js")).RegistryCacheService,

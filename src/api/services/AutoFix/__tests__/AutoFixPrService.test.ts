@@ -14,9 +14,11 @@ import {
 import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
 
 async function createService(databaseClient: DatabaseClient.Interface) {
-    const { AutoFixPrServiceImpl } = await import("#api/services/AutoFixPrService.js");
-    const { AutoFixSettingsServiceImpl } = await import("#api/services/AutoFixSettingsService.js");
-    const { LicensePolicyServiceImpl } = await import("#api/services/LicensePolicyService.js");
+    const { AutoFixPrServiceImpl } = await import("#api/services/AutoFix/AutoFixPrService.js");
+    const { AutoFixSettingsServiceImpl } =
+        await import("#api/services/AutoFix/AutoFixSettingsService.js");
+    const { LicensePolicyServiceImpl } =
+        await import("#api/services/License/LicensePolicyService.js");
     return new AutoFixPrServiceImpl(
         databaseClient,
         new AutoFixSettingsServiceImpl(databaseClient),

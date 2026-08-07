@@ -19,7 +19,8 @@ async function createService(
     databaseClient: DatabaseClient.Interface,
     lockfileParserService: LockfileParserService.Interface
 ) {
-    const { DependencyGraphServiceImpl } = await import("#api/services/DependencyGraphService.js");
+    const { DependencyGraphServiceImpl } =
+        await import("#api/services/DependencyGraph/DependencyGraphService.js");
     return new DependencyGraphServiceImpl(databaseClient, lockfileParserService);
 }
 
