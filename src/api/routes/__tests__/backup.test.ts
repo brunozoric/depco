@@ -1,11 +1,16 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { zipSync, unzipSync, strToU8, strFromU8 } from "fflate";
 import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { PackageManagerService } from "#api/services/abstractions/PackageManagerService.js";
+import { EmailService } from "#api/services/abstractions/EmailService.js";
+import { UserService as UserServiceRegistration } from "#api/services/UserService.js";
+import { AuthService as AuthServiceRegistration } from "#api/services/AuthService.js";
+import { createAuthHook } from "#api/middleware/authHook.js";
 import {
     appSettings,
     projects,
@@ -64,6 +69,7 @@ function unzipBackup(buffer: Buffer): BackupExport {
 describe("backup routes", () => {
     let app: FastifyInstance;
     let db: Awaited<ReturnType<typeof createTestDb>>;
+    let token: string;
 
     beforeEach(async () => {
         db = await createTestDb();
@@ -75,9 +81,15 @@ describe("backup routes", () => {
             updateVersion: async () => {},
             audit: async () => []
         });
+        container.registerInstance(EmailService, { send: vi.fn() });
+        container.register(UserServiceRegistration).inSingletonScope();
+        container.register(AuthServiceRegistration).inSingletonScope();
         app = Fastify();
+        app.addHook("onRequest", createAuthHook(container));
         await app.register(backupRoutes, { container });
         await app.ready();
+
+        ({ token } = await createTestSession({ db }));
     });
 
     afterEach(async () => {
@@ -86,7 +98,11 @@ describe("backup routes", () => {
 
     describe("GET /api/projects/backup", () => {
         it("returns zip with empty backup when DB is empty", async () => {
-            const response = await app.inject({ method: "GET", url: "/api/projects/backup" });
+            const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "GET",
+                url: "/api/projects/backup"
+            });
             expect(response.statusCode).toBe(200);
             expect(response.headers["content-type"]).toBe("application/zip");
 
@@ -132,7 +148,11 @@ describe("backup routes", () => {
                 })
                 .run();
 
-            const response = await app.inject({ method: "GET", url: "/api/projects/backup" });
+            const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "GET",
+                url: "/api/projects/backup"
+            });
             const body = unzipBackup(response.rawPayload);
 
             expect(body.appSettings).toHaveLength(2);
@@ -175,7 +195,11 @@ describe("backup routes", () => {
                 })
                 .run();
 
-            const response = await app.inject({ method: "GET", url: "/api/projects/backup" });
+            const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "GET",
+                url: "/api/projects/backup"
+            });
             const body = unzipBackup(response.rawPayload);
 
             expect(body.dependencies).toHaveLength(1);
@@ -196,7 +220,11 @@ describe("backup routes", () => {
                 .values({ id: "d1", name: "lodash", repoUrl: null, createdAt: 1000 })
                 .run();
 
-            const response = await app.inject({ method: "GET", url: "/api/projects/backup" });
+            const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "GET",
+                url: "/api/projects/backup"
+            });
             const body = unzipBackup(response.rawPayload);
             expect(body.dependencies[0]!.versions).toEqual([]);
         });
@@ -222,7 +250,11 @@ describe("backup routes", () => {
                 })
                 .run();
 
-            const response = await app.inject({ method: "GET", url: "/api/projects/backup" });
+            const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "GET",
+                url: "/api/projects/backup"
+            });
             const body = unzipBackup(response.rawPayload);
             expect(body.dependencies[0]!.versions[0]!.changelog).toEqual({
                 content: null,
@@ -250,7 +282,10 @@ describe("backup routes", () => {
                 method: "POST",
                 url: "/api/projects/backup",
                 payload: zipPayload(payload),
-                headers: { "content-type": "application/octet-stream" }
+                headers: {
+                    authorization: `Bearer ${token}`,
+                    "content-type": "application/octet-stream"
+                }
             });
         }
 
@@ -576,7 +611,11 @@ describe("backup routes", () => {
                 })
                 .run();
 
-            const exportResponse = await app.inject({ method: "GET", url: "/api/projects/backup" });
+            const exportResponse = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "GET",
+                url: "/api/projects/backup"
+            });
             const zipBuffer = exportResponse.rawPayload;
 
             await db.delete(changelogs).run();
@@ -588,7 +627,10 @@ describe("backup routes", () => {
                 method: "POST",
                 url: "/api/projects/backup",
                 payload: zipBuffer,
-                headers: { "content-type": "application/octet-stream" }
+                headers: {
+                    authorization: `Bearer ${token}`,
+                    "content-type": "application/octet-stream"
+                }
             });
 
             const body = importResponse.json();

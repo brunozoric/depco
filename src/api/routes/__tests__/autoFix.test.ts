@@ -1,12 +1,17 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { generateId } from "@webiny/stdlib";
 import { createContainer } from "#shared/index.js";
 import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
+import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { JobWorker } from "../../services/abstractions/JobWorker.js";
 import { AutoFixSettingsService } from "../../services/AutoFixSettingsService.js";
+import { EmailService } from "../../services/abstractions/EmailService.js";
+import { UserService as UserServiceRegistration } from "../../services/UserService.js";
+import { AuthService as AuthServiceRegistration } from "../../services/AuthService.js";
+import { createAuthHook } from "../../middleware/authHook.js";
 import { projects, autoFixPullRequests } from "#api/db/schema.js";
 import { autoFixSettingsRoutes } from "../autoFixSettings.js";
 import { autoFixPrRoutes } from "../autoFixPrs.js";
@@ -17,6 +22,7 @@ interface IRouteTestContext {
     app: FastifyInstance;
     databaseClient: TestDatabaseClient;
     enqueuedJobs: JobWorker.CreateJobInput[];
+    token: string;
 }
 
 async function insertTestProject(
@@ -68,24 +74,33 @@ async function createTestContext(): Promise<IRouteTestContext> {
         getRunningJobsForReference: async () => []
     });
 
+    container.registerInstance(EmailService, { send: vi.fn() });
+    container.register(UserServiceRegistration).inSingletonScope();
+    container.register(AuthServiceRegistration).inSingletonScope();
+
     const app = Fastify();
+    app.addHook("onRequest", createAuthHook(container));
     await app.register(autoFixSettingsRoutes, { container });
     await app.register(autoFixPrRoutes, { container });
     await app.ready();
 
-    return { app, databaseClient, enqueuedJobs };
+    const { token } = await createTestSession({ db: databaseClient.db });
+
+    return { app, databaseClient, enqueuedJobs, token };
 }
 
 describe("auto-fix routes", () => {
     let app: FastifyInstance;
     let databaseClient: TestDatabaseClient;
     let enqueuedJobs: JobWorker.CreateJobInput[];
+    let token: string;
 
     beforeEach(async () => {
         const context = await createTestContext();
         app = context.app;
         databaseClient = context.databaseClient;
         enqueuedJobs = context.enqueuedJobs;
+        token = context.token;
     });
 
     afterEach(async () => {
@@ -97,6 +112,7 @@ describe("auto-fix routes", () => {
             await insertTestProject(databaseClient, "proj-1");
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/auto-fix/proj-1/settings"
             });
@@ -118,6 +134,7 @@ describe("auto-fix routes", () => {
             await insertTestProject(databaseClient, "proj-1");
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: "/api/auto-fix/proj-1/settings",
                 payload: {
@@ -142,12 +159,14 @@ describe("auto-fix routes", () => {
         it("updates existing settings, preserving unspecified fields", async () => {
             await insertTestProject(databaseClient, "proj-1");
             await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: "/api/auto-fix/proj-1/settings",
                 payload: { enabled: true, branchPrefix: "deps/" }
             });
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: "/api/auto-fix/proj-1/settings",
                 payload: { groupingStrategy: "per-project" }
@@ -164,6 +183,7 @@ describe("auto-fix routes", () => {
     describe("GET /api/auto-fix/pull-requests", () => {
         it("returns empty initially", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/auto-fix/pull-requests"
             });
@@ -210,6 +230,7 @@ describe("auto-fix routes", () => {
                 .run();
 
             const allResponse = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/auto-fix/pull-requests"
             });
@@ -229,6 +250,7 @@ describe("auto-fix routes", () => {
             });
 
             const filteredResponse = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/auto-fix/pull-requests?projectId=proj-1&status=pending"
             });
@@ -281,6 +303,7 @@ describe("auto-fix routes", () => {
                 .run();
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/auto-fix/proj-1/pull-requests"
             });
@@ -297,6 +320,7 @@ describe("auto-fix routes", () => {
             await insertTestProject(databaseClient, "proj-1");
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/auto-fix/proj-1/generate"
             });
@@ -314,6 +338,7 @@ describe("auto-fix routes", () => {
 
         it("returns 404 when the project does not exist", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/auto-fix/missing-project/generate"
             });
@@ -346,6 +371,7 @@ describe("auto-fix routes", () => {
                 .run();
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "DELETE",
                 url: `/api/auto-fix/pull-requests/${id}`
             });
@@ -354,6 +380,7 @@ describe("auto-fix routes", () => {
             expect(response.json()).toEqual({ deleted: true });
 
             const listResponse = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/auto-fix/pull-requests"
             });

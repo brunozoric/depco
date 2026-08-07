@@ -9,11 +9,16 @@ import { ConsoleLoggerConfig, ConsoleLoggerFeature } from "@webiny/stdlib";
 import { DirectoryToolFeature, FileToolFeature, JsonFileToolFeature } from "@webiny/stdlib/node";
 import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestSession } from "#testing/helpers/createTestSession.js";
 import {
     seedYarnSecuritySettings,
     VALID_YARNRC
 } from "#testing/helpers/seedYarnSecuritySettings.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { EmailService } from "#api/services/abstractions/EmailService.js";
+import { UserService as UserServiceRegistration } from "#api/services/UserService.js";
+import { AuthService as AuthServiceRegistration } from "#api/services/AuthService.js";
+import { createAuthHook } from "#api/middleware/authHook.js";
 import { CommandRunner } from "../../services/abstractions/CommandRunner.js";
 import { SecurityService as SecurityServiceReg } from "../../services/SecurityService.js";
 import { UpgradeService as UpgradeServiceReg } from "../../services/UpgradeService.js";
@@ -67,6 +72,7 @@ describe("job routes", () => {
     let testDir: string;
     let db: BetterSQLite3Database;
     let jobWorker: JobWorker.Interface;
+    let token: string;
 
     beforeEach(async () => {
         testDir = join(
@@ -164,11 +170,18 @@ describe("job routes", () => {
             onScanComplete: vi.fn()
         });
 
+        container.registerInstance(EmailService, { send: vi.fn() });
+        container.register(UserServiceRegistration).inSingletonScope();
+        container.register(AuthServiceRegistration).inSingletonScope();
+
         jobWorker = container.resolve(JobWorker);
 
         app = Fastify();
+        app.addHook("onRequest", createAuthHook(container));
         await app.register(jobRoutes, { container });
         await app.ready();
+
+        ({ token } = await createTestSession({ db }));
     });
 
     afterEach(async () => {
@@ -193,6 +206,7 @@ describe("job routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/p1/jobs/upgrade",
             payload: { packages: [{ name: "react", targetVersion: "19.0.0" }] }
@@ -202,13 +216,14 @@ describe("job routes", () => {
         const body = response.json() as { item: { jobId: string } };
         expect(body.item.jobId).toBeDefined();
 
-        const job = await fetchJobViaApi(app, body.item.jobId);
+        const job = await fetchJobViaApi(app, body.item.jobId, token);
         expect(job.packages).toContain('"from":"18.0.0"');
         expect(job.packages).toContain('"to":"19.0.0"');
     });
 
     it("looks up `from` as unknown when package is not in the scan results", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/p1/jobs/upgrade",
             payload: { packages: [{ name: "left-pad", targetVersion: "2.0.0" }] }
@@ -217,12 +232,13 @@ describe("job routes", () => {
         expect(response.statusCode).toBe(200);
         const body = response.json() as { item: { jobId: string } };
 
-        const job = await fetchJobViaApi(app, body.item.jobId);
+        const job = await fetchJobViaApi(app, body.item.jobId, token);
         expect(job.packages).toContain('"from":"unknown"');
     });
 
     it("refreshTransient: true chains a transient job after the dependency job completes", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/p1/jobs/upgrade",
             payload: {
@@ -237,6 +253,7 @@ describe("job routes", () => {
         await jobWorker.drain();
 
         const historyResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/p1/jobs"
         });
@@ -254,6 +271,7 @@ describe("job routes", () => {
         writeFileSync(join(testDir, ".yarnrc.yml"), "enableScripts: true\n");
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/p1/jobs/upgrade",
             payload: { packages: [{ name: "react", targetVersion: "19.0.0" }] }
@@ -264,6 +282,7 @@ describe("job routes", () => {
 
     it("returns 404 when the project does not exist", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/unknown/jobs/upgrade",
             payload: { packages: [{ name: "react", targetVersion: "19.0.0" }] }
@@ -274,18 +293,20 @@ describe("job routes", () => {
 
     it("POST /api/projects/:id/jobs/transient enqueues a transient job", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/p1/jobs/transient"
         });
 
         expect(response.statusCode).toBe(200);
         const body = response.json() as { item: { jobId: string } };
-        const job = await fetchJobViaApi(app, body.item.jobId);
+        const job = await fetchJobViaApi(app, body.item.jobId, token);
         expect(job.type).toBe("transient");
     });
 
     it("GET /api/projects/:id/jobs/:jobId returns job status and logs", async () => {
         const postResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/p1/jobs/upgrade",
             payload: { packages: [{ name: "react", targetVersion: "19.0.0" }] }
@@ -293,6 +314,7 @@ describe("job routes", () => {
         const { item } = postResponse.json() as { item: { jobId: string } };
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: `/api/projects/p1/jobs/${item.jobId}`
         });
@@ -305,6 +327,7 @@ describe("job routes", () => {
 
     it("GET /api/projects/:id/jobs/:jobId returns 404 for unknown job", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/p1/jobs/unknown-job"
         });
@@ -314,16 +337,19 @@ describe("job routes", () => {
 
     it("GET /api/projects/:id/jobs returns job history for the project", async () => {
         await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/p1/jobs/upgrade",
             payload: { packages: [{ name: "react", targetVersion: "19.0.0" }] }
         });
         await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/p1/jobs/transient"
         });
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/p1/jobs"
         });
@@ -337,11 +363,16 @@ describe("job routes", () => {
     describe("GET /api/jobs", () => {
         it("returns all jobs across all projects", async () => {
             await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/projects/p1/jobs/transient"
             });
 
-            const response = await app.inject({ method: "GET", url: "/api/jobs" });
+            const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "GET",
+                url: "/api/jobs"
+            });
 
             expect(response.statusCode).toBe(200);
             const body = response.json() as { items: unknown[]; total: number };
@@ -351,6 +382,7 @@ describe("job routes", () => {
 
         it("filters jobs by status query parameter", async () => {
             await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/projects/p1/jobs/transient"
             });
@@ -358,11 +390,13 @@ describe("job routes", () => {
             await jobWorker.drain();
 
             await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/projects/p1/jobs/transient"
             });
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/jobs?status=pending"
             });
@@ -387,6 +421,7 @@ describe("job routes", () => {
             });
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: `/api/jobs/${jobId}/cancel`
             });
@@ -398,6 +433,7 @@ describe("job routes", () => {
 
         it("returns 404 for an unknown jobId", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/jobs/nonexistent/cancel"
             });
@@ -418,6 +454,7 @@ describe("job routes", () => {
             expect((await jobWorker.getJob(jobId))!.status).toBe("completed");
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: `/api/jobs/${jobId}/cancel`
             });
@@ -529,11 +566,18 @@ describe("job routes", () => {
                 onScanComplete: vi.fn()
             });
 
+            slowContainer.registerInstance(EmailService, { send: vi.fn() });
+            slowContainer.register(UserServiceRegistration).inSingletonScope();
+            slowContainer.register(AuthServiceRegistration).inSingletonScope();
+
             const slowWorker = slowContainer.resolve(JobWorker);
 
             const slowApp = Fastify();
+            slowApp.addHook("onRequest", createAuthHook(slowContainer));
             await slowApp.register(jobRoutes, { container: slowContainer });
             await slowApp.ready();
+
+            const { token: slowToken } = await createTestSession({ db: slowDb });
 
             const jobId = await slowWorker.enqueue({
                 referenceId: "p1",
@@ -545,6 +589,7 @@ describe("job routes", () => {
             await new Promise(resolve => setTimeout(resolve, 0));
 
             const response = await slowApp.inject({
+                headers: { authorization: `Bearer ${slowToken}` },
                 method: "POST",
                 url: `/api/jobs/${jobId}/cancel`
             });
@@ -563,9 +608,11 @@ describe("job routes", () => {
 
 async function fetchJobViaApi(
     app: FastifyInstance,
-    jobId: string
+    jobId: string,
+    token: string
 ): Promise<{ packages: string | null; type: string }> {
     const response = await app.inject({
+        headers: { authorization: `Bearer ${token}` },
         method: "GET",
         url: `/api/projects/p1/jobs/${jobId}`
     });

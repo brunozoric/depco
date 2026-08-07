@@ -1,11 +1,16 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { eq } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import { createContainer } from "#shared/index.js";
 import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
+import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { EmailService } from "#api/services/abstractions/EmailService.js";
+import { UserService as UserServiceRegistration } from "#api/services/UserService.js";
+import { AuthService as AuthServiceRegistration } from "#api/services/AuthService.js";
+import { createAuthHook } from "#api/middleware/authHook.js";
 import {
     projects,
     teamProjects,
@@ -33,6 +38,7 @@ async function insertTestProject(db: TestDb, id: string, name = id): Promise<voi
 describe("teams routes", () => {
     let app: FastifyInstance;
     let db: TestDb;
+    let token: string;
 
     beforeEach(async () => {
         const databaseClient = await createTestDatabaseClient();
@@ -40,10 +46,16 @@ describe("teams routes", () => {
 
         const container = createContainer();
         container.registerInstance(DatabaseClient, databaseClient);
+        container.registerInstance(EmailService, { send: vi.fn() });
+        container.register(UserServiceRegistration).inSingletonScope();
+        container.register(AuthServiceRegistration).inSingletonScope();
 
         app = Fastify();
+        app.addHook("onRequest", createAuthHook(container));
         await app.register(teamsRoutes, { container });
         await app.ready();
+
+        ({ token } = await createTestSession({ db }));
     });
 
     afterEach(async () => {
@@ -52,6 +64,7 @@ describe("teams routes", () => {
 
     it("POST /api/teams creates a team with zero stats", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/teams",
             payload: { name: "Platform", color: "#ff0000" }
@@ -73,17 +86,23 @@ describe("teams routes", () => {
 
     it("GET /api/teams returns created teams", async () => {
         await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/teams",
             payload: { name: "Platform", color: "#ff0000" }
         });
         await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/teams",
             payload: { name: "Growth", color: "#00ff00" }
         });
 
-        const response = await app.inject({ method: "GET", url: "/api/teams" });
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "GET",
+            url: "/api/teams"
+        });
 
         expect(response.statusCode).toBe(200);
         const body = response.json();
@@ -96,12 +115,14 @@ describe("teams routes", () => {
 
     it("POST /api/teams with duplicate name returns 409", async () => {
         await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/teams",
             payload: { name: "Platform", color: "#ff0000" }
         });
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/teams",
             payload: { name: "Platform", color: "#00ff00" }
@@ -112,6 +133,7 @@ describe("teams routes", () => {
 
     it("PUT /api/teams/:id updates name and color", async () => {
         const createResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/teams",
             payload: { name: "Platform", color: "#ff0000" }
@@ -119,6 +141,7 @@ describe("teams routes", () => {
         const created = createResponse.json().item;
 
         const updateResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "PUT",
             url: `/api/teams/${created.id}`,
             payload: { name: "Platform Team", color: "#0000ff" }
@@ -133,11 +156,13 @@ describe("teams routes", () => {
 
     it("PUT /api/teams/:id returns 409 when renaming to another team's name", async () => {
         await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/teams",
             payload: { name: "Platform", color: "#ff0000" }
         });
         const growthResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/teams",
             payload: { name: "Growth", color: "#00ff00" }
@@ -145,6 +170,7 @@ describe("teams routes", () => {
         const growth = growthResponse.json().item;
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "PUT",
             url: `/api/teams/${growth.id}`,
             payload: { name: "Platform" }
@@ -155,6 +181,7 @@ describe("teams routes", () => {
 
     it("PUT /api/teams/:id returns 404 when team does not exist", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "PUT",
             url: `/api/teams/${generateId()}`,
             payload: { name: "Ghost Team" }
@@ -165,6 +192,7 @@ describe("teams routes", () => {
 
     it("DELETE /api/teams/:id removes the team and cascades team_projects", async () => {
         const createResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/teams",
             payload: { name: "Platform", color: "#ff0000" }
@@ -178,6 +206,7 @@ describe("teams routes", () => {
             .run();
 
         const deleteResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "DELETE",
             url: `/api/teams/${created.id}`
         });
@@ -194,6 +223,7 @@ describe("teams routes", () => {
 
     it("DELETE /api/teams/:id returns 404 when team does not exist", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "DELETE",
             url: `/api/teams/${generateId()}`
         });
@@ -203,6 +233,7 @@ describe("teams routes", () => {
 
     it("GET /api/teams/:id returns team detail with project list", async () => {
         const createResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/teams",
             payload: { name: "Platform", color: "#ff0000" }
@@ -219,7 +250,11 @@ describe("teams routes", () => {
             ])
             .run();
 
-        const response = await app.inject({ method: "GET", url: `/api/teams/${created.id}` });
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "GET",
+            url: `/api/teams/${created.id}`
+        });
 
         expect(response.statusCode).toBe(200);
         const body = response.json();
@@ -233,6 +268,7 @@ describe("teams routes", () => {
 
     it("GET /api/teams/:id returns 404 when team does not exist", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: `/api/teams/${generateId()}`
         });
@@ -242,6 +278,7 @@ describe("teams routes", () => {
 
     it("GET /api/teams computes aggregate stats across a team's projects", async () => {
         const createResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/teams",
             payload: { name: "Platform", color: "#ff0000" }
@@ -420,7 +457,11 @@ describe("teams routes", () => {
             ])
             .run();
 
-        const response = await app.inject({ method: "GET", url: "/api/teams" });
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "GET",
+            url: "/api/teams"
+        });
 
         expect(response.statusCode).toBe(200);
         const body = response.json();

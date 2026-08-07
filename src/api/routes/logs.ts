@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { and, eq, gte, lte, sql, type SQL } from "drizzle-orm";
 import { registerRoute, sendList } from "#shared/routing/index.js";
+import { requirePermission } from "#api/middleware/requirePermission.js";
 import { listLogsRoute, deleteLogsRoute } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { appLogs } from "#api/db/schema.js";
@@ -73,24 +74,29 @@ export async function logsRoutes(app: FastifyInstance, options: PluginOptions): 
         sendList(reply, items, countResult?.count ?? 0);
     });
 
-    registerRoute(app, deleteLogsRoute, {}, async (request, reply) => {
-        const { level, source, projectId, from, to } = request.body;
-        const where = buildConditions({ level, source, projectId, from, to });
+    registerRoute(
+        app,
+        deleteLogsRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { level, source, projectId, from, to } = request.body;
+            const where = buildConditions({ level, source, projectId, from, to });
 
-        const countResult = (await db
-            .select({ count: sql<number>`COUNT(*)` })
-            .from(appLogs)
-            .where(where)
-            .get()) as ICountRow | undefined;
+            const countResult = (await db
+                .select({ count: sql<number>`COUNT(*)` })
+                .from(appLogs)
+                .where(where)
+                .get()) as ICountRow | undefined;
 
-        const deleted = countResult?.count ?? 0;
+            const deleted = countResult?.count ?? 0;
 
-        if (where) {
-            await db.delete(appLogs).where(where).run();
-        } else {
-            await db.delete(appLogs).run();
+            if (where) {
+                await db.delete(appLogs).where(where).run();
+            } else {
+                await db.delete(appLogs).run();
+            }
+
+            reply.send({ deleted });
         }
-
-        reply.send({ deleted });
-    });
+    );
 }

@@ -3,6 +3,7 @@ import type { Container } from "@webiny/di";
 import { eq, and, asc } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import { registerRoute, sendOne, sendError } from "#shared/routing/index.js";
+import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listStepHooksRoute,
     createStepHookRoute,
@@ -123,77 +124,96 @@ export async function stepHooksRoutes(app: FastifyInstance, options: PluginOptio
         });
     });
 
-    registerRoute(app, createStepHookRoute, {}, async (request, reply) => {
-        const { id } = request.params;
-        const { position, name, command, type, required } = request.body;
-        const now = Date.now();
+    registerRoute(
+        app,
+        createStepHookRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id } = request.params;
+            const { position, name, command, type, required } = request.body;
+            const now = Date.now();
 
-        const row = {
-            id: generateId(),
-            projectId: id,
-            position,
-            name,
-            command,
-            type,
-            required: required ? 1 : 0,
-            enabled: 1,
-            sortOrder: 0,
-            source: "db" as const,
-            createdAt: now,
-            updatedAt: now
-        };
+            const row = {
+                id: generateId(),
+                projectId: id,
+                position,
+                name,
+                command,
+                type,
+                required: required ? 1 : 0,
+                enabled: 1,
+                sortOrder: 0,
+                source: "db" as const,
+                createdAt: now,
+                updatedAt: now
+            };
 
-        await db.insert(projectStepHooks).values(row).run();
-        sendOne(reply, toResponse(row));
-    });
-
-    registerRoute(app, updateStepHookRoute, {}, async (request, reply) => {
-        const { id, hookId } = request.params;
-
-        const existing = await db
-            .select()
-            .from(projectStepHooks)
-            .where(and(eq(projectStepHooks.id, hookId), eq(projectStepHooks.projectId, id)))
-            .get();
-
-        if (!existing) {
-            sendError(reply, 404, "Step hook not found");
-            return;
+            await db.insert(projectStepHooks).values(row).run();
+            sendOne(reply, toResponse(row));
         }
+    );
 
-        const { name, command, type, required, enabled, sortOrder } = request.body;
+    registerRoute(
+        app,
+        updateStepHookRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id, hookId } = request.params;
 
-        const merged: typeof projectStepHooks.$inferSelect = {
-            ...existing,
-            name: name ?? existing.name,
-            command: command ?? existing.command,
-            type: type ?? existing.type,
-            required: required !== undefined ? (required ? 1 : 0) : existing.required,
-            enabled: enabled !== undefined ? (enabled ? 1 : 0) : existing.enabled,
-            sortOrder: sortOrder ?? existing.sortOrder,
-            updatedAt: Date.now()
-        };
+            const existing = await db
+                .select()
+                .from(projectStepHooks)
+                .where(and(eq(projectStepHooks.id, hookId), eq(projectStepHooks.projectId, id)))
+                .get();
 
-        await db.update(projectStepHooks).set(merged).where(eq(projectStepHooks.id, hookId)).run();
+            if (!existing) {
+                sendError(reply, 404, "Step hook not found");
+                return;
+            }
 
-        sendOne(reply, toResponse(merged));
-    });
+            const { name, command, type, required, enabled, sortOrder } = request.body;
 
-    registerRoute(app, deleteStepHookRoute, {}, async (request, reply) => {
-        const { id, hookId } = request.params;
+            const merged: typeof projectStepHooks.$inferSelect = {
+                ...existing,
+                name: name ?? existing.name,
+                command: command ?? existing.command,
+                type: type ?? existing.type,
+                required: required !== undefined ? (required ? 1 : 0) : existing.required,
+                enabled: enabled !== undefined ? (enabled ? 1 : 0) : existing.enabled,
+                sortOrder: sortOrder ?? existing.sortOrder,
+                updatedAt: Date.now()
+            };
 
-        const existing = await db
-            .select()
-            .from(projectStepHooks)
-            .where(and(eq(projectStepHooks.id, hookId), eq(projectStepHooks.projectId, id)))
-            .get();
+            await db
+                .update(projectStepHooks)
+                .set(merged)
+                .where(eq(projectStepHooks.id, hookId))
+                .run();
 
-        if (!existing) {
-            sendError(reply, 404, "Step hook not found");
-            return;
+            sendOne(reply, toResponse(merged));
         }
+    );
 
-        await db.delete(projectStepHooks).where(eq(projectStepHooks.id, hookId)).run();
-        reply.status(200).send({ deleted: true });
-    });
+    registerRoute(
+        app,
+        deleteStepHookRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id, hookId } = request.params;
+
+            const existing = await db
+                .select()
+                .from(projectStepHooks)
+                .where(and(eq(projectStepHooks.id, hookId), eq(projectStepHooks.projectId, id)))
+                .get();
+
+            if (!existing) {
+                sendError(reply, 404, "Step hook not found");
+                return;
+            }
+
+            await db.delete(projectStepHooks).where(eq(projectStepHooks.id, hookId)).run();
+            reply.status(200).send({ deleted: true });
+        }
+    );
 }

@@ -1,12 +1,17 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { generateId } from "@webiny/stdlib";
 import { createContainer } from "#shared/index.js";
 import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
+import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { LockfileParserService } from "#api/services/abstractions/LockfileParserService.js";
 import { DependencyGraphService } from "#api/services/DependencyGraphService.js";
+import { EmailService } from "#api/services/abstractions/EmailService.js";
+import { UserService as UserServiceRegistration } from "#api/services/UserService.js";
+import { AuthService as AuthServiceRegistration } from "#api/services/AuthService.js";
+import { createAuthHook } from "#api/middleware/authHook.js";
 import { projects, dependencyEdges } from "#api/db/schema.js";
 import { dependencyGraphRoutes } from "../dependencyGraph.js";
 
@@ -15,6 +20,7 @@ type TestDatabaseClient = Awaited<ReturnType<typeof createTestDatabaseClient>>;
 interface IRouteTestContext {
     app: FastifyInstance;
     databaseClient: TestDatabaseClient;
+    token: string;
 }
 
 async function insertTestProject(
@@ -78,17 +84,24 @@ async function createTestContext(
     container.registerInstance(DatabaseClient, databaseClient);
     container.registerInstance(LockfileParserService, createStubLockfileParserService(parsedEdges));
     container.register(DependencyGraphService).inSingletonScope();
+    container.registerInstance(EmailService, { send: vi.fn() });
+    container.register(UserServiceRegistration).inSingletonScope();
+    container.register(AuthServiceRegistration).inSingletonScope();
 
     const app = Fastify();
+    app.addHook("onRequest", createAuthHook(container));
     await app.register(dependencyGraphRoutes, { container });
     await app.ready();
 
-    return { app, databaseClient };
+    const { token } = await createTestSession({ db: databaseClient.db });
+
+    return { app, databaseClient, token };
 }
 
 describe("dependency graph routes", () => {
     let app: FastifyInstance;
     let databaseClient: TestDatabaseClient;
+    let token: string;
 
     afterEach(async () => {
         await app.close();
@@ -99,9 +112,11 @@ describe("dependency graph routes", () => {
             const context = await createTestContext();
             app = context.app;
             databaseClient = context.databaseClient;
+            token = context.token;
             await insertTestProject(databaseClient, "proj-1");
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/dependency-graph/proj-1"
             });
@@ -120,6 +135,7 @@ describe("dependency graph routes", () => {
             const context = await createTestContext();
             app = context.app;
             databaseClient = context.databaseClient;
+            token = context.token;
             await insertTestProject(databaseClient, "proj-1");
 
             await seedEdge(databaseClient, {
@@ -140,6 +156,7 @@ describe("dependency graph routes", () => {
             });
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/dependency-graph/proj-1?package=loose-envify"
             });
@@ -164,6 +181,7 @@ describe("dependency graph routes", () => {
             const context = await createTestContext();
             app = context.app;
             databaseClient = context.databaseClient;
+            token = context.token;
             await insertTestProject(databaseClient, "proj-1");
 
             await seedEdge(databaseClient, {
@@ -192,6 +210,7 @@ describe("dependency graph routes", () => {
             });
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/dependency-graph/proj-1/packages?query=lodash"
             });
@@ -204,6 +223,7 @@ describe("dependency graph routes", () => {
             const context = await createTestContext();
             app = context.app;
             databaseClient = context.databaseClient;
+            token = context.token;
             await insertTestProject(databaseClient, "proj-1");
 
             await seedEdge(databaseClient, {
@@ -216,6 +236,7 @@ describe("dependency graph routes", () => {
             });
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/dependency-graph/proj-1/packages"
             });
@@ -247,9 +268,11 @@ describe("dependency graph routes", () => {
             ]);
             app = context.app;
             databaseClient = context.databaseClient;
+            token = context.token;
             await insertTestProject(databaseClient, "proj-1", "npm");
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/dependency-graph/proj-1/refresh"
             });
@@ -258,6 +281,7 @@ describe("dependency graph routes", () => {
             expect(response.json()).toEqual({ edgeCount: 2 });
 
             const graphResponse = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/dependency-graph/proj-1"
             });
@@ -268,8 +292,10 @@ describe("dependency graph routes", () => {
             const context = await createTestContext();
             app = context.app;
             databaseClient = context.databaseClient;
+            token = context.token;
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/dependency-graph/missing-project/refresh"
             });
@@ -281,9 +307,11 @@ describe("dependency graph routes", () => {
             const context = await createTestContext();
             app = context.app;
             databaseClient = context.databaseClient;
+            token = context.token;
             await insertTestProject(databaseClient, "proj-1", null);
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/dependency-graph/proj-1/refresh"
             });
@@ -297,6 +325,7 @@ describe("dependency graph routes", () => {
             const context = await createTestContext();
             app = context.app;
             databaseClient = context.databaseClient;
+            token = context.token;
             await insertTestProject(databaseClient, "proj-1");
 
             await seedEdge(databaseClient, {
@@ -325,6 +354,7 @@ describe("dependency graph routes", () => {
             });
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/dependency-graph/proj-1/stats"
             });

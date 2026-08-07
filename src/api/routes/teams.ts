@@ -3,6 +3,7 @@ import type { Container } from "@webiny/di";
 import { eq, sql } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import { registerRoute, sendOne, sendList, sendNone, sendError } from "#shared/routing/index.js";
+import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listTeamsRoute,
     createTeamRoute,
@@ -191,26 +192,31 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
         sendList(reply, items, items.length);
     });
 
-    registerRoute(app, createTeamRoute, {}, async (request, reply) => {
-        const { name, color } = request.body;
+    registerRoute(
+        app,
+        createTeamRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { name, color } = request.body;
 
-        const existing = await db.select().from(teams).where(eq(teams.name, name)).get();
-        if (existing) {
-            sendError(reply, 409, `A team named "${name}" already exists`);
-            return;
+            const existing = await db.select().from(teams).where(eq(teams.name, name)).get();
+            if (existing) {
+                sendError(reply, 409, `A team named "${name}" already exists`);
+                return;
+            }
+
+            const team: ITeamRow = {
+                id: generateId(),
+                name,
+                color,
+                createdAt: Date.now()
+            };
+
+            await db.insert(teams).values(team).run();
+
+            sendOne(reply, toTeamWithStats(team, zeroStats()), 201);
         }
-
-        const team: ITeamRow = {
-            id: generateId(),
-            name,
-            color,
-            createdAt: Date.now()
-        };
-
-        await db.insert(teams).values(team).run();
-
-        sendOne(reply, toTeamWithStats(team, zeroStats()), 201);
-    });
+    );
 
     registerRoute(app, getTeamDetailRoute, {}, async (request, reply) => {
         const { id } = request.params;
@@ -238,79 +244,98 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
         });
     });
 
-    registerRoute(app, updateTeamRoute, {}, async (request, reply) => {
-        const { id } = request.params;
-        const { name, color } = request.body;
+    registerRoute(
+        app,
+        updateTeamRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id } = request.params;
+            const { name, color } = request.body;
 
-        const existing = await db.select().from(teams).where(eq(teams.id, id)).get();
-        if (!existing) {
-            sendError(reply, 404, "Team not found");
-            return;
-        }
-
-        if (name !== undefined && name !== existing.name) {
-            const nameConflict = await db.select().from(teams).where(eq(teams.name, name)).get();
-            if (nameConflict) {
-                sendError(reply, 409, `A team named "${name}" already exists`);
+            const existing = await db.select().from(teams).where(eq(teams.id, id)).get();
+            if (!existing) {
+                sendError(reply, 404, "Team not found");
                 return;
             }
-        }
 
-        const updates = {
-            name: name ?? existing.name,
-            color: color ?? existing.color
-        };
-
-        await db.update(teams).set(updates).where(eq(teams.id, id)).run();
-
-        const statsByTeam = await computeStatsByTeam(db);
-        const updatedTeam: ITeamRow = { ...existing, ...updates };
-
-        sendOne(reply, toTeamWithStats(updatedTeam, statsByTeam.get(id) ?? zeroStats()));
-    });
-
-    registerRoute(app, setTeamProjectsRoute, {}, async (request, reply) => {
-        const { id } = request.params;
-        const { projectIds } = request.body;
-
-        const team = await db.select().from(teams).where(eq(teams.id, id)).get();
-        if (!team) {
-            sendError(reply, 404, "Team not found");
-            return;
-        }
-
-        const uniqueProjectIds = [...new Set(projectIds)];
-
-        db.transaction(tx => {
-            tx.delete(teamProjects).where(eq(teamProjects.teamId, id)).run();
-
-            if (uniqueProjectIds.length > 0) {
-                tx.insert(teamProjects)
-                    .values(
-                        uniqueProjectIds.map(projectId => ({
-                            id: generateId(),
-                            teamId: id,
-                            projectId
-                        }))
-                    )
-                    .run();
+            if (name !== undefined && name !== existing.name) {
+                const nameConflict = await db
+                    .select()
+                    .from(teams)
+                    .where(eq(teams.name, name))
+                    .get();
+                if (nameConflict) {
+                    sendError(reply, 409, `A team named "${name}" already exists`);
+                    return;
+                }
             }
-        });
 
-        sendNone(reply);
-    });
+            const updates = {
+                name: name ?? existing.name,
+                color: color ?? existing.color
+            };
 
-    registerRoute(app, deleteTeamRoute, {}, async (request, reply) => {
-        const { id } = request.params;
+            await db.update(teams).set(updates).where(eq(teams.id, id)).run();
 
-        const existing = await db.select().from(teams).where(eq(teams.id, id)).get();
-        if (!existing) {
-            sendError(reply, 404, "Team not found");
-            return;
+            const statsByTeam = await computeStatsByTeam(db);
+            const updatedTeam: ITeamRow = { ...existing, ...updates };
+
+            sendOne(reply, toTeamWithStats(updatedTeam, statsByTeam.get(id) ?? zeroStats()));
         }
+    );
 
-        await db.delete(teams).where(eq(teams.id, id)).run();
+    registerRoute(
+        app,
+        setTeamProjectsRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id } = request.params;
+            const { projectIds } = request.body;
 
-        sendNone(reply, 204);
-    });
+            const team = await db.select().from(teams).where(eq(teams.id, id)).get();
+            if (!team) {
+                sendError(reply, 404, "Team not found");
+                return;
+            }
+
+            const uniqueProjectIds = [...new Set(projectIds)];
+
+            db.transaction(tx => {
+                tx.delete(teamProjects).where(eq(teamProjects.teamId, id)).run();
+
+                if (uniqueProjectIds.length > 0) {
+                    tx.insert(teamProjects)
+                        .values(
+                            uniqueProjectIds.map(projectId => ({
+                                id: generateId(),
+                                teamId: id,
+                                projectId
+                            }))
+                        )
+                        .run();
+                }
+            });
+
+            sendNone(reply);
+        }
+    );
+
+    registerRoute(
+        app,
+        deleteTeamRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { id } = request.params;
+
+            const existing = await db.select().from(teams).where(eq(teams.id, id)).get();
+            if (!existing) {
+                sendError(reply, 404, "Team not found");
+                return;
+            }
+
+            await db.delete(teams).where(eq(teams.id, id)).run();
+
+            sendNone(reply, 204);
+        }
+    );
 }

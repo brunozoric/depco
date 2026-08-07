@@ -4,8 +4,13 @@ import type { FastifyInstance } from "fastify";
 import { generateId } from "@webiny/stdlib";
 import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { ScanSchedulerService } from "#api/services/abstractions/ScanSchedulerService.js";
+import { EmailService } from "#api/services/abstractions/EmailService.js";
+import { UserService as UserServiceRegistration } from "#api/services/UserService.js";
+import { AuthService as AuthServiceRegistration } from "#api/services/AuthService.js";
+import { createAuthHook } from "#api/middleware/authHook.js";
 import { projects, scanSchedules } from "#api/db/schema.js";
 import { scanScheduleRoutes } from "../scanSchedules.js";
 
@@ -26,6 +31,7 @@ describe("scan schedule routes", () => {
     let app: FastifyInstance;
     let db: TestDb;
     let scheduler: ScanSchedulerService.Interface;
+    let token: string;
 
     beforeEach(async () => {
         db = await createTestDb();
@@ -33,10 +39,16 @@ describe("scan schedule routes", () => {
         const container = createContainer();
         container.registerInstance(DatabaseClient, { db });
         container.registerInstance(ScanSchedulerService, scheduler);
+        container.registerInstance(EmailService, { send: vi.fn() });
+        container.register(UserServiceRegistration).inSingletonScope();
+        container.register(AuthServiceRegistration).inSingletonScope();
 
         app = Fastify();
+        app.addHook("onRequest", createAuthHook(container));
         await app.register(scanScheduleRoutes, { container });
         await app.ready();
+
+        ({ token } = await createTestSession({ db }));
     });
 
     afterEach(async () => {
@@ -50,7 +62,11 @@ describe("scan schedule routes", () => {
             .values({ id: projectId, name: "test", path: "/test", addedAt: Date.now() })
             .run();
 
-        const response = await app.inject({ method: "GET", url: "/api/scan-schedules" });
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "GET",
+            url: "/api/scan-schedules"
+        });
         expect(response.statusCode).toBe(200);
         const body = response.json();
         expect(body.items).toHaveLength(1);
@@ -67,6 +83,7 @@ describe("scan schedule routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "PUT",
             url: `/api/scan-schedules/${projectId}`,
             payload: { interval: "12h" }
@@ -100,6 +117,7 @@ describe("scan schedule routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "DELETE",
             url: `/api/scan-schedules/${projectId}`
         });
@@ -110,6 +128,7 @@ describe("scan schedule routes", () => {
 
     it("GET /api/settings/scan-schedule-default returns disabled when unset", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/settings/scan-schedule-default"
         });
@@ -119,6 +138,7 @@ describe("scan schedule routes", () => {
 
     it("PUT /api/settings/scan-schedule-default sets global default", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "PUT",
             url: "/api/settings/scan-schedule-default",
             payload: { interval: "24h" }

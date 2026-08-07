@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { eq } from "drizzle-orm";
 import { registerRoute, sendError } from "#shared/routing/index.js";
+import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     getDependencyGraphRoute,
     refreshDependencyGraphRoute,
@@ -50,26 +51,35 @@ export async function dependencyGraphRoutes(
         reply.send({ packages });
     });
 
-    registerRoute(app, refreshDependencyGraphRoute, {}, async (request, reply) => {
-        const { projectId } = request.params;
+    registerRoute(
+        app,
+        refreshDependencyGraphRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { projectId } = request.params;
 
-        const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
-        if (!project) {
-            sendError(reply, 404, "Project not found");
-            return;
-        }
-        if (!project.packageManager) {
-            sendError(reply, 400, "Project has no detected package manager");
-            return;
-        }
+            const project = await db
+                .select()
+                .from(projects)
+                .where(eq(projects.id, projectId))
+                .get();
+            if (!project) {
+                sendError(reply, 404, "Project not found");
+                return;
+            }
+            if (!project.packageManager) {
+                sendError(reply, 400, "Project has no detected package manager");
+                return;
+            }
 
-        const edgeCount = await dependencyGraphService.refreshGraph(
-            projectId,
-            project.path,
-            project.packageManager
-        );
-        reply.send({ edgeCount });
-    });
+            const edgeCount = await dependencyGraphService.refreshGraph(
+                projectId,
+                project.path,
+                project.packageManager
+            );
+            reply.send({ edgeCount });
+        }
+    );
 
     registerRoute(app, getDependencyGraphStatsRoute, {}, async (request, reply) => {
         const { projectId } = request.params;

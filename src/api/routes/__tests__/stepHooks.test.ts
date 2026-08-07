@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { mkdtemp, writeFile, rm } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
@@ -8,7 +8,12 @@ import { ConsoleLoggerConfig, ConsoleLoggerFeature } from "@webiny/stdlib";
 import { DirectoryToolFeature, FileToolFeature, JsonFileToolFeature } from "@webiny/stdlib/node";
 import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { EmailService } from "#api/services/abstractions/EmailService.js";
+import { UserService as UserServiceRegistration } from "#api/services/UserService.js";
+import { AuthService as AuthServiceRegistration } from "#api/services/AuthService.js";
+import { createAuthHook } from "#api/middleware/authHook.js";
 import { projects, projectStepHooks } from "#api/db/schema.js";
 import { FileConfigService } from "../../services/FileConfigService.js";
 import { PackageJsonService } from "../../services/PackageJsonService.js";
@@ -19,6 +24,7 @@ type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 describe("step hooks routes", () => {
     let app: FastifyInstance;
     let db: TestDb;
+    let token: string;
     const projectId = "p1";
 
     beforeEach(async () => {
@@ -45,10 +51,16 @@ describe("step hooks routes", () => {
         JsonFileToolFeature.register(container);
         container.register(FileConfigService).inSingletonScope();
         container.register(PackageJsonService).inSingletonScope();
+        container.registerInstance(EmailService, { send: vi.fn() });
+        container.register(UserServiceRegistration).inSingletonScope();
+        container.register(AuthServiceRegistration).inSingletonScope();
 
         app = Fastify();
+        app.addHook("onRequest", createAuthHook(container));
         await app.register(stepHooksRoutes, { container });
         await app.ready();
+
+        ({ token } = await createTestSession({ db }));
     });
 
     afterEach(async () => {
@@ -57,6 +69,7 @@ describe("step hooks routes", () => {
 
     it("GET /api/projects/:id/step-hooks returns empty list for project with no hooks", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: `/api/projects/${projectId}/step-hooks`
         });
@@ -69,6 +82,7 @@ describe("step hooks routes", () => {
 
     it("GET /api/projects/:id/step-hooks returns 404 for unknown project", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: `/api/projects/nonexistent/step-hooks`
         });
@@ -109,6 +123,7 @@ describe("step hooks routes", () => {
             );
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: `/api/projects/p2/step-hooks`
             });
@@ -134,6 +149,7 @@ describe("step hooks routes", () => {
 
     it("POST /api/projects/:id/step-hooks creates a hook and returns it", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: `/api/projects/${projectId}/step-hooks`,
             payload: {
@@ -161,6 +177,7 @@ describe("step hooks routes", () => {
         expect(typeof body.item.updatedAt).toBe("number");
 
         const listResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: `/api/projects/${projectId}/step-hooks`
         });
@@ -169,6 +186,7 @@ describe("step hooks routes", () => {
 
     it("PUT /api/projects/:id/step-hooks/:hookId updates an existing hook", async () => {
         const createResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: `/api/projects/${projectId}/step-hooks`,
             payload: {
@@ -181,6 +199,7 @@ describe("step hooks routes", () => {
         const hookId = createResponse.json().item.id;
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "PUT",
             url: `/api/projects/${projectId}/step-hooks/${hookId}`,
             payload: {
@@ -202,6 +221,7 @@ describe("step hooks routes", () => {
 
     it("PUT /api/projects/:id/step-hooks/:hookId returns 404 for unknown hook", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "PUT",
             url: `/api/projects/${projectId}/step-hooks/nonexistent`,
             payload: { name: "Anything" }
@@ -213,6 +233,7 @@ describe("step hooks routes", () => {
 
     it("DELETE /api/projects/:id/step-hooks/:hookId removes a hook", async () => {
         const createResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: `/api/projects/${projectId}/step-hooks`,
             payload: {
@@ -225,6 +246,7 @@ describe("step hooks routes", () => {
         const hookId = createResponse.json().item.id;
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "DELETE",
             url: `/api/projects/${projectId}/step-hooks/${hookId}`,
             payload: {}
@@ -234,6 +256,7 @@ describe("step hooks routes", () => {
         expect(response.json().deleted).toBe(true);
 
         const listResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: `/api/projects/${projectId}/step-hooks`
         });
@@ -242,6 +265,7 @@ describe("step hooks routes", () => {
 
     it("DELETE /api/projects/:id/step-hooks/:hookId returns 404 for unknown hook", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "DELETE",
             url: `/api/projects/${projectId}/step-hooks/nonexistent`,
             payload: {}
@@ -293,6 +317,7 @@ describe("step hooks routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: `/api/projects/${projectId}/step-hooks`
         });
@@ -344,6 +369,7 @@ describe("step hooks routes", () => {
                 .run();
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/projects/p-scripts/step-hooks"
             });
@@ -401,6 +427,7 @@ describe("step hooks routes", () => {
                 .run();
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/projects/p-file-scripts/step-hooks"
             });
@@ -438,6 +465,7 @@ describe("step hooks routes", () => {
                 .run();
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/projects/p-no-scripts/step-hooks"
             });
@@ -474,6 +502,7 @@ describe("step hooks routes", () => {
                 .run();
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/projects/p-all-scripts/step-hooks"
             });

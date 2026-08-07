@@ -7,6 +7,7 @@ import { zipSync, unzipSync, strToU8, strFromU8 } from "fflate";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { PackageManagerService } from "../services/abstractions/PackageManagerService.js";
 import { registerProject } from "../services/registerProject.js";
+import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     appSettings,
     pmSecuritySettings,
@@ -162,178 +163,182 @@ export async function backupRoutes(app: FastifyInstance, options: PluginOptions)
             .send(buffer);
     });
 
-    app.post("/api/projects/backup", async (request, reply) => {
-        const rawBody = request.body as Buffer;
-        const unzipped = unzipSync(new Uint8Array(rawBody));
-        const jsonFile = unzipped["backup.json"];
+    app.post(
+        "/api/projects/backup",
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const rawBody = request.body as Buffer;
+            const unzipped = unzipSync(new Uint8Array(rawBody));
+            const jsonFile = unzipped["backup.json"];
 
-        if (!jsonFile) {
-            reply.status(400).send({ error: "ZIP must contain backup.json" });
-            return;
-        }
-
-        const content = strFromU8(jsonFile);
-        const backup = JSON.parse(content) as BackupPayload;
-
-        const result: ImportResult = {
-            appSettings: { imported: 0, skipped: 0 },
-            securitySettings: { imported: 0, skipped: 0 },
-            projects: { imported: 0, skipped: 0, failed: 0, errors: [] },
-            dependencies: { imported: 0, skipped: 0 },
-            registryCache: { imported: 0, skipped: 0 }
-        };
-
-        for (const setting of backup.appSettings) {
-            const inserted = await db
-                .insert(appSettings)
-                .values(setting)
-                .onConflictDoNothing()
-                .run();
-            if (inserted.changes > 0) {
-                result.appSettings.imported++;
-            } else {
-                result.appSettings.skipped++;
-            }
-        }
-
-        for (const setting of backup.securitySettings) {
-            const inserted = await db
-                .insert(pmSecuritySettings)
-                .values({ id: generateId(), ...setting })
-                .onConflictDoNothing()
-                .run();
-            if (inserted.changes > 0) {
-                result.securitySettings.imported++;
-            } else {
-                result.securitySettings.skipped++;
-            }
-        }
-
-        for (const entry of backup.registryCache) {
-            const inserted = await db
-                .insert(registryCache)
-                .values(entry)
-                .onConflictDoNothing()
-                .run();
-            if (inserted.changes > 0) {
-                result.registryCache.imported++;
-            } else {
-                result.registryCache.skipped++;
-            }
-        }
-
-        for (const project of backup.projects) {
-            if (!existsSync(project.path)) {
-                result.projects.failed++;
-                result.projects.errors.push(`Path does not exist: ${project.path}`);
-                continue;
+            if (!jsonFile) {
+                reply.status(400).send({ error: "ZIP must contain backup.json" });
+                return;
             }
 
-            const existing = await db
-                .select()
-                .from(projects)
-                .where(eq(projects.path, project.path))
-                .get();
+            const content = strFromU8(jsonFile);
+            const backup = JSON.parse(content) as BackupPayload;
 
-            if (existing) {
-                result.projects.skipped++;
-                continue;
+            const result: ImportResult = {
+                appSettings: { imported: 0, skipped: 0 },
+                securitySettings: { imported: 0, skipped: 0 },
+                projects: { imported: 0, skipped: 0, failed: 0, errors: [] },
+                dependencies: { imported: 0, skipped: 0 },
+                registryCache: { imported: 0, skipped: 0 }
+            };
+
+            for (const setting of backup.appSettings) {
+                const inserted = await db
+                    .insert(appSettings)
+                    .values(setting)
+                    .onConflictDoNothing()
+                    .run();
+                if (inserted.changes > 0) {
+                    result.appSettings.imported++;
+                } else {
+                    result.appSettings.skipped++;
+                }
             }
 
-            try {
-                await registerProject({
-                    projectPath: project.path,
-                    databaseClient,
-                    packageManagerService
-                });
-                result.projects.imported++;
-            } catch (err) {
-                result.projects.failed++;
-                result.projects.errors.push(
-                    `${project.path}: ${err instanceof Error ? err.message : "Unknown error"}`
-                );
-            }
-        }
-
-        for (const dep of backup.dependencies) {
-            const depInserted = await db
-                .insert(dependencies)
-                .values({
-                    id: generateId(),
-                    name: dep.name,
-                    repoUrl: dep.repoUrl,
-                    createdAt: Date.now()
-                })
-                .onConflictDoNothing()
-                .run();
-
-            const depRow = await db
-                .select()
-                .from(dependencies)
-                .where(eq(dependencies.name, dep.name))
-                .get();
-
-            if (!depRow) {
-                continue;
+            for (const setting of backup.securitySettings) {
+                const inserted = await db
+                    .insert(pmSecuritySettings)
+                    .values({ id: generateId(), ...setting })
+                    .onConflictDoNothing()
+                    .run();
+                if (inserted.changes > 0) {
+                    result.securitySettings.imported++;
+                } else {
+                    result.securitySettings.skipped++;
+                }
             }
 
-            if (depInserted.changes > 0) {
-                result.dependencies.imported++;
-            } else {
-                result.dependencies.skipped++;
+            for (const entry of backup.registryCache) {
+                const inserted = await db
+                    .insert(registryCache)
+                    .values(entry)
+                    .onConflictDoNothing()
+                    .run();
+                if (inserted.changes > 0) {
+                    result.registryCache.imported++;
+                } else {
+                    result.registryCache.skipped++;
+                }
             }
 
-            for (const version of dep.versions) {
-                const vInserted = await db
-                    .insert(dependencyVersions)
+            for (const project of backup.projects) {
+                if (!existsSync(project.path)) {
+                    result.projects.failed++;
+                    result.projects.errors.push(`Path does not exist: ${project.path}`);
+                    continue;
+                }
+
+                const existing = await db
+                    .select()
+                    .from(projects)
+                    .where(eq(projects.path, project.path))
+                    .get();
+
+                if (existing) {
+                    result.projects.skipped++;
+                    continue;
+                }
+
+                try {
+                    await registerProject({
+                        projectPath: project.path,
+                        databaseClient,
+                        packageManagerService
+                    });
+                    result.projects.imported++;
+                } catch (err) {
+                    result.projects.failed++;
+                    result.projects.errors.push(
+                        `${project.path}: ${err instanceof Error ? err.message : "Unknown error"}`
+                    );
+                }
+            }
+
+            for (const dep of backup.dependencies) {
+                const depInserted = await db
+                    .insert(dependencies)
                     .values({
                         id: generateId(),
-                        dependencyId: depRow.id,
-                        version: version.version,
-                        publishedAt: version.publishedAt
+                        name: dep.name,
+                        repoUrl: dep.repoUrl,
+                        createdAt: Date.now()
                     })
                     .onConflictDoNothing()
                     .run();
 
-                if (vInserted.changes > 0) {
+                const depRow = await db
+                    .select()
+                    .from(dependencies)
+                    .where(eq(dependencies.name, dep.name))
+                    .get();
+
+                if (!depRow) {
+                    continue;
+                }
+
+                if (depInserted.changes > 0) {
                     result.dependencies.imported++;
                 } else {
                     result.dependencies.skipped++;
                 }
 
-                if (version.changelog) {
-                    const versionRow = (
-                        await db
-                            .select()
-                            .from(dependencyVersions)
-                            .where(eq(dependencyVersions.dependencyId, depRow.id))
-                            .all()
-                    ).find(v => v.version === version.version);
+                for (const version of dep.versions) {
+                    const vInserted = await db
+                        .insert(dependencyVersions)
+                        .values({
+                            id: generateId(),
+                            dependencyId: depRow.id,
+                            version: version.version,
+                            publishedAt: version.publishedAt
+                        })
+                        .onConflictDoNothing()
+                        .run();
 
-                    if (versionRow) {
-                        const clInserted = await db
-                            .insert(changelogs)
-                            .values({
-                                id: generateId(),
-                                dependencyId: depRow.id,
-                                dependencyVersionId: versionRow.id,
-                                content: version.changelog.content,
-                                source: version.changelog.source,
-                                fetchedAt: Date.now()
-                            })
-                            .onConflictDoNothing()
-                            .run();
+                    if (vInserted.changes > 0) {
+                        result.dependencies.imported++;
+                    } else {
+                        result.dependencies.skipped++;
+                    }
 
-                        if (clInserted.changes > 0) {
-                            result.dependencies.imported++;
-                        } else {
-                            result.dependencies.skipped++;
+                    if (version.changelog) {
+                        const versionRow = (
+                            await db
+                                .select()
+                                .from(dependencyVersions)
+                                .where(eq(dependencyVersions.dependencyId, depRow.id))
+                                .all()
+                        ).find(v => v.version === version.version);
+
+                        if (versionRow) {
+                            const clInserted = await db
+                                .insert(changelogs)
+                                .values({
+                                    id: generateId(),
+                                    dependencyId: depRow.id,
+                                    dependencyVersionId: versionRow.id,
+                                    content: version.changelog.content,
+                                    source: version.changelog.source,
+                                    fetchedAt: Date.now()
+                                })
+                                .onConflictDoNothing()
+                                .run();
+
+                            if (clInserted.changes > 0) {
+                                result.dependencies.imported++;
+                            } else {
+                                result.dependencies.skipped++;
+                            }
                         }
                     }
                 }
             }
-        }
 
-        reply.send(result);
-    });
+            reply.send(result);
+        }
+    );
 }

@@ -10,8 +10,13 @@ import { generateId, ConsoleLoggerConfig, ConsoleLoggerFeature } from "@webiny/s
 import { DirectoryToolFeature, FileToolFeature, JsonFileToolFeature } from "@webiny/stdlib/node";
 import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { seedYarnSecuritySettings } from "#testing/helpers/seedYarnSecuritySettings.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { EmailService } from "../../services/abstractions/EmailService.js";
+import { UserService as UserServiceRegistration } from "../../services/UserService.js";
+import { AuthService as AuthServiceRegistration } from "../../services/AuthService.js";
+import { createAuthHook } from "../../middleware/authHook.js";
 import { CommandRunner } from "../../services/abstractions/CommandRunner.js";
 import { SecurityService as SecurityServiceReg } from "../../services/SecurityService.js";
 import { ScanService as ScanServiceReg } from "../../services/ScanService.js";
@@ -117,6 +122,7 @@ describe("project routes", () => {
     let db: BetterSQLite3Database;
     let jobWorker: JobWorker.Interface;
     let scanSchedulerMock: ScanSchedulerServiceMock;
+    let token: string;
 
     beforeEach(async () => {
         testDir = join(tmpdir(), `route-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -208,12 +214,18 @@ describe("project routes", () => {
         };
         container.register(EventBus).inSingletonScope();
         container.registerInstance(ScanSchedulerService, scanSchedulerMock);
+        container.registerInstance(EmailService, { send: vi.fn() });
+        container.register(UserServiceRegistration).inSingletonScope();
+        container.register(AuthServiceRegistration).inSingletonScope();
 
         jobWorker = container.resolve(JobWorker);
 
         app = Fastify();
+        app.addHook("onRequest", createAuthHook(container));
         await app.register(projectRoutes, { container });
         await app.ready();
+
+        ({ token } = await createTestSession({ db }));
     });
 
     afterEach(async () => {
@@ -223,6 +235,7 @@ describe("project routes", () => {
 
     it("POST /api/projects derives name from package.json and detects yarn version", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects",
             payload: { path: testDir }
@@ -257,6 +270,7 @@ describe("project routes", () => {
 
         try {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/projects",
                 payload: { path: noPackageDir }
@@ -279,6 +293,7 @@ describe("project routes", () => {
 
         try {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/projects",
                 payload: { path: emptyDir }
@@ -317,6 +332,7 @@ describe("project routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects"
         });
@@ -343,6 +359,7 @@ describe("project routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/p1"
         });
@@ -354,6 +371,7 @@ describe("project routes", () => {
 
     it("GET /api/projects/:id returns 404 for unknown project", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/unknown"
         });
@@ -410,6 +428,7 @@ describe("project routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "DELETE",
             url: "/api/projects/p1"
         });
@@ -446,6 +465,7 @@ describe("project routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "DELETE",
             url: "/api/projects/p1"
         });
@@ -467,6 +487,7 @@ describe("project routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/p1/scan"
         });
@@ -482,6 +503,7 @@ describe("project routes", () => {
         expect(updated?.lastScannedAt).not.toBeNull();
 
         const dependenciesResponse = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/p1/dependencies"
         });
@@ -490,6 +512,7 @@ describe("project routes", () => {
 
     it("POST /api/projects/:id/scan returns 404 for unknown project", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/unknown/scan"
         });
@@ -524,6 +547,7 @@ describe("project routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/p1/dependencies"
         });
@@ -556,6 +580,7 @@ describe("project routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/p1/dependencies"
         });
@@ -568,6 +593,7 @@ describe("project routes", () => {
 
     it("GET /api/projects/:id/dependencies returns 404 for unknown project", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/unknown/dependencies"
         });
@@ -611,6 +637,7 @@ describe("project routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/p1/dependencies?dependencyKind=transitive"
         });
@@ -659,6 +686,7 @@ describe("project routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/p1/dependencies?registryResolved=false"
         });
@@ -721,6 +749,7 @@ describe("project routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/p1/transitive-resolve-status"
         });
@@ -734,6 +763,7 @@ describe("project routes", () => {
 
     it("GET /api/projects/:id/transitive-resolve-status returns 404 for unknown project", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/unknown/transitive-resolve-status"
         });
@@ -753,6 +783,7 @@ describe("project routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/p1/security"
         });
@@ -784,6 +815,7 @@ describe("project routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/p1/security"
         });
@@ -795,6 +827,7 @@ describe("project routes", () => {
 
     it("GET /api/projects/:id/security returns 404 for unknown project", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/unknown/security"
         });
@@ -817,6 +850,7 @@ describe("project routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/p1/security"
         });
@@ -828,6 +862,7 @@ describe("project routes", () => {
 
     it("POST /api/projects/:id/security returns 404 for unknown project", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/unknown/security"
         });
@@ -845,6 +880,7 @@ describe("project routes", () => {
             .run();
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/export"
         });
@@ -860,6 +896,7 @@ describe("project routes", () => {
 
     it("GET /api/projects/export returns empty when no projects exist", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "GET",
             url: "/api/projects/export"
         });
@@ -872,6 +909,7 @@ describe("project routes", () => {
 
     it("POST /api/projects/import adds new projects and skips existing ones", async () => {
         await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects",
             payload: { path: testDir }
@@ -887,6 +925,7 @@ describe("project routes", () => {
 
         try {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/projects/import",
                 payload: {
@@ -915,6 +954,7 @@ describe("project routes", () => {
 
     it("POST /api/projects/import enqueues a scan job for each added project", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/import",
             payload: {
@@ -942,6 +982,7 @@ describe("project routes", () => {
 
         try {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "POST",
                 url: "/api/projects/import",
                 payload: {
@@ -961,6 +1002,7 @@ describe("project routes", () => {
 
     it("POST /api/projects/clone enqueues a clone job", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/clone",
             payload: {
@@ -980,6 +1022,7 @@ describe("project routes", () => {
 
     it("POST /api/projects/clone uses folderName when provided", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/clone",
             payload: {
@@ -997,6 +1040,7 @@ describe("project routes", () => {
 
     it("POST /api/projects/clone rejects file:// scheme URLs", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/clone",
             payload: {
@@ -1010,6 +1054,7 @@ describe("project routes", () => {
 
     it("POST /api/projects/clone rejects nonexistent destination", async () => {
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/clone",
             payload: {
@@ -1024,12 +1069,14 @@ describe("project routes", () => {
     it("POST /api/projects/clone rejects already-registered path", async () => {
         // First add a project at testDir
         await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects",
             payload: { path: testDir }
         });
 
         const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
             method: "POST",
             url: "/api/projects/clone",
             payload: {
@@ -1073,6 +1120,7 @@ describe("project routes", () => {
                 .run();
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/projects/p1/teams"
             });
@@ -1088,6 +1136,7 @@ describe("project routes", () => {
 
         it("GET /api/projects/:id/teams returns empty when no teams assigned", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "GET",
                 url: "/api/projects/p1/teams"
             });
@@ -1101,6 +1150,7 @@ describe("project routes", () => {
             const growthId = await insertTeam("Growth");
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: "/api/projects/p1/teams",
                 payload: { teamIds: [platformId, growthId] }
@@ -1120,6 +1170,7 @@ describe("project routes", () => {
             const platformId = await insertTeam("Platform");
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: "/api/projects/p1/teams",
                 payload: { teamIds: [platformId, platformId, platformId] }
@@ -1145,6 +1196,7 @@ describe("project routes", () => {
                 .run();
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: "/api/projects/p1/teams",
                 payload: { teamIds: [growthId] }
@@ -1169,6 +1221,7 @@ describe("project routes", () => {
                 .run();
 
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: "/api/projects/p1/teams",
                 payload: { teamIds: [] }
@@ -1186,6 +1239,7 @@ describe("project routes", () => {
 
         it("PUT /api/projects/:id/teams returns 404 when project not found", async () => {
             const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
                 url: "/api/projects/unknown/teams",
                 payload: { teamIds: [] }
