@@ -20,7 +20,7 @@ declare module "../EventBus/index.js" {
 // `import.meta.url`, mirroring how `runMigrations` locates
 // `./src/api/db/migrations` — both read source-tree assets at runtime rather
 // than assuming a build step materializes them under `dist/`.
-const WORKER_SCRIPT_PATH = resolve(process.cwd(), "src/api/services/workers/scanWorker.js");
+const WORKER_SCRIPT_PATH = resolve(process.cwd(), "src/api/workers/scanWorker.js");
 
 interface IWorkerMessage {
     projectId: string;

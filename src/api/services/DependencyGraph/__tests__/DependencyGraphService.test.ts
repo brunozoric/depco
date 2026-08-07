@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { generateId } from "@webiny/stdlib";
 import { dependencyEdges, projects } from "#api/db/schema.js";
 import type { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import type { LockfileParserService } from "#api/services/abstractions/LockfileParserService.js";
+import type { LockfileParserService } from "#api/services/DependencyGraph/index.js";
 import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
 
 interface ISeedEdgeInput {

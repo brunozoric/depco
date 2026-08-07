@@ -27,7 +27,7 @@ import { SecurityService } from "../services/Security/index.js";
 import { PackageManagerService } from "../services/PackageManager/index.js";
 import { JobWorker } from "../services/JobExecution/index.js";
 import { ScanSchedulerService } from "../services/ScanScheduler/index.js";
-import { registerProject as registerProjectHelper } from "../services/registerProject.js";
+import { registerProject as registerProjectHelper } from "../utils/registerProject.js";
 import {
     projects,
     upgradeJobs,

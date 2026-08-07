@@ -53,8 +53,7 @@ async function createService(registryCache: RegistryCacheService.Interface, db: 
     );
     container.registerInstance(DatabaseClient, { db });
     container.register(LicenseCheckerService).inSingletonScope();
-    const abstraction = (await import("#api/services/abstractions/LicenseCheckerService.js"))
-        .LicenseCheckerService;
+    const abstraction = (await import("#api/services/License/index.js")).LicenseCheckerService;
     return container.resolve(abstraction);
 }
 
