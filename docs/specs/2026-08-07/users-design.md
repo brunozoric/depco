@@ -8,38 +8,38 @@ Add user management, authentication, and permission enforcement to the dependenc
 
 ### `users` table
 
-| Column | Type | Constraints | Notes |
-|--------|------|-------------|-------|
-| id | text | PK | UUID |
-| email | text | UNIQUE, NOT NULL | Lowercase, trimmed |
-| passwordHash | text | NOT NULL | argon2id |
-| displayName | text | NOT NULL | |
-| permission | text | NOT NULL | `"full"` or `"read-only"` |
-| isActive | integer | NOT NULL, default 1 | Soft delete flag |
-| createdAt | integer | NOT NULL | epoch ms |
-| updatedAt | integer | NOT NULL | epoch ms |
+| Column       | Type    | Constraints         | Notes                     |
+| ------------ | ------- | ------------------- | ------------------------- |
+| id           | text    | PK                  | UUID                      |
+| email        | text    | UNIQUE, NOT NULL    | Lowercase, trimmed        |
+| passwordHash | text    | NOT NULL            | argon2id                  |
+| displayName  | text    | NOT NULL            |                           |
+| permission   | text    | NOT NULL            | `"full"` or `"read-only"` |
+| isActive     | integer | NOT NULL, default 1 | Soft delete flag          |
+| createdAt    | integer | NOT NULL            | epoch ms                  |
+| updatedAt    | integer | NOT NULL            | epoch ms                  |
 
 ### `sessions` table
 
-| Column | Type | Constraints | Notes |
-|--------|------|-------------|-------|
-| id | text | PK | UUID |
-| userId | text | FK users.id, CASCADE, NOT NULL | |
-| tokenHash | text | UNIQUE, NOT NULL | sha256 of raw token |
-| expiresAt | integer | NOT NULL | epoch ms, 30 days from creation |
-| createdAt | integer | NOT NULL | epoch ms |
+| Column    | Type    | Constraints                    | Notes                           |
+| --------- | ------- | ------------------------------ | ------------------------------- |
+| id        | text    | PK                             | UUID                            |
+| userId    | text    | FK users.id, CASCADE, NOT NULL |                                 |
+| tokenHash | text    | UNIQUE, NOT NULL               | sha256 of raw token             |
+| expiresAt | integer | NOT NULL                       | epoch ms, 30 days from creation |
+| createdAt | integer | NOT NULL                       | epoch ms                        |
 
 ### `login_codes` table
 
-| Column | Type | Constraints | Notes |
-|--------|------|-------------|-------|
-| id | text | PK | UUID |
-| userId | text | FK users.id, CASCADE, NOT NULL | |
-| code | text | NOT NULL | 6-digit code or magic link token |
-| type | text | NOT NULL | `"email-code"` or `"magic-link"` |
-| expiresAt | integer | NOT NULL | epoch ms, 10 minute TTL |
-| usedAt | integer | nullable | Set on use, prevents reuse |
-| createdAt | integer | NOT NULL | epoch ms |
+| Column    | Type    | Constraints                    | Notes                            |
+| --------- | ------- | ------------------------------ | -------------------------------- |
+| id        | text    | PK                             | UUID                             |
+| userId    | text    | FK users.id, CASCADE, NOT NULL |                                  |
+| code      | text    | NOT NULL                       | 6-digit code or magic link token |
+| type      | text    | NOT NULL                       | `"email-code"` or `"magic-link"` |
+| expiresAt | integer | NOT NULL                       | epoch ms, 10 minute TTL          |
+| usedAt    | integer | nullable                       | Set on use, prevents reuse       |
+| createdAt | integer | NOT NULL                       | epoch ms                         |
 
 ## Authentication Flow
 
@@ -62,6 +62,7 @@ Add user management, authentication, and permission enforcement to the dependenc
 ### Extensibility for OAuth
 
 Auth routes follow a provider strategy pattern. OAuth providers (Google, GitHub, GitLab, etc.) will add:
+
 - `POST /api/auth/:provider/start` — initiates OAuth flow, returns redirect URL
 - `GET /api/auth/:provider/callback` — handles OAuth callback, creates session
 
@@ -84,12 +85,14 @@ Current `WebSocketBroadcaster` stores connections as an anonymous `Set<Connectio
 ### Global Auth Hook
 
 Fastify `onRequest` hook on all `/api/*` routes. Whitelisted (no auth required):
+
 - `POST /api/auth/login`
 - `POST /api/auth/verify-code`
 - `POST /api/auth/magic-link`
 - `POST /api/auth/verify-magic-link`
 
 All other routes require a valid, non-expired session. The hook:
+
 1. Extracts token from `Authorization: Bearer <token>` header
 2. Hashes token with sha256
 3. Looks up session + user via JOIN (single query)
@@ -99,12 +102,14 @@ All other routes require a valid, non-expired session. The hook:
 ### Permission Enforcement
 
 Two permission levels:
+
 - **`"full"`** — unrestricted access to all operations
 - **`"read-only"`** — can access all GET routes, logout, and update own profile (displayName, password only — not permission field)
 
 Enforcement via `requirePermission("full")` helper used as Fastify `preHandler` on write routes. Read-only users attempting write operations receive 403.
 
 Routes requiring `"full"` permission:
+
 - All POST/PUT/DELETE on `/api/projects/*` (create, delete, scan, install, upgrade)
 - All POST/PUT/DELETE on `/api/settings/*`
 - All POST/PUT/DELETE on `/api/users/*` (except own profile update)
@@ -113,6 +118,7 @@ Routes requiring `"full"` permission:
 - All scan/upgrade/auto-fix routes
 
 Routes accessible to all authenticated users:
+
 - All GET routes (projects, packages, dashboard, vulnerabilities, licenses, etc.)
 - `GET /api/auth/me`
 - `POST /api/auth/logout`
@@ -120,16 +126,17 @@ Routes accessible to all authenticated users:
 
 ## User CRUD Routes
 
-| Route | Method | Permission | Notes |
-|-------|--------|-----------|-------|
-| `POST /api/users` | POST | full | Create user (email, displayName, password, permission) |
-| `GET /api/users` | GET | any | List users. Query: search, isActive, page, pageSize, sortBy, sortOrder |
-| `GET /api/users/:id` | GET | any | Get single user |
-| `PUT /api/users/:id` | PUT | own: any, other: full | Own profile: displayName + password. Full users: all fields including permission |
-| `DELETE /api/users/:id` | DELETE | full | Soft delete (isActive=0). Deletes all sessions. Cannot delete self |
-| `POST /api/users/:id/force-logout` | POST | full | Delete all sessions for target user + close WS connections. Cannot target self (returns 400) |
+| Route                              | Method | Permission            | Notes                                                                                        |
+| ---------------------------------- | ------ | --------------------- | -------------------------------------------------------------------------------------------- |
+| `POST /api/users`                  | POST   | full                  | Create user (email, displayName, password, permission)                                       |
+| `GET /api/users`                   | GET    | any                   | List users. Query: search, isActive, page, pageSize, sortBy, sortOrder                       |
+| `GET /api/users/:id`               | GET    | any                   | Get single user                                                                              |
+| `PUT /api/users/:id`               | PUT    | own: any, other: full | Own profile: displayName + password. Full users: all fields including permission             |
+| `DELETE /api/users/:id`            | DELETE | full                  | Soft delete (isActive=0). Deletes all sessions. Cannot delete self                           |
+| `POST /api/users/:id/force-logout` | POST   | full                  | Delete all sessions for target user + close WS connections. Cannot target self (returns 400) |
 
 **User response shape** (never includes passwordHash):
+
 ```
 { id, email, displayName, permission, isActive, createdAt, updatedAt }
 ```
@@ -137,6 +144,7 @@ Routes accessible to all authenticated users:
 **List response:** `{ items: User[], total }` — consistent with existing app patterns.
 
 **List query params:**
+
 - `search` — matches email or displayName (case-insensitive)
 - `isActive` — boolean filter
 - `page` / `pageSize` — pagination (default page=1, pageSize=25)
@@ -157,20 +165,22 @@ Routes accessible to all authenticated users:
 ### Configuration
 
 Config resolution order (highest priority wins):
+
 1. Environment variables: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
 2. Project config file: `depco.config.ts` in project root
 3. Defaults: ConsoleEmailService (no SMTP)
 
 **Config file shape** (`depco.config.ts`):
+
 ```ts
 export default defineConfig({
-    smtp: {
-        host: "smtp.example.com",
-        port: 587,
-        user: "user",
-        pass: "secret",
-        from: "noreply@example.com"
-    }
+  smtp: {
+    host: "smtp.example.com",
+    port: 587,
+    user: "user",
+    pass: "secret",
+    from: "noreply@example.com"
+  }
 });
 ```
 
@@ -193,6 +203,7 @@ At startup, check for SMTP config (env vars or config file). If present, registe
 Interactive first-user setup. Separate entry point (`src/cli/init.ts`).
 
 **Flow:**
+
 1. Ensure data directory exists (create if missing)
 2. Create DB file if missing, run migrations
 3. Check if any users exist in DB. If yes, exit with "Users already exist. Use the app to manage users."
@@ -204,11 +215,12 @@ Interactive first-user setup. Separate entry point (`src/cli/init.ts`).
 9. Print success message
 
 **package.json bin entry:**
+
 ```json
 {
-    "bin": {
-        "depco": "./dist/cli/index.js"
-    }
+  "bin": {
+    "depco": "./dist/cli/index.js"
+  }
 }
 ```
 
@@ -221,11 +233,13 @@ Interactive first-user setup. Separate entry point (`src/cli/init.ts`).
 Shown when no valid session exists. Two tabs:
 
 **Email + Password tab:**
+
 - Email input, password input, submit button
 - On success: shows 6-digit code input field
 - Code submission completes login
 
 **Magic Link tab:**
+
 - Email input, submit button
 - Shows "Check your email" message after submit
 - Magic link opens app with token in URL, auto-verifies via `POST /api/auth/verify-magic-link`
@@ -280,6 +294,7 @@ All services follow existing project DI patterns: `createAbstraction` for the ab
 ## Session Cleanup
 
 Expired sessions are cleaned up in two ways:
+
 1. **Lazy cleanup on lookup:** when the auth hook finds an expired session, it deletes that row and rejects the request.
 2. **Periodic sweep:** `setInterval` in `server.ts` (every 1 hour) deletes all sessions where `expiresAt < Date.now()`. Same pattern as existing snooze expiry check.
 
@@ -289,18 +304,18 @@ Expired `login_codes` cleaned up by the same periodic sweep (delete where `expir
 
 All auth error responses use `sendError()` with appropriate HTTP status:
 
-| Scenario | Status | Message |
-|----------|--------|---------|
-| Missing/invalid Authorization header | 401 | "Authentication required" |
-| Expired/invalid session | 401 | "Session expired" |
-| Inactive user | 403 | "Account is deactivated" |
-| Invalid credentials (login) | 401 | "Invalid email or password" |
-| Expired login code | 400 | "Code has expired" |
-| Already-used login code | 400 | "Code has already been used" |
-| Too many code attempts | 429 | "Too many attempts, request a new code" |
-| Insufficient permission | 403 | "Insufficient permission" |
-| Cannot delete/force-logout self | 400 | "Cannot perform this action on your own account" |
-| User not found | 404 | "User not found" |
+| Scenario                             | Status | Message                                          |
+| ------------------------------------ | ------ | ------------------------------------------------ |
+| Missing/invalid Authorization header | 401    | "Authentication required"                        |
+| Expired/invalid session              | 401    | "Session expired"                                |
+| Inactive user                        | 403    | "Account is deactivated"                         |
+| Invalid credentials (login)          | 401    | "Invalid email or password"                      |
+| Expired login code                   | 400    | "Code has expired"                               |
+| Already-used login code              | 400    | "Code has already been used"                     |
+| Too many code attempts               | 429    | "Too many attempts, request a new code"          |
+| Insufficient permission              | 403    | "Insufficient permission"                        |
+| Cannot delete/force-logout self      | 400    | "Cannot perform this action on your own account" |
+| User not found                       | 404    | "User not found"                                 |
 
 ## Security Considerations
 
