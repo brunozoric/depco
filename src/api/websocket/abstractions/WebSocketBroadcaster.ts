@@ -7,12 +7,14 @@ import type { WSEventMap, WSEventType } from "#shared/websocket/types.js";
 export interface IWebSocketConnection {
     readyState: number;
     send(data: string): void;
+    close(): void;
 }
 
 export interface IWebSocketBroadcaster {
     broadcast<T extends WSEventType>(type: T, data: WSEventMap[T]): void;
-    addClient(connection: IWebSocketConnection): void;
+    addClient(connection: IWebSocketConnection, userId: string): void;
     removeClient(connection: IWebSocketConnection): void;
+    closeConnectionsForUser(userId: string): void;
 }
 
 export const WebSocketBroadcaster = createAbstraction<IWebSocketBroadcaster>(

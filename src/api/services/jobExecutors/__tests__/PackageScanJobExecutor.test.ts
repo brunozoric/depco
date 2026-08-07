@@ -183,7 +183,8 @@ describe("PackageScanJobExecutor", () => {
         broadcaster = {
             broadcast: vi.fn(),
             addClient: vi.fn(),
-            removeClient: vi.fn()
+            removeClient: vi.fn(),
+            closeConnectionsForUser: vi.fn()
         };
     });
 

@@ -64,7 +64,8 @@ describe("upgrade session routes", () => {
         container.registerInstance(WebSocketBroadcaster, {
             broadcast: vi.fn(),
             addClient: vi.fn(),
-            removeClient: vi.fn()
+            removeClient: vi.fn(),
+            closeConnectionsForUser: vi.fn()
         });
         container.registerInstance(GitService, createMockGitService());
         container.registerInstance(UpgradeService, createMockUpgradeService());

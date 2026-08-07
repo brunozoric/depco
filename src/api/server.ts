@@ -16,7 +16,9 @@ import { ScanSchedulerService } from "./services/abstractions/ScanSchedulerServi
 import { EventBus } from "./services/abstractions/EventBus.js";
 import { VulnerabilityService } from "./services/abstractions/VulnerabilityService.js";
 import { AutoFixSettingsService } from "./services/abstractions/AutoFixSettingsService.js";
+import { AuthService } from "./services/abstractions/AuthService.js";
 import { WebSocketBroadcaster } from "./websocket/abstractions/WebSocketBroadcaster.js";
+import { createAuthHook } from "./middleware/authHook.js";
 import { createDatabaseClient } from "./db/client.js";
 import { runMigrations } from "./db/migrate.js";
 import { seedSecurityDefaults } from "./db/seedSecurityDefaults.js";
@@ -53,6 +55,7 @@ import { websocketRoutes } from "./websocket/WebSocketPlugin.js";
 const DATA_DIR = "./data";
 const DB_PATH = process.env["DB_PATH"] ?? "./data/manager.db";
 const POLL_INTERVAL_MS = 3000;
+const SESSION_CLEANUP_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 const API_PORT = 3001;
 
 export async function createServer(): Promise<FastifyInstance> {
@@ -99,6 +102,12 @@ export async function createServer(): Promise<FastifyInstance> {
 
     await app.register(fastifyCompress);
     await app.register(fastifyRateLimit, { max: 100, timeWindow: "1 minute" });
+
+    // Global auth hook: requires a valid session `Authorization: Bearer`
+    // token on every `/api/*` route except the login/verification endpoints.
+    // The `/ws` WebSocket upgrade authenticates separately, via a `?token=`
+    // query param — see WebSocketPlugin.ts.
+    app.addHook("onRequest", createAuthHook(container));
 
     // Route plugins are registered here, each receiving the DI container via
     // its Fastify plugin options (`{ container }`).
@@ -192,10 +201,20 @@ export async function createServer(): Promise<FastifyInstance> {
         }
     }, snoozeCheckIntervalMs);
 
+    // Periodically purge expired sessions and login codes so the sessions/
+    // login_codes tables don't grow unbounded.
+    const authService = container.resolve(AuthService);
+    const sessionCleanupInterval = setInterval(() => {
+        authService.cleanupExpired().catch(error => {
+            console.error("Session cleanup error:", error);
+        });
+    }, SESSION_CLEANUP_INTERVAL_MS);
+
     app.addHook("onClose", async () => {
         await scanScheduler.stop();
         clearInterval(pollInterval);
         clearInterval(snoozeCheckInterval);
+        clearInterval(sessionCleanupInterval);
     });
 
     return app;

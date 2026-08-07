@@ -9,12 +9,14 @@ const READY_STATE_CLOSED = 3;
 
 interface MockConnection extends WebSocketBroadcaster.Connection {
     send: Mock<(data: string) => void>;
+    close: Mock<() => void>;
 }
 
 function createMockConnection(readyState: number = READY_STATE_OPEN): MockConnection {
     return {
         readyState,
-        send: vi.fn<(data: string) => void>()
+        send: vi.fn<(data: string) => void>(),
+        close: vi.fn<() => void>()
     };
 }
 
@@ -30,8 +32,8 @@ describe("WebSocketBroadcaster", () => {
         const clientA = createMockConnection();
         const clientB = createMockConnection();
 
-        broadcaster.addClient(clientA);
-        broadcaster.addClient(clientB);
+        broadcaster.addClient(clientA, "user-a");
+        broadcaster.addClient(clientB, "user-b");
 
         broadcaster.broadcast("scan:progress", {
             projectId: "project-1",
@@ -53,7 +55,7 @@ describe("WebSocketBroadcaster", () => {
         const broadcaster = resolveBroadcaster();
         const client = createMockConnection();
 
-        broadcaster.addClient(client);
+        broadcaster.addClient(client, "user-a");
         broadcaster.removeClient(client);
         broadcaster.broadcast("notification", { message: "hello", level: "info" });
 
@@ -65,8 +67,8 @@ describe("WebSocketBroadcaster", () => {
         const openClient = createMockConnection(READY_STATE_OPEN);
         const closedClient = createMockConnection(READY_STATE_CLOSED);
 
-        broadcaster.addClient(openClient);
-        broadcaster.addClient(closedClient);
+        broadcaster.addClient(openClient, "user-a");
+        broadcaster.addClient(closedClient, "user-b");
 
         broadcaster.broadcast("scan:complete", { projectId: "project-1", warning: null });
 
@@ -82,12 +84,48 @@ describe("WebSocketBroadcaster", () => {
         });
         const healthyClient = createMockConnection();
 
-        broadcaster.addClient(failingClient);
-        broadcaster.addClient(healthyClient);
+        broadcaster.addClient(failingClient, "user-a");
+        broadcaster.addClient(healthyClient, "user-b");
 
         expect(() => {
             broadcaster.broadcast("notification", { message: "test", level: "error" });
         }).not.toThrow();
         expect(healthyClient.send).toHaveBeenCalled();
+    });
+
+    it("closes and removes all connections belonging to a given user", () => {
+        const broadcaster = resolveBroadcaster();
+        const userAConnection1 = createMockConnection();
+        const userAConnection2 = createMockConnection();
+        const userBConnection = createMockConnection();
+
+        broadcaster.addClient(userAConnection1, "user-a");
+        broadcaster.addClient(userAConnection2, "user-a");
+        broadcaster.addClient(userBConnection, "user-b");
+
+        broadcaster.closeConnectionsForUser("user-a");
+
+        expect(userAConnection1.close).toHaveBeenCalled();
+        expect(userAConnection2.close).toHaveBeenCalled();
+        expect(userBConnection.close).not.toHaveBeenCalled();
+
+        broadcaster.broadcast("notification", { message: "test", level: "info" });
+        expect(userAConnection1.send).not.toHaveBeenCalled();
+        expect(userAConnection2.send).not.toHaveBeenCalled();
+        expect(userBConnection.send).toHaveBeenCalled();
+    });
+
+    it("silently ignores errors thrown by an individual connection's close", () => {
+        const broadcaster = resolveBroadcaster();
+        const failingClient = createMockConnection();
+        failingClient.close.mockImplementation(() => {
+            throw new Error("connection already closed");
+        });
+
+        broadcaster.addClient(failingClient, "user-a");
+
+        expect(() => {
+            broadcaster.closeConnectionsForUser("user-a");
+        }).not.toThrow();
     });
 });

@@ -69,6 +69,9 @@ import { EncryptionService } from "./services/EncryptionService.js";
 import { SbomFormatterRegistry } from "#api/services/sbomFormatters/SbomFormatterRegistry.js";
 import { CycloneDxFormatter } from "#api/services/sbomFormatters/CycloneDxFormatter.js";
 import { SpdxFormatter } from "#api/services/sbomFormatters/SpdxFormatter.js";
+import { UserService } from "./services/UserService.js";
+import { AuthService } from "./services/AuthService.js";
+import { ConsoleEmailService } from "./services/ConsoleEmailService.js";
 
 interface IApiFeatureContext {
     databaseClient: DatabaseClient.Interface;
@@ -162,5 +165,9 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
 
         container.register(UpgradeSessionStepResolverRegistry);
         container.register(UpgradeSessionService).inSingletonScope();
+
+        container.register(UserService).inSingletonScope();
+        container.register(ConsoleEmailService).inSingletonScope();
+        container.register(AuthService).inSingletonScope();
     }
 });
