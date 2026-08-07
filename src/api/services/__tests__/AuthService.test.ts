@@ -150,6 +150,28 @@ describe("AuthService", () => {
                 authService.verifyCode({ email: "test@example.com", code: "000000" })
             ).rejects.toThrow();
         });
+
+        it("should reject a valid code if the user was deactivated after it was issued", async () => {
+            await authService.login({ email: "test@example.com", password: "password123" });
+            const codeRow = await databaseClient.db
+                .select()
+                .from(loginCodes)
+                .where(eq(loginCodes.userId, userId))
+                .get();
+
+            await userService.deactivate(userId);
+
+            await expect(
+                authService.verifyCode({ email: "test@example.com", code: codeRow!.code })
+            ).rejects.toThrow();
+
+            const sessionRows = await databaseClient.db
+                .select()
+                .from(sessions)
+                .where(eq(sessions.userId, userId))
+                .all();
+            expect(sessionRows).toHaveLength(0);
+        });
     });
 
     describe("requestMagicLink", () => {
@@ -207,6 +229,31 @@ describe("AuthService", () => {
             await expect(
                 authService.verifyMagicLink({ token: "bogus", email: "test@example.com" })
             ).rejects.toThrow();
+        });
+
+        it("should reject a valid link if the user was deactivated after it was issued", async () => {
+            await authService.requestMagicLink({
+                email: "test@example.com",
+                baseUrl: "http://localhost:3000/login"
+            });
+
+            const sendMock = emailService.send as unknown as { mock: { calls: unknown[][] } };
+            const sentParams = sendMock.mock.calls[0]![0] as { text: string };
+            const link = sentParams.text.match(/http\S+/)![0];
+            const token = new URL(link).searchParams.get("token")!;
+
+            await userService.deactivate(userId);
+
+            await expect(
+                authService.verifyMagicLink({ token, email: "test@example.com" })
+            ).rejects.toThrow();
+
+            const sessionRows = await databaseClient.db
+                .select()
+                .from(sessions)
+                .where(eq(sessions.userId, userId))
+                .all();
+            expect(sessionRows).toHaveLength(0);
         });
     });
 

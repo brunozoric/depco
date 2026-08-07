@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "crypto";
+import { createHash, randomBytes, randomInt } from "crypto";
 import { eq, and, lt, isNull } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import { AuthService as Abstraction } from "./abstractions/AuthService.js";
@@ -16,7 +16,7 @@ function hashToken(raw: string): string {
 }
 
 function generateCode(): string {
-    return Math.random().toString().slice(2, 8).padStart(6, "0");
+    return randomInt(0, 1000000).toString().padStart(6, "0");
 }
 
 class AuthServiceImpl implements Abstraction.Interface {
@@ -115,6 +115,16 @@ class AuthServiceImpl implements Abstraction.Interface {
             .where(eq(loginCodes.id, codeRow.id))
             .run();
 
+        const freshUserRow = await this.databaseClient.db
+            .select()
+            .from(users)
+            .where(eq(users.id, userRow.id))
+            .get();
+
+        if (!freshUserRow || freshUserRow.isActive !== 1) {
+            throw new HttpError(403, "Account is deactivated");
+        }
+
         return this.createSession(userRow.id);
     }
 
@@ -202,6 +212,16 @@ class AuthServiceImpl implements Abstraction.Interface {
             .set({ usedAt: now })
             .where(eq(loginCodes.id, codeRow.id))
             .run();
+
+        const freshUserRow = await this.databaseClient.db
+            .select()
+            .from(users)
+            .where(eq(users.id, userRow.id))
+            .get();
+
+        if (!freshUserRow || freshUserRow.isActive !== 1) {
+            throw new HttpError(403, "Account is deactivated");
+        }
 
         return this.createSession(userRow.id);
     }
