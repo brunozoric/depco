@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { CustomStepResolver } from "../CustomStepResolver.js";
 import type { IStepContext } from "../abstractions/StepResolver.js";
-import type { CommandRunner } from "../../abstractions/CommandRunner.js";
+import type { CommandRunner } from "../../CommandRunner/index.js";
 
 function createMockCommandRunner(exitCode = 0, stdout = "ok"): CommandRunner.Interface {
     return {

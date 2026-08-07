@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ChangelogResolver as Abstraction } from "./abstractions/ChangelogResolver.js";
-import { CommandRunner } from "../abstractions/CommandRunner.js";
+import { CommandRunner } from "../CommandRunner/index.js";
 import { extractOwnerRepo } from "./extractOwnerRepo.js";
 
 const githubReleasesSchema = z.array(

@@ -15,11 +15,11 @@ import {
     VALID_YARNRC
 } from "#testing/helpers/seedYarnSecuritySettings.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { EmailService } from "#api/services/abstractions/EmailService.js";
+import { EmailService } from "#api/services/Email/index.js";
 import { UserService as UserServiceRegistration } from "#api/services/UserService.js";
 import { AuthService as AuthServiceRegistration } from "#api/services/AuthService.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
-import { CommandRunner } from "../../services/abstractions/CommandRunner.js";
+import { CommandRunner } from "../../services/CommandRunner/index.js";
 import { SecurityService as SecurityServiceReg } from "../../services/SecurityService.js";
 import { UpgradeService as UpgradeServiceReg } from "../../services/UpgradeService.js";
 import { PackageManagerService as PackageManagerServiceReg } from "../../services/PackageManagerService.js";

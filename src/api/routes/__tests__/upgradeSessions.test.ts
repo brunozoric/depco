@@ -5,7 +5,7 @@ import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { EmailService } from "#api/services/abstractions/EmailService.js";
+import { EmailService } from "#api/services/Email/index.js";
 import { UserService as UserServiceRegistration } from "#api/services/UserService.js";
 import { AuthService as AuthServiceRegistration } from "#api/services/AuthService.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
@@ -22,7 +22,7 @@ import { CommitResolver } from "#api/services/stepResolvers/CommitResolver.js";
 import { GitService } from "#api/services/abstractions/GitService.js";
 import { UpgradeService } from "#api/services/abstractions/UpgradeService.js";
 import { StepHookService } from "#api/services/abstractions/StepHookService.js";
-import { CommandRunner } from "#api/services/abstractions/CommandRunner.js";
+import { CommandRunner } from "#api/services/CommandRunner/index.js";
 import { upgradeSessionRoutes } from "../upgradeSessions.js";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;

@@ -1,5 +1,5 @@
 import { UpgradeService as Abstraction } from "./abstractions/UpgradeService.js";
-import { CommandRunner } from "./abstractions/CommandRunner.js";
+import { CommandRunner } from "./CommandRunner/index.js";
 import { PackageManagerDriverRegistry } from "./packageManagers/abstractions/PackageManagerDriverRegistry.js";
 import { FileConfigService } from "./abstractions/FileConfigService.js";
 

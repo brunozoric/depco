@@ -5,7 +5,7 @@ import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { changelogs, dependencies, dependencyVersions } from "#api/db/schema.js";
-import { CommandRunner } from "../abstractions/CommandRunner.js";
+import { CommandRunner } from "../CommandRunner/index.js";
 import { FileConfigService } from "../abstractions/FileConfigService.js";
 import { RegistryCacheService as RegistryCacheServiceRegistration } from "../RegistryCacheService.js";
 import { PackageManagerDriverRegistry as RegistryRegistration } from "../packageManagers/PackageManagerDriverRegistry.js";

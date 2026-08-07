@@ -1,7 +1,7 @@
 import { StepResolver } from "./abstractions/StepResolver.js";
 import { getNextStep } from "./abstractions/StepResolver.js";
 import type { ICustomStepConfig } from "./abstractions/CustomStepConfig.js";
-import type { CommandRunner } from "../abstractions/CommandRunner.js";
+import type { CommandRunner } from "../CommandRunner/index.js";
 
 export class CustomStepResolver implements StepResolver.Interface {
     public readonly type: string;

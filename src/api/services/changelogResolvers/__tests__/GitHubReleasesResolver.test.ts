@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { GitHubReleasesResolver } from "../GitHubReleasesResolver.js";
-import type { CommandRunner } from "../../abstractions/CommandRunner.js";
+import type { CommandRunner } from "../../CommandRunner/index.js";
 
 type RunHandler = CommandRunner.Interface["run"];
 

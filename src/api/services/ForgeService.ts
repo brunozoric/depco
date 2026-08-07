@@ -3,7 +3,7 @@ import { Gitlab } from "@gitbeaker/rest";
 import { eq } from "drizzle-orm";
 import { ForgeService as Abstraction } from "./abstractions/ForgeService.js";
 import type { ForgeType, IParsedRemote } from "./abstractions/ForgeService.js";
-import { CommandRunner } from "./abstractions/CommandRunner.js";
+import { CommandRunner } from "./CommandRunner/index.js";
 import { EncryptionService } from "./Encryption/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { appSettings } from "#api/db/schema.js";

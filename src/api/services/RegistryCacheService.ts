@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { RegistryCacheService as Abstraction } from "./abstractions/RegistryCacheService.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { CommandRunner } from "./abstractions/CommandRunner.js";
+import { CommandRunner } from "./CommandRunner/index.js";
 import { PackageManagerDriverRegistry } from "./packageManagers/abstractions/PackageManagerDriverRegistry.js";
 import type { PackageManagerDriver } from "./packageManagers/abstractions/PackageManagerDriver.js";
 import { FileConfigService } from "./abstractions/FileConfigService.js";

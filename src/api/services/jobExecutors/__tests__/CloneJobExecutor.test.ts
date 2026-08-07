@@ -6,7 +6,7 @@ import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
 import { seedYarnSecuritySettings } from "#testing/helpers/seedYarnSecuritySettings.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { CommandRunner } from "../../abstractions/CommandRunner.js";
+import { CommandRunner } from "../../CommandRunner/index.js";
 import { SecurityService as SecurityServiceReg } from "../../SecurityService.js";
 import { PackageManagerService as PackageManagerServiceReg } from "../../PackageManagerService.js";
 import { AuditParserService as AuditParserServiceReg } from "../../AuditParserService.js";

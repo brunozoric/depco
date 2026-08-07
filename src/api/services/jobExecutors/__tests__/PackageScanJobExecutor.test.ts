@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { CommandRunner } from "../../abstractions/CommandRunner.js";
+import { CommandRunner } from "../../CommandRunner/index.js";
 import { ErrorReporter } from "../../abstractions/ErrorReporter.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { FileConfigService } from "../../abstractions/FileConfigService.js";

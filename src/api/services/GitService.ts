@@ -1,5 +1,5 @@
 import { GitService as Abstraction } from "./abstractions/GitService.js";
-import { CommandRunner } from "./abstractions/CommandRunner.js";
+import { CommandRunner } from "./CommandRunner/index.js";
 
 class GitServiceImpl implements Abstraction.Interface {
     public constructor(private readonly commandRunner: CommandRunner.Interface) {}

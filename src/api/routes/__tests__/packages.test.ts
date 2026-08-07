@@ -5,7 +5,7 @@ import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { EmailService } from "../../services/abstractions/EmailService.js";
+import { EmailService } from "../../services/Email/index.js";
 import { UserService as UserServiceRegistration } from "../../services/UserService.js";
 import { AuthService as AuthServiceRegistration } from "../../services/AuthService.js";
 import { createAuthHook } from "../../middleware/authHook.js";

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createContainer } from "#shared/index.js";
-import { CommandRunner } from "../abstractions/CommandRunner.js";
+import { CommandRunner } from "../CommandRunner/index.js";
 import { CommandRunner as CommandRunnerRegistration } from "../CommandRunner.js";
 
 describe("ExecaCommandRunner", () => {

@@ -2,7 +2,7 @@ import { readFile, readdir } from "fs/promises";
 import { join } from "path";
 import semver from "semver";
 import { ScanService as Abstraction } from "./abstractions/ScanService.js";
-import { CommandRunner } from "./abstractions/CommandRunner.js";
+import { CommandRunner } from "./CommandRunner/index.js";
 import { RegistryCacheService } from "./abstractions/RegistryCacheService.js";
 import { LockfileParserService } from "./abstractions/LockfileParserService.js";
 import { PackageManagerDriverRegistry } from "./packageManagers/abstractions/PackageManagerDriverRegistry.js";

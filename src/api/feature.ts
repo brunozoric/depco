@@ -7,7 +7,7 @@ import {
 } from "@webiny/stdlib/node";
 import { createFeature } from "#shared/index.js";
 import { DatabaseClient } from "./db/abstractions/DatabaseClient.js";
-import { CommandRunner } from "./services/CommandRunner.js";
+import { CommandRunnerFeature } from "./services/CommandRunner/index.js";
 import { SecurityService } from "./services/SecurityService.js";
 import { RegistryCacheService } from "./services/RegistryCacheService.js";
 import { ScanService } from "./services/ScanService.js";
@@ -71,7 +71,7 @@ import { CycloneDxFormatter } from "#api/services/sbomFormatters/CycloneDxFormat
 import { SpdxFormatter } from "#api/services/sbomFormatters/SpdxFormatter.js";
 import { UserService } from "./services/UserService.js";
 import { AuthService } from "./services/AuthService.js";
-import { ConsoleEmailService } from "./services/ConsoleEmailService.js";
+import { EmailFeature } from "./services/Email/index.js";
 
 interface IApiFeatureContext {
     databaseClient: DatabaseClient.Interface;
@@ -84,7 +84,7 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
         container.registerInstance(DatabaseClient, context.databaseClient);
         EncryptionFeature.register(container);
         EventBusFeature.register(container);
-        container.register(CommandRunner).inSingletonScope();
+        CommandRunnerFeature.register(container);
         container.register(SecurityService).inSingletonScope();
         container.register(RegistryCacheService).inSingletonScope();
         container.register(ScanService).inSingletonScope();
@@ -167,7 +167,7 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
         container.register(UpgradeSessionService).inSingletonScope();
 
         container.register(UserService).inSingletonScope();
-        container.register(ConsoleEmailService).inSingletonScope();
+        EmailFeature.register(container);
         container.register(AuthService).inSingletonScope();
     }
 });

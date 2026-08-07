@@ -12,7 +12,7 @@ import { CustomStepResolver } from "./stepResolvers/CustomStepResolver.js";
 import { buildStepOrder, createSessionSteps, toSlug } from "./stepResolvers/stepPipeline.js";
 import { ErrorReporter } from "./abstractions/ErrorReporter.js";
 import { StepHookService } from "./abstractions/StepHookService.js";
-import { CommandRunner } from "./abstractions/CommandRunner.js";
+import { CommandRunner } from "./CommandRunner/index.js";
 
 interface IUpgradeSessionSqlRow {
     id: string;

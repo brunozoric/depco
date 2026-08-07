@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync, rmSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import { createContainer } from "#shared/index.js";
-import { CommandRunner } from "../abstractions/CommandRunner.js";
+import { CommandRunner } from "../CommandRunner/index.js";
 import { PackageManagerService } from "../abstractions/PackageManagerService.js";
 import { PackageManagerService as PackageManagerServiceRegistration } from "../PackageManagerService.js";
 import { PackageManagerDriverRegistry as RegistryRegistration } from "../packageManagers/PackageManagerDriverRegistry.js";

@@ -13,7 +13,7 @@ import {
 } from "#testing/helpers/seedYarnSecuritySettings.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { projects, upgradeJobs } from "#api/db/schema.js";
-import { CommandRunner } from "../abstractions/CommandRunner.js";
+import { CommandRunner } from "../CommandRunner/index.js";
 import { SecurityService as SecurityServiceRegistration } from "../SecurityService.js";
 import { UpgradeService as UpgradeServiceRegistration } from "../UpgradeService.js";
 import { PackageManagerService as PackageManagerServiceRegistration } from "../PackageManagerService.js";
