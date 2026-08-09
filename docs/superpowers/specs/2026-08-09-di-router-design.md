@@ -22,8 +22,8 @@ infrastructure/Router/
 
 ```typescript
 interface IRouteMatch {
-    params: Record<string, string>;
-    query: Record<string, unknown>;
+  params: Record<string, string>;
+  query: Record<string, unknown>;
 }
 ```
 
@@ -31,18 +31,18 @@ interface IRouteMatch {
 
 ```typescript
 interface IRoute {
-    name: string;
-    path: string | RegExp;
-    matchPath(path: string): Record<string, string> | null;
-    validateQueryString?(query: URLSearchParams): Record<string, unknown>;
-    render(match: IRouteMatch): React.ReactNode;
+  name: string;
+  path: string | RegExp;
+  matchPath(path: string): Record<string, string> | null;
+  validateQueryString?(query: URLSearchParams): Record<string, unknown>;
+  render(match: IRouteMatch): React.ReactNode;
 }
 
 const Route = createAbstraction<IRoute>("Ui/Route");
 
 namespace Route {
-    type Interface = IRoute;
-    type Match = IRouteMatch;
+  type Interface = IRoute;
+  type Match = IRouteMatch;
 }
 ```
 
@@ -54,18 +54,18 @@ namespace Route {
 
 ```typescript
 interface IRouteRegistry {
-    register(route: Route.Interface): void;
-    resolve(args: IRouteResolveArgs): IRouteResolveResult | undefined;
+  register(route: Route.Interface): void;
+  resolve(args: IRouteResolveArgs): IRouteResolveResult | undefined;
 }
 
 interface IRouteResolveArgs {
-    path: string;
-    query: URLSearchParams;
+  path: string;
+  query: URLSearchParams;
 }
 
 interface IRouteResolveResult {
-    route: Route.Interface;
-    match: Route.Match;
+  route: Route.Interface;
+  match: Route.Match;
 }
 ```
 
@@ -75,15 +75,15 @@ RouteRegistryImpl stores routes in insertion order. `resolve` iterates and retur
 
 ```tsx
 function RouterComponent(): React.ReactNode {
-    const path = useCurrentPath();
-    const container = useContainer();
-    const registry = container.resolve(RouteRegistry);
-    const query = new URLSearchParams(window.location.search);
-    const result = registry.resolve({ path, query });
-    if (result) {
-        return result.route.render(result.match);
-    }
-    return null;
+  const path = useCurrentPath();
+  const container = useContainer();
+  const registry = container.resolve(RouteRegistry);
+  const query = new URLSearchParams(window.location.search);
+  const result = registry.resolve({ path, query });
+  if (result) {
+    return result.route.render(result.match);
+  }
+  return null;
 }
 ```
 
@@ -107,33 +107,34 @@ presentation/<Domain>/<Page>/
 
 ### Route table
 
-| # | Name | Path | Type | Domain | Params |
-|---|------|------|------|--------|--------|
-| 1 | dashboard | `/` | default | Dashboard/Dashboard | none |
-| 2 | project-list | `/projects` | string | Projects/ProjectList | none |
-| 3 | project-detail | `/projects/:projectId` | regex | Projects/ProjectDetail | projectId |
-| 4 | upgrade-wizard | `/projects/:projectId/upgrade` | regex | Projects/UpgradeWizard | projectId |
-| 5 | step-hooks | `/projects/:projectId/step-hooks` | regex | Projects/StepHooks | projectId |
-| 6 | dependency-graph | `/projects/:projectId/graph` | regex | DependencyGraph/GraphPage | projectId |
-| 7 | job-manager | `/jobs` | string | Jobs/JobManager | none |
-| 8 | pm-settings | `/settings` | string | Settings/PmSettings | none |
-| 9 | app-settings | `/settings/app` | string | Settings/AppSettings | none |
-| 10 | log-browser | `/logs` | string | Logs/LogBrowser | none |
-| 11 | backup | `/backup` | string | Backup/BackupPage | none |
-| 12 | vulnerabilities | `/vulnerabilities` | string | Vulnerabilities/VulnerabilityList | none |
-| 13 | vulnerability-detail | `/vulnerabilities/:vulnerabilityId` | regex | Vulnerabilities/VulnerabilityDetail | vulnerabilityId |
-| 14 | licenses | `/licenses` | string | Licenses/LicensesList | none |
-| 15 | trends | `/trends` | string | Trends/TrendsPage | none |
-| 16 | teams | `/teams` | string | Teams/TeamsPage | none |
-| 17 | team-detail | `/teams/:teamId` | regex | Teams/TeamDetail | teamId |
-| 18 | packages | `/packages` | string | Packages/PackageList | none |
-| 19 | users | `/users` | string | Users/UserList | none |
+| #   | Name                 | Path                                | Type    | Domain                              | Params          |
+| --- | -------------------- | ----------------------------------- | ------- | ----------------------------------- | --------------- |
+| 1   | dashboard            | `/`                                 | default | Dashboard/Dashboard                 | none            |
+| 2   | project-list         | `/projects`                         | string  | Projects/ProjectList                | none            |
+| 3   | project-detail       | `/projects/:projectId`              | regex   | Projects/ProjectDetail              | projectId       |
+| 4   | upgrade-wizard       | `/projects/:projectId/upgrade`      | regex   | Projects/UpgradeWizard              | projectId       |
+| 5   | step-hooks           | `/projects/:projectId/step-hooks`   | regex   | Projects/StepHooks                  | projectId       |
+| 6   | dependency-graph     | `/projects/:projectId/graph`        | regex   | DependencyGraph/GraphPage           | projectId       |
+| 7   | job-manager          | `/jobs`                             | string  | Jobs/JobManager                     | none            |
+| 8   | pm-settings          | `/settings`                         | string  | Settings/PmSettings                 | none            |
+| 9   | app-settings         | `/settings/app`                     | string  | Settings/AppSettings                | none            |
+| 10  | log-browser          | `/logs`                             | string  | Logs/LogBrowser                     | none            |
+| 11  | backup               | `/backup`                           | string  | Backup/BackupPage                   | none            |
+| 12  | vulnerabilities      | `/vulnerabilities`                  | string  | Vulnerabilities/VulnerabilityList   | none            |
+| 13  | vulnerability-detail | `/vulnerabilities/:vulnerabilityId` | regex   | Vulnerabilities/VulnerabilityDetail | vulnerabilityId |
+| 14  | licenses             | `/licenses`                         | string  | Licenses/LicensesList               | none            |
+| 15  | trends               | `/trends`                           | string  | Trends/TrendsPage                   | none            |
+| 16  | teams                | `/teams`                            | string  | Teams/TeamsPage                     | none            |
+| 17  | team-detail          | `/teams/:teamId`                    | regex   | Teams/TeamDetail                    | teamId          |
+| 18  | packages             | `/packages`                         | string  | Packages/PackageList                | none            |
+| 19  | users                | `/users`                            | string  | Users/UserList                      | none            |
 
 19 routes total: 12 string paths + 6 regex parameterized paths + 1 dashboard fallback.
 
 ### Registration order
 
 RouteRegistry uses first-match-wins. More specific paths must register before less specific ones within the same prefix. Note: simple string routes use exact equality in matchPath (not prefix matching), so `/settings` and `/settings/app` don't conflict in practice. Still, register specific-first as a convention:
+
 - `/projects/:id/upgrade` before `/projects/:id/step-hooks` before `/projects/:id/graph` before `/projects/:id`
 - `/vulnerabilities/:id` before `/vulnerabilities`
 - `/teams/:id` before `/teams`
