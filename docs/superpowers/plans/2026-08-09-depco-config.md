@@ -405,6 +405,7 @@ git commit -m "feat(config): add LoadConfig step for scan command"
 ### Task 3: Wire LoadConfig into ScanCommand + update CheckLicenses
 
 **Files:**
+- Modify: `src/cli/index.ts` (register tsx for .ts config loading)
 - Modify: `src/cli/commands/scan/ScanCommand.ts` (add LoadConfig as step 2)
 - Modify: `src/cli/commands/scan/feature.ts` (add LoadConfigStepFeature dependency)
 - Modify: `src/cli/commands/scan/steps/CheckLicenses/CheckLicensesStep.ts` (read config from context)
@@ -416,7 +417,21 @@ git commit -m "feat(config): add LoadConfig step for scan command"
 - Consumes: `LoadConfigStep` from `./steps/LoadConfig/index.js`, `IDepcoConfig` from `#shared/config/types.js`
 - Produces: Updated ScanCommand (4 steps), config-aware CheckLicenses
 
-- [ ] **Step 1: Update ScanCommand to include LoadConfig**
+- [ ] **Step 1: Register tsx in CLI entry point**
+
+Modify `src/cli/index.ts` — add tsx ESM registration at the very top (before any other imports) so the CLI can dynamically import `.ts` config files. Same pattern as data-transfer project's `cli.ts`:
+
+```typescript
+#!/usr/bin/env node
+import { register } from "tsx/esm/api";
+register();
+
+// ... rest of existing imports unchanged
+```
+
+This enables `import("file:///path/to/depco.config.ts")` in the LoadConfig step. tsx is already a dependency (`"tsx": "^4.23.9"` in package.json).
+
+- [ ] **Step 2: Update ScanCommand to include LoadConfig**
 
 Modify `src/cli/commands/scan/ScanCommand.ts`:
 - Add import: `import { LoadConfigStep } from "./steps/LoadConfig/index.js";`
@@ -424,19 +439,19 @@ Modify `src/cli/commands/scan/ScanCommand.ts`:
 - Update `steps()`: return `[this.detectPackageManager, this.loadConfig, this.parseLockfile, this.checkLicenses]`
 - Update `dependencies` array: add `LoadConfigStep` between `DetectPackageManagerStep` and `ParseLockfileStep`
 
-- [ ] **Step 2: Update ScanCommandFeature dependencies**
+- [ ] **Step 3: Update ScanCommandFeature dependencies**
 
 Modify `src/cli/commands/scan/feature.ts`:
 - Add import: `import { LoadConfigStepFeature } from "./steps/LoadConfig/index.js";`
 - Add `LoadConfigStepFeature` to dependencies array (between DetectPackageManager and ParseLockfile)
 
-- [ ] **Step 3: Update ScanCommand test**
+- [ ] **Step 4: Update ScanCommand test**
 
 Modify `src/cli/commands/scan/__tests__/ScanCommand.test.ts`:
 - Change step count expectation from 3 to 4
 - Update expected step names: `["detect-package-manager", "load-config", "parse-lockfile", "check-licenses"]`
 
-- [ ] **Step 4: Update CheckLicenses to read config**
+- [ ] **Step 5: Update CheckLicenses to read config**
 
 Modify `src/cli/commands/scan/steps/CheckLicenses/CheckLicensesStep.ts`:
 
@@ -474,7 +489,7 @@ const violations = results.filter(
 
 Remove the module-level `const REGISTRY_URL = "https://registry.npmjs.org";`.
 
-- [ ] **Step 5: Add config-aware CheckLicenses tests**
+- [ ] **Step 6: Add config-aware CheckLicenses tests**
 
 Add tests to `src/cli/commands/scan/steps/CheckLicenses/__tests__/CheckLicensesStep.test.ts`:
 
@@ -527,14 +542,14 @@ it("filters global ignored packages", async () => {
 
 Update existing tests to set `context.results.set("config", {})` so they use defaults (no config = all defaults = only permissive allowed).
 
-- [ ] **Step 6: Run all tests — verify pass + yarn full**
+- [ ] **Step 7: Run all tests — verify pass + yarn full**
 
 ```bash
 yarn test src/cli/commands/scan/
 yarn full
 ```
 
-- [ ] **Step 7: Update AGENTS.md**
+- [ ] **Step 8: Update AGENTS.md**
 
 Add to CLI scan section:
 ```
@@ -547,7 +562,7 @@ Add to shared section or create new entry:
     config/           — defineConfig() + IDepcoConfig types + Zod schema. Exported via package.json "exports" as @fundus/depco/config.
 ```
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
 yarn format:fix && yarn lint:fix
