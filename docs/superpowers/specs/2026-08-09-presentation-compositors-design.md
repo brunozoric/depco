@@ -11,32 +11,33 @@ Extract per-domain compositor `feature.ts` files in each `src/ui/presentation/<D
 ## Change
 
 Create `feature.ts` in each domain folder under `src/ui/presentation/`. Each compositor:
+
 - Uses `createFeature` with `dependencies: [...]` listing that domain's sub-features
 - Has empty `register() {}` (pure aggregator, same pattern as current PresentationFeature)
 - Named `"Ui/Presentation/<Domain>"` following existing convention
 
 ### Domain Compositors (18 total)
 
-| Domain | Compositor Name | Sub-features |
-|--------|----------------|-------------|
-| Auth | AuthPresentationFeature | LoginPageFeature |
-| AutoFix | AutoFixPresentationFeature | AutoFixUseCasesFeature |
-| Backup | BackupDomainFeature | BackupPresentationFeature, BackupUseCasesFeature |
-| Dashboard | DashboardDomainFeature | DashboardPresentationFeature, DashboardUseCasesFeature |
-| DependencyGraph | DependencyGraphDomainFeature | DependencyGraphPageFeature, DependencyGraphUseCasesFeature |
-| Jobs | JobsDomainFeature | JobManagerPresentationFeature, JobManagerUseCasesFeature, JobProgressFeature |
-| Licenses | LicensesDomainFeature | LicenseListFeature, LicensesUseCasesFeature |
-| Logs | LogsDomainFeature | LogBrowserPresentationFeature, AppLogsUseCasesFeature |
-| Packages | PackagesDomainFeature | PackageListFeature, PackagesUseCasesFeature |
-| Projects | ProjectsDomainFeature | ProjectListFeature, ProjectDetailFeature, StepHooksPresentationFeature, UpgradeWizardFeature, ProjectsUseCasesFeature |
-| Sbom | SbomDomainFeature | SbomPageFeature, SbomUseCasesFeature |
-| ScanSchedules | ScanSchedulesDomainFeature | ScanSchedulesUseCasesFeature |
-| Settings | SettingsDomainFeature | PmSettingsPresentationFeature, AppSettingsPresentationFeature, SecuritySettingsUseCasesFeature, AppSettingsUseCasesFeature |
-| Teams | TeamsDomainFeature | TeamsPageFeature, TeamDetailFeature, TeamsUseCasesFeature |
-| Trends | TrendsDomainFeature | TrendsPageFeature, TrendsUseCasesFeature |
-| Upgrades | UpgradesDomainFeature | UpgradesUseCasesFeature |
-| Users | UsersDomainFeature | UserListFeature, UsersUseCasesFeature |
-| Vulnerabilities | VulnerabilitiesDomainFeature | VulnerabilityListFeature, VulnerabilityDetailFeature, VulnerabilitiesUseCasesFeature |
+| Domain          | Compositor Name              | Sub-features                                                                                                               |
+| --------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Auth            | AuthPresentationFeature      | LoginPageFeature                                                                                                           |
+| AutoFix         | AutoFixPresentationFeature   | AutoFixUseCasesFeature                                                                                                     |
+| Backup          | BackupDomainFeature          | BackupPresentationFeature, BackupUseCasesFeature                                                                           |
+| Dashboard       | DashboardDomainFeature       | DashboardPresentationFeature, DashboardUseCasesFeature                                                                     |
+| DependencyGraph | DependencyGraphDomainFeature | DependencyGraphPageFeature, DependencyGraphUseCasesFeature                                                                 |
+| Jobs            | JobsDomainFeature            | JobManagerPresentationFeature, JobManagerUseCasesFeature, JobProgressFeature                                               |
+| Licenses        | LicensesDomainFeature        | LicenseListFeature, LicensesUseCasesFeature                                                                                |
+| Logs            | LogsDomainFeature            | LogBrowserPresentationFeature, AppLogsUseCasesFeature                                                                      |
+| Packages        | PackagesDomainFeature        | PackageListFeature, PackagesUseCasesFeature                                                                                |
+| Projects        | ProjectsDomainFeature        | ProjectListFeature, ProjectDetailFeature, StepHooksPresentationFeature, UpgradeWizardFeature, ProjectsUseCasesFeature      |
+| Sbom            | SbomDomainFeature            | SbomPageFeature, SbomUseCasesFeature                                                                                       |
+| ScanSchedules   | ScanSchedulesDomainFeature   | ScanSchedulesUseCasesFeature                                                                                               |
+| Settings        | SettingsDomainFeature        | PmSettingsPresentationFeature, AppSettingsPresentationFeature, SecuritySettingsUseCasesFeature, AppSettingsUseCasesFeature |
+| Teams           | TeamsDomainFeature           | TeamsPageFeature, TeamDetailFeature, TeamsUseCasesFeature                                                                  |
+| Trends          | TrendsDomainFeature          | TrendsPageFeature, TrendsUseCasesFeature                                                                                   |
+| Upgrades        | UpgradesDomainFeature        | UpgradesUseCasesFeature                                                                                                    |
+| Users           | UsersDomainFeature           | UserListFeature, UsersUseCasesFeature                                                                                      |
+| Vulnerabilities | VulnerabilitiesDomainFeature | VulnerabilityListFeature, VulnerabilityDetailFeature, VulnerabilitiesUseCasesFeature                                       |
 
 ### Naming Convention
 
@@ -47,28 +48,28 @@ Create `feature.ts` in each domain folder under `src/ui/presentation/`. Each com
 
 ```typescript
 export const PresentationFeature = createFeature({
-    name: "Ui/Presentation",
-    dependencies: [
-        AuthPresentationFeature,
-        AutoFixPresentationFeature,
-        BackupDomainFeature,
-        DashboardDomainFeature,
-        DependencyGraphDomainFeature,
-        JobsDomainFeature,
-        LicensesDomainFeature,
-        LogsDomainFeature,
-        PackagesDomainFeature,
-        ProjectsDomainFeature,
-        SbomDomainFeature,
-        ScanSchedulesDomainFeature,
-        SettingsDomainFeature,
-        TeamsDomainFeature,
-        TrendsDomainFeature,
-        UpgradesDomainFeature,
-        UsersDomainFeature,
-        VulnerabilitiesDomainFeature
-    ],
-    register() {}
+  name: "Ui/Presentation",
+  dependencies: [
+    AuthPresentationFeature,
+    AutoFixPresentationFeature,
+    BackupDomainFeature,
+    DashboardDomainFeature,
+    DependencyGraphDomainFeature,
+    JobsDomainFeature,
+    LicensesDomainFeature,
+    LogsDomainFeature,
+    PackagesDomainFeature,
+    ProjectsDomainFeature,
+    SbomDomainFeature,
+    ScanSchedulesDomainFeature,
+    SettingsDomainFeature,
+    TeamsDomainFeature,
+    TrendsDomainFeature,
+    UpgradesDomainFeature,
+    UsersDomainFeature,
+    VulnerabilitiesDomainFeature
+  ],
+  register() {}
 });
 ```
 
