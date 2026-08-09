@@ -25,7 +25,6 @@ export const PresentationFeature = createFeature({
         AuthPresentationFeature,
         AutoFixPresentationFeature,
         BackupDomainFeature,
-        DashboardDomainFeature,
         DependencyGraphDomainFeature,
         JobsDomainFeature,
         LicensesDomainFeature,
@@ -39,7 +38,8 @@ export const PresentationFeature = createFeature({
         TrendsDomainFeature,
         UpgradesDomainFeature,
         UsersDomainFeature,
-        VulnerabilitiesDomainFeature
+        VulnerabilitiesDomainFeature,
+        DashboardDomainFeature
     ],
     register() {}
 });

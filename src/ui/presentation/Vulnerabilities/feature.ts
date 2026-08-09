@@ -7,8 +7,8 @@ import { VulnerabilitiesUseCasesFeature } from "./useCases/feature.js";
 export const VulnerabilitiesDomainFeature = createFeature({
     name: "Ui/Presentation/Vulnerabilities",
     dependencies: [
-        VulnerabilityListFeature,
         VulnerabilityDetailFeature,
+        VulnerabilityListFeature,
         VulnerabilitiesUseCasesFeature
     ],
     register() {}

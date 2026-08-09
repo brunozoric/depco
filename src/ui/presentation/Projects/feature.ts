@@ -9,10 +9,10 @@ import { ProjectsUseCasesFeature } from "./useCases/feature.js";
 export const ProjectsDomainFeature = createFeature({
     name: "Ui/Presentation/Projects",
     dependencies: [
-        ProjectListFeature,
-        ProjectDetailFeature,
-        StepHooksPresentationFeature,
         UpgradeWizardFeature,
+        StepHooksPresentationFeature,
+        ProjectDetailFeature,
+        ProjectListFeature,
         ProjectsUseCasesFeature
     ],
     register() {}

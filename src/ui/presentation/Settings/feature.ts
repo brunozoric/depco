@@ -8,8 +8,8 @@ import { SecuritySettingsUseCasesFeature } from "./useCases/feature.js";
 export const SettingsDomainFeature = createFeature({
     name: "Ui/Presentation/Settings",
     dependencies: [
-        PmSettingsPresentationFeature,
         AppSettingsPresentationFeature,
+        PmSettingsPresentationFeature,
         SecuritySettingsUseCasesFeature,
         AppSettingsUseCasesFeature
     ],
