@@ -54,6 +54,7 @@
     "spdx-license-list": "^6.12.0",
     "typescript": "^7.0.2",
     "yaml": "^2.9.0",
+    "yargs": "^18.1.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -63,6 +64,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@types/semver": "^7.8.0",
+    "@types/yargs": "^17.0.35",
     "@vitejs/plugin-react": "^6.0.5",
     "@vitest/coverage-v8": "^4.1.10",
     "adio": "^3.0.1",

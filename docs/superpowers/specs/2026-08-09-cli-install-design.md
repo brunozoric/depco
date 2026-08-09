@@ -110,10 +110,10 @@ src/cli/
 ```typescript
 // src/cli/commands/abstractions/Command.ts
 interface ICommand {
-    name: string;
-    description: string;
-    steps(): Step.Interface[];
-    context(): IStepContext;
+  name: string;
+  description: string;
+  steps(): Step.Interface[];
+  context(): IStepContext;
 }
 
 const Command = createAbstraction<ICommand>("Cli/Command");
@@ -140,10 +140,10 @@ const InitCommand = createAbstraction<Command.Interface>("Cli/InitCommand");
 ```typescript
 // src/cli/runner/abstractions/Step.ts
 interface IStep {
-    name: string;
-    description: string;
-    execute(context: IStepContext): Promise<IStepResult>;
-    rollback?(context: IStepContext): Promise<void>;
+  name: string;
+  description: string;
+  execute(context: IStepContext): Promise<IStepResult>;
+  rollback?(context: IStepContext): Promise<void>;
 }
 
 const Step = createAbstraction<IStep>("Cli/Step");
@@ -160,10 +160,10 @@ const EnsureDataDirectoryStep = createAbstraction<Step.Interface>("Cli/EnsureDat
 
 ```typescript
 interface IStepContext {
-    dataDirectory: string;
-    envFilePath: string;
-    options: Record<string, unknown>;
-    results: Map<string, unknown>;
+  dataDirectory: string;
+  envFilePath: string;
+  options: Record<string, unknown>;
+  results: Map<string, unknown>;
 }
 ```
 
@@ -173,9 +173,9 @@ Shared state passed through steps. Steps store results for later steps via `resu
 
 ```typescript
 interface IStepResult {
-    success: boolean;
-    skipped?: boolean;
-    message?: string;
+  success: boolean;
+  skipped?: boolean;
+  message?: string;
 }
 ```
 
@@ -183,13 +183,14 @@ interface IStepResult {
 
 ```typescript
 interface IStepRunner {
-    run(steps: Step.Interface[], context: IStepContext): Promise<void>;
+  run(steps: Step.Interface[], context: IStepContext): Promise<void>;
 }
 
 const StepRunner = createAbstraction<IStepRunner>("Cli/StepRunner");
 ```
 
 StepRunnerImpl handles:
+
 - Sequential execution of steps
 - Progress display: `[N/M] Step description...`
 - On failure: calls `rollback()` in reverse order on completed steps
@@ -203,52 +204,52 @@ InitCommandImpl receives all 7 step abstractions via DI constructor injection. `
 
 ```typescript
 class InitCommandImpl implements Command.Interface {
-    name = "init";
-    description = "Initialize depco — create database, admin user, and environment config";
+  name = "init";
+  description = "Initialize depco — create database, admin user, and environment config";
 
-    constructor(
-        private ensureDataDirectory: Step.Interface,
-        private runMigrations: Step.Interface,
-        private generateEncryptionKey: Step.Interface,
-        private selectPort: Step.Interface,
-        private createAdminUser: Step.Interface,
-        private writeEnvFile: Step.Interface,
-        private printNextSteps: Step.Interface
-    ) {}
+  constructor(
+    private ensureDataDirectory: Step.Interface,
+    private runMigrations: Step.Interface,
+    private generateEncryptionKey: Step.Interface,
+    private selectPort: Step.Interface,
+    private createAdminUser: Step.Interface,
+    private writeEnvFile: Step.Interface,
+    private printNextSteps: Step.Interface
+  ) {}
 
-    steps(): Step.Interface[] {
-        return [
-            this.ensureDataDirectory,
-            this.runMigrations,
-            this.generateEncryptionKey,
-            this.selectPort,
-            this.createAdminUser,
-            this.writeEnvFile,
-            this.printNextSteps
-        ];
-    }
+  steps(): Step.Interface[] {
+    return [
+      this.ensureDataDirectory,
+      this.runMigrations,
+      this.generateEncryptionKey,
+      this.selectPort,
+      this.createAdminUser,
+      this.writeEnvFile,
+      this.printNextSteps
+    ];
+  }
 
-    context(): IStepContext {
-        return {
-            dataDirectory: "./data",
-            envFilePath: "./.env",
-            options: {},
-            results: new Map()
-        };
-    }
+  context(): IStepContext {
+    return {
+      dataDirectory: "./data",
+      envFilePath: "./.env",
+      options: {},
+      results: new Map()
+    };
+  }
 }
 
 const InitCommand = Abstraction.createImplementation({
-    implementation: InitCommandImpl,
-    dependencies: [
-        EnsureDataDirectoryStep,
-        RunMigrationsStep,
-        GenerateEncryptionKeyStep,
-        SelectPortStep,
-        CreateAdminUserStep,
-        WriteEnvFileStep,
-        PrintNextStepsStep
-    ]
+  implementation: InitCommandImpl,
+  dependencies: [
+    EnsureDataDirectoryStep,
+    RunMigrationsStep,
+    GenerateEncryptionKeyStep,
+    SelectPortStep,
+    CreateAdminUserStep,
+    WriteEnvFileStep,
+    PrintNextStepsStep
+  ]
 });
 ```
 
@@ -258,15 +259,15 @@ StartCommandImpl has 2 steps: ValidateEnvironment (checks .env exists, DB access
 
 ## Init Steps Detail
 
-| # | Step | Description | Rollback |
-|---|------|-------------|----------|
-| 1 | EnsureDataDirectory | Creates `./data/` if missing | Remove dir if empty |
-| 2 | RunMigrations | Runs Drizzle migrations on SQLite DB | No (forward-only) |
-| 3 | GenerateEncryptionKey | Generates random 32-byte hex key, stores in context | No |
-| 4 | SelectPort | Prompts for port (default 3000), stores in context | No |
-| 5 | CreateAdminUser | Prompts email/name/password, inserts into DB | No |
-| 6 | WriteEnvFile | Writes `.env` with ENCRYPTION_KEY, PORT, DB_PATH | Remove .env |
-| 7 | PrintNextSteps | Prints "run `depco start`" instructions | No |
+| #   | Step                  | Description                                         | Rollback            |
+| --- | --------------------- | --------------------------------------------------- | ------------------- |
+| 1   | EnsureDataDirectory   | Creates `./data/` if missing                        | Remove dir if empty |
+| 2   | RunMigrations         | Runs Drizzle migrations on SQLite DB                | No (forward-only)   |
+| 3   | GenerateEncryptionKey | Generates random 32-byte hex key, stores in context | No                  |
+| 4   | SelectPort            | Prompts for port (default 3000), stores in context  | No                  |
+| 5   | CreateAdminUser       | Prompts email/name/password, inserts into DB        | No                  |
+| 6   | WriteEnvFile          | Writes `.env` with ENCRYPTION_KEY, PORT, DB_PATH    | Remove .env         |
+| 7   | PrintNextSteps        | Prints "run `depco start`" instructions             | No                  |
 
 ### Step result flow via context.results
 
@@ -276,41 +277,41 @@ StartCommandImpl has 2 steps: ValidateEnvironment (checks .env exists, DB access
 
 ## Start Steps Detail
 
-| # | Step | Description | Rollback |
-|---|------|-------------|----------|
-| 1 | ValidateEnvironment | Checks .env exists, ENCRYPTION_KEY set, DB file accessible | No |
-| 2 | StartServer | Imports startServer() from #api/server.js, runs it | No |
+| #   | Step                | Description                                                | Rollback |
+| --- | ------------------- | ---------------------------------------------------------- | -------- |
+| 1   | ValidateEnvironment | Checks .env exists, ENCRYPTION_KEY set, DB file accessible | No       |
+| 2   | StartServer         | Imports startServer() from #api/server.js, runs it         | No       |
 
 ## Feature Composition
 
 ```typescript
 // cli/feature.ts — top-level compositor
 const CliFeature = createFeature({
-    name: "Cli",
-    dependencies: [
-        StepRunnerFeature,
-        InitCommandFeature,    // pulls in all init step features
-        StartCommandFeature,   // pulls in start step features
-    ],
-    register() {}
+  name: "Cli",
+  dependencies: [
+    StepRunnerFeature,
+    InitCommandFeature, // pulls in all init step features
+    StartCommandFeature // pulls in start step features
+  ],
+  register() {}
 });
 
 // commands/init/feature.ts
 const InitCommandFeature = createFeature({
-    name: "Cli/InitCommand",
-    dependencies: [
-        StepRunnerFeature,
-        EnsureDataDirectoryStepFeature,
-        RunMigrationsStepFeature,
-        GenerateEncryptionKeyStepFeature,
-        SelectPortStepFeature,
-        CreateAdminUserStepFeature,
-        WriteEnvFileStepFeature,
-        PrintNextStepsStepFeature,
-    ],
-    register(container) {
-        container.register(InitCommand).inSingletonScope();
-    }
+  name: "Cli/InitCommand",
+  dependencies: [
+    StepRunnerFeature,
+    EnsureDataDirectoryStepFeature,
+    RunMigrationsStepFeature,
+    GenerateEncryptionKeyStepFeature,
+    SelectPortStepFeature,
+    CreateAdminUserStepFeature,
+    WriteEnvFileStepFeature,
+    PrintNextStepsStepFeature
+  ],
+  register(container) {
+    container.register(InitCommand).inSingletonScope();
+  }
 });
 ```
 
@@ -322,7 +323,7 @@ const container = createContainer();
 CliFeature.register(container);
 
 // yargs dispatches to command handler, which does:
-const command = container.resolve(InitCommand);  // or StartCommand
+const command = container.resolve(InitCommand); // or StartCommand
 const runner = container.resolve(StepRunner);
 await runner.run(command.steps(), command.context());
 ```
@@ -371,22 +372,26 @@ Extract `startServer()` function from current `src/api/server.ts` top-level code
 ## Testing
 
 Each step independently testable:
+
 - Mock dependencies via DI
 - Test execute() returns correct StepResult
 - Test rollback() where applicable
 - Test context.results flow between steps
 
 Command tests:
+
 - steps() returns correct step instances in correct order
 - context() returns valid IStepContext
 
 StepRunner tests:
+
 - Executes steps in order
 - Calls rollback on failure (reverse order)
 - Skips rollback for steps without rollback
 - Reports progress
 
 Integration test for full init flow:
+
 - Temp directory for data/env
 - Verify DB created with migrations
 - Verify .env written with correct values

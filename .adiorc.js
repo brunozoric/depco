@@ -9,7 +9,9 @@ export default {
             "concurrently",
             // peer dependency by recharts
             "react-is",
-            "typescript"
+            "typescript",
+            // wired up in a later CLI task (command parsing not yet implemented)
+            "yargs"
         ],
         devDependencies: true,
         peerDependencies: true
