@@ -2,7 +2,7 @@ import { createFeature } from "#shared/index.js";
 import { ProjectListPresenter as ProjectListPresenterAbstraction } from "./abstractions/ProjectListPresenter.js";
 import { ProjectListPresenter } from "./ProjectListPresenter.js";
 import { ProjectsUseCasesFeature } from "../useCases/feature.js";
-import { WebSocketFeature } from "../../../websocket/feature.js";
+import { WebSocketFeature } from "../../../infrastructure/WebSocket/feature.js";
 import { FilesystemFeature } from "../../../features/Filesystem/feature.js";
 import { TeamFilterFeature } from "../../../features/TeamFilter/feature.js";
 

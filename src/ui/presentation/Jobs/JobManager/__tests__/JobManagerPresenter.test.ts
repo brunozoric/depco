@@ -7,14 +7,14 @@ import {
     deleteJobsRoute,
     listProjectsRoute
 } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
-import { HTTPClientFeature } from "../../../../httpClient/feature.js";
+import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
+import { HTTPClientFeature } from "../../../../infrastructure/HttpClient/feature.js";
 import { JobsFeature } from "../../../../features/Jobs/feature.js";
 import type { JobsGateway } from "../../../../features/Jobs/abstractions/JobsGateway.js";
 import { ProjectsFeature } from "../../../../features/Projects/feature.js";
 import { ProjectsRepository } from "../../../../features/Projects/abstractions/ProjectsRepository.js";
-import { EventBridge } from "../../../../events/abstractions/EventBridge.js";
-import "../../../../events/eventMap.js";
+import { EventBridge } from "../../../../infrastructure/Events/abstractions/EventBridge.js";
+import "../../../../infrastructure/Events/eventMap.js";
 import { LoadAllJobsUseCase as LoadAllJobsUseCaseRegistration } from "../useCases/LoadAllJobsUseCase.js";
 import { CancelJobUseCase as CancelJobUseCaseRegistration } from "../useCases/CancelJobUseCase.js";
 import { DeleteJobsUseCase as DeleteJobsUseCaseRegistration } from "../useCases/DeleteJobsUseCase.js";

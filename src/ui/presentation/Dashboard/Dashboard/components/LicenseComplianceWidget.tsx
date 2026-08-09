@@ -1,9 +1,9 @@
 import type React from "react";
 import { Card, Text, Stack, Group, Badge, Anchor } from "@mantine/core";
-import { navigate } from "#ui/shared/router/router.js";
+import { navigate } from "#ui/infrastructure/Shared/router/router.js";
 import type { DashboardGateway } from "#ui/features/Dashboard/abstractions/DashboardGateway.js";
 import { RISK_TIER_VALUES } from "#shared/licenses/types.js";
-import { RISK_TIER_COLORS } from "#ui/shared/licenses/riskTierColors.js";
+import { RISK_TIER_COLORS } from "#ui/infrastructure/Shared/licenses/riskTierColors.js";
 
 interface LicenseComplianceWidgetProps {
     summary: DashboardGateway.LicenseComplianceSummary | null;

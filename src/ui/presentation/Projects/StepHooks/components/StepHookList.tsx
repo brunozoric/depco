@@ -1,7 +1,7 @@
 import type React from "react";
 import { useState } from "react";
 import { ActionIcon, Badge, Group, Switch, Table, Text } from "@mantine/core";
-import { ConfirmDialog } from "#ui/shared/components/ConfirmDialog.js";
+import { ConfirmDialog } from "#ui/infrastructure/Shared/components/ConfirmDialog.js";
 import type { StepHooksPresenter } from "../abstractions/StepHooksPresenter.js";
 
 const POSITION_ORDER = [

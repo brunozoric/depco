@@ -1,8 +1,8 @@
 import { WebSocketListener as Abstraction } from "./abstractions/WebSocketListener.js";
-import { EventBridge } from "../events/abstractions/EventBridge.js";
-import type { EventName } from "../events/abstractions/EventBridge.js";
-import { AuthRepository } from "../features/Auth/abstractions/AuthRepository.js";
-import "../events/eventMap.js";
+import { EventBridge } from "../Events/abstractions/EventBridge.js";
+import type { EventName } from "../Events/abstractions/EventBridge.js";
+import { AuthRepository } from "../../features/Auth/abstractions/AuthRepository.js";
+import "../Events/eventMap.js";
 
 interface WSMessage {
     type: string;

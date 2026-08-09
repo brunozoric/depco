@@ -8,7 +8,7 @@ import {
     deleteUserRoute,
     forceLogoutUserRoute
 } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { UsersGateway } from "../abstractions/UsersGateway.js";
 import { UsersGateway as UsersGatewayRegistration } from "../UsersGateway.js";
 import type { UserResponse } from "#shared/users/index.js";

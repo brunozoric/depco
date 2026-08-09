@@ -4,7 +4,7 @@ import { JobManagerPresenter } from "./JobManagerPresenter.js";
 import { JobManagerUseCasesFeature } from "./useCases/feature.js";
 import { ProjectsFeature } from "../../../features/Projects/feature.js";
 import { ProjectsUseCasesFeature } from "../../Projects/useCases/feature.js";
-import { WebSocketFeature } from "../../../websocket/feature.js";
+import { WebSocketFeature } from "../../../infrastructure/WebSocket/feature.js";
 
 export interface IJobManagerFeatureExports {
     presenter: JobManagerPresenterAbstraction.Interface;

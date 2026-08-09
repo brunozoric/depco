@@ -51,6 +51,9 @@ Subpath imports via package.json `imports` with conditional resolution:
 - Double quotes, trailing comma: none, arrow parens: avoid
 - Linter: oxlint with TypeScript and React plugins
 - Curly braces always required (`curly: error`)
+- PascalCase for all domain/infrastructure subfolders in `ui/` (features/, presentation/, infrastructure/)
+- Top-level dirs (`ui/`, `api/`, `shared/`, `testing/`) stay lowercase
+- `infrastructure/` groups UI infra: HttpClient, Events, WebSocket, Shared
 
 ## Project Structure
 
@@ -104,7 +107,11 @@ src/
     websocket/        — shared WS event types (WSEventMap, WSEventType)
     index.ts          — DI barrel export
   ui/
-    httpClient/       — HTTPClient DI abstraction (fetch-based, mockable), cleanQuery helper (strips undefined values from query objects to prevent `teamId=undefined` serialization)
+    infrastructure/   — PascalCase infrastructure layer (HttpClient, Events, WebSocket, Shared)
+      HttpClient/     — HTTPClient DI abstraction (fetch-based, mockable), cleanQuery helper (strips undefined values from query objects to prevent `teamId=undefined` serialization)
+      Events/         — EventBridge pub/sub abstraction (IEventBridge: on/off/emit, keyed by IEventMap), eventMap.ts maps WSEventMap onto IEventMap
+      WebSocket/      — WebSocketListener thin transport adapter (connect/disconnect, auto-reconnect with exponential backoff, pushes events into EventBridge)
+      Shared/         — shared UI utilities (di/, router/, components/, notifications/, download/, vulnerabilities/, licenses/)
     features/         — PascalCase folder-per-feature headless layer (Gateways + Repositories). Each folder: abstractions/, implementation, feature.ts.
       Projects/       — ProjectsGateway, ProjectsRepository
       Upgrades/       — UpgradesGateway, UpgradesRepository
@@ -179,7 +186,7 @@ src/
       Dashboard/
         Dashboard/    — Presenter, Provider, DashboardPage (home page `/`, 12 widgets: SummaryCards (total projects, avg health score, worst project with outdated package breakdown, open auto-fix PR count), ProjectHealthTable (clickable score badges open ScoreDetailModal — full-width modal with formula breakdown (base score - vulnerability penalty = final), outdated packages table with per-package score impact, active vulnerabilities with per-item penalty, lazy-loaded detail via GET /api/dashboard/health/:projectId/score-detail, stale-response race guard), HealthTrendChart, VulnerabilityTrendChart (full-width, 4 severity lines, independent 7d/30d/90d/all range toggle, clickable date points drill-down to /vulnerabilities?scannedDate=YYYY-MM-DD), RecentActivityWidget, ScanFreshnessWidget, SecurityOverviewWidget, VulnerabilitySummaryWidget, LicenseComplianceWidget, StalenessSummaryCard, LicenseComplianceSummaryCard, AutoFixSummaryCard (sparkline cards linking to /trends)). Recharts for trend charts. WS auto-refresh on scan:complete and job:status. TeamFilterService integration — reloads on team change.
         useCases/     — LoadDashboardUseCase (parallel fetch of 11 dashboard endpoints including vulnerability summary, license compliance summary, open auto-fix PR count, and 3 sparkline trends), LoadVulnerabilityTrendUseCase (fetches vulnerability trend independently from dashboard load)
-    shared/
+    infrastructure/Shared/ contents:
       di/             — ContainerProvider, useFeature hook
       router/         — minimal browser-history router (no react-router-dom)
       components/     — shared UI components (ConfirmDialog)
@@ -296,7 +303,7 @@ docs/
 - **UpgradeWizardPage** → `/projects/:id/upgrade` route. Dynamic stepper with grouped custom steps (pre/post hooks nested under parent built-in step). SelectPackagesStep loads deps via gateway, shows table with selection + changelog drawer. BranchStep offers branch creation with template-resolved name. UpgradeStep auto-executes and shows streaming logs. RefreshTransientStep offers refresh/skip. CommitStep shows editable commit message from template. "Upgrade Selected" button on project detail navigates here with pre-selected packages via URL params.
 - **VulnerabilitiesPage** → `/vulnerabilities` route. All filters (severity, packageName, source, projectIds, includeDismissed, scannedDate, dependencyType), sort (severity, packageName, projectName), and pagination sync to URL via UrlFilterService. Server-side sort + paginate in JS after enrichment/dependencyType filtering (enrichment requires post-query logic). Bulk actions: dismiss, snooze (7/30/90 days), undismiss, rescan. Export CSV/JSON. Group-by-project toggle (auto-enabled when scannedDate URL param present). `dependencyType` filtering is API-side only (no client-side filtering).
 - **UrlFilterService** → DI singleton (`src/ui/features/UrlFilter/`). Reads/writes URL query params with Zod schema generics. API: `read(schema)` returns typed partial from `window.location.search`, `update(schema, params)` sets/removes params via `pushState` + `popstate` dispatch, `onChange(callback)` subscribes to `popstate`. Standard pattern for all list pages: presenter reads filter values from URL in `vm` getter and `buildFilters`, setters call `update()`, `onChange` triggers reload. Used by: LicensesPresenter, VulnerabilitiesPresenter, PackagesPresenter.
-- **EventBridge** (`src/ui/events/`) → source-agnostic pub/sub abstraction (`IEventBridge`: `on`/`off`/`emit`, keyed by `IEventMap` — extensible via `declare module` augmentation, same pattern as the API-side `EventBus`). Presenters subscribe to events via `EventBridge`, not `WebSocketListener`, directly — decouples presentation from transport. `src/ui/events/eventMap.ts` maps `WSEventMap` onto `IEventMap`.
+- **EventBridge** (`src/ui/infrastructure/Events/`) → source-agnostic pub/sub abstraction (`IEventBridge`: `on`/`off`/`emit`, keyed by `IEventMap` — extensible via `declare module` augmentation, same pattern as the API-side `EventBus`). Presenters subscribe to events via `EventBridge`, not `WebSocketListener`, directly — decouples presentation from transport. `src/ui/events/eventMap.ts` maps `WSEventMap` onto `IEventMap`.
 - **WebSocketListener** → now a thin transport adapter: `connect()`/`disconnect()` only (auto-reconnect with exponential backoff), no `on`/`off` of its own. On each inbound message it parses the JSON envelope and calls `eventBridge.emit(message.type, message.data)` — it pushes events into `EventBridge` rather than exposing subscriptions itself. Presenters that used to call `webSocketListener.on(...)` now call `eventBridge.on(...)`.
 - **ChangelogTracker** (`src/ui/presentation/Shared/ChangelogTracker.ts`) → shared MobX class (`makeAutoObservable`, computed `state`) encapsulating the changelog-streaming subscription logic used by both ChangelogModal and ChangelogDrawer. Subscribes to `changelog:resolved` and `job:status` via `EventBridge` in its constructor, tracks entries/resolving/resolvedCount/totalToResolve for one in-flight package at a time (`startTracking`/`stopTracking`), and `dispose()`s its listeners. Instantiated by ProjectDetailPresenter, PackagesPresenter, and UpgradeWizardPresenter (one instance each) instead of each presenter hand-rolling the WS wiring.
 - **Job notification toasts** → `@mantine/notifications` with `<Notifications position="top-right" />` in App.tsx. `JobNotificationListener` (render-less component) subscribes to `job:status` WS events via `createJobStatusNotificationHandler` factory (receives DI container, resolves ProjectsRepository for project name lookup). Shows toast on terminal statuses (completed/failed/cancelled/interrupted). Branches on `referenceType`: project jobs show project name suffix, package jobs show referenceId (package name). Green/red/yellow color, failed toasts sticky. Click navigates to `/jobs`.
@@ -309,7 +316,7 @@ docs/
 ### UI Rules
 
 - **No inline structural types** — always use named interfaces, even for simple shapes like `Record<string, { label: string }>`. Extract to named interface.
-- **All destructive actions require confirmation dialog** — use `ConfirmDialog` from `#ui/shared/components/ConfirmDialog.js` for any delete/remove action.
+- **All destructive actions require confirmation dialog** — use `ConfirmDialog` from `#ui/infrastructure/Shared/components/ConfirmDialog.js` for any delete/remove action.
 
 ### DI Conventions
 

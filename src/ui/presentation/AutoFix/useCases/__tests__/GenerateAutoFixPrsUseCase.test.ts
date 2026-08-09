@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { generateAutoFixPrRoute } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { AutoFixFeature } from "../../../../features/AutoFix/feature.js";
 import { GenerateAutoFixPrsUseCase } from "../abstractions/GenerateAutoFixPrsUseCase.js";
 import { GenerateAutoFixPrsUseCase as GenerateAutoFixPrsUseCaseRegistration } from "../GenerateAutoFixPrsUseCase.js";

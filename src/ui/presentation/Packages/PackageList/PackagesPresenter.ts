@@ -6,8 +6,8 @@ import { PackagesRepository } from "../../../features/Packages/abstractions/Pack
 import { PackagesGateway } from "../../../features/Packages/abstractions/PackagesGateway.js";
 import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
 import { UpgradesGateway } from "../../../features/Upgrades/abstractions/UpgradesGateway.js";
-import { EventBridge } from "../../../events/abstractions/EventBridge.js";
-import "../../../events/eventMap.js";
+import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBridge.js";
+import "../../../infrastructure/Events/eventMap.js";
 import { ChangelogTracker } from "../../Shared/ChangelogTracker.js";
 import type { IStartChangelogTrackingInput } from "../../Shared/ChangelogTracker.js";
 import { TeamFilterService } from "../../../features/TeamFilter/abstractions/TeamFilterService.js";

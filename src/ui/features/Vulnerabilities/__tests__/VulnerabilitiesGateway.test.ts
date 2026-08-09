@@ -5,7 +5,7 @@ import {
     bulkVulnerabilitiesRoute,
     bulkRescanVulnerabilitiesRoute
 } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { VulnerabilitiesGateway } from "../abstractions/VulnerabilitiesGateway.js";
 import { VulnerabilitiesGateway as VulnerabilitiesGatewayRegistration } from "../VulnerabilitiesGateway.js";
 

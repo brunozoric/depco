@@ -5,7 +5,7 @@ import {
     listLicenseViolationsRoute,
     getLicenseSummaryRoute
 } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { LicensesFeature } from "../../../../features/Licenses/feature.js";
 import { LicensesRepository } from "../../../../features/Licenses/abstractions/LicensesRepository.js";
 import { LoadLicensesUseCase } from "../abstractions/LoadLicensesUseCase.js";

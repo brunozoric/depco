@@ -6,7 +6,7 @@ import {
     upsertScanScheduleDefaultRoute
 } from "#shared/routes/index.js";
 import { ScanSchedulesGateway as Abstraction } from "./abstractions/ScanSchedulesGateway.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 
 class ScanSchedulesGatewayImpl implements Abstraction.Interface {
     public constructor(private readonly httpClient: HTTPClient.Interface) {}

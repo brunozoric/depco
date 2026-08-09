@@ -1,7 +1,7 @@
 import { computed, makeAutoObservable, runInAction } from "mobx";
-import type { EventBridge } from "../../events/abstractions/EventBridge.js";
-import "../../events/eventMap.js";
-import { compareVersions } from "../../shared/versionCompare.js";
+import type { EventBridge } from "../../infrastructure/Events/abstractions/EventBridge.js";
+import "../../infrastructure/Events/eventMap.js";
+import { compareVersions } from "../../infrastructure/Shared/versionCompare.js";
 import type { IChangelogEntry } from "#shared/changelog/types.js";
 
 export interface IChangelogTrackingState {

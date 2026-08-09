@@ -9,8 +9,8 @@ import {
     resetSecuritySettingsRoute,
     listPmSettingsRoute
 } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
-import { HTTPClientFeature } from "../../../../httpClient/feature.js";
+import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
+import { HTTPClientFeature } from "../../../../infrastructure/HttpClient/feature.js";
 import { PmSettingsFeature } from "../../../../features/Settings/feature.js";
 import { SecuritySettingsUseCasesFeature } from "../../useCases/feature.js";
 import { PmSettingsPresenter } from "../abstractions/PmSettingsPresenter.js";

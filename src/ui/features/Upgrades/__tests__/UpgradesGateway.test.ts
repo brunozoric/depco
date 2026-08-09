@@ -10,7 +10,7 @@ import {
     clearCacheRoute,
     clearPackageCacheRoute
 } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { UpgradesGateway } from "../abstractions/UpgradesGateway.js";
 import { UpgradesGateway as UpgradesGatewayRegistration } from "../UpgradesGateway.js";
 

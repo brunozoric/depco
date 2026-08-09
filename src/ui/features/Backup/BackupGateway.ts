@@ -1,5 +1,5 @@
 import { BackupGateway as Abstraction } from "./abstractions/BackupGateway.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { exportBackupRoute, importBackupRoute } from "#shared/routes/index.js";
 
 class BackupGatewayImpl implements Abstraction.Interface {

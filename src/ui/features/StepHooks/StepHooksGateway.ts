@@ -5,7 +5,7 @@ import {
     deleteStepHookRoute
 } from "#shared/routes/index.js";
 import { StepHooksGateway as Abstraction } from "./abstractions/StepHooksGateway.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 
 class StepHooksGatewayImpl implements Abstraction.Interface {
     public constructor(private readonly httpClient: HTTPClient.Interface) {}

@@ -4,8 +4,8 @@ import { LoadDependencyGraphUseCase } from "../useCases/abstractions/LoadDepende
 import { RefreshDependencyGraphUseCase } from "../useCases/abstractions/RefreshDependencyGraphUseCase.js";
 import { DependencyGraphRepository } from "../../../features/DependencyGraph/abstractions/DependencyGraphRepository.js";
 import { DependencyGraphGateway } from "../../../features/DependencyGraph/abstractions/DependencyGraphGateway.js";
-import { EventBridge } from "../../../events/abstractions/EventBridge.js";
-import "../../../events/eventMap.js";
+import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBridge.js";
+import "../../../infrastructure/Events/eventMap.js";
 
 class DependencyGraphPresenterImpl implements Abstraction.Interface {
     private loading = true;

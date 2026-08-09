@@ -4,7 +4,7 @@ import { createContainer } from "#shared/index.js";
 import { defineRoute } from "#shared/routing/index.js";
 import { HTTPClient } from "../abstractions/HTTPClient.js";
 import { HTTPClient as HTTPClientRegistration } from "../HTTPClient.js";
-import { AuthRepository } from "../../features/Auth/abstractions/AuthRepository.js";
+import { AuthRepository } from "../../../features/Auth/abstractions/AuthRepository.js";
 
 function createFakeAuthRepository(token: string | null = null): AuthRepository.Interface {
     return {

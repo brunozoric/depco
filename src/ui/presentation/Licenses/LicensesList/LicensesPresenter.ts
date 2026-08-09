@@ -5,8 +5,8 @@ import { ManagePolicyRulesUseCase } from "../useCases/abstractions/ManagePolicyR
 import { ScanLicensesUseCase } from "../useCases/abstractions/ScanLicensesUseCase.js";
 import { LicensesRepository } from "../../../features/Licenses/abstractions/LicensesRepository.js";
 import { LicensesGateway } from "../../../features/Licenses/abstractions/LicensesGateway.js";
-import { EventBridge } from "../../../events/abstractions/EventBridge.js";
-import "../../../events/eventMap.js";
+import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBridge.js";
+import "../../../infrastructure/Events/eventMap.js";
 import { LoadProjectsUseCase } from "../../Projects/useCases/abstractions/LoadProjectsUseCase.js";
 import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
 import { TeamFilterService } from "../../../features/TeamFilter/abstractions/TeamFilterService.js";

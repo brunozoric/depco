@@ -1,5 +1,5 @@
 import { FilesystemGateway as Abstraction } from "./abstractions/FilesystemGateway.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { browseFilesystemRoute, scanFilesystemRoute } from "#shared/routes/index.js";
 
 class FilesystemGatewayImpl implements Abstraction.Interface {

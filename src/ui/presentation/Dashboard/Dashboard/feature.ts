@@ -2,7 +2,7 @@ import { createFeature } from "#shared/index.js";
 import { DashboardPresenter as DashboardPresenterAbstraction } from "./abstractions/DashboardPresenter.js";
 import { DashboardPresenter } from "./DashboardPresenter.js";
 import { DashboardUseCasesFeature } from "../useCases/feature.js";
-import { WebSocketFeature } from "../../../websocket/feature.js";
+import { WebSocketFeature } from "../../../infrastructure/WebSocket/feature.js";
 import { TeamFilterFeature } from "../../../features/TeamFilter/feature.js";
 
 export interface IDashboardPresentationFeatureExports {

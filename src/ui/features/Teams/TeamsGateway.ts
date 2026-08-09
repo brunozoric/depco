@@ -1,5 +1,5 @@
 import { TeamsGateway as Abstraction } from "./abstractions/TeamsGateway.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import {
     listTeamsRoute,
     createTeamRoute,

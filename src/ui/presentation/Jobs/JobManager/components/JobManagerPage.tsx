@@ -21,8 +21,8 @@ import {
     Title
 } from "@mantine/core";
 import { observer } from "mobx-react-lite";
-import { navigate } from "#ui/shared/router/router.js";
-import { ConfirmDialog } from "#ui/shared/components/ConfirmDialog.js";
+import { navigate } from "#ui/infrastructure/Shared/router/router.js";
+import { ConfirmDialog } from "#ui/infrastructure/Shared/components/ConfirmDialog.js";
 import type { JobManagerPresenter } from "../abstractions/JobManagerPresenter.js";
 
 interface JobManagerPageProps {

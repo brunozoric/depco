@@ -1,7 +1,7 @@
 import type React from "react";
 import { useEffect, useState } from "react";
 import { Alert, PasswordInput, Stack, Text, TextInput, Textarea } from "@mantine/core";
-import { useContainer } from "../../../../shared/di/ContainerProvider.js";
+import { useContainer } from "../../../../infrastructure/Shared/di/ContainerProvider.js";
 import { AppSettingsGateway } from "../../../../features/AppSettings/abstractions/AppSettingsGateway.js";
 import { AppSettingsRepository } from "../../../../features/AppSettings/abstractions/AppSettingsRepository.js";
 

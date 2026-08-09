@@ -1,5 +1,5 @@
 import { TrendsGateway as Abstraction } from "./abstractions/TrendsGateway.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import type { DashboardGateway } from "../Dashboard/abstractions/DashboardGateway.js";
 import {
     dashboardStalenessTrendRoute,
@@ -7,7 +7,7 @@ import {
     dashboardAutoFixTrendRoute,
     dashboardDependencyChangesRoute
 } from "#shared/routes/index.js";
-import { cleanQuery } from "../../httpClient/cleanQuery.js";
+import { cleanQuery } from "../../infrastructure/HttpClient/cleanQuery.js";
 
 type SparklineTrendDaysQuery = "7" | "30" | "90" | undefined;
 

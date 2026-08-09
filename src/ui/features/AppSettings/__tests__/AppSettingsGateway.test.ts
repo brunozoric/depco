@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { listAppSettingsRoute, upsertAppSettingRoute } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { AppSettingsGateway } from "../abstractions/AppSettingsGateway.js";
 import { AppSettingsGateway as AppSettingsGatewayRegistration } from "../AppSettingsGateway.js";
 

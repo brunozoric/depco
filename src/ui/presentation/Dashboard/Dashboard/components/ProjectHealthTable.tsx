@@ -1,6 +1,6 @@
 import type React from "react";
 import { Table, Badge, Text } from "@mantine/core";
-import { navigate } from "#ui/shared/router/router.js";
+import { navigate } from "#ui/infrastructure/Shared/router/router.js";
 import type { DashboardGateway } from "#ui/features/Dashboard/abstractions/DashboardGateway.js";
 
 interface ProjectHealthTableProps {

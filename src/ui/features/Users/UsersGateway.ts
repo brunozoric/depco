@@ -1,6 +1,6 @@
 import { UsersGateway as Abstraction } from "./abstractions/UsersGateway.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
-import { cleanQuery } from "../../httpClient/cleanQuery.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
+import { cleanQuery } from "../../infrastructure/HttpClient/cleanQuery.js";
 import {
     listUsersRoute,
     getUserRoute,

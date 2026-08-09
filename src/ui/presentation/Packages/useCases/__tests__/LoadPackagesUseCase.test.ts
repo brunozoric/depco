@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { listPackagesRoute } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { PackagesGateway as PackagesGatewayRegistration } from "../../../../features/Packages/PackagesGateway.js";
 import { PackagesRepository } from "../../../../features/Packages/abstractions/PackagesRepository.js";
 import { PackagesRepository as PackagesRepositoryRegistration } from "../../../../features/Packages/PackagesRepository.js";

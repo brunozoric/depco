@@ -3,10 +3,10 @@ import { UpgradeWizardPresenter as UpgradeWizardPresenterAbstraction } from "./a
 import { UpgradeWizardPresenter } from "./UpgradeWizardPresenter.js";
 import { UpgradeSessionsGateway } from "../../../features/UpgradeSessions/UpgradeSessionsGateway.js";
 import { UpgradeSessionsRepository } from "../../../features/UpgradeSessions/UpgradeSessionsRepository.js";
-import { HTTPClientFeature } from "../../../httpClient/feature.js";
+import { HTTPClientFeature } from "../../../infrastructure/HttpClient/feature.js";
 import { ProjectsFeature } from "../../../features/Projects/feature.js";
 import { ProjectsUseCasesFeature } from "../useCases/feature.js";
-import { WebSocketFeature } from "../../../websocket/feature.js";
+import { WebSocketFeature } from "../../../infrastructure/WebSocket/feature.js";
 import { AppSettingsFeature } from "../../../features/AppSettings/feature.js";
 
 export interface IUpgradeWizardFeatureExports {

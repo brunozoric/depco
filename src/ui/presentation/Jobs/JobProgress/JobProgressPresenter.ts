@@ -3,8 +3,8 @@ import { JobProgressPresenter as Abstraction } from "./abstractions/JobProgressP
 import { GetJobUseCase } from "../../Upgrades/useCases/abstractions/GetJobUseCase.js";
 import { GetJobsUseCase } from "../../Upgrades/useCases/abstractions/GetJobsUseCase.js";
 import { UpgradesRepository } from "../../../features/Upgrades/abstractions/UpgradesRepository.js";
-import { EventBridge } from "../../../events/abstractions/EventBridge.js";
-import "../../../events/eventMap.js";
+import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBridge.js";
+import "../../../infrastructure/Events/eventMap.js";
 
 class JobProgressPresenterImpl implements Abstraction.Interface {
     private currentReferenceId: string | null = null;
