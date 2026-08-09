@@ -25,6 +25,7 @@
 ### Task 1: Config types + defineConfig + Zod schema + package.json exports
 
 **Files:**
+
 - Create: `src/shared/config/types.ts`
 - Create: `src/shared/config/defineConfig.ts`
 - Create: `src/shared/config/schema.ts`
@@ -33,6 +34,7 @@
 - Modify: `package.json` (add `exports` field)
 
 **Interfaces:**
+
 - Consumes: `RISK_TIER_VALUES`, `LicenseRiskTier` from `#shared/licenses/types.js`, `VULNERABILITY_SEVERITIES`, `VulnerabilitySeverity` from `#shared/vulnerabilities/types.js`, `z` from `zod`
 - Produces: `IDepcoConfig`, `IScanConfig`, `ILicenseScanConfig`, `IVulnerabilityScanConfig` interfaces, `defineConfig(config: IDepcoConfig): IDepcoConfig` function, `depcoConfigSchema` Zod schema
 
@@ -44,60 +46,60 @@ import { describe, it, expect } from "vitest";
 import { depcoConfigSchema } from "../schema.js";
 
 describe("depcoConfigSchema", () => {
-    it("accepts empty config", () => {
-        const result = depcoConfigSchema.parse({});
-        expect(result).toEqual({});
-    });
+  it("accepts empty config", () => {
+    const result = depcoConfigSchema.parse({});
+    expect(result).toEqual({});
+  });
 
-    it("accepts full config", () => {
-        const result = depcoConfigSchema.parse({
-            scan: {
-                license: {
-                    allowedRiskTiers: ["permissive", "weak-copyleft"],
-                    ignoredPackages: ["some-pkg"]
-                },
-                vulnerability: {
-                    maxSeverity: "moderate",
-                    ignoredPackages: ["old-pkg"]
-                },
-                ignoredPackages: ["internal"],
-                registryUrl: "https://custom.registry.com"
-            }
-        });
-        expect(result.scan?.license?.allowedRiskTiers).toEqual(["permissive", "weak-copyleft"]);
-        expect(result.scan?.vulnerability?.maxSeverity).toBe("moderate");
+  it("accepts full config", () => {
+    const result = depcoConfigSchema.parse({
+      scan: {
+        license: {
+          allowedRiskTiers: ["permissive", "weak-copyleft"],
+          ignoredPackages: ["some-pkg"]
+        },
+        vulnerability: {
+          maxSeverity: "moderate",
+          ignoredPackages: ["old-pkg"]
+        },
+        ignoredPackages: ["internal"],
+        registryUrl: "https://custom.registry.com"
+      }
     });
+    expect(result.scan?.license?.allowedRiskTiers).toEqual(["permissive", "weak-copyleft"]);
+    expect(result.scan?.vulnerability?.maxSeverity).toBe("moderate");
+  });
 
-    it("accepts config with only scan.license", () => {
-        const result = depcoConfigSchema.parse({
-            scan: { license: { allowedRiskTiers: ["permissive"] } }
-        });
-        expect(result.scan?.license?.allowedRiskTiers).toEqual(["permissive"]);
+  it("accepts config with only scan.license", () => {
+    const result = depcoConfigSchema.parse({
+      scan: { license: { allowedRiskTiers: ["permissive"] } }
     });
+    expect(result.scan?.license?.allowedRiskTiers).toEqual(["permissive"]);
+  });
 
-    it("rejects invalid risk tier", () => {
-        expect(() =>
-            depcoConfigSchema.parse({
-                scan: { license: { allowedRiskTiers: ["invalid-tier"] } }
-            })
-        ).toThrow();
-    });
+  it("rejects invalid risk tier", () => {
+    expect(() =>
+      depcoConfigSchema.parse({
+        scan: { license: { allowedRiskTiers: ["invalid-tier"] } }
+      })
+    ).toThrow();
+  });
 
-    it("rejects invalid severity", () => {
-        expect(() =>
-            depcoConfigSchema.parse({
-                scan: { vulnerability: { maxSeverity: "invalid" } }
-            })
-        ).toThrow();
-    });
+  it("rejects invalid severity", () => {
+    expect(() =>
+      depcoConfigSchema.parse({
+        scan: { vulnerability: { maxSeverity: "invalid" } }
+      })
+    ).toThrow();
+  });
 
-    it("rejects invalid registry URL", () => {
-        expect(() =>
-            depcoConfigSchema.parse({
-                scan: { registryUrl: "not-a-url" }
-            })
-        ).toThrow();
-    });
+  it("rejects invalid registry URL", () => {
+    expect(() =>
+      depcoConfigSchema.parse({
+        scan: { registryUrl: "not-a-url" }
+      })
+    ).toThrow();
+  });
 });
 ```
 
@@ -115,24 +117,24 @@ import type { LicenseRiskTier } from "../licenses/types.js";
 import type { VulnerabilitySeverity } from "../vulnerabilities/types.js";
 
 export interface ILicenseScanConfig {
-    allowedRiskTiers?: LicenseRiskTier[];
-    ignoredPackages?: string[];
+  allowedRiskTiers?: LicenseRiskTier[];
+  ignoredPackages?: string[];
 }
 
 export interface IVulnerabilityScanConfig {
-    maxSeverity?: VulnerabilitySeverity;
-    ignoredPackages?: string[];
+  maxSeverity?: VulnerabilitySeverity;
+  ignoredPackages?: string[];
 }
 
 export interface IScanConfig {
-    license?: ILicenseScanConfig;
-    vulnerability?: IVulnerabilityScanConfig;
-    ignoredPackages?: string[];
-    registryUrl?: string;
+  license?: ILicenseScanConfig;
+  vulnerability?: IVulnerabilityScanConfig;
+  ignoredPackages?: string[];
+  registryUrl?: string;
 }
 
 export interface IDepcoConfig {
-    scan?: IScanConfig;
+  scan?: IScanConfig;
 }
 ```
 
@@ -145,24 +147,24 @@ import { RISK_TIER_VALUES } from "../licenses/types.js";
 import { VULNERABILITY_SEVERITIES } from "../vulnerabilities/types.js";
 
 const licenseScanConfigSchema = z.object({
-    allowedRiskTiers: z.array(z.enum(RISK_TIER_VALUES)).optional(),
-    ignoredPackages: z.array(z.string()).optional()
+  allowedRiskTiers: z.array(z.enum(RISK_TIER_VALUES)).optional(),
+  ignoredPackages: z.array(z.string()).optional()
 });
 
 const vulnerabilityScanConfigSchema = z.object({
-    maxSeverity: z.enum(VULNERABILITY_SEVERITIES).optional(),
-    ignoredPackages: z.array(z.string()).optional()
+  maxSeverity: z.enum(VULNERABILITY_SEVERITIES).optional(),
+  ignoredPackages: z.array(z.string()).optional()
 });
 
 const scanConfigSchema = z.object({
-    license: licenseScanConfigSchema.optional(),
-    vulnerability: vulnerabilityScanConfigSchema.optional(),
-    ignoredPackages: z.array(z.string()).optional(),
-    registryUrl: z.string().url().optional()
+  license: licenseScanConfigSchema.optional(),
+  vulnerability: vulnerabilityScanConfigSchema.optional(),
+  ignoredPackages: z.array(z.string()).optional(),
+  registryUrl: z.string().url().optional()
 });
 
 export const depcoConfigSchema = z.object({
-    scan: scanConfigSchema.optional()
+  scan: scanConfigSchema.optional()
 });
 ```
 
@@ -173,7 +175,7 @@ export const depcoConfigSchema = z.object({
 import type { IDepcoConfig } from "./types.js";
 
 export function defineConfig(config: IDepcoConfig): IDepcoConfig {
-    return config;
+  return config;
 }
 ```
 
@@ -184,10 +186,10 @@ export function defineConfig(config: IDepcoConfig): IDepcoConfig {
 export { defineConfig } from "./defineConfig.js";
 export { depcoConfigSchema } from "./schema.js";
 export type {
-    IDepcoConfig,
-    IScanConfig,
-    ILicenseScanConfig,
-    IVulnerabilityScanConfig
+  IDepcoConfig,
+  IScanConfig,
+  ILicenseScanConfig,
+  IVulnerabilityScanConfig
 } from "./types.js";
 ```
 
@@ -223,6 +225,7 @@ git commit -m "feat(config): add depco.config.ts types, Zod schema, and defineCo
 ### Task 2: LoadConfig step
 
 **Files:**
+
 - Create: `src/cli/commands/scan/steps/LoadConfig/abstractions/LoadConfigStep.ts`
 - Create: `src/cli/commands/scan/steps/LoadConfig/abstractions/index.ts`
 - Create: `src/cli/commands/scan/steps/LoadConfig/LoadConfigStep.ts`
@@ -231,6 +234,7 @@ git commit -m "feat(config): add depco.config.ts types, Zod schema, and defineCo
 - Create: `src/cli/commands/scan/steps/LoadConfig/__tests__/LoadConfigStep.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Step` from `src/cli/runner/abstractions/Step.ts`, `depcoConfigSchema` from `#shared/config/schema.js`, `IDepcoConfig` from `#shared/config/types.js`
 - Produces: `LoadConfigStep` abstraction, `LoadConfigStepFeature`. Stores `context.results.set("config", validatedConfig)` as `IDepcoConfig`.
 
@@ -249,61 +253,61 @@ import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
 import type { IDepcoConfig } from "#shared/config/types.js";
 
 function createTestContext(dataDirectory: string): IStepContext {
-    return {
-        dataDirectory,
-        envFilePath: "./.env",
-        options: {},
-        results: new Map()
-    };
+  return {
+    dataDirectory,
+    envFilePath: "./.env",
+    options: {},
+    results: new Map()
+  };
 }
 
 describe("LoadConfigStep", () => {
-    let workDir: string;
-    let container: ReturnType<typeof createContainer>;
+  let workDir: string;
+  let container: ReturnType<typeof createContainer>;
 
-    beforeEach(() => {
-        workDir = mkdtempSync(join(tmpdir(), "load-config-"));
-        container = createContainer();
-        LoadConfigStepFeature.register(container);
-    });
+  beforeEach(() => {
+    workDir = mkdtempSync(join(tmpdir(), "load-config-"));
+    container = createContainer();
+    LoadConfigStepFeature.register(container);
+  });
 
-    afterEach(() => {
-        rmSync(workDir, { recursive: true, force: true });
-    });
+  afterEach(() => {
+    rmSync(workDir, { recursive: true, force: true });
+  });
 
-    it("loads config from depco.config.ts", async () => {
-        writeFileSync(
-            join(workDir, "depco.config.ts"),
-            `export default { scan: { license: { allowedRiskTiers: ["permissive", "weak-copyleft"] } } };`
-        );
-        const step = container.resolve(LoadConfigStep);
-        const context = createTestContext(workDir);
-        const result = await step.execute(context);
-        expect(result.success).toBe(true);
-        const config = context.results.get("config") as IDepcoConfig;
-        expect(config.scan?.license?.allowedRiskTiers).toEqual(["permissive", "weak-copyleft"]);
-    });
+  it("loads config from depco.config.ts", async () => {
+    writeFileSync(
+      join(workDir, "depco.config.ts"),
+      `export default { scan: { license: { allowedRiskTiers: ["permissive", "weak-copyleft"] } } };`
+    );
+    const step = container.resolve(LoadConfigStep);
+    const context = createTestContext(workDir);
+    const result = await step.execute(context);
+    expect(result.success).toBe(true);
+    const config = context.results.get("config") as IDepcoConfig;
+    expect(config.scan?.license?.allowedRiskTiers).toEqual(["permissive", "weak-copyleft"]);
+  });
 
-    it("returns empty config when no file exists", async () => {
-        const step = container.resolve(LoadConfigStep);
-        const context = createTestContext(workDir);
-        const result = await step.execute(context);
-        expect(result.success).toBe(true);
-        expect(result.skipped).toBe(true);
-        const config = context.results.get("config") as IDepcoConfig;
-        expect(config).toEqual({});
-    });
+  it("returns empty config when no file exists", async () => {
+    const step = container.resolve(LoadConfigStep);
+    const context = createTestContext(workDir);
+    const result = await step.execute(context);
+    expect(result.success).toBe(true);
+    expect(result.skipped).toBe(true);
+    const config = context.results.get("config") as IDepcoConfig;
+    expect(config).toEqual({});
+  });
 
-    it("fails on invalid config", async () => {
-        writeFileSync(
-            join(workDir, "depco.config.ts"),
-            `export default { scan: { license: { allowedRiskTiers: ["invalid-tier"] } } };`
-        );
-        const step = container.resolve(LoadConfigStep);
-        const context = createTestContext(workDir);
-        const result = await step.execute(context);
-        expect(result.success).toBe(false);
-    });
+  it("fails on invalid config", async () => {
+    writeFileSync(
+      join(workDir, "depco.config.ts"),
+      `export default { scan: { license: { allowedRiskTiers: ["invalid-tier"] } } };`
+    );
+    const step = container.resolve(LoadConfigStep);
+    const context = createTestContext(workDir);
+    const result = await step.execute(context);
+    expect(result.success).toBe(false);
+  });
 });
 ```
 
@@ -319,7 +323,7 @@ import type { IStep } from "../../../../../runner/abstractions/Step.js";
 export const LoadConfigStep = createAbstraction<IStep>("Cli/LoadConfigStep");
 
 export namespace LoadConfigStep {
-    export type Interface = IStep;
+  export type Interface = IStep;
 }
 ```
 
@@ -340,33 +344,33 @@ import { depcoConfigSchema } from "#shared/config/schema.js";
 import type { IStepContext, IStepResult } from "../../../../runner/abstractions/Step.js";
 
 class LoadConfigStepImpl implements Abstraction.Interface {
-    public name = "load-config";
-    public description = "Load depco.config.ts";
+  public name = "load-config";
+  public description = "Load depco.config.ts";
 
-    public async execute(context: IStepContext): Promise<IStepResult> {
-        const configPath = join(context.dataDirectory, "depco.config.ts");
+  public async execute(context: IStepContext): Promise<IStepResult> {
+    const configPath = join(context.dataDirectory, "depco.config.ts");
 
-        if (!existsSync(configPath)) {
-            context.results.set("config", {});
-            return { success: true, skipped: true, message: "no depco.config.ts found, using defaults" };
-        }
-
-        try {
-            const module = (await import(pathToFileURL(configPath).href)) as Record<string, unknown>;
-            const raw = module["default"];
-            const config = depcoConfigSchema.parse(raw);
-            context.results.set("config", config);
-            return { success: true, message: "loaded depco.config.ts" };
-        } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
-            return { success: false, message: `Invalid depco.config.ts: ${message}` };
-        }
+    if (!existsSync(configPath)) {
+      context.results.set("config", {});
+      return { success: true, skipped: true, message: "no depco.config.ts found, using defaults" };
     }
+
+    try {
+      const module = (await import(pathToFileURL(configPath).href)) as Record<string, unknown>;
+      const raw = module["default"];
+      const config = depcoConfigSchema.parse(raw);
+      context.results.set("config", config);
+      return { success: true, message: "loaded depco.config.ts" };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { success: false, message: `Invalid depco.config.ts: ${message}` };
+    }
+  }
 }
 
 export const LoadConfigStep = Abstraction.createImplementation({
-    implementation: LoadConfigStepImpl,
-    dependencies: []
+  implementation: LoadConfigStepImpl,
+  dependencies: []
 });
 ```
 
@@ -378,10 +382,10 @@ import { createFeature } from "#shared/index.js";
 import { LoadConfigStep } from "./LoadConfigStep.js";
 
 export const LoadConfigStepFeature = createFeature({
-    name: "Cli/LoadConfigStep",
-    register(container) {
-        container.register(LoadConfigStep).inSingletonScope();
-    }
+  name: "Cli/LoadConfigStep",
+  register(container) {
+    container.register(LoadConfigStep).inSingletonScope();
+  }
 });
 ```
 
@@ -405,6 +409,7 @@ git commit -m "feat(config): add LoadConfig step for scan command"
 ### Task 3: Wire LoadConfig into ScanCommand + update CheckLicenses
 
 **Files:**
+
 - Modify: `src/cli/index.ts` (register tsx for .ts config loading)
 - Modify: `src/cli/commands/scan/ScanCommand.ts` (add LoadConfig as step 2)
 - Modify: `src/cli/commands/scan/feature.ts` (add LoadConfigStepFeature dependency)
@@ -414,6 +419,7 @@ git commit -m "feat(config): add LoadConfig step for scan command"
 - Modify: `AGENTS.md` (document config)
 
 **Interfaces:**
+
 - Consumes: `LoadConfigStep` from `./steps/LoadConfig/index.js`, `IDepcoConfig` from `#shared/config/types.js`
 - Produces: Updated ScanCommand (4 steps), config-aware CheckLicenses
 
@@ -434,6 +440,7 @@ This enables `import("file:///path/to/depco.config.ts")` in the LoadConfig step.
 - [ ] **Step 2: Update ScanCommand to include LoadConfig**
 
 Modify `src/cli/commands/scan/ScanCommand.ts`:
+
 - Add import: `import { LoadConfigStep } from "./steps/LoadConfig/index.js";`
 - Add constructor param: `private loadConfig: Step.Interface` (between detectPackageManager and parseLockfile)
 - Update `steps()`: return `[this.detectPackageManager, this.loadConfig, this.parseLockfile, this.checkLicenses]`
@@ -442,12 +449,14 @@ Modify `src/cli/commands/scan/ScanCommand.ts`:
 - [ ] **Step 3: Update ScanCommandFeature dependencies**
 
 Modify `src/cli/commands/scan/feature.ts`:
+
 - Add import: `import { LoadConfigStepFeature } from "./steps/LoadConfig/index.js";`
 - Add `LoadConfigStepFeature` to dependencies array (between DetectPackageManager and ParseLockfile)
 
 - [ ] **Step 4: Update ScanCommand test**
 
 Modify `src/cli/commands/scan/__tests__/ScanCommand.test.ts`:
+
 - Change step count expectation from 3 to 4
 - Update expected step names: `["detect-package-manager", "load-config", "parse-lockfile", "check-licenses"]`
 
@@ -456,11 +465,13 @@ Modify `src/cli/commands/scan/__tests__/ScanCommand.test.ts`:
 Modify `src/cli/commands/scan/steps/CheckLicenses/CheckLicensesStep.ts`:
 
 Replace the hardcoded `REGISTRY_URL` constant and violation filter. Add import:
+
 ```typescript
 import type { IDepcoConfig } from "#shared/config/types.js";
 ```
 
 In `execute()`, read config from context and use it:
+
 ```typescript
 const config = (context.results.get("config") as IDepcoConfig | undefined) ?? {};
 const allowedTiers = config.scan?.license?.allowedRiskTiers ?? ["permissive"];
@@ -471,19 +482,22 @@ const registryUrl = config.scan?.registryUrl ?? "https://registry.npmjs.org";
 ```
 
 Update `fetchLicense` to accept registryUrl as parameter (instead of module-level constant):
+
 ```typescript
 async function fetchLicense(args: { packageEntry: IPackageEntry; registryUrl: string }): Promise<ILicenseResult> {
 ```
 
 Update `fetchInBatches` similarly:
+
 ```typescript
 async function fetchInBatches(args: { packages: IPackageEntry[]; registryUrl: string }): Promise<ILicenseResult[]> {
 ```
 
 Update violation filter:
+
 ```typescript
 const violations = results.filter(
-    result => !allIgnored.has(result.packageName) && !allowedTiers.includes(result.riskTier)
+  result => !allIgnored.has(result.packageName) && !allowedTiers.includes(result.riskTier)
 );
 ```
 
@@ -495,48 +509,48 @@ Add tests to `src/cli/commands/scan/steps/CheckLicenses/__tests__/CheckLicensesS
 
 ```typescript
 it("respects allowedRiskTiers from config", async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ license: "LGPL-2.1" })
-    }) as unknown as typeof fetch;
+  globalThis.fetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: () => Promise.resolve({ license: "LGPL-2.1" })
+  }) as unknown as typeof fetch;
 
-    const step = container.resolve(CheckLicensesStep);
-    const context = createTestContext([{ name: "lgpl-pkg", version: "1.0.0" }]);
-    context.results.set("config", {
-        scan: { license: { allowedRiskTiers: ["permissive", "weak-copyleft"] } }
-    });
-    const result = await step.execute(context);
-    expect(result.success).toBe(true);
+  const step = container.resolve(CheckLicensesStep);
+  const context = createTestContext([{ name: "lgpl-pkg", version: "1.0.0" }]);
+  context.results.set("config", {
+    scan: { license: { allowedRiskTiers: ["permissive", "weak-copyleft"] } }
+  });
+  const result = await step.execute(context);
+  expect(result.success).toBe(true);
 });
 
 it("filters ignored packages from violations", async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ license: "GPL-3.0" })
-    }) as unknown as typeof fetch;
+  globalThis.fetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: () => Promise.resolve({ license: "GPL-3.0" })
+  }) as unknown as typeof fetch;
 
-    const step = container.resolve(CheckLicensesStep);
-    const context = createTestContext([{ name: "gpl-pkg", version: "1.0.0" }]);
-    context.results.set("config", {
-        scan: { license: { ignoredPackages: ["gpl-pkg"] } }
-    });
-    const result = await step.execute(context);
-    expect(result.success).toBe(true);
+  const step = container.resolve(CheckLicensesStep);
+  const context = createTestContext([{ name: "gpl-pkg", version: "1.0.0" }]);
+  context.results.set("config", {
+    scan: { license: { ignoredPackages: ["gpl-pkg"] } }
+  });
+  const result = await step.execute(context);
+  expect(result.success).toBe(true);
 });
 
 it("filters global ignored packages", async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ license: "GPL-3.0" })
-    }) as unknown as typeof fetch;
+  globalThis.fetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: () => Promise.resolve({ license: "GPL-3.0" })
+  }) as unknown as typeof fetch;
 
-    const step = container.resolve(CheckLicensesStep);
-    const context = createTestContext([{ name: "gpl-pkg", version: "1.0.0" }]);
-    context.results.set("config", {
-        scan: { ignoredPackages: ["gpl-pkg"] }
-    });
-    const result = await step.execute(context);
-    expect(result.success).toBe(true);
+  const step = container.resolve(CheckLicensesStep);
+  const context = createTestContext([{ name: "gpl-pkg", version: "1.0.0" }]);
+  context.results.set("config", {
+    scan: { ignoredPackages: ["gpl-pkg"] }
+  });
+  const result = await step.execute(context);
+  expect(result.success).toBe(true);
 });
 ```
 
@@ -552,12 +566,14 @@ yarn full
 - [ ] **Step 8: Update AGENTS.md**
 
 Add to CLI scan section:
+
 ```
       scan/           — ScanCommand (composes scan steps), steps/ subfolder, feature.ts. Standalone — no server, no DB. Supports depco.config.ts for configuration.
         steps/          — DetectPackageManager, LoadConfig, ParseLockfile, CheckLicenses
 ```
 
 Add to shared section or create new entry:
+
 ```
     config/           — defineConfig() + IDepcoConfig types + Zod schema. Exported via package.json "exports" as @fundus/depco/config.
 ```

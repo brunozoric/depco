@@ -11,18 +11,18 @@ Add TypeScript config file support for the CLI scan command. Users create `depco
 import { defineConfig } from "@fundus/depco/config";
 
 export default defineConfig({
-    scan: {
-        license: {
-            allowedRiskTiers: ["permissive", "weak-copyleft"],
-            ignoredPackages: ["legacy-gpl-thing"]
-        },
-        vulnerability: {
-            maxSeverity: "moderate",
-            ignoredPackages: ["old-but-safe"]
-        },
-        ignoredPackages: ["internal-pkg"],
-        registryUrl: "https://registry.npmjs.org"
-    }
+  scan: {
+    license: {
+      allowedRiskTiers: ["permissive", "weak-copyleft"],
+      ignoredPackages: ["legacy-gpl-thing"]
+    },
+    vulnerability: {
+      maxSeverity: "moderate",
+      ignoredPackages: ["old-but-safe"]
+    },
+    ignoredPackages: ["internal-pkg"],
+    registryUrl: "https://registry.npmjs.org"
+  }
 });
 ```
 
@@ -31,24 +31,24 @@ export default defineConfig({
 ```typescript
 // src/shared/config/types.ts
 interface IDepcoConfig {
-    scan?: IScanConfig;
+  scan?: IScanConfig;
 }
 
 interface IScanConfig {
-    license?: ILicenseScanConfig;
-    vulnerability?: IVulnerabilityScanConfig;
-    ignoredPackages?: string[];
-    registryUrl?: string;
+  license?: ILicenseScanConfig;
+  vulnerability?: IVulnerabilityScanConfig;
+  ignoredPackages?: string[];
+  registryUrl?: string;
 }
 
 interface ILicenseScanConfig {
-    allowedRiskTiers?: LicenseRiskTier[];
-    ignoredPackages?: string[];
+  allowedRiskTiers?: LicenseRiskTier[];
+  ignoredPackages?: string[];
 }
 
 interface IVulnerabilityScanConfig {
-    maxSeverity?: VulnerabilitySeverity;
-    ignoredPackages?: string[];
+  maxSeverity?: VulnerabilitySeverity;
+  ignoredPackages?: string[];
 }
 ```
 
@@ -56,14 +56,14 @@ All fields optional — empty config or missing file means defaults.
 
 ## Defaults
 
-| Field | Default |
-|-------|---------|
-| `scan.license.allowedRiskTiers` | `["permissive"]` |
-| `scan.license.ignoredPackages` | `[]` |
-| `scan.vulnerability.maxSeverity` | `"low"` (fail on anything moderate+) |
-| `scan.vulnerability.ignoredPackages` | `[]` |
-| `scan.ignoredPackages` | `[]` |
-| `scan.registryUrl` | `"https://registry.npmjs.org"` |
+| Field                                | Default                              |
+| ------------------------------------ | ------------------------------------ |
+| `scan.license.allowedRiskTiers`      | `["permissive"]`                     |
+| `scan.license.ignoredPackages`       | `[]`                                 |
+| `scan.vulnerability.maxSeverity`     | `"low"` (fail on anything moderate+) |
+| `scan.vulnerability.ignoredPackages` | `[]`                                 |
+| `scan.ignoredPackages`               | `[]`                                 |
+| `scan.registryUrl`                   | `"https://registry.npmjs.org"`       |
 
 ## defineConfig
 
@@ -71,7 +71,7 @@ Identity function with type narrowing. Located at `src/shared/config/defineConfi
 
 ```typescript
 export function defineConfig(config: IDepcoConfig): IDepcoConfig {
-    return config;
+  return config;
 }
 ```
 
@@ -83,12 +83,12 @@ Add conditional export for the config subpath:
 
 ```json
 {
-    "exports": {
-        "./config": {
-            "source": "./src/shared/config/index.ts",
-            "default": "./dist/shared/config/index.js"
-        }
+  "exports": {
+    "./config": {
+      "source": "./src/shared/config/index.ts",
+      "default": "./dist/shared/config/index.js"
     }
+  }
 }
 ```
 
@@ -112,18 +112,24 @@ Config is external user input — validate with Zod per project convention (all 
 
 ```typescript
 const depcoConfigSchema = z.object({
-    scan: z.object({
-        license: z.object({
-            allowedRiskTiers: z.array(z.enum(RISK_TIER_VALUES)).optional(),
-            ignoredPackages: z.array(z.string()).optional()
-        }).optional(),
-        vulnerability: z.object({
-            maxSeverity: z.enum(VULNERABILITY_SEVERITIES).optional(),
-            ignoredPackages: z.array(z.string()).optional()
-        }).optional(),
-        ignoredPackages: z.array(z.string()).optional(),
-        registryUrl: z.string().url().optional()
-    }).optional()
+  scan: z
+    .object({
+      license: z
+        .object({
+          allowedRiskTiers: z.array(z.enum(RISK_TIER_VALUES)).optional(),
+          ignoredPackages: z.array(z.string()).optional()
+        })
+        .optional(),
+      vulnerability: z
+        .object({
+          maxSeverity: z.enum(VULNERABILITY_SEVERITIES).optional(),
+          ignoredPackages: z.array(z.string()).optional()
+        })
+        .optional(),
+      ignoredPackages: z.array(z.string()).optional(),
+      registryUrl: z.string().url().optional()
+    })
+    .optional()
 });
 ```
 
@@ -131,13 +137,13 @@ const depcoConfigSchema = z.object({
 
 ```typescript
 async function loadConfigFile(projectPath: string): Promise<IDepcoConfig> {
-    const configPath = join(projectPath, "depco.config.ts");
-    if (!existsSync(configPath)) {
-        return {};
-    }
-    const module = await import(pathToFileURL(configPath).href);
-    const raw = module.default;
-    return depcoConfigSchema.parse(raw);
+  const configPath = join(projectPath, "depco.config.ts");
+  if (!existsSync(configPath)) {
+    return {};
+  }
+  const module = await import(pathToFileURL(configPath).href);
+  const raw = module.default;
+  return depcoConfigSchema.parse(raw);
 }
 ```
 
@@ -166,7 +172,7 @@ const allIgnored = new Set([...licenseIgnored, ...globalIgnored]);
 
 // Filter: skip ignored packages, flag non-allowed tiers
 const violations = results.filter(
-    r => !allIgnored.has(r.packageName) && !allowedTiers.includes(r.riskTier)
+  r => !allIgnored.has(r.packageName) && !allowedTiers.includes(r.riskTier)
 );
 ```
 
