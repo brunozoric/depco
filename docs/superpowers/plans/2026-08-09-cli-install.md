@@ -1463,12 +1463,12 @@ describe("InitCommand", () => {
 ```typescript
 // src/cli/commands/init/abstractions/InitCommand.ts
 import { createAbstraction } from "#shared/index.js";
-import type { ICommand } from "../../abstractions/Command.js";
+import type { Command } from "../../abstractions/Command.js";
 
-export const InitCommand = createAbstraction<ICommand>("Cli/InitCommand");
+export const InitCommand = createAbstraction<Command.Interface>("Cli/InitCommand");
 
 export namespace InitCommand {
-    export type Interface = ICommand;
+    export type Interface = Command.Interface;
 }
 ```
 
@@ -1695,15 +1695,194 @@ describe("ValidateEnvironmentStep", () => {
 });
 ```
 
-- [ ] **Step 3: Implement ValidateEnvironment + StartServer steps + StartCommand**
+- [ ] **Step 3: Create ValidateEnvironment abstraction + implementation**
 
-ValidateEnvironmentStep checks .env exists and contains ENCRYPTION_KEY.
+```typescript
+// src/cli/commands/start/steps/ValidateEnvironment/abstractions/ValidateEnvironmentStep.ts
+import { createAbstraction } from "#shared/index.js";
+import type { IStep } from "../../../../../runner/abstractions/Step.js";
 
-StartServerStep calls `startServer()` from `#api/server.js`.
+export const ValidateEnvironmentStep = createAbstraction<IStep>("Cli/ValidateEnvironmentStep");
 
-StartCommand has 2 steps: ValidateEnvironment, StartServer.
+export namespace ValidateEnvironmentStep {
+    export type Interface = IStep;
+}
+```
 
-Follow identical DI structure as init steps.
+```typescript
+// src/cli/commands/start/steps/ValidateEnvironment/abstractions/index.ts
+export { ValidateEnvironmentStep } from "./ValidateEnvironmentStep.js";
+```
+
+```typescript
+// src/cli/commands/start/steps/ValidateEnvironment/ValidateEnvironmentStep.ts
+import { existsSync, readFileSync } from "node:fs";
+import { ValidateEnvironmentStep as Abstraction } from "./abstractions/ValidateEnvironmentStep.js";
+import type { IStepContext, IStepResult } from "../../../../runner/abstractions/Step.js";
+
+class ValidateEnvironmentStepImpl implements Abstraction.Interface {
+    public name = "validate-environment";
+    public description = "Validate environment configuration";
+
+    public async execute(context: IStepContext): Promise<IStepResult> {
+        if (!existsSync(context.envFilePath)) {
+            return { success: false, message: `.env not found at ${context.envFilePath} — run 'depco init' first` };
+        }
+
+        const content = readFileSync(context.envFilePath, "utf-8");
+        if (!content.includes("ENCRYPTION_KEY=")) {
+            return { success: false, message: "ENCRYPTION_KEY missing from .env" };
+        }
+
+        return { success: true };
+    }
+}
+
+export const ValidateEnvironmentStep = Abstraction.createImplementation({
+    implementation: ValidateEnvironmentStepImpl,
+    dependencies: []
+});
+```
+
+```typescript
+// src/cli/commands/start/steps/ValidateEnvironment/feature.ts
+import { createFeature } from "#shared/index.js";
+import { ValidateEnvironmentStep } from "./ValidateEnvironmentStep.js";
+
+export const ValidateEnvironmentStepFeature = createFeature({
+    name: "Cli/ValidateEnvironmentStep",
+    register(container) {
+        container.register(ValidateEnvironmentStep).inSingletonScope();
+    }
+});
+```
+
+```typescript
+// src/cli/commands/start/steps/ValidateEnvironment/index.ts
+export { ValidateEnvironmentStep } from "./abstractions/ValidateEnvironmentStep.js";
+export { ValidateEnvironmentStepFeature } from "./feature.js";
+```
+
+- [ ] **Step 4: Create StartServer abstraction + implementation**
+
+```typescript
+// src/cli/commands/start/steps/StartServer/abstractions/StartServerStep.ts
+import { createAbstraction } from "#shared/index.js";
+import type { IStep } from "../../../../../runner/abstractions/Step.js";
+
+export const StartServerStep = createAbstraction<IStep>("Cli/StartServerStep");
+
+export namespace StartServerStep {
+    export type Interface = IStep;
+}
+```
+
+```typescript
+// src/cli/commands/start/steps/StartServer/abstractions/index.ts
+export { StartServerStep } from "./StartServerStep.js";
+```
+
+```typescript
+// src/cli/commands/start/steps/StartServer/StartServerStep.ts
+import { StartServerStep as Abstraction } from "./abstractions/StartServerStep.js";
+import type { IStepContext, IStepResult } from "../../../../runner/abstractions/Step.js";
+
+class StartServerStepImpl implements Abstraction.Interface {
+    public name = "start-server";
+    public description = "Start the depco server";
+
+    public async execute(_context: IStepContext): Promise<IStepResult> {
+        const { startServer } = await import("#api/server.js");
+        await startServer();
+        return { success: true };
+    }
+}
+
+export const StartServerStep = Abstraction.createImplementation({
+    implementation: StartServerStepImpl,
+    dependencies: []
+});
+```
+
+```typescript
+// src/cli/commands/start/steps/StartServer/feature.ts
+import { createFeature } from "#shared/index.js";
+import { StartServerStep } from "./StartServerStep.js";
+
+export const StartServerStepFeature = createFeature({
+    name: "Cli/StartServerStep",
+    register(container) {
+        container.register(StartServerStep).inSingletonScope();
+    }
+});
+```
+
+```typescript
+// src/cli/commands/start/steps/StartServer/index.ts
+export { StartServerStep } from "./abstractions/StartServerStep.js";
+export { StartServerStepFeature } from "./feature.js";
+```
+
+- [ ] **Step 5: Create StartCommand abstraction + implementation**
+
+```typescript
+// src/cli/commands/start/abstractions/StartCommand.ts
+import { createAbstraction } from "#shared/index.js";
+import type { Command } from "../../abstractions/Command.js";
+
+export const StartCommand = createAbstraction<Command.Interface>("Cli/StartCommand");
+
+export namespace StartCommand {
+    export type Interface = Command.Interface;
+}
+```
+
+```typescript
+// src/cli/commands/start/abstractions/index.ts
+export { StartCommand } from "./StartCommand.js";
+```
+
+```typescript
+// src/cli/commands/start/StartCommand.ts
+import { StartCommand as Abstraction } from "./abstractions/StartCommand.js";
+import { ValidateEnvironmentStep } from "./steps/ValidateEnvironment/index.js";
+import { StartServerStep } from "./steps/StartServer/index.js";
+import type { Step } from "../../runner/abstractions/Step.js";
+
+class StartCommandImpl implements Abstraction.Interface {
+    public name = "start";
+    public description = "Start the depco server";
+
+    public constructor(
+        private validateEnvironment: Step.Interface,
+        private startServer: Step.Interface
+    ) {}
+
+    public steps(): Step.Interface[] {
+        return [this.validateEnvironment, this.startServer];
+    }
+
+    public context(): Step.Context {
+        return {
+            dataDirectory: "./data",
+            envFilePath: "./.env",
+            options: {},
+            results: new Map()
+        };
+    }
+}
+
+export const StartCommand = Abstraction.createImplementation({
+    implementation: StartCommandImpl,
+    dependencies: [ValidateEnvironmentStep, StartServerStep]
+});
+```
+
+```typescript
+// src/cli/commands/start/index.ts
+export { StartCommand } from "./abstractions/StartCommand.js";
+export { StartCommandFeature } from "./feature.js";
+```
 
 - [ ] **Step 4: Create StartCommand feature + barrel**
 
