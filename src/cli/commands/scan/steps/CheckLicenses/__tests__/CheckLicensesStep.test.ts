@@ -81,6 +81,19 @@ describe("CheckLicensesStep", () => {
         expect(result.success).toBe(false);
     });
 
+    it("handles legacy object license format", async () => {
+        globalThis.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ license: { type: "MIT", url: "https://..." } })
+        }) as unknown as typeof fetch;
+
+        const step = container.resolve(CheckLicensesStep);
+        const context = createTestContext([{ name: "legacy-pkg", version: "1.0.0" }]);
+        const result = await step.execute(context);
+
+        expect(result.success).toBe(true);
+    });
+
     it("handles fetch errors gracefully", async () => {
         globalThis.fetch = vi.fn().mockResolvedValue({
             ok: false,

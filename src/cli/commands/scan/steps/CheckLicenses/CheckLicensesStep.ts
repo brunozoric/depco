@@ -18,6 +18,21 @@ interface ILicenseResult {
 const CONCURRENCY = 10;
 const REGISTRY_URL = "https://registry.npmjs.org";
 
+function normalizeLicenseField(rawLicense: unknown): string {
+    if (typeof rawLicense === "string") {
+        return rawLicense;
+    }
+
+    if (rawLicense && typeof rawLicense === "object" && "type" in rawLicense) {
+        const legacyType = (rawLicense as Record<string, unknown>)["type"];
+        if (typeof legacyType === "string") {
+            return legacyType;
+        }
+    }
+
+    return "UNKNOWN";
+}
+
 async function fetchLicense(packageEntry: IPackageEntry): Promise<ILicenseResult> {
     try {
         const response = await fetch(
@@ -31,8 +46,8 @@ async function fetchLicense(packageEntry: IPackageEntry): Promise<ILicenseResult
                 riskTier: "unknown"
             };
         }
-        const data = (await response.json()) as { license?: string };
-        const license = data.license ?? "UNKNOWN";
+        const data = (await response.json()) as Record<string, unknown>;
+        const license = normalizeLicenseField(data["license"]);
         return {
             packageName: packageEntry.name,
             version: packageEntry.version,
