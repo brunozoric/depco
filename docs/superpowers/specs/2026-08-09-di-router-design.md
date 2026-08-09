@@ -89,7 +89,7 @@ function RouterComponent(): React.ReactNode {
 
 Replaces `AppRoutes` function in App.tsx.
 
-## Route Implementations (17 total)
+## Route Implementations (19 total)
 
 Each route follows the DI pattern: abstraction + implementation + registered in domain feature.
 
@@ -114,7 +114,7 @@ presentation/<Domain>/<Page>/
 | 3 | project-detail | `/projects/:projectId` | regex | Projects/ProjectDetail | projectId |
 | 4 | upgrade-wizard | `/projects/:projectId/upgrade` | regex | Projects/UpgradeWizard | projectId |
 | 5 | step-hooks | `/projects/:projectId/step-hooks` | regex | Projects/StepHooks | projectId |
-| 6 | dependency-graph | `/projects/:projectId/graph` | regex | Projects/DependencyGraph (in DependencyGraph domain) | projectId |
+| 6 | dependency-graph | `/projects/:projectId/graph` | regex | DependencyGraph/GraphPage | projectId |
 | 7 | job-manager | `/jobs` | string | Jobs/JobManager | none |
 | 8 | pm-settings | `/settings` | string | Settings/PmSettings | none |
 | 9 | app-settings | `/settings/app` | string | Settings/AppSettings | none |
@@ -129,16 +129,16 @@ presentation/<Domain>/<Page>/
 | 18 | packages | `/packages` | string | Packages/PackageList | none |
 | 19 | users | `/users` | string | Users/UserList | none |
 
-Note: 19 routes (not 17) — the 6 regex routes + 11 string routes + dashboard default = 18 distinct pages + dashboard fallback.
+19 routes total: 12 string paths + 6 regex parameterized paths + 1 dashboard fallback.
 
 ### Registration order
 
-Parameterized routes with more specific paths must register before less specific ones within the same path prefix:
+RouteRegistry uses first-match-wins. More specific paths must register before less specific ones within the same prefix. Note: simple string routes use exact equality in matchPath (not prefix matching), so `/settings` and `/settings/app` don't conflict in practice. Still, register specific-first as a convention:
 - `/projects/:id/upgrade` before `/projects/:id/step-hooks` before `/projects/:id/graph` before `/projects/:id`
 - `/vulnerabilities/:id` before `/vulnerabilities`
 - `/teams/:id` before `/teams`
 - `/settings/app` before `/settings`
-- Dashboard registers last (default/fallback — matches `/` and anything unmatched)
+- Dashboard registers last (default/fallback — matchPath always returns `{}`)
 
 Each domain's feature.ts handles registration during `register(container)`. The domain compositor's `dependencies` array controls feature registration order.
 
