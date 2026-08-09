@@ -224,7 +224,7 @@ export async function createServer(): Promise<FastifyInstance> {
     return app;
 }
 
-async function main(): Promise<void> {
+export async function startServer(): Promise<void> {
     process.on("uncaughtException", error => {
         console.error("Uncaught exception:", error);
     });
@@ -241,7 +241,7 @@ const isMainModule =
     process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
 
 if (isMainModule) {
-    main().catch(error => {
+    startServer().catch(error => {
         console.error("Server failed to start:", error);
         process.exit(1);
     });
