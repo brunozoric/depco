@@ -22,7 +22,7 @@ class WriteEnvFileStepImpl implements Abstraction.Interface {
             ""
         ].join("\n");
 
-        writeFileSync(context.envFilePath, content);
+        writeFileSync(context.envFilePath, content, { mode: 0o600 });
         return { success: true };
     }
 
