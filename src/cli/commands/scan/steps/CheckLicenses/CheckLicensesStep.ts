@@ -1,6 +1,7 @@
 import { CheckLicensesStep as Abstraction } from "./abstractions/CheckLicensesStep.js";
 import { classifyLicenseRiskTier } from "#shared/licenses/types.js";
 import type { LicenseRiskTier } from "#shared/licenses/types.js";
+import type { IDepcoConfig } from "#shared/config/types.js";
 import type { IStepContext, IStepResult } from "../../../../runner/abstractions/Step.js";
 
 interface IPackageEntry {
@@ -16,7 +17,6 @@ interface ILicenseResult {
 }
 
 const CONCURRENCY = 10;
-const REGISTRY_URL = "https://registry.npmjs.org";
 
 function normalizeLicenseField(rawLicense: unknown): string {
     if (typeof rawLicense === "string") {
@@ -33,11 +33,13 @@ function normalizeLicenseField(rawLicense: unknown): string {
     return "UNKNOWN";
 }
 
-async function fetchLicense(packageEntry: IPackageEntry): Promise<ILicenseResult> {
+async function fetchLicense(args: {
+    packageEntry: IPackageEntry;
+    registryUrl: string;
+}): Promise<ILicenseResult> {
+    const { packageEntry, registryUrl } = args;
     try {
-        const response = await fetch(
-            `${REGISTRY_URL}/${packageEntry.name}/${packageEntry.version}`
-        );
+        const response = await fetch(`${registryUrl}/${packageEntry.name}/${packageEntry.version}`);
         if (!response.ok) {
             return {
                 packageName: packageEntry.name,
@@ -64,11 +66,17 @@ async function fetchLicense(packageEntry: IPackageEntry): Promise<ILicenseResult
     }
 }
 
-async function fetchInBatches(packages: IPackageEntry[]): Promise<ILicenseResult[]> {
+async function fetchInBatches(args: {
+    packages: IPackageEntry[];
+    registryUrl: string;
+}): Promise<ILicenseResult[]> {
+    const { packages, registryUrl } = args;
     const results: ILicenseResult[] = [];
     for (let i = 0; i < packages.length; i += CONCURRENCY) {
         const batch = packages.slice(i, i + CONCURRENCY);
-        const batchResults = await Promise.all(batch.map(fetchLicense));
+        const batchResults = await Promise.all(
+            batch.map(packageEntry => fetchLicense({ packageEntry, registryUrl }))
+        );
         results.push(...batchResults);
     }
     return results;
@@ -80,11 +88,19 @@ class CheckLicensesStepImpl implements Abstraction.Interface {
 
     public async execute(context: IStepContext): Promise<IStepResult> {
         const packages = context.results.get("packages") as IPackageEntry[];
+        const config = (context.results.get("config") as IDepcoConfig | undefined) ?? {};
+        const allowedTiers = config.scan?.license?.allowedRiskTiers ?? ["permissive"];
+        const licenseIgnored = config.scan?.license?.ignoredPackages ?? [];
+        const globalIgnored = config.scan?.ignoredPackages ?? [];
+        const allIgnored = new Set([...licenseIgnored, ...globalIgnored]);
+        const registryUrl = config.scan?.registryUrl ?? "https://registry.npmjs.org";
 
         console.log(`\nScanning ${packages.length} packages for license issues...\n`);
 
-        const results = await fetchInBatches(packages);
-        const violations = results.filter(result => result.riskTier !== "permissive");
+        const results = await fetchInBatches({ packages, registryUrl });
+        const violations = results.filter(
+            result => !allIgnored.has(result.packageName) && !allowedTiers.includes(result.riskTier)
+        );
 
         context.results.set("violations", violations);
 

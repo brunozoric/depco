@@ -37,6 +37,7 @@ describe("CheckLicensesStep", () => {
             { name: "react", version: "19.0.0" },
             { name: "typescript", version: "7.0.2" }
         ]);
+        context.results.set("config", {});
         const result = await step.execute(context);
 
         expect(result.success).toBe(true);
@@ -61,6 +62,7 @@ describe("CheckLicensesStep", () => {
             { name: "react", version: "19.0.0" },
             { name: "gpl-package", version: "1.0.0" }
         ]);
+        context.results.set("config", {});
         const result = await step.execute(context);
 
         expect(result.success).toBe(false);
@@ -76,6 +78,7 @@ describe("CheckLicensesStep", () => {
 
         const step = container.resolve(CheckLicensesStep);
         const context = createTestContext([{ name: "mystery", version: "1.0.0" }]);
+        context.results.set("config", {});
         const result = await step.execute(context);
 
         expect(result.success).toBe(false);
@@ -89,6 +92,7 @@ describe("CheckLicensesStep", () => {
 
         const step = container.resolve(CheckLicensesStep);
         const context = createTestContext([{ name: "legacy-pkg", version: "1.0.0" }]);
+        context.results.set("config", {});
         const result = await step.execute(context);
 
         expect(result.success).toBe(true);
@@ -103,8 +107,54 @@ describe("CheckLicensesStep", () => {
 
         const step = container.resolve(CheckLicensesStep);
         const context = createTestContext([{ name: "missing-pkg", version: "0.0.0" }]);
+        context.results.set("config", {});
         const result = await step.execute(context);
 
         expect(result.success).toBe(false);
+    });
+
+    it("respects allowedRiskTiers from config", async () => {
+        globalThis.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ license: "LGPL-2.1" })
+        }) as unknown as typeof fetch;
+
+        const step = container.resolve(CheckLicensesStep);
+        const context = createTestContext([{ name: "lgpl-pkg", version: "1.0.0" }]);
+        context.results.set("config", {
+            scan: { license: { allowedRiskTiers: ["permissive", "weak-copyleft"] } }
+        });
+        const result = await step.execute(context);
+        expect(result.success).toBe(true);
+    });
+
+    it("filters ignored packages from violations", async () => {
+        globalThis.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ license: "GPL-3.0" })
+        }) as unknown as typeof fetch;
+
+        const step = container.resolve(CheckLicensesStep);
+        const context = createTestContext([{ name: "gpl-pkg", version: "1.0.0" }]);
+        context.results.set("config", {
+            scan: { license: { ignoredPackages: ["gpl-pkg"] } }
+        });
+        const result = await step.execute(context);
+        expect(result.success).toBe(true);
+    });
+
+    it("filters global ignored packages", async () => {
+        globalThis.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ license: "GPL-3.0" })
+        }) as unknown as typeof fetch;
+
+        const step = container.resolve(CheckLicensesStep);
+        const context = createTestContext([{ name: "gpl-pkg", version: "1.0.0" }]);
+        context.results.set("config", {
+            scan: { ignoredPackages: ["gpl-pkg"] }
+        });
+        const result = await step.execute(context);
+        expect(result.success).toBe(true);
     });
 });

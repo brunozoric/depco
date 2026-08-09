@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+import { register } from "tsx/esm/api";
+register();
+
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { createContainer, registerFeatures } from "#shared/index.js";

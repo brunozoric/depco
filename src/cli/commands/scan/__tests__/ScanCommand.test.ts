@@ -11,12 +11,13 @@ describe("ScanCommand", () => {
         registerFeatures(container, [ScanCommandFeature]);
     });
 
-    it("returns 3 steps in correct order", () => {
+    it("returns 4 steps in correct order", () => {
         const command = container.resolve(ScanCommand);
         const steps = command.steps();
-        expect(steps).toHaveLength(3);
+        expect(steps).toHaveLength(4);
         expect(steps.map(step => step.name)).toEqual([
             "detect-package-manager",
+            "load-config",
             "parse-lockfile",
             "check-licenses"
         ]);
