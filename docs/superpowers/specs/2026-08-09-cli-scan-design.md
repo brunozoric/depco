@@ -17,6 +17,7 @@ Exit codes: 0 = clean, 1 = violations found.
 ## Architecture
 
 Follows existing CLI DI patterns (Command abstraction + Step abstraction). Standalone — no server, no database. Uses only:
+
 - `LockfileParserService` (zero DI deps, pure file parser)
 - `classifyLicenseRiskTier` from `#shared/licenses/` (pure function)
 - Direct `fetch()` to npm registry (no RegistryCacheService, no DB cache)
@@ -60,6 +61,7 @@ src/cli/commands/scan/
 ### 1. DetectPackageManager
 
 Checks cwd for lockfiles to determine package manager:
+
 - `yarn.lock` → yarn
 - `package-lock.json` → npm
 - `pnpm-lock.yaml` → pnpm
@@ -76,6 +78,7 @@ LockfileParserService has zero DI dependencies — registered via a lightweight 
 ### 3. CheckLicenses
 
 For each package:
+
 1. Fetch license from npm registry via `fetch("https://registry.npmjs.org/<name>/<version>")`
 2. Extract `license` field from response
 3. Classify via `classifyLicenseRiskTier(spdxId)` from `#shared/licenses/types.js`
@@ -84,6 +87,7 @@ For each package:
 Concurrency: batch requests (10 concurrent, matching existing ScanService pattern).
 
 Output to console:
+
 ```
 Scanning 245 packages...
 
@@ -105,11 +109,11 @@ Exit code 1 if any violations. Exit code 0 if all permissive.
 
 ```typescript
 interface IScanStepContext extends IStepContext {
-    // Standard fields inherited: dataDirectory, envFilePath, options, results
-    // results map keys:
-    //   "packageManager" → string (from DetectPackageManager)
-    //   "packages" → Array<{ name: string; version: string }> (from ParseLockfile)
-    //   "violations" → Array<ILicenseViolation> (from CheckLicenses)
+  // Standard fields inherited: dataDirectory, envFilePath, options, results
+  // results map keys:
+  //   "packageManager" → string (from DetectPackageManager)
+  //   "packages" → Array<{ name: string; version: string }> (from ParseLockfile)
+  //   "violations" → Array<ILicenseViolation> (from CheckLicenses)
 }
 ```
 
@@ -118,23 +122,29 @@ Uses existing `IStepContext` — no new interface needed. Step data flows throug
 ## Yargs Registration
 
 ```typescript
-cli = cli.command("scan", "Scan current directory for dependency issues", yargs => {
+cli = cli.command(
+  "scan",
+  "Scan current directory for dependency issues",
+  yargs => {
     return yargs.option("check", {
-        type: "string",
-        description: "Check to run (license)",
-        default: "license"
+      type: "string",
+      description: "Check to run (license)",
+      default: "license"
     });
-}, async argv => {
+  },
+  async argv => {
     const command = container.resolve(ScanCommand);
     const context = command.context();
     context.options["check"] = argv.check;
     await runner.run({ steps: command.steps(), context });
-});
+  }
+);
 ```
 
 ## DI Wiring
 
 ScanCommandFeature depends on:
+
 - StepRunnerFeature (from existing runner)
 - DetectPackageManagerStepFeature
 - ParseLockfileStepFeature (registers LockfileParserService from DependencyGraph)
@@ -147,6 +157,7 @@ ParseLockfileStep needs LockfileParserService — import its feature from `src/a
 ## No New Dependencies
 
 All npm packages already in the project:
+
 - `yargs` (added in CLI install feature)
 - Native `fetch()` (Node 24+, no polyfill needed)
 - `classifyLicenseRiskTier` from `#shared/licenses/`
