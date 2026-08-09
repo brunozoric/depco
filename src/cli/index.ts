@@ -5,6 +5,7 @@ import { createContainer, registerFeatures } from "#shared/index.js";
 import { CliFeature } from "./feature.js";
 import { InitCommand } from "./commands/init/index.js";
 import { StartCommand } from "./commands/start/index.js";
+import { ScanCommand } from "./commands/scan/index.js";
 import { StepRunner } from "./runner/index.js";
 
 const container = createContainer();
@@ -24,7 +25,22 @@ cli = cli.command("start", "Start the depco server", {}, async () => {
     await runner.run({ steps: command.steps(), context: command.context() });
 });
 
-cli.demandCommand(1, "Please specify a command: init or start")
+cli = cli.command(
+    "scan",
+    "Scan current directory for dependency issues",
+    yargs =>
+        yargs.option("check", {
+            type: "string",
+            description: "Check to run (license)",
+            default: "license"
+        }),
+    async () => {
+        const command = container.resolve(ScanCommand);
+        await runner.run({ steps: command.steps(), context: command.context() });
+    }
+);
+
+cli.demandCommand(1, "Please specify a command: init, start, or scan")
     .strict()
     .help()
     .parseAsync()
