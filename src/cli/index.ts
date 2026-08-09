@@ -1,13 +1,27 @@
 #!/usr/bin/env node
-const command = process.argv[2];
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+import { createContainer, registerFeatures } from "#shared/index.js";
+import { CliFeature } from "./feature.js";
+import { InitCommand } from "./commands/init/index.js";
+import { StartCommand } from "./commands/start/index.js";
+import { StepRunner } from "./runner/index.js";
 
-if (command === "init") {
-    const { init } = await import("./init.js");
-    await init();
-} else {
-    console.log("Usage: depco <command>");
-    console.log("");
-    console.log("Commands:");
-    console.log("  init    Create the first admin user");
-    process.exit(1);
-}
+const container = createContainer();
+registerFeatures(container, [CliFeature]);
+
+const runner = container.resolve(StepRunner);
+
+let cli = yargs(hideBin(process.argv));
+
+cli = cli.command("init", "Initialize depco", {}, async () => {
+    const command = container.resolve(InitCommand);
+    await runner.run({ steps: command.steps(), context: command.context() });
+});
+
+cli = cli.command("start", "Start the depco server", {}, async () => {
+    const command = container.resolve(StartCommand);
+    await runner.run({ steps: command.steps(), context: command.context() });
+});
+
+cli.help().parse();
