@@ -51,6 +51,9 @@ Subpath imports via package.json `imports` with conditional resolution:
 - Double quotes, trailing comma: none, arrow parens: avoid
 - Linter: oxlint with TypeScript and React plugins
 - Curly braces always required (`curly: error`)
+- PascalCase for all domain/infrastructure subfolders in `ui/` (features/, presentation/, infrastructure/)
+- Top-level dirs (`ui/`, `api/`, `shared/`, `testing/`) stay lowercase
+- `infrastructure/` groups UI infra: HttpClient, Events, WebSocket, Shared
 
 ## Project Structure
 
@@ -91,8 +94,19 @@ src/
     websocket/        — WebSocketBroadcaster abstraction + Fastify WS plugin
     server.ts         — Fastify setup, migration runner, stale job recovery, job worker loop. Loads `.env` via dotenv. DB path configurable via `DB_PATH` env var (default: `./data/manager.db`). Requires `ENCRYPTION_KEY` env var for token storage
     feature.ts        — API DI compositor (imports and registers all sub-features, no implementation imports)
+  cli/
+    runner/           — StepRunner abstraction + implementation (sequential step execution with rollback on failure), Step abstraction, feature.ts (StepRunnerFeature)
+    commands/
+      abstractions/   — Command abstraction (ICommand: steps(), context())
+      init/           — InitCommand (composes init steps), steps/ subfolder, feature.ts (InitCommandFeature)
+        steps/          — EnsureDataDirectory, RunMigrations, GenerateEncryptionKey, SelectPort, CreateAdminUser, WriteEnvFile, PrintNextSteps — each own abstraction + implementation + feature.ts
+      start/          — StartCommand (composes start steps), steps/ subfolder, feature.ts (StartCommandFeature)
+        steps/          — ValidateEnvironment, StartServer — each own abstraction + implementation + feature.ts
+      index.ts        — barrel: InitCommand/InitCommandFeature, StartCommand/StartCommandFeature, Command
+    feature.ts        — CliFeature compositor (dependencies: StepRunnerFeature, InitCommandFeature, StartCommandFeature; empty register())
+    index.ts          — CLI entry point (`#!/usr/bin/env node`), yargs command wiring for `depco init` / `depco start`
   shared/
-    di/               — createAbstraction, createFeature, createContainer
+    di/               — createAbstraction, createFeature, createContainer, registerFeatures
     routing/          — defineRoute, registerRoute, response helpers (sendOne/sendList/sendNone/sendError), interpolatePath
     routes/           — shared Zod route definitions (projects, jobs, packageManager, cache, settings, appSettings, install, changelogs, packages, upgradeSessions, stepHooks, logs, backup, filesystem, pmSettings, dashboard, scanSchedules, vulnerabilities, licenses, autoFix)
     templates/        — resolveTemplate utility for branch/commit/PR message token replacement (YYYY/MM/DD/BRANCH/PROJECT/COUNT/PACKAGES_TABLE)
@@ -104,7 +118,11 @@ src/
     websocket/        — shared WS event types (WSEventMap, WSEventType)
     index.ts          — DI barrel export
   ui/
-    httpClient/       — HTTPClient DI abstraction (fetch-based, mockable), cleanQuery helper (strips undefined values from query objects to prevent `teamId=undefined` serialization)
+    infrastructure/   — PascalCase infrastructure layer (HttpClient, Events, WebSocket, Shared)
+      HttpClient/     — HTTPClient DI abstraction (fetch-based, mockable), cleanQuery helper (strips undefined values from query objects to prevent `teamId=undefined` serialization)
+      Events/         — EventBridge pub/sub abstraction (IEventBridge: on/off/emit, keyed by IEventMap), eventMap.ts maps WSEventMap onto IEventMap
+      WebSocket/      — WebSocketListener thin transport adapter (connect/disconnect, auto-reconnect with exponential backoff, pushes events into EventBridge)
+      Shared/         — shared UI utilities (di/, router/, components/, notifications/, download/, vulnerabilities/, licenses/)
     features/         — PascalCase folder-per-feature headless layer (Gateways + Repositories). Each folder: abstractions/, implementation, feature.ts.
       Projects/       — ProjectsGateway, ProjectsRepository
       Upgrades/       — UpgradesGateway, UpgradesRepository
@@ -179,7 +197,7 @@ src/
       Dashboard/
         Dashboard/    — Presenter, Provider, DashboardPage (home page `/`, 12 widgets: SummaryCards (total projects, avg health score, worst project with outdated package breakdown, open auto-fix PR count), ProjectHealthTable (clickable score badges open ScoreDetailModal — full-width modal with formula breakdown (base score - vulnerability penalty = final), outdated packages table with per-package score impact, active vulnerabilities with per-item penalty, lazy-loaded detail via GET /api/dashboard/health/:projectId/score-detail, stale-response race guard), HealthTrendChart, VulnerabilityTrendChart (full-width, 4 severity lines, independent 7d/30d/90d/all range toggle, clickable date points drill-down to /vulnerabilities?scannedDate=YYYY-MM-DD), RecentActivityWidget, ScanFreshnessWidget, SecurityOverviewWidget, VulnerabilitySummaryWidget, LicenseComplianceWidget, StalenessSummaryCard, LicenseComplianceSummaryCard, AutoFixSummaryCard (sparkline cards linking to /trends)). Recharts for trend charts. WS auto-refresh on scan:complete and job:status. TeamFilterService integration — reloads on team change.
         useCases/     — LoadDashboardUseCase (parallel fetch of 11 dashboard endpoints including vulnerability summary, license compliance summary, open auto-fix PR count, and 3 sparkline trends), LoadVulnerabilityTrendUseCase (fetches vulnerability trend independently from dashboard load)
-    shared/
+    infrastructure/Shared/ contents:
       di/             — ContainerProvider, useFeature hook
       router/         — minimal browser-history router (no react-router-dom)
       components/     — shared UI components (ConfirmDialog)
@@ -283,6 +301,17 @@ docs/
 - Custom pre/post steps: `project_step_hooks` table stores per-project hook config (position, name, command, executionType, required, enabled). `StepHookService` loads enabled hooks — checks `FileConfigService` first (`.dependency-upgrader.json`), falls back to DB. When file config exists and has `stepHooks`, file hooks take precedence (DB ignored). `stepHooks` is optional in the file schema — a file with only `settings` does not override DB hooks. `UpgradeSessionService.createSession` builds dynamic `stepOrder` array interleaving custom + built-in steps. `CustomStepResolver` executes shell commands/scripts/package-scripts with streaming output. Non-required steps skip gracefully on failure. `StepResolverRegistry.createSessionRegistry()` creates per-session registries. Step hooks CRUD: `GET/POST/PUT/DELETE /api/projects/:id/step-hooks`. List endpoint returns `configSource: "db" | "file"` and `discoveredScripts` (from `PackageJsonService`, filtered by already-configured hook names). UI config page at `/projects/:id/step-hooks` — goes read-only with banner when `configSource === "file"`. Discovered scripts section shows package.json scripts with "Add as hook" button (pre-fills form, disabled when file config active).
 - WebSocket: `@fastify/websocket` plugin at `GET /ws`, `WebSocketBroadcaster` sends typed events to all connected clients. Event types: `scan:progress`, `scan:complete` (includes `warning`), `scan:failed`, `job:status` (includes `referenceId`, `referenceType`), `job:log` (real-time log streaming), `install:complete`, `notification`, `upgrade-session:step-progress`, `upgrade-session:step-complete`, `log:created`, `changelog:resolved` (per-version streaming: `{ packageName, version, content, source }`), `license-scan:progress` (`{ projectId, packageName, current, total }`), `license-scan:complete` (`{ projectId, totalLicenses, violations }`, broadcast by LicenseScanJobExecutor), `auto-fix:progress` (`{ projectId, packageName, step, current, total }`), `auto-fix:complete` (`{ projectId, created, skipped, failed }`, broadcast by AutoFixPrJobExecutor), `transitive-resolve:complete` (`{ projectId, resolved, failed }`, `failed` counts packages whose registry lookup errored during that run, broadcast by TransitiveResolveJobExecutor). `WSJobStatus` includes `type` and `referenceType` fields so UI can distinguish job kinds. `job:log` streams individual lines from `appendLog` — client appends incrementally via `UpgradesRepository.appendJobLog`.
 
+### CLI Layer
+
+- Entry point `src/cli/index.ts` (`#!/usr/bin/env node`, bin name `depco`): builds a DI container via `createContainer()`, wires the whole CLI dependency tree with `registerFeatures(container, [CliFeature])` (walks `dependencies` recursively, registering each feature exactly once — not `CliFeature.register(container)` directly), resolves `StepRunner`, then defines two `yargs` commands, `init` and `start`. Each command handler resolves its `Command` abstraction (`InitCommand` / `StartCommand`) from the container and runs it: `await runner.run({ steps: command.steps(), context: command.context() })`.
+- `Command` abstraction (`src/cli/commands/abstractions/Command.ts`): `ICommand` interface with `steps(): Step.Interface[]` and `context(): Step.Context`. `InitCommand` and `StartCommand` are both `createAbstraction<Command.Interface>(...)` aliases of the same interface, registered under distinct DI tokens (`Cli/InitCommand`, `Cli/StartCommand`).
+- `StepRunner` (`src/cli/runner/`): `IStepRunner.run({ steps, context })` executes `Step.Interface[]` sequentially against a shared mutable `Step.Context`, rolling back already-executed steps (in reverse order, best-effort) if a later step throws. Each `Step.Interface` has `run(context)` and optional `rollback(context)`.
+- `InitCommandFeature` (`src/cli/commands/init/feature.ts`) composes 7 step features via `dependencies` (not manual `.register()` calls): `EnsureDataDirectory`, `RunMigrations`, `GenerateEncryptionKey`, `SelectPort`, `CreateAdminUser`, `WriteEnvFile`, `PrintNextSteps` — each its own DI-wired step in `steps/<StepName>/` (abstraction + implementation + feature.ts). Its own `register()` only binds `InitCommand` itself; the step features are registered by `registerFeatures` walking the tree.
+- `StartCommandFeature` (`src/cli/commands/start/feature.ts`) composes `ValidateEnvironment` and `StartServer` step features the same way; `StartServerStep` wraps the refactored `src/api/server.ts` bootstrap (extracted into a reusable function so both `yarn start` and `depco start` share one code path).
+- `CliFeature` (`src/cli/feature.ts`) is the top-level compositor: `dependencies: [StepRunnerFeature, InitCommandFeature, StartCommandFeature]`, empty `register()` body — it exists purely to be the single entry passed to `registerFeatures`, mirroring the "top-level `feature.ts` composes all sub-features" convention used by `ApiFeature` and `PresentationFeature`, except via `dependencies` (declarative walk) rather than imperative `.register()` calls, since none of its own bindings are needed.
+- `registerFeatures(container, features)` (`src/shared/di/registerFeatures.ts`): DFS over each feature's `dependencies`, calling `feature.register(container)` post-order exactly once per feature (dedup via a `Set`), throws on dependency cycles. Preferred over manual `Feature.register(container)` chains whenever a feature tree is more than one level deep.
+- Package manager detection, DB path (`DB_PATH` env var, default `./data/manager.db`), and `ENCRYPTION_KEY` requirements are unchanged from the API server — `depco init` seeds `data/`, runs migrations, generates the encryption key + `.env`, creates the first admin user, and picks a free port; `depco start` validates the environment then starts the same Fastify server used by `yarn start`.
+
 ### UI Layer (MVP)
 
 - **Gateway** → HTTP calls via `HTTPClient.request(route, args)` with typed route definitions
@@ -296,7 +325,7 @@ docs/
 - **UpgradeWizardPage** → `/projects/:id/upgrade` route. Dynamic stepper with grouped custom steps (pre/post hooks nested under parent built-in step). SelectPackagesStep loads deps via gateway, shows table with selection + changelog drawer. BranchStep offers branch creation with template-resolved name. UpgradeStep auto-executes and shows streaming logs. RefreshTransientStep offers refresh/skip. CommitStep shows editable commit message from template. "Upgrade Selected" button on project detail navigates here with pre-selected packages via URL params.
 - **VulnerabilitiesPage** → `/vulnerabilities` route. All filters (severity, packageName, source, projectIds, includeDismissed, scannedDate, dependencyType), sort (severity, packageName, projectName), and pagination sync to URL via UrlFilterService. Server-side sort + paginate in JS after enrichment/dependencyType filtering (enrichment requires post-query logic). Bulk actions: dismiss, snooze (7/30/90 days), undismiss, rescan. Export CSV/JSON. Group-by-project toggle (auto-enabled when scannedDate URL param present). `dependencyType` filtering is API-side only (no client-side filtering).
 - **UrlFilterService** → DI singleton (`src/ui/features/UrlFilter/`). Reads/writes URL query params with Zod schema generics. API: `read(schema)` returns typed partial from `window.location.search`, `update(schema, params)` sets/removes params via `pushState` + `popstate` dispatch, `onChange(callback)` subscribes to `popstate`. Standard pattern for all list pages: presenter reads filter values from URL in `vm` getter and `buildFilters`, setters call `update()`, `onChange` triggers reload. Used by: LicensesPresenter, VulnerabilitiesPresenter, PackagesPresenter.
-- **EventBridge** (`src/ui/events/`) → source-agnostic pub/sub abstraction (`IEventBridge`: `on`/`off`/`emit`, keyed by `IEventMap` — extensible via `declare module` augmentation, same pattern as the API-side `EventBus`). Presenters subscribe to events via `EventBridge`, not `WebSocketListener`, directly — decouples presentation from transport. `src/ui/events/eventMap.ts` maps `WSEventMap` onto `IEventMap`.
+- **EventBridge** (`src/ui/infrastructure/Events/`) → source-agnostic pub/sub abstraction (`IEventBridge`: `on`/`off`/`emit`, keyed by `IEventMap` — extensible via `declare module` augmentation, same pattern as the API-side `EventBus`). Presenters subscribe to events via `EventBridge`, not `WebSocketListener`, directly — decouples presentation from transport. `src/ui/infrastructure/Events/eventMap.ts` maps `WSEventMap` onto `IEventMap`.
 - **WebSocketListener** → now a thin transport adapter: `connect()`/`disconnect()` only (auto-reconnect with exponential backoff), no `on`/`off` of its own. On each inbound message it parses the JSON envelope and calls `eventBridge.emit(message.type, message.data)` — it pushes events into `EventBridge` rather than exposing subscriptions itself. Presenters that used to call `webSocketListener.on(...)` now call `eventBridge.on(...)`.
 - **ChangelogTracker** (`src/ui/presentation/Shared/ChangelogTracker.ts`) → shared MobX class (`makeAutoObservable`, computed `state`) encapsulating the changelog-streaming subscription logic used by both ChangelogModal and ChangelogDrawer. Subscribes to `changelog:resolved` and `job:status` via `EventBridge` in its constructor, tracks entries/resolving/resolvedCount/totalToResolve for one in-flight package at a time (`startTracking`/`stopTracking`), and `dispose()`s its listeners. Instantiated by ProjectDetailPresenter, PackagesPresenter, and UpgradeWizardPresenter (one instance each) instead of each presenter hand-rolling the WS wiring.
 - **Job notification toasts** → `@mantine/notifications` with `<Notifications position="top-right" />` in App.tsx. `JobNotificationListener` (render-less component) subscribes to `job:status` WS events via `createJobStatusNotificationHandler` factory (receives DI container, resolves ProjectsRepository for project name lookup). Shows toast on terminal statuses (completed/failed/cancelled/interrupted). Branches on `referenceType`: project jobs show project name suffix, package jobs show referenceId (package name). Green/red/yellow color, failed toasts sticky. Click navigates to `/jobs`.
@@ -309,7 +338,7 @@ docs/
 ### UI Rules
 
 - **No inline structural types** — always use named interfaces, even for simple shapes like `Record<string, { label: string }>`. Extract to named interface.
-- **All destructive actions require confirmation dialog** — use `ConfirmDialog` from `#ui/shared/components/ConfirmDialog.js` for any delete/remove action.
+- **All destructive actions require confirmation dialog** — use `ConfirmDialog` from `#ui/infrastructure/Shared/components/ConfirmDialog.js` for any delete/remove action.
 
 ### DI Conventions
 

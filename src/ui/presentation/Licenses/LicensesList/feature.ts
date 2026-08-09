@@ -3,7 +3,7 @@ import { LicensesPresenter as LicensesPresenterAbstraction } from "./abstraction
 import { LicensesPresenter } from "./LicensesPresenter.js";
 import { LicensesUseCasesFeature } from "../useCases/feature.js";
 import { LicensesFeature } from "../../../features/Licenses/feature.js";
-import { WebSocketFeature } from "../../../websocket/feature.js";
+import { WebSocketFeature } from "../../../infrastructure/WebSocket/feature.js";
 import { ProjectsFeature } from "../../../features/Projects/feature.js";
 import { ProjectsUseCasesFeature } from "../../Projects/useCases/feature.js";
 import { TeamFilterFeature } from "../../../features/TeamFilter/feature.js";

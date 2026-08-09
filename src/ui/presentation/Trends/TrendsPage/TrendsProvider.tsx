@@ -1,5 +1,5 @@
 import type React from "react";
-import { useFeature } from "#ui/shared/di/useFeature.js";
+import { useFeature } from "#ui/infrastructure/Shared/di/useFeature.js";
 import { TrendsPageFeature } from "./feature.js";
 import type { TrendsPresenter } from "./abstractions/TrendsPresenter.js";
 

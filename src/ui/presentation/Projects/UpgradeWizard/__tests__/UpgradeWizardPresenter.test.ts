@@ -12,14 +12,14 @@ import {
     getChangelogsRoute,
     reResolveChangelogsRoute
 } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { ProjectsFeature } from "../../../../features/Projects/feature.js";
 import { AppSettingsFeature } from "../../../../features/AppSettings/feature.js";
 import { ProjectsUseCasesFeature } from "../../useCases/feature.js";
 import { UpgradeSessionsGateway } from "../../../../features/UpgradeSessions/UpgradeSessionsGateway.js";
 import { UpgradeSessionsRepository } from "../../../../features/UpgradeSessions/UpgradeSessionsRepository.js";
-import { EventBridge } from "../../../../events/abstractions/EventBridge.js";
-import "../../../../events/eventMap.js";
+import { EventBridge } from "../../../../infrastructure/Events/abstractions/EventBridge.js";
+import "../../../../infrastructure/Events/eventMap.js";
 import { UpgradeWizardPresenter } from "../abstractions/UpgradeWizardPresenter.js";
 import { UpgradeWizardPresenter as UpgradeWizardPresenterRegistration } from "../UpgradeWizardPresenter.js";
 import type { UpgradeSessionsGateway as UpgradeSessionsGatewayNS } from "../../../../features/UpgradeSessions/abstractions/UpgradeSessionsGateway.js";

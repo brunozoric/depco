@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { listLogsRoute, deleteLogsRoute } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { AppLogsGateway } from "../abstractions/AppLogsGateway.js";
 import { AppLogsGateway as AppLogsGatewayRegistration } from "../AppLogsGateway.js";
 

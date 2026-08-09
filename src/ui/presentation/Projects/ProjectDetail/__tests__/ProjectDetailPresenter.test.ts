@@ -23,8 +23,8 @@ import {
     getProjectTeamsRoute,
     setProjectTeamsRoute
 } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
-import { HTTPClientFeature } from "../../../../httpClient/feature.js";
+import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
+import { HTTPClientFeature } from "../../../../infrastructure/HttpClient/feature.js";
 import { ProjectsFeature } from "../../../../features/Projects/feature.js";
 import { UpgradesFeature } from "../../../../features/Upgrades/feature.js";
 import { ScanSchedulesFeature } from "../../../../features/ScanSchedules/index.js";
@@ -34,8 +34,8 @@ import { AutoFixFeature } from "../../../../features/AutoFix/feature.js";
 import { TeamsFeature } from "../../../../features/Teams/feature.js";
 import { TeamFilterFeature } from "../../../../features/TeamFilter/feature.js";
 import { SbomGateway as SbomGatewayAbstraction } from "../../../../features/Sbom/abstractions/SbomGateway.js";
-import { EventBridge } from "../../../../events/abstractions/EventBridge.js";
-import "../../../../events/eventMap.js";
+import { EventBridge } from "../../../../infrastructure/Events/abstractions/EventBridge.js";
+import "../../../../infrastructure/Events/eventMap.js";
 import { LoadProjectsUseCase as LoadProjectsUseCaseRegistration } from "../../useCases/LoadProjectsUseCase.js";
 import { ScanProjectUseCase as ScanProjectUseCaseRegistration } from "../../useCases/ScanProjectUseCase.js";
 import { CheckSecurityUseCase as CheckSecurityUseCaseRegistration } from "../../useCases/CheckSecurityUseCase.js";

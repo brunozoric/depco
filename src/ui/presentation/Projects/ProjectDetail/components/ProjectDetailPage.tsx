@@ -18,9 +18,9 @@ import {
     Title
 } from "@mantine/core";
 import type { UpgradeFilter } from "../abstractions/ProjectDetailPresenter.js";
-import { navigate } from "#ui/shared/router/router.js";
+import { navigate } from "#ui/infrastructure/Shared/router/router.js";
 import { observer } from "mobx-react-lite";
-import { useFeature } from "#ui/shared/di/useFeature.js";
+import { useFeature } from "#ui/infrastructure/Shared/di/useFeature.js";
 import type { ProjectDetailPresenter } from "../abstractions/ProjectDetailPresenter.js";
 import { JobProgressFeature } from "../../../Jobs/JobProgress/feature.js";
 import { JobProgressPanel } from "../../../Jobs/JobProgress/components/JobProgressPanel.js";

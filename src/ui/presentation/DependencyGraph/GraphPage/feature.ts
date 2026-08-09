@@ -3,7 +3,7 @@ import { DependencyGraphPresenter as DependencyGraphPresenterAbstraction } from 
 import { DependencyGraphPresenter } from "./DependencyGraphPresenter.js";
 import { DependencyGraphUseCasesFeature } from "../useCases/feature.js";
 import { DependencyGraphFeature } from "../../../features/DependencyGraph/feature.js";
-import { WebSocketFeature } from "../../../websocket/feature.js";
+import { WebSocketFeature } from "../../../infrastructure/WebSocket/feature.js";
 
 export interface IDependencyGraphPageFeatureExports {
     presenter: DependencyGraphPresenterAbstraction.Interface;

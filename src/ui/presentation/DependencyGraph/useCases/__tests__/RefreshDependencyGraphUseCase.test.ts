@@ -5,7 +5,7 @@ import {
     getDependencyGraphStatsRoute,
     refreshDependencyGraphRoute
 } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { DependencyGraphFeature } from "../../../../features/DependencyGraph/feature.js";
 import { DependencyGraphRepository } from "../../../../features/DependencyGraph/abstractions/DependencyGraphRepository.js";
 import { RefreshDependencyGraphUseCase } from "../abstractions/RefreshDependencyGraphUseCase.js";

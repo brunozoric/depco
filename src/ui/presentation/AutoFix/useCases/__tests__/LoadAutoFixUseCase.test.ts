@@ -4,7 +4,7 @@ import {
     getAutoFixSettingsRoute,
     getProjectAutoFixPullRequestsRoute
 } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { AutoFixFeature } from "../../../../features/AutoFix/feature.js";
 import { AutoFixRepository } from "../../../../features/AutoFix/abstractions/AutoFixRepository.js";
 import { LoadAutoFixUseCase } from "../abstractions/LoadAutoFixUseCase.js";

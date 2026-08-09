@@ -1,5 +1,5 @@
 import { AppLogsGateway as Abstraction } from "./abstractions/AppLogsGateway.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { listLogsRoute, deleteLogsRoute } from "#shared/routes/index.js";
 
 class AppLogsGatewayImpl implements Abstraction.Interface {

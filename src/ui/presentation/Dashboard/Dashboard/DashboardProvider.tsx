@@ -1,5 +1,5 @@
 import type React from "react";
-import { useFeature } from "#ui/shared/di/useFeature.js";
+import { useFeature } from "#ui/infrastructure/Shared/di/useFeature.js";
 import { DashboardPresentationFeature } from "./feature.js";
 import type { DashboardPresenter } from "./abstractions/DashboardPresenter.js";
 

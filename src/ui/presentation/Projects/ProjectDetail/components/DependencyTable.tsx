@@ -2,7 +2,7 @@ import type React from "react";
 import { Badge, Button, Checkbox, Group, Table } from "@mantine/core";
 import { observer } from "mobx-react-lite";
 import type { ProjectDetailPresenter } from "../abstractions/ProjectDetailPresenter.js";
-import { SEVERITY_COLORS } from "#ui/shared/vulnerabilities/severityColors.js";
+import { SEVERITY_COLORS } from "#ui/infrastructure/Shared/vulnerabilities/severityColors.js";
 
 interface DependencyTableProps {
     dependencies: ProjectDetailPresenter.DependencyViewModel[];

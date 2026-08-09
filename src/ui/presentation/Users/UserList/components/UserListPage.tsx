@@ -18,8 +18,8 @@ import {
     Pagination
 } from "@mantine/core";
 import type { UserListPresenter } from "../abstractions/UserListPresenter.js";
-import { ConfirmDialog } from "#ui/shared/components/ConfirmDialog.js";
-import { SortableHeader } from "#ui/shared/components/SortableHeader.js";
+import { ConfirmDialog } from "#ui/infrastructure/Shared/components/ConfirmDialog.js";
+import { SortableHeader } from "#ui/infrastructure/Shared/components/SortableHeader.js";
 import { USER_PERMISSIONS } from "#shared/users/index.js";
 import type { UserPermission } from "#shared/users/index.js";
 

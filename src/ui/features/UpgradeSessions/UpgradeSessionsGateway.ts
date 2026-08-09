@@ -1,6 +1,6 @@
 import { UpgradeSessionsGateway as Abstraction } from "./abstractions/UpgradeSessionsGateway.js";
 import type { IUpgradeSessionResponse } from "./abstractions/UpgradeSessionsGateway.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import {
     createUpgradeSessionRoute,
     getUpgradeSessionRoute,

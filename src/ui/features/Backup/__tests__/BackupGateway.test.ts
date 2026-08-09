@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { exportBackupRoute, importBackupRoute } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { BackupGateway } from "../abstractions/BackupGateway.js";
 import { BackupGateway as BackupGatewayRegistration } from "../BackupGateway.js";
 

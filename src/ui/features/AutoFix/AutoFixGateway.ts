@@ -1,5 +1,5 @@
 import { AutoFixGateway as Abstraction } from "./abstractions/AutoFixGateway.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import {
     getAutoFixSettingsRoute,
     updateAutoFixSettingsRoute,

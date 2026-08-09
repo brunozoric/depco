@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { bulkRescanVulnerabilitiesRoute } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { VulnerabilitiesFeature } from "../../../../features/Vulnerabilities/feature.js";
 import { BulkRescanVulnerabilitiesUseCase } from "../abstractions/BulkRescanVulnerabilitiesUseCase.js";
 import { BulkRescanVulnerabilitiesUseCase as BulkRescanVulnerabilitiesUseCaseRegistration } from "../BulkRescanVulnerabilitiesUseCase.js";

@@ -1,5 +1,5 @@
 import { LicensesGateway as Abstraction } from "./abstractions/LicensesGateway.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import {
     listLicensesRoute,
     getProjectLicensesRoute,

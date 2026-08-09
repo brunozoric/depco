@@ -2,7 +2,7 @@ import type React from "react";
 import { useEffect } from "react";
 import { ActionIcon, Alert, Button, Group, Stack, Title } from "@mantine/core";
 import { observer } from "mobx-react-lite";
-import { navigate } from "#ui/shared/router/router.js";
+import { navigate } from "#ui/infrastructure/Shared/router/router.js";
 import type { StepHooksPresenter } from "../abstractions/StepHooksPresenter.js";
 import { StepHookList } from "./StepHookList.js";
 import { StepHookForm } from "./StepHookForm.js";

@@ -10,12 +10,12 @@ import {
     reResolveChangelogsRoute,
     createUpgradeJobRoute
 } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { ProjectsFeature } from "../../../../features/Projects/feature.js";
 import { PackagesFeature } from "../../../../features/Packages/feature.js";
 import { UpgradesFeature } from "../../../../features/Upgrades/feature.js";
-import { EventBridge } from "../../../../events/abstractions/EventBridge.js";
-import "../../../../events/eventMap.js";
+import { EventBridge } from "../../../../infrastructure/Events/abstractions/EventBridge.js";
+import "../../../../infrastructure/Events/eventMap.js";
 import { LoadPackagesUseCase as LoadPackagesUseCaseRegistration } from "../../useCases/LoadPackagesUseCase.js";
 import { LoadProjectsUseCase as LoadProjectsUseCaseRegistration } from "../../../Projects/useCases/LoadProjectsUseCase.js";
 import { PackagesPresenter } from "../abstractions/PackagesPresenter.js";

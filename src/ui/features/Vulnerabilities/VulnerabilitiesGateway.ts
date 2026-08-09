@@ -1,5 +1,5 @@
 import { VulnerabilitiesGateway as Abstraction } from "./abstractions/VulnerabilitiesGateway.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import {
     listVulnerabilitiesRoute,
     getProjectVulnerabilitiesRoute,

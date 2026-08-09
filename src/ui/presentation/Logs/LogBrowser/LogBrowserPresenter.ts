@@ -5,8 +5,8 @@ import { DeleteAppLogsUseCase } from "../useCases/abstractions/DeleteAppLogsUseC
 import { AppLogsRepository } from "../../../features/AppLogs/abstractions/AppLogsRepository.js";
 import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
 import { LoadProjectsUseCase } from "../../Projects/useCases/abstractions/LoadProjectsUseCase.js";
-import { EventBridge } from "../../../events/abstractions/EventBridge.js";
-import "../../../events/eventMap.js";
+import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBridge.js";
+import "../../../infrastructure/Events/eventMap.js";
 import type { AppLogsGateway } from "../../../features/AppLogs/abstractions/AppLogsGateway.js";
 
 const PAGE_SIZE = 50;

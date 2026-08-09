@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { getDependencyGraphRoute, getDependencyGraphStatsRoute } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { DependencyGraphFeature } from "../../../../features/DependencyGraph/feature.js";
 import { DependencyGraphRepository } from "../../../../features/DependencyGraph/abstractions/DependencyGraphRepository.js";
 import { LoadDependencyGraphUseCase } from "../abstractions/LoadDependencyGraphUseCase.js";

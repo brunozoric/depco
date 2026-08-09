@@ -1,7 +1,7 @@
 import type React from "react";
 import { useEffect, useState } from "react";
 import { Select, Stack, Text } from "@mantine/core";
-import { useContainer } from "../../../../shared/di/ContainerProvider.js";
+import { useContainer } from "../../../../infrastructure/Shared/di/ContainerProvider.js";
 import { LoadScanSchedulesUseCase } from "../../../ScanSchedules/useCases/abstractions/LoadScanSchedulesUseCase.js";
 import { UpdateScanScheduleDefaultUseCase } from "../../../ScanSchedules/useCases/abstractions/UpdateScanScheduleDefaultUseCase.js";
 import { ScanSchedulesRepository } from "../../../../features/ScanSchedules/abstractions/ScanSchedulesRepository.js";

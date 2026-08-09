@@ -3,7 +3,7 @@ import { ProjectDetailPresenter as ProjectDetailPresenterAbstraction } from "./a
 import { ProjectDetailPresenter } from "./ProjectDetailPresenter.js";
 import { ProjectsUseCasesFeature } from "../useCases/feature.js";
 import { UpgradesUseCasesFeature } from "../../Upgrades/useCases/feature.js";
-import { WebSocketFeature } from "../../../websocket/feature.js";
+import { WebSocketFeature } from "../../../infrastructure/WebSocket/feature.js";
 import { ScanSchedulesUseCasesFeature } from "../../ScanSchedules/useCases/feature.js";
 import { VulnerabilitiesFeature } from "../../../features/Vulnerabilities/feature.js";
 import { LicensesFeature } from "../../../features/Licenses/feature.js";

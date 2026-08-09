@@ -15,7 +15,7 @@ import {
 } from "#shared/routes/index.js";
 import type { IDependency, IProject } from "./abstractions/ProjectsGateway.js";
 import { ProjectsGateway as Abstraction } from "./abstractions/ProjectsGateway.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 
 function toProject(item: {
     id: string;

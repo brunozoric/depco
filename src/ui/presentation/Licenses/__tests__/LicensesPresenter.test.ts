@@ -7,8 +7,8 @@ import { LicensesRepository as LicensesRepositoryRegistration } from "../../../f
 import { LoadLicensesUseCase as LoadLicensesUseCaseRegistration } from "../useCases/LoadLicensesUseCase.js";
 import { ManagePolicyRulesUseCase as ManagePolicyRulesUseCaseRegistration } from "../useCases/ManagePolicyRulesUseCase.js";
 import { ScanLicensesUseCase as ScanLicensesUseCaseRegistration } from "../useCases/ScanLicensesUseCase.js";
-import { EventBridge as EventBridgeAbstraction } from "../../../events/abstractions/EventBridge.js";
-import "../../../events/eventMap.js";
+import { EventBridge as EventBridgeAbstraction } from "../../../infrastructure/Events/abstractions/EventBridge.js";
+import "../../../infrastructure/Events/eventMap.js";
 import { LicensesPresenter } from "../LicensesList/abstractions/LicensesPresenter.js";
 import { LicensesPresenter as LicensesPresenterRegistration } from "../LicensesList/LicensesPresenter.js";
 import { ProjectsRepository as ProjectsRepositoryAbstraction } from "../../../features/Projects/abstractions/ProjectsRepository.js";

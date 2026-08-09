@@ -8,7 +8,7 @@ import {
     getMeRoute,
     logoutRoute
 } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { AuthGateway } from "../abstractions/AuthGateway.js";
 import { AuthGateway as AuthGatewayRegistration } from "../AuthGateway.js";
 

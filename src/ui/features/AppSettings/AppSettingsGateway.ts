@@ -1,5 +1,5 @@
 import { AppSettingsGateway as Abstraction } from "./abstractions/AppSettingsGateway.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { listAppSettingsRoute, upsertAppSettingRoute } from "#shared/routes/index.js";
 
 class AppSettingsGatewayImpl implements Abstraction.Interface {

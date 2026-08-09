@@ -10,7 +10,7 @@ import {
     getLicenseSummaryRoute,
     listAutoFixPullRequestsRoute
 } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { DashboardGateway } from "../abstractions/DashboardGateway.js";
 import { DashboardGateway as DashboardGatewayRegistration } from "../DashboardGateway.js";
 

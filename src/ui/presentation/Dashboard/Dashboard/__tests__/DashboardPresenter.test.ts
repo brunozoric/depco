@@ -15,11 +15,11 @@ import {
     dashboardAutoFixTrendRoute,
     dashboardScoreDetailRoute
 } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
-import { HTTPClientFeature } from "../../../../httpClient/feature.js";
+import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
+import { HTTPClientFeature } from "../../../../infrastructure/HttpClient/feature.js";
 import { DashboardFeature } from "../../../../features/Dashboard/feature.js";
-import { EventBridge } from "../../../../events/abstractions/EventBridge.js";
-import "../../../../events/eventMap.js";
+import { EventBridge } from "../../../../infrastructure/Events/abstractions/EventBridge.js";
+import "../../../../infrastructure/Events/eventMap.js";
 import { DashboardUseCasesFeature } from "../../useCases/feature.js";
 import { DashboardPresenter as DashboardPresenterAbstraction } from "../abstractions/DashboardPresenter.js";
 import { DashboardPresenter as DashboardPresenterRegistration } from "../DashboardPresenter.js";

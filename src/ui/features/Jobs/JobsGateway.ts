@@ -1,5 +1,5 @@
 import { JobsGateway as Abstraction } from "./abstractions/JobsGateway.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { listAllJobsRoute, cancelJobRoute, deleteJobsRoute } from "#shared/routes/index.js";
 
 function toJob(item: {

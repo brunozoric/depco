@@ -5,8 +5,8 @@ import { UpgradeSessionsRepository } from "../../../features/UpgradeSessions/abs
 import { ProjectsGateway } from "../../../features/Projects/abstractions/ProjectsGateway.js";
 import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
 import { LoadProjectsUseCase } from "../useCases/abstractions/LoadProjectsUseCase.js";
-import { EventBridge } from "../../../events/abstractions/EventBridge.js";
-import "../../../events/eventMap.js";
+import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBridge.js";
+import "../../../infrastructure/Events/eventMap.js";
 import { ChangelogTracker } from "../../Shared/ChangelogTracker.js";
 import type { IStartChangelogTrackingInput } from "../../Shared/ChangelogTracker.js";
 import { AppSettingsGateway } from "../../../features/AppSettings/abstractions/AppSettingsGateway.js";

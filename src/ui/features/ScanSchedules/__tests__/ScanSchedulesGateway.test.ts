@@ -7,7 +7,7 @@ import {
     getScanScheduleDefaultRoute,
     upsertScanScheduleDefaultRoute
 } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { ScanSchedulesGateway } from "../abstractions/ScanSchedulesGateway.js";
 import { ScanSchedulesGateway as ScanSchedulesGatewayRegistration } from "../ScanSchedulesGateway.js";
 

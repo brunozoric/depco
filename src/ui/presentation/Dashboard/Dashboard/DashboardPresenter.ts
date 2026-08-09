@@ -3,8 +3,8 @@ import { DashboardPresenter as Abstraction } from "./abstractions/DashboardPrese
 import { DashboardRepository } from "../../../features/Dashboard/abstractions/DashboardRepository.js";
 import { LoadDashboardUseCase } from "../useCases/abstractions/LoadDashboardUseCase.js";
 import { LoadVulnerabilityTrendUseCase } from "../useCases/abstractions/LoadVulnerabilityTrendUseCase.js";
-import { EventBridge } from "../../../events/abstractions/EventBridge.js";
-import "../../../events/eventMap.js";
+import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBridge.js";
+import "../../../infrastructure/Events/eventMap.js";
 import { TeamFilterService } from "../../../features/TeamFilter/abstractions/TeamFilterService.js";
 import { DashboardGateway } from "../../../features/Dashboard/abstractions/DashboardGateway.js";
 

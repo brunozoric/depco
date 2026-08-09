@@ -14,7 +14,7 @@ import {
     TextInput,
     Title
 } from "@mantine/core";
-import { navigate } from "#ui/shared/router/router.js";
+import { navigate } from "#ui/infrastructure/Shared/router/router.js";
 import { observer } from "mobx-react-lite";
 import type { AppSettingsPresenter } from "../abstractions/AppSettingsPresenter.js";
 import { ScanScheduleDefaultSection } from "./ScanScheduleDefaultSection.js";

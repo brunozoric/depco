@@ -1,5 +1,5 @@
 import { PmSettingsGateway as Abstraction } from "./abstractions/PmSettingsGateway.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import {
     listSecuritySettingsRoute,
     createSecuritySettingRoute,

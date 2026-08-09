@@ -1,5 +1,5 @@
 import { DependencyGraphGateway as Abstraction } from "./abstractions/DependencyGraphGateway.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import {
     getDependencyGraphRoute,
     refreshDependencyGraphRoute,

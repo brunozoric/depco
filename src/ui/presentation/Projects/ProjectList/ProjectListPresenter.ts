@@ -8,8 +8,8 @@ import { CheckSecurityUseCase } from "../useCases/abstractions/CheckSecurityUseC
 import { CloneProjectUseCase } from "../useCases/abstractions/CloneProjectUseCase.js";
 import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
 import { ProjectsGateway } from "../../../features/Projects/abstractions/ProjectsGateway.js";
-import { EventBridge } from "../../../events/abstractions/EventBridge.js";
-import "../../../events/eventMap.js";
+import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBridge.js";
+import "../../../infrastructure/Events/eventMap.js";
 import { FilesystemGateway } from "../../../features/Filesystem/abstractions/FilesystemGateway.js";
 import { TeamFilterService } from "../../../features/TeamFilter/abstractions/TeamFilterService.js";
 

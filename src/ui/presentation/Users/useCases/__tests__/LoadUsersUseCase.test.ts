@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { listUsersRoute } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { UsersGateway as UsersGatewayRegistration } from "../../../../features/Users/UsersGateway.js";
 import { UsersRepository } from "../../../../features/Users/abstractions/UsersRepository.js";
 import { UsersRepository as UsersRepositoryRegistration } from "../../../../features/Users/UsersRepository.js";

@@ -6,8 +6,8 @@ import { DeleteJobsUseCase } from "./useCases/abstractions/DeleteJobsUseCase.js"
 import { LoadProjectsUseCase } from "../../Projects/useCases/abstractions/LoadProjectsUseCase.js";
 import { JobsRepository } from "../../../features/Jobs/abstractions/JobsRepository.js";
 import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
-import { EventBridge } from "../../../events/abstractions/EventBridge.js";
-import "../../../events/eventMap.js";
+import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBridge.js";
+import "../../../infrastructure/Events/eventMap.js";
 import type { JobsGateway } from "../../../features/Jobs/abstractions/JobsGateway.js";
 
 const PAGE_SIZE = 25;

@@ -2,7 +2,7 @@ import type React from "react";
 import { useEffect } from "react";
 import { observer } from "mobx-react-lite";
 import { Stack, Skeleton, Text, Title, SimpleGrid } from "@mantine/core";
-import { navigate } from "#ui/shared/router/router.js";
+import { navigate } from "#ui/infrastructure/Shared/router/router.js";
 import type { DashboardPresenter } from "../abstractions/DashboardPresenter.js";
 import { SummaryCards } from "./SummaryCards.js";
 import { ProjectHealthTable } from "./ProjectHealthTable.js";

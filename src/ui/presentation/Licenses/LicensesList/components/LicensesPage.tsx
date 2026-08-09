@@ -24,9 +24,9 @@ import type { LicensesPresenter } from "../abstractions/LicensesPresenter.js";
 import type { LicensesGateway } from "#ui/features/Licenses/abstractions/LicensesGateway.js";
 import { RISK_TIER_VALUES, LICENSE_POLICY_ACTIONS } from "#shared/licenses/types.js";
 import type { LicensePolicyAction } from "#shared/licenses/types.js";
-import { RISK_TIER_COLORS } from "#ui/shared/licenses/riskTierColors.js";
-import { ConfirmDialog } from "#ui/shared/components/ConfirmDialog.js";
-import { SortableHeader } from "#ui/shared/components/SortableHeader.js";
+import { RISK_TIER_COLORS } from "#ui/infrastructure/Shared/licenses/riskTierColors.js";
+import { ConfirmDialog } from "#ui/infrastructure/Shared/components/ConfirmDialog.js";
+import { SortableHeader } from "#ui/infrastructure/Shared/components/SortableHeader.js";
 
 interface LicensesPageProps {
     presenter: LicensesPresenter.Interface;

@@ -2,7 +2,7 @@ import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Center, Group, Loader, Stack, Text } from "@mantine/core";
 import { observer } from "mobx-react-lite";
-import { useContainer } from "#ui/shared/di/ContainerProvider.js";
+import { useContainer } from "#ui/infrastructure/Shared/di/ContainerProvider.js";
 import { ProjectsGateway } from "#ui/features/Projects/abstractions/ProjectsGateway.js";
 import type { UpgradeWizardPresenter } from "../abstractions/UpgradeWizardPresenter.js";
 import { SelectPackagesTable } from "./SelectPackagesTable.js";

@@ -7,8 +7,8 @@ import { RefreshTransientUseCase } from "../../Upgrades/useCases/abstractions/Re
 import { UpdatePackageManagerUseCase } from "../../Upgrades/useCases/abstractions/UpdatePackageManagerUseCase.js";
 import { ProjectsGateway } from "../../../features/Projects/abstractions/ProjectsGateway.js";
 import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
-import { EventBridge } from "../../../events/abstractions/EventBridge.js";
-import "../../../events/eventMap.js";
+import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBridge.js";
+import "../../../infrastructure/Events/eventMap.js";
 import { ChangelogTracker } from "../../Shared/ChangelogTracker.js";
 import type { IStartChangelogTrackingInput } from "../../Shared/ChangelogTracker.js";
 import { ScanSchedulesRepository } from "../../../features/ScanSchedules/abstractions/ScanSchedulesRepository.js";
@@ -24,7 +24,7 @@ import { SbomGateway } from "../../../features/Sbom/abstractions/SbomGateway.js"
 import { TeamsGateway } from "../../../features/Teams/abstractions/TeamsGateway.js";
 import { TeamListService } from "../../../features/TeamFilter/abstractions/TeamListService.js";
 import { UrlFilterService } from "../../../features/UrlFilter/abstractions/UrlFilterService.js";
-import { downloadBlob } from "#ui/shared/download/downloadBlob.js";
+import { downloadBlob } from "#ui/infrastructure/Shared/download/downloadBlob.js";
 import { getProjectDependenciesRoute } from "#shared/routes/projects.js";
 import type { z } from "zod";
 

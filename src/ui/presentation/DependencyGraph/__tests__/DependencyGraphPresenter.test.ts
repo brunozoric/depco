@@ -7,8 +7,8 @@ import { LoadDependencyGraphUseCase as LoadDependencyGraphUseCaseRegistration } 
 import { RefreshDependencyGraphUseCase as RefreshDependencyGraphUseCaseRegistration } from "../useCases/RefreshDependencyGraphUseCase.js";
 import { DependencyGraphPresenter } from "../GraphPage/abstractions/DependencyGraphPresenter.js";
 import { DependencyGraphPresenter as DependencyGraphPresenterRegistration } from "../GraphPage/DependencyGraphPresenter.js";
-import { EventBridge } from "../../../events/abstractions/EventBridge.js";
-import "../../../events/eventMap.js";
+import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBridge.js";
+import "../../../infrastructure/Events/eventMap.js";
 
 interface MockEventBridge {
     on: ReturnType<typeof vi.fn>;

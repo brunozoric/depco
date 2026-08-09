@@ -6,7 +6,7 @@ import {
     getDependencyGraphStatsRoute,
     searchDependencyPackagesRoute
 } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { DependencyGraphGateway } from "../abstractions/DependencyGraphGateway.js";
 import { DependencyGraphGateway as DependencyGraphGatewayRegistration } from "../DependencyGraphGateway.js";
 

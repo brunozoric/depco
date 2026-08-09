@@ -1,5 +1,5 @@
 import { AuthGateway as Abstraction } from "./abstractions/AuthGateway.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import {
     loginRoute,
     verifyCodeRoute,

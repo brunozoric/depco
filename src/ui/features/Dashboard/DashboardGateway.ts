@@ -1,5 +1,5 @@
 import { DashboardGateway as Abstraction } from "./abstractions/DashboardGateway.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import {
     dashboardHealthRoute,
     dashboardTrendRoute,
@@ -15,7 +15,7 @@ import {
     dashboardAutoFixTrendRoute,
     dashboardScoreDetailRoute
 } from "#shared/routes/index.js";
-import { cleanQuery } from "../../httpClient/cleanQuery.js";
+import { cleanQuery } from "../../infrastructure/HttpClient/cleanQuery.js";
 
 type TrendRangeQuery = "7d" | "30d" | "90d" | "all" | undefined;
 type VulnerabilityTrendDaysQuery = "7" | "30" | "90";

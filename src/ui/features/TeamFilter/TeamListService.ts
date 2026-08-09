@@ -1,6 +1,6 @@
 import { makeAutoObservable } from "mobx";
 import { TeamListService as Abstraction } from "./abstractions/TeamListService.js";
-import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { listTeamsRoute } from "#shared/routes/index.js";
 
 class TeamListServiceImpl implements Abstraction.Interface {

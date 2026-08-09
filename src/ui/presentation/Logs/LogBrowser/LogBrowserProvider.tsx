@@ -1,5 +1,5 @@
 import type React from "react";
-import { useFeature } from "#ui/shared/di/useFeature.js";
+import { useFeature } from "#ui/infrastructure/Shared/di/useFeature.js";
 import { LogBrowserPresentationFeature } from "./feature.js";
 import type { LogBrowserPresenter } from "./abstractions/LogBrowserPresenter.js";
 

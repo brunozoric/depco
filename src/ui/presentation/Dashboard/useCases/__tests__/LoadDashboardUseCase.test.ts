@@ -13,7 +13,7 @@ import {
     dashboardLicenseTrendRoute,
     dashboardAutoFixTrendRoute
 } from "#shared/routes/index.js";
-import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
+import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { DashboardFeature } from "../../../../features/Dashboard/feature.js";
 import { DashboardRepository } from "../../../../features/Dashboard/abstractions/DashboardRepository.js";
 import { LoadDashboardUseCase } from "../abstractions/LoadDashboardUseCase.js";
