@@ -20,7 +20,7 @@ import {
 } from "@mantine/core";
 import { observer } from "mobx-react-lite";
 import { SortableHeader } from "#ui/infrastructure/Shared/components/SortableHeader.js";
-import { navigate } from "#ui/infrastructure/Shared/router/router.js";
+import { navigate } from "#ui/infrastructure/Router/router.js";
 import type { PackagesPresenter } from "../abstractions/PackagesPresenter.js";
 import { ChangelogModal } from "../../../Projects/ProjectDetail/components/ChangelogModal.js";
 import { PackageName } from "./columns/PackageName.js";

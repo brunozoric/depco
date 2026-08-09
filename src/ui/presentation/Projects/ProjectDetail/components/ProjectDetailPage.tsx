@@ -18,7 +18,7 @@ import {
     Title
 } from "@mantine/core";
 import type { UpgradeFilter } from "../abstractions/ProjectDetailPresenter.js";
-import { navigate } from "#ui/infrastructure/Shared/router/router.js";
+import { navigate } from "#ui/infrastructure/Router/router.js";
 import { observer } from "mobx-react-lite";
 import { useFeature } from "#ui/infrastructure/Shared/di/useFeature.js";
 import type { ProjectDetailPresenter } from "../abstractions/ProjectDetailPresenter.js";

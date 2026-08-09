@@ -1,5 +1,5 @@
 import type React from "react";
-import { useCurrentPath } from "../Shared/router/router.js";
+import { useCurrentPath } from "./router.js";
 import { useContainer } from "../Shared/di/ContainerProvider.js";
 import { RouteRegistry } from "./abstractions/RouteRegistry.js";
 

@@ -1,6 +1,6 @@
 import { notifications } from "@mantine/notifications";
 import type { WSSnoozeExpired } from "#shared/websocket/types.js";
-import { navigate } from "../router/router.js";
+import { navigate } from "../../Router/router.js";
 
 let lastNotificationTime = 0;
 const DEDUP_WINDOW_MS = 60000;

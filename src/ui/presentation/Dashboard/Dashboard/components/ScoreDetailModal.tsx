@@ -1,7 +1,7 @@
 import type React from "react";
 import { useState } from "react";
 import { Badge, Button, Group, Modal, Skeleton, Stack, Table, Text } from "@mantine/core";
-import { navigate } from "#ui/infrastructure/Shared/router/router.js";
+import { navigate } from "#ui/infrastructure/Router/router.js";
 import { computeVulnerabilityPenalty } from "#shared/vulnerabilities/types.js";
 import type { DashboardGateway } from "../../../../features/Dashboard/abstractions/DashboardGateway.js";
 import type { DashboardPresenter } from "../abstractions/DashboardPresenter.js";

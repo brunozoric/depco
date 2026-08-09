@@ -20,7 +20,7 @@ import { showConfigErrorToast } from "./infrastructure/Shared/notifications/conf
 import { handleSnoozeExpired } from "./infrastructure/Shared/notifications/snoozeNotifications.js";
 import { ContainerProvider, useContainer } from "#ui/infrastructure/Shared/di/ContainerProvider.js";
 import { useFeature } from "#ui/infrastructure/Shared/di/useFeature.js";
-import { navigate } from "#ui/infrastructure/Shared/router/router.js";
+import { navigate } from "#ui/infrastructure/Router/router.js";
 import { AuthGateway } from "#ui/features/Auth/abstractions/AuthGateway.js";
 import { AuthRepository } from "#ui/features/Auth/abstractions/AuthRepository.js";
 import { PmSettingsGateway } from "#ui/features/Settings/abstractions/PmSettingsGateway.js";

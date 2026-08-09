@@ -13,7 +13,7 @@ import {
     Title
 } from "@mantine/core";
 import { observer } from "mobx-react-lite";
-import { navigate } from "#ui/infrastructure/Shared/router/router.js";
+import { navigate } from "#ui/infrastructure/Router/router.js";
 import type { UpgradeWizardPresenter } from "../abstractions/UpgradeWizardPresenter.js";
 import { SelectPackagesStep } from "./SelectPackagesStep.js";
 import { BranchStep } from "./BranchStep.js";

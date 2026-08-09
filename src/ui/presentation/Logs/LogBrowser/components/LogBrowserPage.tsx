@@ -18,7 +18,7 @@ import {
     Title
 } from "@mantine/core";
 import { observer } from "mobx-react-lite";
-import { navigate } from "#ui/infrastructure/Shared/router/router.js";
+import { navigate } from "#ui/infrastructure/Router/router.js";
 import { ConfirmDialog } from "#ui/infrastructure/Shared/components/ConfirmDialog.js";
 import type { LogBrowserPresenter } from "../abstractions/LogBrowserPresenter.js";
 

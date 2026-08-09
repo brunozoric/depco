@@ -2,7 +2,7 @@ import type React from "react";
 import { useState } from "react";
 import { ActionIcon, Badge, Group, Menu, Stack, Table, Text, Tooltip } from "@mantine/core";
 import { observer } from "mobx-react-lite";
-import { navigate } from "#ui/infrastructure/Shared/router/router.js";
+import { navigate } from "#ui/infrastructure/Router/router.js";
 import { ConfirmDialog } from "#ui/infrastructure/Shared/components/ConfirmDialog.js";
 import type { ProjectListPresenter } from "../abstractions/ProjectListPresenter.js";
 

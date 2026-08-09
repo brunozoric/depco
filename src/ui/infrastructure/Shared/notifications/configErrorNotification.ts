@@ -1,6 +1,6 @@
 import { notifications } from "@mantine/notifications";
 import type { IConfigError } from "#ui/features/Settings/abstractions/PmSettingsGateway.js";
-import { navigate } from "../router/router.js";
+import { navigate } from "../../Router/router.js";
 
 export function showConfigErrorToast(error: IConfigError): void {
     notifications.show({

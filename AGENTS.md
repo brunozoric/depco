@@ -124,8 +124,8 @@ src/
       HttpClient/     — HTTPClient DI abstraction (fetch-based, mockable), cleanQuery helper (strips undefined values from query objects to prevent `teamId=undefined` serialization)
       Events/         — EventBridge pub/sub abstraction (IEventBridge: on/off/emit, keyed by IEventMap), eventMap.ts maps WSEventMap onto IEventMap
       WebSocket/      — WebSocketListener thin transport adapter (connect/disconnect, auto-reconnect with exponential backoff, pushes events into EventBridge)
-      Router/          — Route abstraction (IRoute: matchPath, validateQueryString, render), RouteRegistry (first-match resolution), RouterComponent. Each page has its own route abstraction registered via domain feature compositor.
-      Shared/         — shared UI utilities (di/, router/, components/, notifications/, download/, vulnerabilities/, licenses/)
+      Router/          — Route abstraction (IRoute: matchPath, validateQueryString, render), RouteRegistry (first-match resolution), RouterComponent, navigate(), useCurrentPath(). Each page has its own route abstraction registered via domain feature compositor.
+      Shared/         — shared UI utilities (di/, components/, notifications/, download/, vulnerabilities/, licenses/)
     features/         — PascalCase folder-per-feature headless layer (Gateways + Repositories). Each folder: abstractions/, implementation, feature.ts.
       Projects/       — ProjectsGateway, ProjectsRepository
       Upgrades/       — UpgradesGateway, UpgradesRepository
@@ -202,7 +202,6 @@ src/
         useCases/     — LoadDashboardUseCase (parallel fetch of 11 dashboard endpoints including vulnerability summary, license compliance summary, open auto-fix PR count, and 3 sparkline trends), LoadVulnerabilityTrendUseCase (fetches vulnerability trend independently from dashboard load)
     infrastructure/Shared/ contents:
       di/             — ContainerProvider, useFeature hook
-      router/         — minimal browser-history router (no react-router-dom)
       components/     — shared UI components (ConfirmDialog)
       vulnerabilities/ — SEVERITY_COLORS constant (critical=red, high=orange, moderate=yellow, low=blue, info=gray)
       licenses/       — RISK_TIER_COLORS constant (permissive=green, weak-copyleft=yellow, copyleft=orange, proprietary=red, unknown=gray)

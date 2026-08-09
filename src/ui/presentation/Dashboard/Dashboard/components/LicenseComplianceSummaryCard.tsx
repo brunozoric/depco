@@ -1,7 +1,7 @@
 import type React from "react";
 import { Card, Group, Stack, Text } from "@mantine/core";
 import { Line, LineChart, ResponsiveContainer } from "recharts";
-import { navigate } from "#ui/infrastructure/Shared/router/router.js";
+import { navigate } from "#ui/infrastructure/Router/router.js";
 import type { DashboardGateway } from "../../../../features/Dashboard/abstractions/DashboardGateway.js";
 
 interface LicenseComplianceSummaryCardProps {

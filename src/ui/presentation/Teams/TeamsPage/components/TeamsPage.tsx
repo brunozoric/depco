@@ -17,7 +17,7 @@ import {
 } from "@mantine/core";
 import type { TeamsPresenter } from "../abstractions/TeamsPresenter.js";
 import { ConfirmDialog } from "#ui/infrastructure/Shared/components/ConfirmDialog.js";
-import { navigate } from "#ui/infrastructure/Shared/router/router.js";
+import { navigate } from "#ui/infrastructure/Router/router.js";
 
 interface TeamsPageProps {
     presenter: TeamsPresenter.Interface;

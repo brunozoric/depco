@@ -6,13 +6,13 @@ vi.mock("@mantine/notifications", () => ({
     }
 }));
 
-vi.mock("../../router/router.js", () => ({
+vi.mock("../../../Router/router.js", () => ({
     navigate: vi.fn()
 }));
 
 import { handleSnoozeExpired } from "../snoozeNotifications.js";
 import { notifications } from "@mantine/notifications";
-import { navigate } from "../../router/router.js";
+import { navigate } from "../../../Router/router.js";
 
 interface NotificationClickHandler {
     onClick: () => void;

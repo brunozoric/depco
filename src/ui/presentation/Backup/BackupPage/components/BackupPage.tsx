@@ -12,7 +12,7 @@ import {
     Title
 } from "@mantine/core";
 import { observer } from "mobx-react-lite";
-import { navigate } from "#ui/infrastructure/Shared/router/router.js";
+import { navigate } from "#ui/infrastructure/Router/router.js";
 import type { BackupPresenter } from "../abstractions/BackupPresenter.js";
 import type { BackupGateway } from "../../../../features/Backup/abstractions/BackupGateway.js";
 

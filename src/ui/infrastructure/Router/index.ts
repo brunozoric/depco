@@ -7,3 +7,4 @@ export {
 } from "./abstractions/index.js";
 export { RouterComponent } from "./RouterComponent.js";
 export { RouterFeature } from "./feature.js";
+export { navigate, useCurrentPath } from "./router.js";
