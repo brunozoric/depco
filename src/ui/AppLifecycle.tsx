@@ -151,12 +151,19 @@ function TeamListLoader(): null {
 // Mounts all app-lifecycle renderless components: connection setup, session
 // restoration, magic-link handling, event-driven notifications, and initial
 // data loading. Renders nothing itself.
-export function AppLifecycle(): React.ReactNode {
+export function PreAuthLifecycle(): React.ReactNode {
+    return (
+        <>
+            <SessionRestorer />
+            <MagicLinkHandler />
+        </>
+    );
+}
+
+export function PostAuthLifecycle(): React.ReactNode {
     return (
         <>
             <WebSocketConnector />
-            <SessionRestorer />
-            <MagicLinkHandler />
             <JobNotificationListener />
             <SnoozeExpiryListener />
             <ConfigErrorNotifier />

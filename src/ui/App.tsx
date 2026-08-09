@@ -5,7 +5,7 @@ import "@mantine/core/styles.css";
 import { Notifications } from "@mantine/notifications";
 import "@mantine/notifications/styles.css";
 import { ContainerProvider } from "#ui/infrastructure/Shared/di/ContainerProvider.js";
-import { AppLifecycle } from "./AppLifecycle.js";
+import { PreAuthLifecycle, PostAuthLifecycle } from "./AppLifecycle.js";
 import { AppHeader, AuthGate, SbomDialogContainer } from "./AppHeader.js";
 import { PresentationFeature } from "./presentation/feature.js";
 import { RouterComponent } from "./infrastructure/Router/index.js";
@@ -17,10 +17,11 @@ export function App(): React.ReactNode {
 
     return (
         <ContainerProvider features={ALL_FEATURES}>
-            <AppLifecycle />
+            <PreAuthLifecycle />
             <MantineProvider>
                 <Notifications position="bottom-left" />
                 <AuthGate>
+                    <PostAuthLifecycle />
                     <AppShell header={{ height: 60 }} padding="md">
                         <AppHeader onSbomExportClick={() => setSbomDialogOpened(true)} />
                         <AppShell.Main>
