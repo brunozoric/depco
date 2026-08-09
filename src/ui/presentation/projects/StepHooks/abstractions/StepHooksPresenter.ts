@@ -1,5 +1,5 @@
 import { createAbstraction } from "#shared/index.js";
-import type { StepHooksGateway } from "../../../../features/stepHooks/abstractions/StepHooksGateway.js";
+import type { StepHooksGateway } from "../../../../features/StepHooks/abstractions/StepHooksGateway.js";
 
 export interface IStepHookViewModel {
     id: string;

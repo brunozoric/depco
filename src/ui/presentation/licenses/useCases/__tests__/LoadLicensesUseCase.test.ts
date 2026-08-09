@@ -6,11 +6,11 @@ import {
     getLicenseSummaryRoute
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
-import { LicensesFeature } from "../../../../features/licenses/feature.js";
-import { LicensesRepository } from "../../../../features/licenses/abstractions/LicensesRepository.js";
+import { LicensesFeature } from "../../../../features/Licenses/feature.js";
+import { LicensesRepository } from "../../../../features/Licenses/abstractions/LicensesRepository.js";
 import { LoadLicensesUseCase } from "../abstractions/LoadLicensesUseCase.js";
 import { LoadLicensesUseCase as LoadLicensesUseCaseRegistration } from "../LoadLicensesUseCase.js";
-import type { LicensesGateway } from "../../../../features/licenses/abstractions/LicensesGateway.js";
+import type { LicensesGateway } from "../../../../features/Licenses/abstractions/LicensesGateway.js";
 
 interface RecordedCall {
     route: unknown;

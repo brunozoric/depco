@@ -10,7 +10,7 @@ import {
     Legend,
     ResponsiveContainer
 } from "recharts";
-import type { DashboardGateway } from "#ui/features/dashboard/abstractions/DashboardGateway.js";
+import type { DashboardGateway } from "#ui/features/Dashboard/abstractions/DashboardGateway.js";
 
 interface HealthTrendChartProps {
     trendData: DashboardGateway.TrendProject[];

@@ -2,7 +2,7 @@ import { makeAutoObservable, runInAction, computed } from "mobx";
 import { AppSettingsPresenter as Abstraction } from "./abstractions/AppSettingsPresenter.js";
 import { LoadAppSettingsUseCase } from "../appSettingsUseCases/abstractions/LoadAppSettingsUseCase.js";
 import { UpsertAppSettingUseCase } from "../appSettingsUseCases/abstractions/UpsertAppSettingUseCase.js";
-import { AppSettingsRepository } from "../../../features/appSettings/abstractions/AppSettingsRepository.js";
+import { AppSettingsRepository } from "../../../features/AppSettings/abstractions/AppSettingsRepository.js";
 
 interface IKnownSettingMeta {
     label: string;

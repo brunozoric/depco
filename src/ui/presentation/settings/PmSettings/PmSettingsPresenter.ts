@@ -6,8 +6,8 @@ import { CreateSecuritySettingUseCase } from "../useCases/abstractions/CreateSec
 import { UpdateSecuritySettingUseCase } from "../useCases/abstractions/UpdateSecuritySettingUseCase.js";
 import { ToggleSecuritySettingUseCase } from "../useCases/abstractions/ToggleSecuritySettingUseCase.js";
 import { ResetSecuritySettingsUseCase } from "../useCases/abstractions/ResetSecuritySettingsUseCase.js";
-import { PmSettingsRepository } from "../../../features/settings/abstractions/PmSettingsRepository.js";
-import type { PmSettingsGateway } from "../../../features/settings/abstractions/PmSettingsGateway.js";
+import { PmSettingsRepository } from "../../../features/Settings/abstractions/PmSettingsRepository.js";
+import type { PmSettingsGateway } from "../../../features/Settings/abstractions/PmSettingsGateway.js";
 import { SECURITY_FIELD_REGISTRY, type PackageManagerId } from "#shared/security/index.js";
 import { SavePmConfigUseCase } from "../useCases/abstractions/SavePmConfigUseCase.js";
 import { notifications } from "@mantine/notifications";

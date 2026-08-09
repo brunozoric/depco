@@ -1,5 +1,5 @@
 import { createAbstraction } from "#shared/index.js";
-import type { TeamsGateway } from "../../../../features/teams/abstractions/TeamsGateway.js";
+import type { TeamsGateway } from "../../../../features/Teams/abstractions/TeamsGateway.js";
 
 export interface IProjectOption {
     value: string;

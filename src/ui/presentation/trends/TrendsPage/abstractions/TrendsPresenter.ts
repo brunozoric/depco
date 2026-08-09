@@ -1,6 +1,6 @@
 import { createAbstraction } from "#shared/index.js";
-import type { DashboardGateway } from "../../../../features/dashboard/abstractions/DashboardGateway.js";
-import type { TrendsGateway } from "../../../../features/trends/abstractions/TrendsGateway.js";
+import type { DashboardGateway } from "../../../../features/Dashboard/abstractions/DashboardGateway.js";
+import type { TrendsGateway } from "../../../../features/Trends/abstractions/TrendsGateway.js";
 
 export interface IProjectOption {
     id: string;

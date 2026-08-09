@@ -1,6 +1,6 @@
 import { LoadSecuritySettingsUseCase as Abstraction } from "./abstractions/LoadSecuritySettingsUseCase.js";
-import { PmSettingsGateway } from "../../../features/settings/abstractions/PmSettingsGateway.js";
-import { PmSettingsRepository } from "../../../features/settings/abstractions/PmSettingsRepository.js";
+import { PmSettingsGateway } from "../../../features/Settings/abstractions/PmSettingsGateway.js";
+import { PmSettingsRepository } from "../../../features/Settings/abstractions/PmSettingsRepository.js";
 
 class LoadSecuritySettingsUseCaseImpl implements Abstraction.Interface {
     public constructor(

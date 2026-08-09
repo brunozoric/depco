@@ -2,10 +2,10 @@ import { createFeature } from "#shared/index.js";
 import { TrendsPresenter as TrendsPresenterAbstraction } from "./abstractions/TrendsPresenter.js";
 import { TrendsPresenter } from "./TrendsPresenter.js";
 import { TrendsUseCasesFeature } from "../useCases/feature.js";
-import { TrendsFeature } from "../../../features/trends/feature.js";
-import { ProjectsFeature } from "../../../features/projects/feature.js";
+import { TrendsFeature } from "../../../features/Trends/feature.js";
+import { ProjectsFeature } from "../../../features/Projects/feature.js";
 import { ProjectsUseCasesFeature } from "../../projects/useCases/feature.js";
-import { TeamFilterFeature } from "../../../features/teamFilter/feature.js";
+import { TeamFilterFeature } from "../../../features/TeamFilter/feature.js";
 
 export interface ITrendsPageFeatureExports {
     presenter: TrendsPresenterAbstraction.Interface;

@@ -2,8 +2,8 @@ import { computed, makeAutoObservable, runInAction } from "mobx";
 import { DependencyGraphPresenter as Abstraction } from "./abstractions/DependencyGraphPresenter.js";
 import { LoadDependencyGraphUseCase } from "../useCases/abstractions/LoadDependencyGraphUseCase.js";
 import { RefreshDependencyGraphUseCase } from "../useCases/abstractions/RefreshDependencyGraphUseCase.js";
-import { DependencyGraphRepository } from "../../../features/dependencyGraph/abstractions/DependencyGraphRepository.js";
-import { DependencyGraphGateway } from "../../../features/dependencyGraph/abstractions/DependencyGraphGateway.js";
+import { DependencyGraphRepository } from "../../../features/DependencyGraph/abstractions/DependencyGraphRepository.js";
+import { DependencyGraphGateway } from "../../../features/DependencyGraph/abstractions/DependencyGraphGateway.js";
 import { EventBridge } from "../../../events/abstractions/EventBridge.js";
 import "../../../events/eventMap.js";
 

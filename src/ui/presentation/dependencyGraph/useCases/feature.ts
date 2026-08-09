@@ -1,5 +1,5 @@
 import { createFeature } from "#shared/index.js";
-import { DependencyGraphFeature } from "../../../features/dependencyGraph/feature.js";
+import { DependencyGraphFeature } from "../../../features/DependencyGraph/feature.js";
 import { LoadDependencyGraphUseCase } from "./LoadDependencyGraphUseCase.js";
 import { RefreshDependencyGraphUseCase } from "./RefreshDependencyGraphUseCase.js";
 

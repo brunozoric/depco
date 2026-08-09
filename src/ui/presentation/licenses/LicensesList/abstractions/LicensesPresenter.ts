@@ -1,6 +1,6 @@
 import { createAbstraction } from "#shared/index.js";
 import type { LicenseRiskTier, LicensePolicyAction } from "#shared/licenses/types.js";
-import type { LicensesGateway } from "../../../../features/licenses/abstractions/LicensesGateway.js";
+import type { LicensesGateway } from "../../../../features/Licenses/abstractions/LicensesGateway.js";
 
 export interface ILicenseRowViewModel {
     id: string;

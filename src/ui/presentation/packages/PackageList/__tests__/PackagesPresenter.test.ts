@@ -11,18 +11,18 @@ import {
     createUpgradeJobRoute
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
-import { ProjectsFeature } from "../../../../features/projects/feature.js";
-import { PackagesFeature } from "../../../../features/packages/feature.js";
-import { UpgradesFeature } from "../../../../features/upgrades/feature.js";
+import { ProjectsFeature } from "../../../../features/Projects/feature.js";
+import { PackagesFeature } from "../../../../features/Packages/feature.js";
+import { UpgradesFeature } from "../../../../features/Upgrades/feature.js";
 import { EventBridge } from "../../../../events/abstractions/EventBridge.js";
 import "../../../../events/eventMap.js";
 import { LoadPackagesUseCase as LoadPackagesUseCaseRegistration } from "../../useCases/LoadPackagesUseCase.js";
 import { LoadProjectsUseCase as LoadProjectsUseCaseRegistration } from "../../../projects/useCases/LoadProjectsUseCase.js";
 import { PackagesPresenter } from "../abstractions/PackagesPresenter.js";
 import { PackagesPresenter as PackagesPresenterRegistration } from "../PackagesPresenter.js";
-import type { PackagesGateway } from "../../../../features/packages/abstractions/PackagesGateway.js";
-import { TeamFilterFeature } from "../../../../features/teamFilter/feature.js";
-import { UrlFilterFeature } from "../../../../features/urlFilter/feature.js";
+import type { PackagesGateway } from "../../../../features/Packages/abstractions/PackagesGateway.js";
+import { TeamFilterFeature } from "../../../../features/TeamFilter/feature.js";
+import { UrlFilterFeature } from "../../../../features/UrlFilter/feature.js";
 
 function setUrlParams(params: Record<string, string>): void {
     const search = new URLSearchParams(params).toString();

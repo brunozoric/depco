@@ -1,5 +1,5 @@
 import { createAbstraction } from "#shared/index.js";
-import type { DashboardGateway } from "../../dashboard/abstractions/DashboardGateway.js";
+import type { DashboardGateway } from "../../Dashboard/abstractions/DashboardGateway.js";
 import type { TrendsGateway } from "./TrendsGateway.js";
 
 export interface ITrendsRepository {

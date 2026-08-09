@@ -2,11 +2,11 @@ import { createFeature } from "#shared/index.js";
 import { PackagesPresenter as PackagesPresenterAbstraction } from "./abstractions/PackagesPresenter.js";
 import { PackagesPresenter } from "./PackagesPresenter.js";
 import { PackagesUseCasesFeature } from "../useCases/feature.js";
-import { ProjectsFeature } from "../../../features/projects/feature.js";
+import { ProjectsFeature } from "../../../features/Projects/feature.js";
 import { ProjectsUseCasesFeature } from "../../projects/useCases/feature.js";
-import { UpgradesFeature } from "../../../features/upgrades/feature.js";
+import { UpgradesFeature } from "../../../features/Upgrades/feature.js";
 import { WebSocketFeature } from "../../../websocket/feature.js";
-import { TeamFilterFeature } from "../../../features/teamFilter/feature.js";
+import { TeamFilterFeature } from "../../../features/TeamFilter/feature.js";
 
 export interface IPackageListFeatureExports {
     presenter: PackagesPresenterAbstraction.Interface;

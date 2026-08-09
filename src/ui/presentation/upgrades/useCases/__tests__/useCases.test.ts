@@ -8,9 +8,9 @@ import {
     listJobsRoute
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
-import { UpgradesGateway as UpgradesGatewayRegistration } from "../../../../features/upgrades/UpgradesGateway.js";
-import { UpgradesRepository } from "../../../../features/upgrades/abstractions/UpgradesRepository.js";
-import { UpgradesRepository as UpgradesRepositoryRegistration } from "../../../../features/upgrades/UpgradesRepository.js";
+import { UpgradesGateway as UpgradesGatewayRegistration } from "../../../../features/Upgrades/UpgradesGateway.js";
+import { UpgradesRepository } from "../../../../features/Upgrades/abstractions/UpgradesRepository.js";
+import { UpgradesRepository as UpgradesRepositoryRegistration } from "../../../../features/Upgrades/UpgradesRepository.js";
 import { UpgradePackagesUseCase } from "../abstractions/UpgradePackagesUseCase.js";
 import { UpgradePackagesUseCase as UpgradePackagesUseCaseRegistration } from "../UpgradePackagesUseCase.js";
 import { RefreshTransientUseCase } from "../abstractions/RefreshTransientUseCase.js";

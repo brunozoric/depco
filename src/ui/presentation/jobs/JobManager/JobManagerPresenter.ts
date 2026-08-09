@@ -4,11 +4,11 @@ import { LoadAllJobsUseCase } from "./useCases/abstractions/LoadAllJobsUseCase.j
 import { CancelJobUseCase } from "./useCases/abstractions/CancelJobUseCase.js";
 import { DeleteJobsUseCase } from "./useCases/abstractions/DeleteJobsUseCase.js";
 import { LoadProjectsUseCase } from "../../projects/useCases/abstractions/LoadProjectsUseCase.js";
-import { JobsRepository } from "../../../features/jobs/abstractions/JobsRepository.js";
-import { ProjectsRepository } from "../../../features/projects/abstractions/ProjectsRepository.js";
+import { JobsRepository } from "../../../features/Jobs/abstractions/JobsRepository.js";
+import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
 import { EventBridge } from "../../../events/abstractions/EventBridge.js";
 import "../../../events/eventMap.js";
-import type { JobsGateway } from "../../../features/jobs/abstractions/JobsGateway.js";
+import type { JobsGateway } from "../../../features/Jobs/abstractions/JobsGateway.js";
 
 const PAGE_SIZE = 25;
 

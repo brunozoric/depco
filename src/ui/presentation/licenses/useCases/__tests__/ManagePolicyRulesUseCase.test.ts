@@ -7,11 +7,11 @@ import {
     listLicensePoliciesRoute
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
-import { LicensesFeature } from "../../../../features/licenses/feature.js";
-import { LicensesRepository } from "../../../../features/licenses/abstractions/LicensesRepository.js";
+import { LicensesFeature } from "../../../../features/Licenses/feature.js";
+import { LicensesRepository } from "../../../../features/Licenses/abstractions/LicensesRepository.js";
 import { ManagePolicyRulesUseCase } from "../abstractions/ManagePolicyRulesUseCase.js";
 import { ManagePolicyRulesUseCase as ManagePolicyRulesUseCaseRegistration } from "../ManagePolicyRulesUseCase.js";
-import type { LicensesGateway } from "../../../../features/licenses/abstractions/LicensesGateway.js";
+import type { LicensesGateway } from "../../../../features/Licenses/abstractions/LicensesGateway.js";
 
 interface RecordedCall {
     route: unknown;

@@ -1,5 +1,5 @@
 import { createAbstraction } from "#shared/index.js";
-import type { PmSettingsGateway } from "../../../../features/settings/abstractions/PmSettingsGateway.js";
+import type { PmSettingsGateway } from "../../../../features/Settings/abstractions/PmSettingsGateway.js";
 
 export interface ISavePmConfigUseCase {
     execute(pm: string, settings: PmSettingsGateway.UpdatePmConfigBody): Promise<void>;

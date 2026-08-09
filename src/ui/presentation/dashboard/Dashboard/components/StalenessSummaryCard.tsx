@@ -2,7 +2,7 @@ import type React from "react";
 import { Card, Group, Stack, Text } from "@mantine/core";
 import { Line, LineChart, ResponsiveContainer } from "recharts";
 import { navigate } from "#ui/shared/router/router.js";
-import type { DashboardGateway } from "../../../../features/dashboard/abstractions/DashboardGateway.js";
+import type { DashboardGateway } from "../../../../features/Dashboard/abstractions/DashboardGateway.js";
 
 interface StalenessSummaryCardProps {
     data: DashboardGateway.StalenessTrendPoint[];

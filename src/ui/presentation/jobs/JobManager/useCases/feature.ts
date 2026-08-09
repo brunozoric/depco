@@ -1,5 +1,5 @@
 import { createFeature } from "#shared/index.js";
-import { JobsFeature } from "../../../../features/jobs/feature.js";
+import { JobsFeature } from "../../../../features/Jobs/feature.js";
 import { LoadAllJobsUseCase } from "./LoadAllJobsUseCase.js";
 import { CancelJobUseCase } from "./CancelJobUseCase.js";
 import { DeleteJobsUseCase } from "./DeleteJobsUseCase.js";

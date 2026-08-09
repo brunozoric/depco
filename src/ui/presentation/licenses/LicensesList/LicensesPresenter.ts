@@ -3,14 +3,14 @@ import { LicensesPresenter as Abstraction } from "./abstractions/LicensesPresent
 import { LoadLicensesUseCase } from "../useCases/abstractions/LoadLicensesUseCase.js";
 import { ManagePolicyRulesUseCase } from "../useCases/abstractions/ManagePolicyRulesUseCase.js";
 import { ScanLicensesUseCase } from "../useCases/abstractions/ScanLicensesUseCase.js";
-import { LicensesRepository } from "../../../features/licenses/abstractions/LicensesRepository.js";
-import { LicensesGateway } from "../../../features/licenses/abstractions/LicensesGateway.js";
+import { LicensesRepository } from "../../../features/Licenses/abstractions/LicensesRepository.js";
+import { LicensesGateway } from "../../../features/Licenses/abstractions/LicensesGateway.js";
 import { EventBridge } from "../../../events/abstractions/EventBridge.js";
 import "../../../events/eventMap.js";
 import { LoadProjectsUseCase } from "../../projects/useCases/abstractions/LoadProjectsUseCase.js";
-import { ProjectsRepository } from "../../../features/projects/abstractions/ProjectsRepository.js";
-import { TeamFilterService } from "../../../features/teamFilter/abstractions/TeamFilterService.js";
-import { UrlFilterService } from "../../../features/urlFilter/abstractions/UrlFilterService.js";
+import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
+import { TeamFilterService } from "../../../features/TeamFilter/abstractions/TeamFilterService.js";
+import { UrlFilterService } from "../../../features/UrlFilter/abstractions/UrlFilterService.js";
 import type { z } from "zod";
 import { listLicensesRoute } from "#shared/routes/index.js";
 

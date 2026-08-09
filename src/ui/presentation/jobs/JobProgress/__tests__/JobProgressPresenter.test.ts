@@ -4,7 +4,7 @@ import { createContainer } from "#shared/index.js";
 import { getJobRoute, listJobsRoute } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
 import { HTTPClientFeature } from "../../../../httpClient/feature.js";
-import { UpgradesFeature } from "../../../../features/upgrades/feature.js";
+import { UpgradesFeature } from "../../../../features/Upgrades/feature.js";
 import { EventBridge } from "../../../../events/abstractions/EventBridge.js";
 import "../../../../events/eventMap.js";
 import { GetJobUseCase as GetJobUseCaseRegistration } from "../../../upgrades/useCases/GetJobUseCase.js";

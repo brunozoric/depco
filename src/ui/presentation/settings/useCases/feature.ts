@@ -1,5 +1,5 @@
 import { createFeature } from "#shared/index.js";
-import { PmSettingsFeature } from "../../../features/settings/feature.js";
+import { PmSettingsFeature } from "../../../features/Settings/feature.js";
 import { LoadSecuritySettingsUseCase } from "./LoadSecuritySettingsUseCase.js";
 import { LoadPmConfigUseCase } from "./LoadPmConfigUseCase.js";
 import { SavePmConfigUseCase } from "./SavePmConfigUseCase.js";

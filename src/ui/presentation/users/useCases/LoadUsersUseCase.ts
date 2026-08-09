@@ -1,6 +1,6 @@
 import { LoadUsersUseCase as Abstraction } from "./abstractions/LoadUsersUseCase.js";
-import { UsersGateway } from "../../../features/users/abstractions/UsersGateway.js";
-import { UsersRepository } from "../../../features/users/abstractions/UsersRepository.js";
+import { UsersGateway } from "../../../features/Users/abstractions/UsersGateway.js";
+import { UsersRepository } from "../../../features/Users/abstractions/UsersRepository.js";
 
 class LoadUsersUseCaseImpl implements Abstraction.Interface {
     public constructor(

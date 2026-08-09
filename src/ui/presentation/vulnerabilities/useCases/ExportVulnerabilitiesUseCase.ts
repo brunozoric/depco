@@ -1,5 +1,5 @@
 import { ExportVulnerabilitiesUseCase as Abstraction } from "./abstractions/ExportVulnerabilitiesUseCase.js";
-import { VulnerabilitiesGateway } from "../../../features/vulnerabilities/abstractions/VulnerabilitiesGateway.js";
+import { VulnerabilitiesGateway } from "../../../features/Vulnerabilities/abstractions/VulnerabilitiesGateway.js";
 
 class ExportVulnerabilitiesUseCaseImpl implements Abstraction.Interface {
     public constructor(private readonly gateway: VulnerabilitiesGateway.Interface) {}

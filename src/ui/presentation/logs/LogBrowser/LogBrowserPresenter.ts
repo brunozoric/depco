@@ -2,12 +2,12 @@ import { computed, makeAutoObservable, runInAction } from "mobx";
 import { LogBrowserPresenter as Abstraction } from "./abstractions/LogBrowserPresenter.js";
 import { LoadAppLogsUseCase } from "../useCases/abstractions/LoadAppLogsUseCase.js";
 import { DeleteAppLogsUseCase } from "../useCases/abstractions/DeleteAppLogsUseCase.js";
-import { AppLogsRepository } from "../../../features/appLogs/abstractions/AppLogsRepository.js";
-import { ProjectsRepository } from "../../../features/projects/abstractions/ProjectsRepository.js";
+import { AppLogsRepository } from "../../../features/AppLogs/abstractions/AppLogsRepository.js";
+import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
 import { LoadProjectsUseCase } from "../../projects/useCases/abstractions/LoadProjectsUseCase.js";
 import { EventBridge } from "../../../events/abstractions/EventBridge.js";
 import "../../../events/eventMap.js";
-import type { AppLogsGateway } from "../../../features/appLogs/abstractions/AppLogsGateway.js";
+import type { AppLogsGateway } from "../../../features/AppLogs/abstractions/AppLogsGateway.js";
 
 const PAGE_SIZE = 50;
 

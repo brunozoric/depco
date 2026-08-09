@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { createContainer } from "#shared/index.js";
-import { LicensesGateway as LicensesGatewayAbstraction } from "../../../features/licenses/abstractions/LicensesGateway.js";
-import type { LicensesGateway } from "../../../features/licenses/abstractions/LicensesGateway.js";
-import { LicensesRepository as LicensesRepositoryRegistration } from "../../../features/licenses/LicensesRepository.js";
+import { LicensesGateway as LicensesGatewayAbstraction } from "../../../features/Licenses/abstractions/LicensesGateway.js";
+import type { LicensesGateway } from "../../../features/Licenses/abstractions/LicensesGateway.js";
+import { LicensesRepository as LicensesRepositoryRegistration } from "../../../features/Licenses/LicensesRepository.js";
 import { LoadLicensesUseCase as LoadLicensesUseCaseRegistration } from "../useCases/LoadLicensesUseCase.js";
 import { ManagePolicyRulesUseCase as ManagePolicyRulesUseCaseRegistration } from "../useCases/ManagePolicyRulesUseCase.js";
 import { ScanLicensesUseCase as ScanLicensesUseCaseRegistration } from "../useCases/ScanLicensesUseCase.js";
@@ -11,10 +11,10 @@ import { EventBridge as EventBridgeAbstraction } from "../../../events/abstracti
 import "../../../events/eventMap.js";
 import { LicensesPresenter } from "../LicensesList/abstractions/LicensesPresenter.js";
 import { LicensesPresenter as LicensesPresenterRegistration } from "../LicensesList/LicensesPresenter.js";
-import { ProjectsRepository as ProjectsRepositoryAbstraction } from "../../../features/projects/abstractions/ProjectsRepository.js";
+import { ProjectsRepository as ProjectsRepositoryAbstraction } from "../../../features/Projects/abstractions/ProjectsRepository.js";
 import { LoadProjectsUseCase as LoadProjectsUseCaseAbstraction } from "../../projects/useCases/abstractions/LoadProjectsUseCase.js";
-import { TeamFilterFeature } from "../../../features/teamFilter/feature.js";
-import { UrlFilterFeature } from "../../../features/urlFilter/feature.js";
+import { TeamFilterFeature } from "../../../features/TeamFilter/feature.js";
+import { UrlFilterFeature } from "../../../features/UrlFilter/feature.js";
 
 function setUrlParams(params: Record<string, string>): void {
     const search = new URLSearchParams(params).toString();

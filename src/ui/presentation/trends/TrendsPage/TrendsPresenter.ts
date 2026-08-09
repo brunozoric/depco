@@ -2,11 +2,11 @@ import { computed, makeAutoObservable, reaction, runInAction } from "mobx";
 import { TrendsPresenter as Abstraction } from "./abstractions/TrendsPresenter.js";
 import { LoadTrendsUseCase } from "../useCases/abstractions/LoadTrendsUseCase.js";
 import { LoadDependencyChangesUseCase } from "../useCases/abstractions/LoadDependencyChangesUseCase.js";
-import { TrendsRepository } from "../../../features/trends/abstractions/TrendsRepository.js";
-import type { TrendsGateway } from "../../../features/trends/abstractions/TrendsGateway.js";
+import { TrendsRepository } from "../../../features/Trends/abstractions/TrendsRepository.js";
+import type { TrendsGateway } from "../../../features/Trends/abstractions/TrendsGateway.js";
 import { LoadProjectsUseCase } from "../../projects/useCases/abstractions/LoadProjectsUseCase.js";
-import { ProjectsRepository } from "../../../features/projects/abstractions/ProjectsRepository.js";
-import { TeamFilterService } from "../../../features/teamFilter/abstractions/TeamFilterService.js";
+import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
+import { TeamFilterService } from "../../../features/TeamFilter/abstractions/TeamFilterService.js";
 
 const DEFAULT_RANGE = "30";
 

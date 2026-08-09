@@ -1,6 +1,6 @@
 import type React from "react";
 import { Badge, Card, Group, Select, Table, Text } from "@mantine/core";
-import type { TrendsGateway } from "../../../../features/trends/abstractions/TrendsGateway.js";
+import type { TrendsGateway } from "../../../../features/Trends/abstractions/TrendsGateway.js";
 import type { TrendsPresenter } from "../abstractions/TrendsPresenter.js";
 
 interface DependencyChangesTableProps {

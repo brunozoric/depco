@@ -1,6 +1,6 @@
 import { UpdateAutoFixSettingsUseCase as Abstraction } from "./abstractions/UpdateAutoFixSettingsUseCase.js";
-import { AutoFixGateway } from "../../../features/autoFix/abstractions/AutoFixGateway.js";
-import { AutoFixRepository } from "../../../features/autoFix/abstractions/AutoFixRepository.js";
+import { AutoFixGateway } from "../../../features/AutoFix/abstractions/AutoFixGateway.js";
+import { AutoFixRepository } from "../../../features/AutoFix/abstractions/AutoFixRepository.js";
 
 class UpdateAutoFixSettingsUseCaseImpl implements Abstraction.Interface {
     public constructor(

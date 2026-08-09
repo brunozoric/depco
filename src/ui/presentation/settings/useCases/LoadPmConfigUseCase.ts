@@ -1,6 +1,6 @@
 import { LoadPmConfigUseCase as Abstraction } from "./abstractions/LoadPmConfigUseCase.js";
-import { PmSettingsGateway } from "../../../features/settings/abstractions/PmSettingsGateway.js";
-import { PmSettingsRepository } from "../../../features/settings/abstractions/PmSettingsRepository.js";
+import { PmSettingsGateway } from "../../../features/Settings/abstractions/PmSettingsGateway.js";
+import { PmSettingsRepository } from "../../../features/Settings/abstractions/PmSettingsRepository.js";
 
 class LoadPmConfigUseCaseImpl implements Abstraction.Interface {
     public constructor(

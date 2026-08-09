@@ -1,5 +1,5 @@
 import { createFeature } from "#shared/index.js";
-import { UpgradesFeature } from "../../../features/upgrades/feature.js";
+import { UpgradesFeature } from "../../../features/Upgrades/feature.js";
 import { GetJobUseCase } from "./GetJobUseCase.js";
 import { GetJobsUseCase } from "./GetJobsUseCase.js";
 import { RefreshTransientUseCase } from "./RefreshTransientUseCase.js";

@@ -1,6 +1,6 @@
 import { LoadProjectsUseCase as Abstraction } from "./abstractions/LoadProjectsUseCase.js";
-import { ProjectsGateway } from "../../../features/projects/abstractions/ProjectsGateway.js";
-import { ProjectsRepository } from "../../../features/projects/abstractions/ProjectsRepository.js";
+import { ProjectsGateway } from "../../../features/Projects/abstractions/ProjectsGateway.js";
+import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
 
 class LoadProjectsUseCaseImpl implements Abstraction.Interface {
     public constructor(

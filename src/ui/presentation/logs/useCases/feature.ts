@@ -1,5 +1,5 @@
 import { createFeature } from "#shared/index.js";
-import { AppLogsFeature } from "../../../features/appLogs/feature.js";
+import { AppLogsFeature } from "../../../features/AppLogs/feature.js";
 import { LoadAppLogsUseCase } from "./LoadAppLogsUseCase.js";
 import { DeleteAppLogsUseCase } from "./DeleteAppLogsUseCase.js";
 

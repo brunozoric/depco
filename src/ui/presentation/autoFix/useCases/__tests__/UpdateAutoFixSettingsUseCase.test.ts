@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { updateAutoFixSettingsRoute } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
-import { AutoFixFeature } from "../../../../features/autoFix/feature.js";
-import { AutoFixRepository } from "../../../../features/autoFix/abstractions/AutoFixRepository.js";
+import { AutoFixFeature } from "../../../../features/AutoFix/feature.js";
+import { AutoFixRepository } from "../../../../features/AutoFix/abstractions/AutoFixRepository.js";
 import { UpdateAutoFixSettingsUseCase } from "../abstractions/UpdateAutoFixSettingsUseCase.js";
 import { UpdateAutoFixSettingsUseCase as UpdateAutoFixSettingsUseCaseRegistration } from "../UpdateAutoFixSettingsUseCase.js";
 

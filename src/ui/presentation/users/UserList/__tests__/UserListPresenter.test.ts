@@ -1,17 +1,17 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from "vitest";
 import { createContainer } from "#shared/index.js";
-import { UsersGateway as UsersGatewayAbstraction } from "../../../../features/users/abstractions/UsersGateway.js";
-import type { UsersGateway } from "../../../../features/users/abstractions/UsersGateway.js";
-import { UsersRepository as UsersRepositoryRegistration } from "../../../../features/users/UsersRepository.js";
-import { AuthRepository as AuthRepositoryAbstraction } from "../../../../features/auth/abstractions/AuthRepository.js";
-import type { AuthRepository } from "../../../../features/auth/abstractions/AuthRepository.js";
+import { UsersGateway as UsersGatewayAbstraction } from "../../../../features/Users/abstractions/UsersGateway.js";
+import type { UsersGateway } from "../../../../features/Users/abstractions/UsersGateway.js";
+import { UsersRepository as UsersRepositoryRegistration } from "../../../../features/Users/UsersRepository.js";
+import { AuthRepository as AuthRepositoryAbstraction } from "../../../../features/Auth/abstractions/AuthRepository.js";
+import type { AuthRepository } from "../../../../features/Auth/abstractions/AuthRepository.js";
 import { LoadUsersUseCase as LoadUsersUseCaseRegistration } from "../../useCases/LoadUsersUseCase.js";
 import { CreateUserUseCase as CreateUserUseCaseRegistration } from "../../useCases/CreateUserUseCase.js";
 import { UpdateUserUseCase as UpdateUserUseCaseRegistration } from "../../useCases/UpdateUserUseCase.js";
 import { DeleteUserUseCase as DeleteUserUseCaseRegistration } from "../../useCases/DeleteUserUseCase.js";
 import { ForceLogoutUserUseCase as ForceLogoutUserUseCaseRegistration } from "../../useCases/ForceLogoutUserUseCase.js";
-import { UrlFilterFeature } from "../../../../features/urlFilter/feature.js";
+import { UrlFilterFeature } from "../../../../features/UrlFilter/feature.js";
 import { UserListPresenter } from "../abstractions/UserListPresenter.js";
 import { UserListPresenter as UserListPresenterRegistration } from "../UserListPresenter.js";
 import type { UserResponse } from "#shared/users/index.js";

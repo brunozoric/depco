@@ -1,6 +1,6 @@
 import { LoadLicensesUseCase as Abstraction } from "./abstractions/LoadLicensesUseCase.js";
-import { LicensesGateway } from "../../../features/licenses/abstractions/LicensesGateway.js";
-import { LicensesRepository } from "../../../features/licenses/abstractions/LicensesRepository.js";
+import { LicensesGateway } from "../../../features/Licenses/abstractions/LicensesGateway.js";
+import { LicensesRepository } from "../../../features/Licenses/abstractions/LicensesRepository.js";
 
 class LoadLicensesUseCaseImpl implements Abstraction.Interface {
     public constructor(

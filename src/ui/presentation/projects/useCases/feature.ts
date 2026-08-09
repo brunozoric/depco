@@ -1,5 +1,5 @@
 import { createFeature } from "#shared/index.js";
-import { ProjectsFeature } from "../../../features/projects/feature.js";
+import { ProjectsFeature } from "../../../features/Projects/feature.js";
 import { LoadProjectsUseCase } from "./LoadProjectsUseCase.js";
 import { AddProjectUseCase } from "./AddProjectUseCase.js";
 import { RemoveProjectUseCase } from "./RemoveProjectUseCase.js";

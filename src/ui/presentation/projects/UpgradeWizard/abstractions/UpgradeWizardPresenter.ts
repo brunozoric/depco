@@ -1,5 +1,5 @@
 import { createAbstraction } from "#shared/index.js";
-import type { UpgradeSessionsGateway } from "../../../../features/upgradeSessions/abstractions/UpgradeSessionsGateway.js";
+import type { UpgradeSessionsGateway } from "../../../../features/UpgradeSessions/abstractions/UpgradeSessionsGateway.js";
 import type { IChangelogResult } from "../../ProjectDetail/abstractions/ProjectDetailPresenter.js";
 import type {
     IChangelogTrackingState,

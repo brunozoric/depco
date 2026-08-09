@@ -1,6 +1,6 @@
 import { ManageTeamUseCase as Abstraction } from "./abstractions/ManageTeamUseCase.js";
-import { TeamsGateway } from "../../../features/teams/abstractions/TeamsGateway.js";
-import { TeamsRepository } from "../../../features/teams/abstractions/TeamsRepository.js";
+import { TeamsGateway } from "../../../features/Teams/abstractions/TeamsGateway.js";
+import { TeamsRepository } from "../../../features/Teams/abstractions/TeamsRepository.js";
 
 class ManageTeamUseCaseImpl implements Abstraction.Interface {
     public constructor(

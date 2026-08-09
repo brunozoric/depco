@@ -1,5 +1,5 @@
 import { createAbstraction } from "#shared/index.js";
-import type { IConfigError } from "../../../../features/appSettings/abstractions/AppSettingsGateway.js";
+import type { IConfigError } from "../../../../features/AppSettings/abstractions/AppSettingsGateway.js";
 
 export interface ISettingOption {
     label: string;

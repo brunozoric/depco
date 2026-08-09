@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { exportBackupRoute } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
-import { BackupGateway } from "../../../../features/backup/abstractions/BackupGateway.js";
-import { BackupGateway as BackupGatewayRegistration } from "../../../../features/backup/BackupGateway.js";
+import { BackupGateway } from "../../../../features/Backup/abstractions/BackupGateway.js";
+import { BackupGateway as BackupGatewayRegistration } from "../../../../features/Backup/BackupGateway.js";
 import { ExportBackupUseCase } from "../abstractions/ExportBackupUseCase.js";
 import { ExportBackupUseCase as ExportBackupUseCaseRegistration } from "../ExportBackupUseCase.js";
 

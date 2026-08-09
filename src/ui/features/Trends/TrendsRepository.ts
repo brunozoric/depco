@@ -1,5 +1,5 @@
 import { TrendsRepository as Abstraction } from "./abstractions/TrendsRepository.js";
-import type { DashboardGateway } from "../dashboard/abstractions/DashboardGateway.js";
+import type { DashboardGateway } from "../Dashboard/abstractions/DashboardGateway.js";
 import type { TrendsGateway } from "./abstractions/TrendsGateway.js";
 
 class TrendsRepositoryImpl implements Abstraction.Interface {

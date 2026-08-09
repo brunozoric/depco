@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createContainer } from "#shared/index.js";
-import { UsersGateway as UsersGatewayAbstraction } from "../../../../features/users/abstractions/UsersGateway.js";
+import { UsersGateway as UsersGatewayAbstraction } from "../../../../features/Users/abstractions/UsersGateway.js";
 import { DeleteUserUseCase } from "../abstractions/DeleteUserUseCase.js";
 import { DeleteUserUseCase as DeleteUserUseCaseRegistration } from "../DeleteUserUseCase.js";
 

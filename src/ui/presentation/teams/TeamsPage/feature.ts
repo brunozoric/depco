@@ -2,7 +2,7 @@ import { createFeature } from "#shared/index.js";
 import { TeamsPresenter as TeamsPresenterAbstraction } from "./abstractions/TeamsPresenter.js";
 import { TeamsPresenter } from "./TeamsPresenter.js";
 import { TeamsUseCasesFeature } from "../useCases/feature.js";
-import { TeamsFeature } from "../../../features/teams/feature.js";
+import { TeamsFeature } from "../../../features/Teams/feature.js";
 
 export interface ITeamsPageFeatureExports {
     presenter: TeamsPresenterAbstraction.Interface;

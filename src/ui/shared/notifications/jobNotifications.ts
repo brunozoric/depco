@@ -1,7 +1,7 @@
 import type { Container } from "@webiny/di";
 import { notifications } from "@mantine/notifications";
 import type { WSJobStatus } from "#shared/websocket/types.js";
-import { ProjectsRepository } from "#ui/features/projects/abstractions/ProjectsRepository.js";
+import { ProjectsRepository } from "#ui/features/Projects/abstractions/ProjectsRepository.js";
 import { navigate } from "../router/router.js";
 
 const TERMINAL_STATUSES = new Set(["completed", "failed", "cancelled", "interrupted"]);

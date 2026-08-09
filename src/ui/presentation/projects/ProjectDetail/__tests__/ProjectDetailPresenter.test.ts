@@ -25,15 +25,15 @@ import {
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
 import { HTTPClientFeature } from "../../../../httpClient/feature.js";
-import { ProjectsFeature } from "../../../../features/projects/feature.js";
-import { UpgradesFeature } from "../../../../features/upgrades/feature.js";
-import { ScanSchedulesFeature } from "../../../../features/scanSchedules/index.js";
-import { VulnerabilitiesFeature } from "../../../../features/vulnerabilities/feature.js";
-import { LicensesFeature } from "../../../../features/licenses/feature.js";
-import { AutoFixFeature } from "../../../../features/autoFix/feature.js";
-import { TeamsFeature } from "../../../../features/teams/feature.js";
-import { TeamFilterFeature } from "../../../../features/teamFilter/feature.js";
-import { SbomGateway as SbomGatewayAbstraction } from "../../../../features/sbom/abstractions/SbomGateway.js";
+import { ProjectsFeature } from "../../../../features/Projects/feature.js";
+import { UpgradesFeature } from "../../../../features/Upgrades/feature.js";
+import { ScanSchedulesFeature } from "../../../../features/ScanSchedules/index.js";
+import { VulnerabilitiesFeature } from "../../../../features/Vulnerabilities/feature.js";
+import { LicensesFeature } from "../../../../features/Licenses/feature.js";
+import { AutoFixFeature } from "../../../../features/AutoFix/feature.js";
+import { TeamsFeature } from "../../../../features/Teams/feature.js";
+import { TeamFilterFeature } from "../../../../features/TeamFilter/feature.js";
+import { SbomGateway as SbomGatewayAbstraction } from "../../../../features/Sbom/abstractions/SbomGateway.js";
 import { EventBridge } from "../../../../events/abstractions/EventBridge.js";
 import "../../../../events/eventMap.js";
 import { LoadProjectsUseCase as LoadProjectsUseCaseRegistration } from "../../useCases/LoadProjectsUseCase.js";
@@ -47,7 +47,7 @@ import { UpdateScanScheduleUseCase as UpdateScanScheduleUseCaseRegistration } fr
 import { ResetScanScheduleUseCase as ResetScanScheduleUseCaseRegistration } from "../../../scanSchedules/useCases/ResetScanScheduleUseCase.js";
 import { ProjectDetailPresenter } from "../abstractions/ProjectDetailPresenter.js";
 import { ProjectDetailPresenter as ProjectDetailPresenterRegistration } from "../ProjectDetailPresenter.js";
-import { UrlFilterService } from "../../../../features/urlFilter/abstractions/UrlFilterService.js";
+import { UrlFilterService } from "../../../../features/UrlFilter/abstractions/UrlFilterService.js";
 
 interface RecordedCall {
     route: unknown;

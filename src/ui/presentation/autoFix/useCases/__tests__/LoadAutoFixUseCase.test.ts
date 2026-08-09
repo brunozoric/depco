@@ -5,11 +5,11 @@ import {
     getProjectAutoFixPullRequestsRoute
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
-import { AutoFixFeature } from "../../../../features/autoFix/feature.js";
-import { AutoFixRepository } from "../../../../features/autoFix/abstractions/AutoFixRepository.js";
+import { AutoFixFeature } from "../../../../features/AutoFix/feature.js";
+import { AutoFixRepository } from "../../../../features/AutoFix/abstractions/AutoFixRepository.js";
 import { LoadAutoFixUseCase } from "../abstractions/LoadAutoFixUseCase.js";
 import { LoadAutoFixUseCase as LoadAutoFixUseCaseRegistration } from "../LoadAutoFixUseCase.js";
-import type { AutoFixGateway } from "../../../../features/autoFix/abstractions/AutoFixGateway.js";
+import type { AutoFixGateway } from "../../../../features/AutoFix/abstractions/AutoFixGateway.js";
 
 interface RecordedCall {
     route: unknown;

@@ -1,6 +1,6 @@
 import { ExportSbomUseCase as Abstraction } from "./abstractions/ExportSbomUseCase.js";
-import { SbomGateway } from "../../../features/sbom/abstractions/SbomGateway.js";
-import { SbomRepository } from "../../../features/sbom/abstractions/SbomRepository.js";
+import { SbomGateway } from "../../../features/Sbom/abstractions/SbomGateway.js";
+import { SbomRepository } from "../../../features/Sbom/abstractions/SbomRepository.js";
 import { downloadBlob } from "#ui/shared/download/downloadBlob.js";
 
 class ExportSbomUseCaseImpl implements Abstraction.Interface {

@@ -1,7 +1,7 @@
 import { createFeature } from "#shared/index.js";
 import { StepHooksPresenter as StepHooksPresenterAbstraction } from "./abstractions/StepHooksPresenter.js";
 import { StepHooksPresenter } from "./StepHooksPresenter.js";
-import { StepHooksFeature as StepHooksHeadlessFeature } from "../../../features/stepHooks/feature.js";
+import { StepHooksFeature as StepHooksHeadlessFeature } from "../../../features/StepHooks/feature.js";
 
 export interface IStepHooksPresentationFeatureExports {
     presenter: StepHooksPresenterAbstraction.Interface;

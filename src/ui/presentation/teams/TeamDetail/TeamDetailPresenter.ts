@@ -1,7 +1,7 @@
 import { computed, makeAutoObservable, runInAction } from "mobx";
 import { TeamDetailPresenter as Abstraction } from "./abstractions/TeamDetailPresenter.js";
-import { TeamsGateway } from "../../../features/teams/abstractions/TeamsGateway.js";
-import { TeamFilterService } from "../../../features/teamFilter/abstractions/TeamFilterService.js";
+import { TeamsGateway } from "../../../features/Teams/abstractions/TeamsGateway.js";
+import { TeamFilterService } from "../../../features/TeamFilter/abstractions/TeamFilterService.js";
 import { DashboardPresenter } from "../../dashboard/Dashboard/abstractions/DashboardPresenter.js";
 
 class TeamDetailPresenterImpl implements Abstraction.Interface {

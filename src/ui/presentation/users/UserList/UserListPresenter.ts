@@ -8,9 +8,9 @@ import { CreateUserUseCase } from "../useCases/abstractions/CreateUserUseCase.js
 import { UpdateUserUseCase } from "../useCases/abstractions/UpdateUserUseCase.js";
 import { DeleteUserUseCase } from "../useCases/abstractions/DeleteUserUseCase.js";
 import { ForceLogoutUserUseCase } from "../useCases/abstractions/ForceLogoutUserUseCase.js";
-import { UsersRepository } from "../../../features/users/abstractions/UsersRepository.js";
-import { AuthRepository } from "../../../features/auth/abstractions/AuthRepository.js";
-import { UrlFilterService } from "../../../features/urlFilter/abstractions/UrlFilterService.js";
+import { UsersRepository } from "../../../features/Users/abstractions/UsersRepository.js";
+import { AuthRepository } from "../../../features/Auth/abstractions/AuthRepository.js";
+import { UrlFilterService } from "../../../features/UrlFilter/abstractions/UrlFilterService.js";
 
 const FILTER_SCHEMA = listUsersRoute.querystring as NonNullable<typeof listUsersRoute.querystring> &
     z.ZodObject<z.ZodRawShape>;

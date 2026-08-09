@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { scanProjectLicensesRoute } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
-import { LicensesFeature } from "../../../../features/licenses/feature.js";
+import { LicensesFeature } from "../../../../features/Licenses/feature.js";
 import { ScanLicensesUseCase } from "../abstractions/ScanLicensesUseCase.js";
 import { ScanLicensesUseCase as ScanLicensesUseCaseRegistration } from "../ScanLicensesUseCase.js";
 

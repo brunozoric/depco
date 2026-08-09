@@ -14,7 +14,7 @@ import {
 import { observer } from "mobx-react-lite";
 import { navigate } from "#ui/shared/router/router.js";
 import type { BackupPresenter } from "../abstractions/BackupPresenter.js";
-import type { BackupGateway } from "../../../../features/backup/abstractions/BackupGateway.js";
+import type { BackupGateway } from "../../../../features/Backup/abstractions/BackupGateway.js";
 
 interface BackupPageProps {
     presenter: BackupPresenter.Interface;

@@ -4,13 +4,13 @@ import { TrendsPresenter } from "../TrendsPage/abstractions/TrendsPresenter.js";
 import { TrendsPresenter as TrendsPresenterRegistration } from "../TrendsPage/TrendsPresenter.js";
 import { LoadTrendsUseCase as LoadTrendsUseCaseAbstraction } from "../useCases/abstractions/LoadTrendsUseCase.js";
 import { LoadDependencyChangesUseCase as LoadDependencyChangesUseCaseAbstraction } from "../useCases/abstractions/LoadDependencyChangesUseCase.js";
-import { TrendsRepository as TrendsRepositoryAbstraction } from "../../../features/trends/abstractions/TrendsRepository.js";
+import { TrendsRepository as TrendsRepositoryAbstraction } from "../../../features/Trends/abstractions/TrendsRepository.js";
 import { LoadProjectsUseCase as LoadProjectsUseCaseAbstraction } from "../../projects/useCases/abstractions/LoadProjectsUseCase.js";
-import { ProjectsRepository as ProjectsRepositoryAbstraction } from "../../../features/projects/abstractions/ProjectsRepository.js";
-import type { DashboardGateway } from "../../../features/dashboard/abstractions/DashboardGateway.js";
-import type { TrendsGateway } from "../../../features/trends/abstractions/TrendsGateway.js";
+import { ProjectsRepository as ProjectsRepositoryAbstraction } from "../../../features/Projects/abstractions/ProjectsRepository.js";
+import type { DashboardGateway } from "../../../features/Dashboard/abstractions/DashboardGateway.js";
+import type { TrendsGateway } from "../../../features/Trends/abstractions/TrendsGateway.js";
 import type { LoadTrendsUseCase } from "../useCases/abstractions/LoadTrendsUseCase.js";
-import { TeamFilterFeature } from "../../../features/teamFilter/feature.js";
+import { TeamFilterFeature } from "../../../features/TeamFilter/feature.js";
 
 interface FakeTrendsRepositoryHandle {
     repository: TrendsRepositoryAbstraction.Interface;

@@ -1,5 +1,5 @@
 import { createAbstraction } from "#shared/index.js";
-import type { LicensesGateway } from "../../../../features/licenses/abstractions/LicensesGateway.js";
+import type { LicensesGateway } from "../../../../features/Licenses/abstractions/LicensesGateway.js";
 
 export interface IManagePolicyRulesUseCase {
     create(input: LicensesGateway.CreatePolicyInput): Promise<void>;

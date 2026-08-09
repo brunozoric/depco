@@ -1,5 +1,5 @@
 import { createFeature } from "#shared/index.js";
-import { LicensesFeature } from "../../../features/licenses/feature.js";
+import { LicensesFeature } from "../../../features/Licenses/feature.js";
 import { LoadLicensesUseCase } from "./LoadLicensesUseCase.js";
 import { ManagePolicyRulesUseCase } from "./ManagePolicyRulesUseCase.js";
 import { ScanLicensesUseCase } from "./ScanLicensesUseCase.js";

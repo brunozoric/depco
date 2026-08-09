@@ -1,6 +1,6 @@
 import { ManagePolicyRulesUseCase as Abstraction } from "./abstractions/ManagePolicyRulesUseCase.js";
-import { LicensesGateway } from "../../../features/licenses/abstractions/LicensesGateway.js";
-import { LicensesRepository } from "../../../features/licenses/abstractions/LicensesRepository.js";
+import { LicensesGateway } from "../../../features/Licenses/abstractions/LicensesGateway.js";
+import { LicensesRepository } from "../../../features/Licenses/abstractions/LicensesRepository.js";
 
 class ManagePolicyRulesUseCaseImpl implements Abstraction.Interface {
     public constructor(

@@ -1,6 +1,6 @@
 import { LoadDashboardUseCase as Abstraction } from "./abstractions/LoadDashboardUseCase.js";
-import { DashboardGateway } from "../../../features/dashboard/abstractions/DashboardGateway.js";
-import { DashboardRepository } from "../../../features/dashboard/abstractions/DashboardRepository.js";
+import { DashboardGateway } from "../../../features/Dashboard/abstractions/DashboardGateway.js";
+import { DashboardRepository } from "../../../features/Dashboard/abstractions/DashboardRepository.js";
 
 class LoadDashboardUseCaseImpl implements Abstraction.Interface {
     public constructor(

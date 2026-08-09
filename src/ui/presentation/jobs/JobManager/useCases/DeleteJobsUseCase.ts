@@ -1,5 +1,5 @@
 import { DeleteJobsUseCase as Abstraction } from "./abstractions/DeleteJobsUseCase.js";
-import { JobsGateway } from "../../../../features/jobs/abstractions/JobsGateway.js";
+import { JobsGateway } from "../../../../features/Jobs/abstractions/JobsGateway.js";
 
 class DeleteJobsUseCaseImpl implements Abstraction.Interface {
     public constructor(private readonly gateway: JobsGateway.Interface) {}

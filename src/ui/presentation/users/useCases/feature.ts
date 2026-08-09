@@ -1,5 +1,5 @@
 import { createFeature } from "#shared/index.js";
-import { UsersFeature } from "../../../features/users/feature.js";
+import { UsersFeature } from "../../../features/Users/feature.js";
 import { LoadUsersUseCase } from "./LoadUsersUseCase.js";
 import { CreateUserUseCase } from "./CreateUserUseCase.js";
 import { UpdateUserUseCase } from "./UpdateUserUseCase.js";

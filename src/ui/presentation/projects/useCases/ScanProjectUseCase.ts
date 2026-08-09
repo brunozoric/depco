@@ -1,5 +1,5 @@
 import { ScanProjectUseCase as Abstraction } from "./abstractions/ScanProjectUseCase.js";
-import { ProjectsGateway } from "../../../features/projects/abstractions/ProjectsGateway.js";
+import { ProjectsGateway } from "../../../features/Projects/abstractions/ProjectsGateway.js";
 
 class ScanProjectUseCaseImpl implements Abstraction.Interface {
     public constructor(private readonly projectsGateway: ProjectsGateway.Interface) {}

@@ -1,6 +1,6 @@
 import { CancelJobUseCase as Abstraction } from "./abstractions/CancelJobUseCase.js";
-import { JobsGateway } from "../../../../features/jobs/abstractions/JobsGateway.js";
-import { JobsRepository } from "../../../../features/jobs/abstractions/JobsRepository.js";
+import { JobsGateway } from "../../../../features/Jobs/abstractions/JobsGateway.js";
+import { JobsRepository } from "../../../../features/Jobs/abstractions/JobsRepository.js";
 
 class CancelJobUseCaseImpl implements Abstraction.Interface {
     public constructor(

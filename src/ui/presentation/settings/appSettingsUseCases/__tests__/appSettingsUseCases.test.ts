@@ -3,11 +3,11 @@ import { createContainer } from "#shared/index.js";
 import { listAppSettingsRoute, upsertAppSettingRoute } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
 import { HTTPClientFeature } from "../../../../httpClient/feature.js";
-import { AppSettingsFeature } from "../../../../features/appSettings/feature.js";
+import { AppSettingsFeature } from "../../../../features/AppSettings/feature.js";
 import { AppSettingsUseCasesFeature } from "../feature.js";
 import { LoadAppSettingsUseCase } from "../abstractions/LoadAppSettingsUseCase.js";
 import { UpsertAppSettingUseCase } from "../abstractions/UpsertAppSettingUseCase.js";
-import { AppSettingsRepository } from "../../../../features/appSettings/abstractions/AppSettingsRepository.js";
+import { AppSettingsRepository } from "../../../../features/AppSettings/abstractions/AppSettingsRepository.js";
 
 interface RecordedCall {
     route: unknown;

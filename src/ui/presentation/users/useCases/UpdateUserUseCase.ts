@@ -1,5 +1,5 @@
 import { UpdateUserUseCase as Abstraction } from "./abstractions/UpdateUserUseCase.js";
-import { UsersGateway } from "../../../features/users/abstractions/UsersGateway.js";
+import { UsersGateway } from "../../../features/Users/abstractions/UsersGateway.js";
 
 class UpdateUserUseCaseImpl implements Abstraction.Interface {
     public constructor(private readonly gateway: UsersGateway.Interface) {}

@@ -1,5 +1,5 @@
 import { ForceLogoutUserUseCase as Abstraction } from "./abstractions/ForceLogoutUserUseCase.js";
-import { UsersGateway } from "../../../features/users/abstractions/UsersGateway.js";
+import { UsersGateway } from "../../../features/Users/abstractions/UsersGateway.js";
 
 class ForceLogoutUserUseCaseImpl implements Abstraction.Interface {
     public constructor(private readonly gateway: UsersGateway.Interface) {}

@@ -14,13 +14,13 @@ import {
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
 import { HTTPClientFeature } from "../../../../httpClient/feature.js";
-import { ProjectsFeature } from "../../../../features/projects/feature.js";
-import type { ProjectsGateway } from "../../../../features/projects/abstractions/ProjectsGateway.js";
-import { UpgradesFeature } from "../../../../features/upgrades/feature.js";
-import { FilesystemFeature } from "../../../../features/filesystem/feature.js";
+import { ProjectsFeature } from "../../../../features/Projects/feature.js";
+import type { ProjectsGateway } from "../../../../features/Projects/abstractions/ProjectsGateway.js";
+import { UpgradesFeature } from "../../../../features/Upgrades/feature.js";
+import { FilesystemFeature } from "../../../../features/Filesystem/feature.js";
 import { EventBridge } from "../../../../events/abstractions/EventBridge.js";
 import "../../../../events/eventMap.js";
-import { TeamFilterFeature } from "../../../../features/teamFilter/feature.js";
+import { TeamFilterFeature } from "../../../../features/TeamFilter/feature.js";
 import { LoadProjectsUseCase as LoadProjectsUseCaseRegistration } from "../../useCases/LoadProjectsUseCase.js";
 import { AddProjectUseCase as AddProjectUseCaseRegistration } from "../../useCases/AddProjectUseCase.js";
 import { RemoveProjectUseCase as RemoveProjectUseCaseRegistration } from "../../useCases/RemoveProjectUseCase.js";

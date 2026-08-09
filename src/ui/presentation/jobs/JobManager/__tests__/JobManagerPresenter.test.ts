@@ -9,10 +9,10 @@ import {
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
 import { HTTPClientFeature } from "../../../../httpClient/feature.js";
-import { JobsFeature } from "../../../../features/jobs/feature.js";
-import type { JobsGateway } from "../../../../features/jobs/abstractions/JobsGateway.js";
-import { ProjectsFeature } from "../../../../features/projects/feature.js";
-import { ProjectsRepository } from "../../../../features/projects/abstractions/ProjectsRepository.js";
+import { JobsFeature } from "../../../../features/Jobs/feature.js";
+import type { JobsGateway } from "../../../../features/Jobs/abstractions/JobsGateway.js";
+import { ProjectsFeature } from "../../../../features/Projects/feature.js";
+import { ProjectsRepository } from "../../../../features/Projects/abstractions/ProjectsRepository.js";
 import { EventBridge } from "../../../../events/abstractions/EventBridge.js";
 import "../../../../events/eventMap.js";
 import { LoadAllJobsUseCase as LoadAllJobsUseCaseRegistration } from "../useCases/LoadAllJobsUseCase.js";

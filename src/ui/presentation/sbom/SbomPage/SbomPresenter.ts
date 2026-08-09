@@ -2,7 +2,7 @@ import { computed, makeAutoObservable, runInAction } from "mobx";
 import { SbomPresenter as Abstraction } from "./abstractions/SbomPresenter.js";
 import { ExportSbomUseCase } from "../useCases/abstractions/ExportSbomUseCase.js";
 import { LoadProjectsUseCase } from "../../projects/useCases/abstractions/LoadProjectsUseCase.js";
-import { ProjectsRepository } from "../../../features/projects/abstractions/ProjectsRepository.js";
+import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
 
 class SbomPresenterImpl implements Abstraction.Interface {
     private loading = true;

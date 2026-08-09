@@ -1,5 +1,5 @@
 import { createAbstraction } from "#shared/index.js";
-import type { IJobFilters } from "../../../../../features/jobs/abstractions/JobsGateway.js";
+import type { IJobFilters } from "../../../../../features/Jobs/abstractions/JobsGateway.js";
 
 export interface IDeleteJobsUseCase {
     execute(filters: IJobFilters): Promise<number>;

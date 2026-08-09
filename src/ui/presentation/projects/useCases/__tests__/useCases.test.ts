@@ -9,10 +9,10 @@ import {
     cloneProjectRoute
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
-import { ProjectsGateway } from "../../../../features/projects/abstractions/ProjectsGateway.js";
-import { ProjectsGateway as ProjectsGatewayRegistration } from "../../../../features/projects/ProjectsGateway.js";
-import { ProjectsRepository } from "../../../../features/projects/abstractions/ProjectsRepository.js";
-import { ProjectsRepository as ProjectsRepositoryRegistration } from "../../../../features/projects/ProjectsRepository.js";
+import { ProjectsGateway } from "../../../../features/Projects/abstractions/ProjectsGateway.js";
+import { ProjectsGateway as ProjectsGatewayRegistration } from "../../../../features/Projects/ProjectsGateway.js";
+import { ProjectsRepository } from "../../../../features/Projects/abstractions/ProjectsRepository.js";
+import { ProjectsRepository as ProjectsRepositoryRegistration } from "../../../../features/Projects/ProjectsRepository.js";
 import { LoadProjectsUseCase } from "../abstractions/LoadProjectsUseCase.js";
 import { LoadProjectsUseCase as LoadProjectsUseCaseRegistration } from "../LoadProjectsUseCase.js";
 import { AddProjectUseCase } from "../abstractions/AddProjectUseCase.js";

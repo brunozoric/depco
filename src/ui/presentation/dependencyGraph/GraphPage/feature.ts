@@ -2,7 +2,7 @@ import { createFeature } from "#shared/index.js";
 import { DependencyGraphPresenter as DependencyGraphPresenterAbstraction } from "./abstractions/DependencyGraphPresenter.js";
 import { DependencyGraphPresenter } from "./DependencyGraphPresenter.js";
 import { DependencyGraphUseCasesFeature } from "../useCases/feature.js";
-import { DependencyGraphFeature } from "../../../features/dependencyGraph/feature.js";
+import { DependencyGraphFeature } from "../../../features/DependencyGraph/feature.js";
 import { WebSocketFeature } from "../../../websocket/feature.js";
 
 export interface IDependencyGraphPageFeatureExports {

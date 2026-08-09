@@ -1,7 +1,7 @@
 import { computed, makeAutoObservable, runInAction } from "mobx";
 import { LoginPresenter as Abstraction } from "./abstractions/LoginPresenter.js";
-import { AuthGateway } from "../../../features/auth/abstractions/AuthGateway.js";
-import { AuthRepository } from "../../../features/auth/abstractions/AuthRepository.js";
+import { AuthGateway } from "../../../features/Auth/abstractions/AuthGateway.js";
+import { AuthRepository } from "../../../features/Auth/abstractions/AuthRepository.js";
 
 class LoginPresenterImpl implements Abstraction.Interface {
     private state: Abstraction.State = "idle";

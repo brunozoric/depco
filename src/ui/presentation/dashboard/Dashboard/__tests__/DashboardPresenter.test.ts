@@ -17,14 +17,14 @@ import {
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
 import { HTTPClientFeature } from "../../../../httpClient/feature.js";
-import { DashboardFeature } from "../../../../features/dashboard/feature.js";
+import { DashboardFeature } from "../../../../features/Dashboard/feature.js";
 import { EventBridge } from "../../../../events/abstractions/EventBridge.js";
 import "../../../../events/eventMap.js";
 import { DashboardUseCasesFeature } from "../../useCases/feature.js";
 import { DashboardPresenter as DashboardPresenterAbstraction } from "../abstractions/DashboardPresenter.js";
 import { DashboardPresenter as DashboardPresenterRegistration } from "../DashboardPresenter.js";
-import type { DashboardGateway } from "../../../../features/dashboard/abstractions/DashboardGateway.js";
-import { TeamFilterFeature } from "../../../../features/teamFilter/feature.js";
+import type { DashboardGateway } from "../../../../features/Dashboard/abstractions/DashboardGateway.js";
+import { TeamFilterFeature } from "../../../../features/TeamFilter/feature.js";
 
 interface RecordedCall {
     route: unknown;

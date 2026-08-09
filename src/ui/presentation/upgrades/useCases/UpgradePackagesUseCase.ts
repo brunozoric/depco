@@ -1,6 +1,6 @@
 import { UpgradePackagesUseCase as Abstraction } from "./abstractions/UpgradePackagesUseCase.js";
-import { UpgradesGateway } from "../../../features/upgrades/abstractions/UpgradesGateway.js";
-import { UpgradesRepository } from "../../../features/upgrades/abstractions/UpgradesRepository.js";
+import { UpgradesGateway } from "../../../features/Upgrades/abstractions/UpgradesGateway.js";
+import { UpgradesRepository } from "../../../features/Upgrades/abstractions/UpgradesRepository.js";
 
 class UpgradePackagesUseCaseImpl implements Abstraction.Interface {
     public constructor(

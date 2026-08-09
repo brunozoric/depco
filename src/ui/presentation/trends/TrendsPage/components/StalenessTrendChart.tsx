@@ -10,7 +10,7 @@ import {
     XAxis,
     YAxis
 } from "recharts";
-import type { DashboardGateway } from "../../../../features/dashboard/abstractions/DashboardGateway.js";
+import type { DashboardGateway } from "../../../../features/Dashboard/abstractions/DashboardGateway.js";
 
 interface StalenessTrendChartProps {
     data: DashboardGateway.StalenessTrendPoint[];

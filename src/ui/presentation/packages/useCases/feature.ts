@@ -1,5 +1,5 @@
 import { createFeature } from "#shared/index.js";
-import { PackagesFeature } from "../../../features/packages/feature.js";
+import { PackagesFeature } from "../../../features/Packages/feature.js";
 import { LoadPackagesUseCase } from "./LoadPackagesUseCase.js";
 
 export const PackagesUseCasesFeature = createFeature({

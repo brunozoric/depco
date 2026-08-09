@@ -1,5 +1,5 @@
 import { createAbstraction } from "#shared/index.js";
-import type { IAppLogsFilters } from "../../../../features/appLogs/abstractions/AppLogsGateway.js";
+import type { IAppLogsFilters } from "../../../../features/AppLogs/abstractions/AppLogsGateway.js";
 
 export interface IDeleteAppLogsUseCase {
     execute(filters: IAppLogsFilters): Promise<number>;

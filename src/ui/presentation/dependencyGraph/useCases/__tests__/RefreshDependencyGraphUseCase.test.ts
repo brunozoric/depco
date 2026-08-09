@@ -6,8 +6,8 @@ import {
     refreshDependencyGraphRoute
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
-import { DependencyGraphFeature } from "../../../../features/dependencyGraph/feature.js";
-import { DependencyGraphRepository } from "../../../../features/dependencyGraph/abstractions/DependencyGraphRepository.js";
+import { DependencyGraphFeature } from "../../../../features/DependencyGraph/feature.js";
+import { DependencyGraphRepository } from "../../../../features/DependencyGraph/abstractions/DependencyGraphRepository.js";
 import { RefreshDependencyGraphUseCase } from "../abstractions/RefreshDependencyGraphUseCase.js";
 import { RefreshDependencyGraphUseCase as RefreshDependencyGraphUseCaseRegistration } from "../RefreshDependencyGraphUseCase.js";
 

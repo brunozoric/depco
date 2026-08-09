@@ -1,6 +1,6 @@
 import { LoadAppLogsUseCase as Abstraction } from "./abstractions/LoadAppLogsUseCase.js";
-import { AppLogsGateway } from "../../../features/appLogs/abstractions/AppLogsGateway.js";
-import { AppLogsRepository } from "../../../features/appLogs/abstractions/AppLogsRepository.js";
+import { AppLogsGateway } from "../../../features/AppLogs/abstractions/AppLogsGateway.js";
+import { AppLogsRepository } from "../../../features/AppLogs/abstractions/AppLogsRepository.js";
 
 class LoadAppLogsUseCaseImpl implements Abstraction.Interface {
     public constructor(

@@ -1,5 +1,5 @@
 import { createFeature } from "#shared/index.js";
-import { ScanSchedulesFeature } from "../../../features/scanSchedules/index.js";
+import { ScanSchedulesFeature } from "../../../features/ScanSchedules/index.js";
 import { LoadScanSchedulesUseCase } from "./LoadScanSchedulesUseCase.js";
 import { UpdateScanScheduleUseCase } from "./UpdateScanScheduleUseCase.js";
 import { ResetScanScheduleUseCase } from "./ResetScanScheduleUseCase.js";

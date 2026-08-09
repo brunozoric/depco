@@ -3,9 +3,9 @@ import { TeamsPresenter as Abstraction } from "./abstractions/TeamsPresenter.js"
 import type { IProjectOption } from "./abstractions/TeamsPresenter.js";
 import { LoadTeamsUseCase } from "../useCases/abstractions/LoadTeamsUseCase.js";
 import { ManageTeamUseCase } from "../useCases/abstractions/ManageTeamUseCase.js";
-import { TeamsRepository } from "../../../features/teams/abstractions/TeamsRepository.js";
-import { TeamsGateway } from "../../../features/teams/abstractions/TeamsGateway.js";
-import { ProjectsRepository } from "../../../features/projects/abstractions/ProjectsRepository.js";
+import { TeamsRepository } from "../../../features/Teams/abstractions/TeamsRepository.js";
+import { TeamsGateway } from "../../../features/Teams/abstractions/TeamsGateway.js";
+import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
 import { LoadProjectsUseCase } from "../../projects/useCases/abstractions/LoadProjectsUseCase.js";
 
 const DEFAULT_TEAM_COLOR = "#228be6";

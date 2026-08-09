@@ -1,6 +1,6 @@
 import { LoadVulnerabilitiesUseCase as Abstraction } from "./abstractions/LoadVulnerabilitiesUseCase.js";
-import { VulnerabilitiesGateway } from "../../../features/vulnerabilities/abstractions/VulnerabilitiesGateway.js";
-import { VulnerabilitiesRepository } from "../../../features/vulnerabilities/abstractions/VulnerabilitiesRepository.js";
+import { VulnerabilitiesGateway } from "../../../features/Vulnerabilities/abstractions/VulnerabilitiesGateway.js";
+import { VulnerabilitiesRepository } from "../../../features/Vulnerabilities/abstractions/VulnerabilitiesRepository.js";
 
 class LoadVulnerabilitiesUseCaseImpl implements Abstraction.Interface {
     public constructor(

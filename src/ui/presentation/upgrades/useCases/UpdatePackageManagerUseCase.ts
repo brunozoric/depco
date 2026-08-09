@@ -1,6 +1,6 @@
 import { UpdatePackageManagerUseCase as Abstraction } from "./abstractions/UpdatePackageManagerUseCase.js";
-import { UpgradesGateway } from "../../../features/upgrades/abstractions/UpgradesGateway.js";
-import { UpgradesRepository } from "../../../features/upgrades/abstractions/UpgradesRepository.js";
+import { UpgradesGateway } from "../../../features/Upgrades/abstractions/UpgradesGateway.js";
+import { UpgradesRepository } from "../../../features/Upgrades/abstractions/UpgradesRepository.js";
 
 class UpdatePackageManagerUseCaseImpl implements Abstraction.Interface {
     public constructor(

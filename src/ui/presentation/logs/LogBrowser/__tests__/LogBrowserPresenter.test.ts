@@ -5,16 +5,16 @@ import { listLogsRoute, deleteLogsRoute } from "#shared/routes/index.js";
 import { listProjectsRoute } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
 import { HTTPClientFeature } from "../../../../httpClient/feature.js";
-import { AppLogsFeature } from "../../../../features/appLogs/feature.js";
-import { ProjectsFeature } from "../../../../features/projects/feature.js";
+import { AppLogsFeature } from "../../../../features/AppLogs/feature.js";
+import { ProjectsFeature } from "../../../../features/Projects/feature.js";
 import { EventBridge } from "../../../../events/abstractions/EventBridge.js";
 import "../../../../events/eventMap.js";
 import { AppLogsUseCasesFeature } from "../../useCases/feature.js";
 import { ProjectsUseCasesFeature } from "../../../projects/useCases/feature.js";
 import { LogBrowserPresenter as LogBrowserPresenterAbstraction } from "../abstractions/LogBrowserPresenter.js";
 import { LogBrowserPresenter as LogBrowserPresenterRegistration } from "../LogBrowserPresenter.js";
-import type { AppLogsGateway } from "../../../../features/appLogs/abstractions/AppLogsGateway.js";
-import type { ProjectsGateway } from "../../../../features/projects/abstractions/ProjectsGateway.js";
+import type { AppLogsGateway } from "../../../../features/AppLogs/abstractions/AppLogsGateway.js";
+import type { ProjectsGateway } from "../../../../features/Projects/abstractions/ProjectsGateway.js";
 
 interface RecordedCall {
     route: unknown;

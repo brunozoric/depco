@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createContainer } from "#shared/index.js";
-import { TeamsGateway } from "../../../../features/teams/abstractions/TeamsGateway.js";
-import { TeamFilterService } from "../../../../features/teamFilter/abstractions/TeamFilterService.js";
+import { TeamsGateway } from "../../../../features/Teams/abstractions/TeamsGateway.js";
+import { TeamFilterService } from "../../../../features/TeamFilter/abstractions/TeamFilterService.js";
 import { DashboardPresenter } from "../../../dashboard/Dashboard/abstractions/DashboardPresenter.js";
 import { TeamDetailPresenter } from "../abstractions/TeamDetailPresenter.js";
 import { TeamDetailPresenter as TeamDetailPresenterRegistration } from "../TeamDetailPresenter.js";

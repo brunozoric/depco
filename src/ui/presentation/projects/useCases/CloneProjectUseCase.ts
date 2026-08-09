@@ -1,5 +1,5 @@
 import { CloneProjectUseCase as Abstraction } from "./abstractions/CloneProjectUseCase.js";
-import { ProjectsGateway } from "../../../features/projects/abstractions/ProjectsGateway.js";
+import { ProjectsGateway } from "../../../features/Projects/abstractions/ProjectsGateway.js";
 
 class CloneProjectUseCaseImpl implements Abstraction.Interface {
     public constructor(private readonly projectsGateway: ProjectsGateway.Interface) {}

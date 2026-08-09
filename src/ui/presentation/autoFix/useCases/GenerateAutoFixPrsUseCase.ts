@@ -1,5 +1,5 @@
 import { GenerateAutoFixPrsUseCase as Abstraction } from "./abstractions/GenerateAutoFixPrsUseCase.js";
-import { AutoFixGateway } from "../../../features/autoFix/abstractions/AutoFixGateway.js";
+import { AutoFixGateway } from "../../../features/AutoFix/abstractions/AutoFixGateway.js";
 
 class GenerateAutoFixPrsUseCaseImpl implements Abstraction.Interface {
     public constructor(private readonly gateway: AutoFixGateway.Interface) {}

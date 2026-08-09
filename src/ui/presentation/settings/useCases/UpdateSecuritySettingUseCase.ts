@@ -1,6 +1,6 @@
 import { UpdateSecuritySettingUseCase as Abstraction } from "./abstractions/UpdateSecuritySettingUseCase.js";
-import { PmSettingsGateway } from "../../../features/settings/abstractions/PmSettingsGateway.js";
-import { PmSettingsRepository } from "../../../features/settings/abstractions/PmSettingsRepository.js";
+import { PmSettingsGateway } from "../../../features/Settings/abstractions/PmSettingsGateway.js";
+import { PmSettingsRepository } from "../../../features/Settings/abstractions/PmSettingsRepository.js";
 
 class UpdateSecuritySettingUseCaseImpl implements Abstraction.Interface {
     public constructor(

@@ -2,8 +2,8 @@ import { createFeature } from "#shared/index.js";
 import { SbomPresenter as SbomPresenterAbstraction } from "./abstractions/SbomPresenter.js";
 import { SbomPresenter } from "./SbomPresenter.js";
 import { SbomUseCasesFeature } from "../useCases/feature.js";
-import { SbomFeature } from "../../../features/sbom/feature.js";
-import { ProjectsFeature } from "../../../features/projects/feature.js";
+import { SbomFeature } from "../../../features/Sbom/feature.js";
+import { ProjectsFeature } from "../../../features/Projects/feature.js";
 import { ProjectsUseCasesFeature } from "../../projects/useCases/feature.js";
 
 export interface ISbomPageFeatureExports {

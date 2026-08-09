@@ -1,12 +1,12 @@
 import { computed, makeAutoObservable, reaction, runInAction } from "mobx";
 import { DashboardPresenter as Abstraction } from "./abstractions/DashboardPresenter.js";
-import { DashboardRepository } from "../../../features/dashboard/abstractions/DashboardRepository.js";
+import { DashboardRepository } from "../../../features/Dashboard/abstractions/DashboardRepository.js";
 import { LoadDashboardUseCase } from "../useCases/abstractions/LoadDashboardUseCase.js";
 import { LoadVulnerabilityTrendUseCase } from "../useCases/abstractions/LoadVulnerabilityTrendUseCase.js";
 import { EventBridge } from "../../../events/abstractions/EventBridge.js";
 import "../../../events/eventMap.js";
-import { TeamFilterService } from "../../../features/teamFilter/abstractions/TeamFilterService.js";
-import { DashboardGateway } from "../../../features/dashboard/abstractions/DashboardGateway.js";
+import { TeamFilterService } from "../../../features/TeamFilter/abstractions/TeamFilterService.js";
+import { DashboardGateway } from "../../../features/Dashboard/abstractions/DashboardGateway.js";
 
 type VulnerabilityTrendDays = 7 | 30 | 90 | undefined;
 

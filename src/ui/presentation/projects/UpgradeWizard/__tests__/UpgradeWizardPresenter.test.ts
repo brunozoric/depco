@@ -13,16 +13,16 @@ import {
     reResolveChangelogsRoute
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
-import { ProjectsFeature } from "../../../../features/projects/feature.js";
-import { AppSettingsFeature } from "../../../../features/appSettings/feature.js";
+import { ProjectsFeature } from "../../../../features/Projects/feature.js";
+import { AppSettingsFeature } from "../../../../features/AppSettings/feature.js";
 import { ProjectsUseCasesFeature } from "../../useCases/feature.js";
-import { UpgradeSessionsGateway } from "../../../../features/upgradeSessions/UpgradeSessionsGateway.js";
-import { UpgradeSessionsRepository } from "../../../../features/upgradeSessions/UpgradeSessionsRepository.js";
+import { UpgradeSessionsGateway } from "../../../../features/UpgradeSessions/UpgradeSessionsGateway.js";
+import { UpgradeSessionsRepository } from "../../../../features/UpgradeSessions/UpgradeSessionsRepository.js";
 import { EventBridge } from "../../../../events/abstractions/EventBridge.js";
 import "../../../../events/eventMap.js";
 import { UpgradeWizardPresenter } from "../abstractions/UpgradeWizardPresenter.js";
 import { UpgradeWizardPresenter as UpgradeWizardPresenterRegistration } from "../UpgradeWizardPresenter.js";
-import type { UpgradeSessionsGateway as UpgradeSessionsGatewayNS } from "../../../../features/upgradeSessions/abstractions/UpgradeSessionsGateway.js";
+import type { UpgradeSessionsGateway as UpgradeSessionsGatewayNS } from "../../../../features/UpgradeSessions/abstractions/UpgradeSessionsGateway.js";
 
 interface RecordedCall {
     route: unknown;

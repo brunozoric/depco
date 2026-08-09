@@ -4,7 +4,7 @@ import { Select, Stack, Text } from "@mantine/core";
 import { useContainer } from "../../../../shared/di/ContainerProvider.js";
 import { LoadScanSchedulesUseCase } from "../../../scanSchedules/useCases/abstractions/LoadScanSchedulesUseCase.js";
 import { UpdateScanScheduleDefaultUseCase } from "../../../scanSchedules/useCases/abstractions/UpdateScanScheduleDefaultUseCase.js";
-import { ScanSchedulesRepository } from "../../../../features/scanSchedules/abstractions/ScanSchedulesRepository.js";
+import { ScanSchedulesRepository } from "../../../../features/ScanSchedules/abstractions/ScanSchedulesRepository.js";
 import { SCAN_INTERVALS } from "#shared/schedules/types.js";
 
 const INTERVAL_LABELS: Record<string, string> = {

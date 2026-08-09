@@ -1,6 +1,6 @@
 import { LoadAllJobsUseCase as Abstraction } from "./abstractions/LoadAllJobsUseCase.js";
-import { JobsGateway } from "../../../../features/jobs/abstractions/JobsGateway.js";
-import { JobsRepository } from "../../../../features/jobs/abstractions/JobsRepository.js";
+import { JobsGateway } from "../../../../features/Jobs/abstractions/JobsGateway.js";
+import { JobsRepository } from "../../../../features/Jobs/abstractions/JobsRepository.js";
 
 class LoadAllJobsUseCaseImpl implements Abstraction.Interface {
     public constructor(

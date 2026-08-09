@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createContainer } from "#shared/index.js";
-import { DependencyGraphGateway as DependencyGraphGatewayAbstraction } from "../../../features/dependencyGraph/abstractions/DependencyGraphGateway.js";
-import type { DependencyGraphGateway } from "../../../features/dependencyGraph/abstractions/DependencyGraphGateway.js";
-import { DependencyGraphRepository as DependencyGraphRepositoryRegistration } from "../../../features/dependencyGraph/DependencyGraphRepository.js";
+import { DependencyGraphGateway as DependencyGraphGatewayAbstraction } from "../../../features/DependencyGraph/abstractions/DependencyGraphGateway.js";
+import type { DependencyGraphGateway } from "../../../features/DependencyGraph/abstractions/DependencyGraphGateway.js";
+import { DependencyGraphRepository as DependencyGraphRepositoryRegistration } from "../../../features/DependencyGraph/DependencyGraphRepository.js";
 import { LoadDependencyGraphUseCase as LoadDependencyGraphUseCaseRegistration } from "../useCases/LoadDependencyGraphUseCase.js";
 import { RefreshDependencyGraphUseCase as RefreshDependencyGraphUseCaseRegistration } from "../useCases/RefreshDependencyGraphUseCase.js";
 import { DependencyGraphPresenter } from "../GraphPage/abstractions/DependencyGraphPresenter.js";

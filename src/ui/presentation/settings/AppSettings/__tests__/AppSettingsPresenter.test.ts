@@ -3,8 +3,8 @@ import type { Container } from "@webiny/di";
 import { createContainer } from "#shared/index.js";
 import { LoadAppSettingsUseCase } from "../../appSettingsUseCases/abstractions/LoadAppSettingsUseCase.js";
 import { UpsertAppSettingUseCase } from "../../appSettingsUseCases/abstractions/UpsertAppSettingUseCase.js";
-import { AppSettingsRepository } from "../../../../features/appSettings/abstractions/AppSettingsRepository.js";
-import type { AppSettingsGateway } from "../../../../features/appSettings/abstractions/AppSettingsGateway.js";
+import { AppSettingsRepository } from "../../../../features/AppSettings/abstractions/AppSettingsRepository.js";
+import type { AppSettingsGateway } from "../../../../features/AppSettings/abstractions/AppSettingsGateway.js";
 import { AppSettingsPresenter } from "../abstractions/AppSettingsPresenter.js";
 import { AppSettingsPresenter as AppSettingsPresenterRegistration } from "../AppSettingsPresenter.js";
 

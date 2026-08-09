@@ -1,6 +1,6 @@
 import { TrendsGateway as Abstraction } from "./abstractions/TrendsGateway.js";
 import { HTTPClient } from "../../httpClient/abstractions/HTTPClient.js";
-import type { DashboardGateway } from "../dashboard/abstractions/DashboardGateway.js";
+import type { DashboardGateway } from "../Dashboard/abstractions/DashboardGateway.js";
 import {
     dashboardStalenessTrendRoute,
     dashboardLicenseTrendRoute,

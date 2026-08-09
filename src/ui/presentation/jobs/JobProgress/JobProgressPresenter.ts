@@ -2,7 +2,7 @@ import { computed, makeAutoObservable, runInAction } from "mobx";
 import { JobProgressPresenter as Abstraction } from "./abstractions/JobProgressPresenter.js";
 import { GetJobUseCase } from "../../upgrades/useCases/abstractions/GetJobUseCase.js";
 import { GetJobsUseCase } from "../../upgrades/useCases/abstractions/GetJobsUseCase.js";
-import { UpgradesRepository } from "../../../features/upgrades/abstractions/UpgradesRepository.js";
+import { UpgradesRepository } from "../../../features/Upgrades/abstractions/UpgradesRepository.js";
 import { EventBridge } from "../../../events/abstractions/EventBridge.js";
 import "../../../events/eventMap.js";
 

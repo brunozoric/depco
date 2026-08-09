@@ -1,5 +1,5 @@
 import { createAbstraction } from "#shared/index.js";
-import type { PackagesGateway } from "../../../../features/packages/abstractions/PackagesGateway.js";
+import type { PackagesGateway } from "../../../../features/Packages/abstractions/PackagesGateway.js";
 
 export interface ILoadPackagesUseCase {
     execute(filters?: PackagesGateway.Filters): Promise<void>;

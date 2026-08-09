@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { createContainer } from "#shared/index.js";
-import { ScanSchedulesGateway } from "../../../../features/scanSchedules/abstractions/ScanSchedulesGateway.js";
-import { ScanSchedulesRepository } from "../../../../features/scanSchedules/abstractions/ScanSchedulesRepository.js";
-import { ScanSchedulesRepositoryImpl } from "../../../../features/scanSchedules/ScanSchedulesRepository.js";
+import { ScanSchedulesGateway } from "../../../../features/ScanSchedules/abstractions/ScanSchedulesGateway.js";
+import { ScanSchedulesRepository } from "../../../../features/ScanSchedules/abstractions/ScanSchedulesRepository.js";
+import { ScanSchedulesRepositoryImpl } from "../../../../features/ScanSchedules/ScanSchedulesRepository.js";
 import { LoadScanSchedulesUseCase as LoadAbstraction } from "../abstractions/LoadScanSchedulesUseCase.js";
 import { LoadScanSchedulesUseCase } from "../LoadScanSchedulesUseCase.js";
 import { UpdateScanScheduleUseCase as UpdateAbstraction } from "../abstractions/UpdateScanScheduleUseCase.js";

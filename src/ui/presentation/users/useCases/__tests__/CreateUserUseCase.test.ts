@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { createContainer } from "#shared/index.js";
-import { UsersGateway as UsersGatewayAbstraction } from "../../../../features/users/abstractions/UsersGateway.js";
-import type { UsersGateway } from "../../../../features/users/abstractions/UsersGateway.js";
+import { UsersGateway as UsersGatewayAbstraction } from "../../../../features/Users/abstractions/UsersGateway.js";
+import type { UsersGateway } from "../../../../features/Users/abstractions/UsersGateway.js";
 import { CreateUserUseCase } from "../abstractions/CreateUserUseCase.js";
 import { CreateUserUseCase as CreateUserUseCaseRegistration } from "../CreateUserUseCase.js";
 

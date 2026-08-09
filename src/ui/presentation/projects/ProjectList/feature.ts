@@ -3,8 +3,8 @@ import { ProjectListPresenter as ProjectListPresenterAbstraction } from "./abstr
 import { ProjectListPresenter } from "./ProjectListPresenter.js";
 import { ProjectsUseCasesFeature } from "../useCases/feature.js";
 import { WebSocketFeature } from "../../../websocket/feature.js";
-import { FilesystemFeature } from "../../../features/filesystem/feature.js";
-import { TeamFilterFeature } from "../../../features/teamFilter/feature.js";
+import { FilesystemFeature } from "../../../features/Filesystem/feature.js";
+import { TeamFilterFeature } from "../../../features/TeamFilter/feature.js";
 
 export interface IProjectListFeatureExports {
     presenter: ProjectListPresenterAbstraction.Interface;

@@ -1,7 +1,7 @@
 import type React from "react";
 import { useEffect, useState } from "react";
 import { Button, Group, Modal, Select, Stack, Switch, TextInput } from "@mantine/core";
-import type { StepHooksGateway } from "../../../../features/stepHooks/abstractions/StepHooksGateway.js";
+import type { StepHooksGateway } from "../../../../features/StepHooks/abstractions/StepHooksGateway.js";
 import type { StepHooksPresenter } from "../abstractions/StepHooksPresenter.js";
 
 const POSITION_OPTIONS = [

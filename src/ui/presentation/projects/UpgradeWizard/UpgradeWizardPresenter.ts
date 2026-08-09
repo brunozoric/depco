@@ -1,15 +1,15 @@
 import { computed, makeAutoObservable, runInAction } from "mobx";
 import { UpgradeWizardPresenter as Abstraction } from "./abstractions/UpgradeWizardPresenter.js";
-import { UpgradeSessionsGateway } from "../../../features/upgradeSessions/abstractions/UpgradeSessionsGateway.js";
-import { UpgradeSessionsRepository } from "../../../features/upgradeSessions/abstractions/UpgradeSessionsRepository.js";
-import { ProjectsGateway } from "../../../features/projects/abstractions/ProjectsGateway.js";
-import { ProjectsRepository } from "../../../features/projects/abstractions/ProjectsRepository.js";
+import { UpgradeSessionsGateway } from "../../../features/UpgradeSessions/abstractions/UpgradeSessionsGateway.js";
+import { UpgradeSessionsRepository } from "../../../features/UpgradeSessions/abstractions/UpgradeSessionsRepository.js";
+import { ProjectsGateway } from "../../../features/Projects/abstractions/ProjectsGateway.js";
+import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
 import { LoadProjectsUseCase } from "../useCases/abstractions/LoadProjectsUseCase.js";
 import { EventBridge } from "../../../events/abstractions/EventBridge.js";
 import "../../../events/eventMap.js";
 import { ChangelogTracker } from "../../shared/ChangelogTracker.js";
 import type { IStartChangelogTrackingInput } from "../../shared/ChangelogTracker.js";
-import { AppSettingsGateway } from "../../../features/appSettings/abstractions/AppSettingsGateway.js";
+import { AppSettingsGateway } from "../../../features/AppSettings/abstractions/AppSettingsGateway.js";
 
 const DEFAULT_BRANCH_TEMPLATE = "chore/update-dependencies-${YYYY}-${MM}-${DD}";
 const DEFAULT_COMMIT_TEMPLATE = "chore: update dependencies ${YYYY}-${MM}-${DD}";

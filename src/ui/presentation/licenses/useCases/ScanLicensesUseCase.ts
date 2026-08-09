@@ -1,5 +1,5 @@
 import { ScanLicensesUseCase as Abstraction } from "./abstractions/ScanLicensesUseCase.js";
-import { LicensesGateway } from "../../../features/licenses/abstractions/LicensesGateway.js";
+import { LicensesGateway } from "../../../features/Licenses/abstractions/LicensesGateway.js";
 
 class ScanLicensesUseCaseImpl implements Abstraction.Interface {
     public constructor(private readonly gateway: LicensesGateway.Interface) {}

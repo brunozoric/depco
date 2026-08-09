@@ -1,5 +1,5 @@
 import { createFeature } from "#shared/index.js";
-import { TeamsFeature } from "../../../features/teams/feature.js";
+import { TeamsFeature } from "../../../features/Teams/feature.js";
 import { LoadTeamsUseCase } from "./LoadTeamsUseCase.js";
 import { ManageTeamUseCase } from "./ManageTeamUseCase.js";
 

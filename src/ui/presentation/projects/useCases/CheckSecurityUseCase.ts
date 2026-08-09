@@ -1,6 +1,6 @@
 import { CheckSecurityUseCase as Abstraction } from "./abstractions/CheckSecurityUseCase.js";
-import { ProjectsGateway } from "../../../features/projects/abstractions/ProjectsGateway.js";
-import { ProjectsRepository } from "../../../features/projects/abstractions/ProjectsRepository.js";
+import { ProjectsGateway } from "../../../features/Projects/abstractions/ProjectsGateway.js";
+import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
 
 class CheckSecurityUseCaseImpl implements Abstraction.Interface {
     public constructor(

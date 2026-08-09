@@ -6,12 +6,12 @@ import { RemoveProjectUseCase } from "../useCases/abstractions/RemoveProjectUseC
 import { ScanProjectUseCase } from "../useCases/abstractions/ScanProjectUseCase.js";
 import { CheckSecurityUseCase } from "../useCases/abstractions/CheckSecurityUseCase.js";
 import { CloneProjectUseCase } from "../useCases/abstractions/CloneProjectUseCase.js";
-import { ProjectsRepository } from "../../../features/projects/abstractions/ProjectsRepository.js";
-import { ProjectsGateway } from "../../../features/projects/abstractions/ProjectsGateway.js";
+import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
+import { ProjectsGateway } from "../../../features/Projects/abstractions/ProjectsGateway.js";
 import { EventBridge } from "../../../events/abstractions/EventBridge.js";
 import "../../../events/eventMap.js";
-import { FilesystemGateway } from "../../../features/filesystem/abstractions/FilesystemGateway.js";
-import { TeamFilterService } from "../../../features/teamFilter/abstractions/TeamFilterService.js";
+import { FilesystemGateway } from "../../../features/Filesystem/abstractions/FilesystemGateway.js";
+import { TeamFilterService } from "../../../features/TeamFilter/abstractions/TeamFilterService.js";
 
 class ProjectListPresenterImpl implements Abstraction.Interface {
     private loading = false;

@@ -14,11 +14,11 @@ import {
     dashboardAutoFixTrendRoute
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
-import { DashboardFeature } from "../../../../features/dashboard/feature.js";
-import { DashboardRepository } from "../../../../features/dashboard/abstractions/DashboardRepository.js";
+import { DashboardFeature } from "../../../../features/Dashboard/feature.js";
+import { DashboardRepository } from "../../../../features/Dashboard/abstractions/DashboardRepository.js";
 import { LoadDashboardUseCase } from "../abstractions/LoadDashboardUseCase.js";
 import { LoadDashboardUseCase as LoadDashboardUseCaseRegistration } from "../LoadDashboardUseCase.js";
-import type { DashboardGateway } from "../../../../features/dashboard/abstractions/DashboardGateway.js";
+import type { DashboardGateway } from "../../../../features/Dashboard/abstractions/DashboardGateway.js";
 
 interface RecordedCall {
     route: unknown;

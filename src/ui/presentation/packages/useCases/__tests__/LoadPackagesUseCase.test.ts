@@ -2,12 +2,12 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { listPackagesRoute } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
-import { PackagesGateway as PackagesGatewayRegistration } from "../../../../features/packages/PackagesGateway.js";
-import { PackagesRepository } from "../../../../features/packages/abstractions/PackagesRepository.js";
-import { PackagesRepository as PackagesRepositoryRegistration } from "../../../../features/packages/PackagesRepository.js";
+import { PackagesGateway as PackagesGatewayRegistration } from "../../../../features/Packages/PackagesGateway.js";
+import { PackagesRepository } from "../../../../features/Packages/abstractions/PackagesRepository.js";
+import { PackagesRepository as PackagesRepositoryRegistration } from "../../../../features/Packages/PackagesRepository.js";
 import { LoadPackagesUseCase } from "../abstractions/LoadPackagesUseCase.js";
 import { LoadPackagesUseCase as LoadPackagesUseCaseRegistration } from "../LoadPackagesUseCase.js";
-import type { PackagesGateway } from "../../../../features/packages/abstractions/PackagesGateway.js";
+import type { PackagesGateway } from "../../../../features/Packages/abstractions/PackagesGateway.js";
 
 interface RecordedCall {
     route: unknown;

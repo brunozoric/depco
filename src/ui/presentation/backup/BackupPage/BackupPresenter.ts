@@ -1,6 +1,6 @@
 import { makeAutoObservable, runInAction, computed } from "mobx";
 import { BackupPresenter as Abstraction } from "./abstractions/BackupPresenter.js";
-import type { BackupGateway } from "../../../features/backup/abstractions/BackupGateway.js";
+import type { BackupGateway } from "../../../features/Backup/abstractions/BackupGateway.js";
 import { downloadBlob } from "#ui/shared/download/downloadBlob.js";
 
 function backupFilename(): string {

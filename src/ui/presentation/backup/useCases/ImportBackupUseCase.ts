@@ -1,5 +1,5 @@
 import { ImportBackupUseCase as Abstraction } from "./abstractions/ImportBackupUseCase.js";
-import { BackupGateway } from "../../../features/backup/abstractions/BackupGateway.js";
+import { BackupGateway } from "../../../features/Backup/abstractions/BackupGateway.js";
 
 class ImportBackupUseCaseImpl implements Abstraction.Interface {
     public constructor(private readonly gateway: BackupGateway.Interface) {}

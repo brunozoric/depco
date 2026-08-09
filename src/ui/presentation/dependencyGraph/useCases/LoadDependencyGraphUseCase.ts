@@ -1,6 +1,6 @@
 import { LoadDependencyGraphUseCase as Abstraction } from "./abstractions/LoadDependencyGraphUseCase.js";
-import { DependencyGraphGateway } from "../../../features/dependencyGraph/abstractions/DependencyGraphGateway.js";
-import { DependencyGraphRepository } from "../../../features/dependencyGraph/abstractions/DependencyGraphRepository.js";
+import { DependencyGraphGateway } from "../../../features/DependencyGraph/abstractions/DependencyGraphGateway.js";
+import { DependencyGraphRepository } from "../../../features/DependencyGraph/abstractions/DependencyGraphRepository.js";
 
 class LoadDependencyGraphUseCaseImpl implements Abstraction.Interface {
     public constructor(

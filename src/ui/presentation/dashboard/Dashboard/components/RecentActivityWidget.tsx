@@ -1,7 +1,7 @@
 import type React from "react";
 import { Card, Text, Badge, Stack, Group } from "@mantine/core";
 import { navigate } from "#ui/shared/router/router.js";
-import type { DashboardGateway } from "#ui/features/dashboard/abstractions/DashboardGateway.js";
+import type { DashboardGateway } from "#ui/features/Dashboard/abstractions/DashboardGateway.js";
 
 interface RecentActivityWidgetProps {
     jobs: DashboardGateway.ActivityJob[];

@@ -3,7 +3,7 @@ import { DashboardPresenter as DashboardPresenterAbstraction } from "./abstracti
 import { DashboardPresenter } from "./DashboardPresenter.js";
 import { DashboardUseCasesFeature } from "../useCases/feature.js";
 import { WebSocketFeature } from "../../../websocket/feature.js";
-import { TeamFilterFeature } from "../../../features/teamFilter/feature.js";
+import { TeamFilterFeature } from "../../../features/TeamFilter/feature.js";
 
 export interface IDashboardPresentationFeatureExports {
     presenter: DashboardPresenterAbstraction.Interface;

@@ -1,6 +1,6 @@
 import { ToggleSecuritySettingUseCase as Abstraction } from "./abstractions/ToggleSecuritySettingUseCase.js";
-import { PmSettingsGateway } from "../../../features/settings/abstractions/PmSettingsGateway.js";
-import { PmSettingsRepository } from "../../../features/settings/abstractions/PmSettingsRepository.js";
+import { PmSettingsGateway } from "../../../features/Settings/abstractions/PmSettingsGateway.js";
+import { PmSettingsRepository } from "../../../features/Settings/abstractions/PmSettingsRepository.js";
 
 class ToggleSecuritySettingUseCaseImpl implements Abstraction.Interface {
     public constructor(

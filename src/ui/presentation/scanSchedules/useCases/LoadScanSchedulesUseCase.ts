@@ -1,6 +1,6 @@
 import { LoadScanSchedulesUseCase as Abstraction } from "./abstractions/LoadScanSchedulesUseCase.js";
-import { ScanSchedulesGateway } from "../../../features/scanSchedules/abstractions/ScanSchedulesGateway.js";
-import { ScanSchedulesRepository } from "../../../features/scanSchedules/abstractions/ScanSchedulesRepository.js";
+import { ScanSchedulesGateway } from "../../../features/ScanSchedules/abstractions/ScanSchedulesGateway.js";
+import { ScanSchedulesRepository } from "../../../features/ScanSchedules/abstractions/ScanSchedulesRepository.js";
 
 class LoadScanSchedulesUseCaseImpl implements Abstraction.Interface {
     public constructor(

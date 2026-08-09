@@ -1,6 +1,6 @@
 import { LoadDependencyChangesUseCase as Abstraction } from "./abstractions/LoadDependencyChangesUseCase.js";
-import { TrendsGateway } from "../../../features/trends/abstractions/TrendsGateway.js";
-import { TrendsRepository } from "../../../features/trends/abstractions/TrendsRepository.js";
+import { TrendsGateway } from "../../../features/Trends/abstractions/TrendsGateway.js";
+import { TrendsRepository } from "../../../features/Trends/abstractions/TrendsRepository.js";
 
 class LoadDependencyChangesUseCaseImpl implements Abstraction.Interface {
     public constructor(

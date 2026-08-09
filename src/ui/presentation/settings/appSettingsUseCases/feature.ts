@@ -1,5 +1,5 @@
 import { createFeature } from "#shared/index.js";
-import { AppSettingsFeature } from "../../../features/appSettings/feature.js";
+import { AppSettingsFeature } from "../../../features/AppSettings/feature.js";
 import { LoadAppSettingsUseCase } from "./LoadAppSettingsUseCase.js";
 import { UpsertAppSettingUseCase } from "./UpsertAppSettingUseCase.js";
 

@@ -1,5 +1,5 @@
 import { createAbstraction } from "#shared/index.js";
-import type { UpgradesGateway } from "../../../../features/upgrades/abstractions/UpgradesGateway.js";
+import type { UpgradesGateway } from "../../../../features/Upgrades/abstractions/UpgradesGateway.js";
 
 export interface IUpgradePackagesUseCase {
     execute(

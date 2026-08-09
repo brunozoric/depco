@@ -1,7 +1,7 @@
 import type React from "react";
 import { Anchor, Badge, Button, Group, Pagination, Stack, Table, Text } from "@mantine/core";
 import { navigate } from "#ui/shared/router/router.js";
-import type { PackagesGateway } from "../../../../features/packages/abstractions/PackagesGateway.js";
+import type { PackagesGateway } from "../../../../features/Packages/abstractions/PackagesGateway.js";
 
 const PAGE_SIZE = 10;
 

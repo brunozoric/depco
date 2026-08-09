@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createContainer } from "#shared/index.js";
-import { TeamsGateway as TeamsGatewayAbstraction } from "../../../features/teams/abstractions/TeamsGateway.js";
-import type { TeamsGateway } from "../../../features/teams/abstractions/TeamsGateway.js";
-import { TeamsRepository as TeamsRepositoryRegistration } from "../../../features/teams/TeamsRepository.js";
+import { TeamsGateway as TeamsGatewayAbstraction } from "../../../features/Teams/abstractions/TeamsGateway.js";
+import type { TeamsGateway } from "../../../features/Teams/abstractions/TeamsGateway.js";
+import { TeamsRepository as TeamsRepositoryRegistration } from "../../../features/Teams/TeamsRepository.js";
 import { LoadTeamsUseCase as LoadTeamsUseCaseRegistration } from "../useCases/LoadTeamsUseCase.js";
 import { ManageTeamUseCase as ManageTeamUseCaseRegistration } from "../useCases/ManageTeamUseCase.js";
 import { TeamsPresenter } from "../TeamsPage/abstractions/TeamsPresenter.js";
 import { TeamsPresenter as TeamsPresenterRegistration } from "../TeamsPage/TeamsPresenter.js";
-import { ProjectsRepository as ProjectsRepositoryRegistration } from "../../../features/projects/ProjectsRepository.js";
-import { ProjectsGateway as ProjectsGatewayAbstraction } from "../../../features/projects/abstractions/ProjectsGateway.js";
+import { ProjectsRepository as ProjectsRepositoryRegistration } from "../../../features/Projects/ProjectsRepository.js";
+import { ProjectsGateway as ProjectsGatewayAbstraction } from "../../../features/Projects/abstractions/ProjectsGateway.js";
 import { LoadProjectsUseCase as LoadProjectsUseCaseRegistration } from "../../projects/useCases/LoadProjectsUseCase.js";
 
 interface RecordedGatewayCall {

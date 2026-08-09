@@ -2,11 +2,11 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { getDependencyGraphRoute, getDependencyGraphStatsRoute } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
-import { DependencyGraphFeature } from "../../../../features/dependencyGraph/feature.js";
-import { DependencyGraphRepository } from "../../../../features/dependencyGraph/abstractions/DependencyGraphRepository.js";
+import { DependencyGraphFeature } from "../../../../features/DependencyGraph/feature.js";
+import { DependencyGraphRepository } from "../../../../features/DependencyGraph/abstractions/DependencyGraphRepository.js";
 import { LoadDependencyGraphUseCase } from "../abstractions/LoadDependencyGraphUseCase.js";
 import { LoadDependencyGraphUseCase as LoadDependencyGraphUseCaseRegistration } from "../LoadDependencyGraphUseCase.js";
-import type { DependencyGraphGateway } from "../../../../features/dependencyGraph/abstractions/DependencyGraphGateway.js";
+import type { DependencyGraphGateway } from "../../../../features/DependencyGraph/abstractions/DependencyGraphGateway.js";
 
 interface RecordedCall {
     route: unknown;

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createContainer } from "#shared/index.js";
-import { AuthGateway } from "../../../../features/auth/abstractions/AuthGateway.js";
-import { AuthRepository } from "../../../../features/auth/abstractions/AuthRepository.js";
+import { AuthGateway } from "../../../../features/Auth/abstractions/AuthGateway.js";
+import { AuthRepository } from "../../../../features/Auth/abstractions/AuthRepository.js";
 import { LoginPresenter } from "../abstractions/LoginPresenter.js";
 import { LoginPresenter as LoginPresenterRegistration } from "../LoginPresenter.js";
 

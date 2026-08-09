@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Badge, Button, Group, Modal, Skeleton, Stack, Table, Text } from "@mantine/core";
 import { navigate } from "#ui/shared/router/router.js";
 import { computeVulnerabilityPenalty } from "#shared/vulnerabilities/types.js";
-import type { DashboardGateway } from "../../../../features/dashboard/abstractions/DashboardGateway.js";
+import type { DashboardGateway } from "../../../../features/Dashboard/abstractions/DashboardGateway.js";
 import type { DashboardPresenter } from "../abstractions/DashboardPresenter.js";
 
 interface ScoreDetailModalProps {

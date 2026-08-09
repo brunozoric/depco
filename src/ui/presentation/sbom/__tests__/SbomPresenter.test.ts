@@ -3,7 +3,7 @@ import { createContainer } from "#shared/index.js";
 import { SbomPresenter } from "../SbomPage/abstractions/SbomPresenter.js";
 import { SbomPresenter as SbomPresenterRegistration } from "../SbomPage/SbomPresenter.js";
 import { ExportSbomUseCase as ExportSbomUseCaseAbstraction } from "../useCases/abstractions/ExportSbomUseCase.js";
-import { ProjectsRepository as ProjectsRepositoryAbstraction } from "../../../features/projects/abstractions/ProjectsRepository.js";
+import { ProjectsRepository as ProjectsRepositoryAbstraction } from "../../../features/Projects/abstractions/ProjectsRepository.js";
 import { LoadProjectsUseCase as LoadProjectsUseCaseAbstraction } from "../../projects/useCases/abstractions/LoadProjectsUseCase.js";
 
 interface MockExportCall {

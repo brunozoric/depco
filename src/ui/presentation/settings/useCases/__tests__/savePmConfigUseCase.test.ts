@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { updatePmConfigRoute } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
-import { PmSettingsGateway as PmSettingsGatewayRegistration } from "../../../../features/settings/PmSettingsGateway.js";
-import { PmSettingsRepository } from "../../../../features/settings/abstractions/PmSettingsRepository.js";
-import { PmSettingsRepository as PmSettingsRepositoryRegistration } from "../../../../features/settings/PmSettingsRepository.js";
+import { PmSettingsGateway as PmSettingsGatewayRegistration } from "../../../../features/Settings/PmSettingsGateway.js";
+import { PmSettingsRepository } from "../../../../features/Settings/abstractions/PmSettingsRepository.js";
+import { PmSettingsRepository as PmSettingsRepositoryRegistration } from "../../../../features/Settings/PmSettingsRepository.js";
 import { SavePmConfigUseCase } from "../abstractions/SavePmConfigUseCase.js";
 import { SavePmConfigUseCase as SavePmConfigUseCaseRegistration } from "../SavePmConfigUseCase.js";
 

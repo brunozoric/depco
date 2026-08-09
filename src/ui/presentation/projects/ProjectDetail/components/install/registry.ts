@@ -1,6 +1,6 @@
 import type React from "react";
 import type { PackageManagerId } from "#shared/security/index.js";
-import type { ProjectsGateway } from "#ui/features/projects/abstractions/ProjectsGateway.js";
+import type { ProjectsGateway } from "#ui/features/Projects/abstractions/ProjectsGateway.js";
 import { NpmInstallOptions } from "./NpmInstallOptions.js";
 import { YarnInstallOptions } from "./YarnInstallOptions.js";
 import { PnpmInstallOptions } from "./PnpmInstallOptions.js";

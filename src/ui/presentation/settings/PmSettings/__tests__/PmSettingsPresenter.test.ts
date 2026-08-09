@@ -11,7 +11,7 @@ import {
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../httpClient/abstractions/HTTPClient.js";
 import { HTTPClientFeature } from "../../../../httpClient/feature.js";
-import { PmSettingsFeature } from "../../../../features/settings/feature.js";
+import { PmSettingsFeature } from "../../../../features/Settings/feature.js";
 import { SecuritySettingsUseCasesFeature } from "../../useCases/feature.js";
 import { PmSettingsPresenter } from "../abstractions/PmSettingsPresenter.js";
 import { PmSettingsPresenter as PmSettingsPresenterRegistration } from "../PmSettingsPresenter.js";

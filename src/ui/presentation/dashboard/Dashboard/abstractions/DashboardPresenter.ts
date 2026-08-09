@@ -1,5 +1,5 @@
 import { createAbstraction } from "#shared/index.js";
-import type { DashboardGateway } from "../../../../features/dashboard/abstractions/DashboardGateway.js";
+import type { DashboardGateway } from "../../../../features/Dashboard/abstractions/DashboardGateway.js";
 
 export interface IDashboardViewModel {
     loading: boolean;

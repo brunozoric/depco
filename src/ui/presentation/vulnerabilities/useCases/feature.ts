@@ -1,5 +1,5 @@
 import { createFeature } from "#shared/index.js";
-import { VulnerabilitiesFeature } from "../../../features/vulnerabilities/feature.js";
+import { VulnerabilitiesFeature } from "../../../features/Vulnerabilities/feature.js";
 import { LoadVulnerabilitiesUseCase } from "./LoadVulnerabilitiesUseCase.js";
 import { LoadVulnerabilitySummaryUseCase } from "./LoadVulnerabilitySummaryUseCase.js";
 import { ScanVulnerabilitiesUseCase } from "./ScanVulnerabilitiesUseCase.js";

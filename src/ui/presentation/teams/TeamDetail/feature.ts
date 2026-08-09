@@ -1,9 +1,9 @@
 import { createFeature } from "#shared/index.js";
 import { TeamDetailPresenter as TeamDetailPresenterAbstraction } from "./abstractions/TeamDetailPresenter.js";
 import { TeamDetailPresenter } from "./TeamDetailPresenter.js";
-import { TeamsFeature } from "../../../features/teams/feature.js";
+import { TeamsFeature } from "../../../features/Teams/feature.js";
 import { DashboardPresentationFeature } from "../../dashboard/Dashboard/feature.js";
-import { TeamFilterFeature } from "../../../features/teamFilter/feature.js";
+import { TeamFilterFeature } from "../../../features/TeamFilter/feature.js";
 
 export interface ITeamDetailFeatureExports {
     presenter: TeamDetailPresenterAbstraction.Interface;

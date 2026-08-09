@@ -1,7 +1,7 @@
 import { computed, makeAutoObservable, runInAction } from "mobx";
 import { StepHooksPresenter as Abstraction } from "./abstractions/StepHooksPresenter.js";
-import { StepHooksGateway } from "../../../features/stepHooks/abstractions/StepHooksGateway.js";
-import { StepHooksRepository } from "../../../features/stepHooks/abstractions/StepHooksRepository.js";
+import { StepHooksGateway } from "../../../features/StepHooks/abstractions/StepHooksGateway.js";
+import { StepHooksRepository } from "../../../features/StepHooks/abstractions/StepHooksRepository.js";
 
 class StepHooksPresenterImpl implements Abstraction.Interface {
     private loading = false;

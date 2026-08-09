@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { Container } from "@webiny/di";
 import { createContainer } from "#shared/index.js";
-import { StepHooksGateway } from "../../../../features/stepHooks/abstractions/StepHooksGateway.js";
-import { StepHooksRepository as StepHooksRepositoryRegistration } from "../../../../features/stepHooks/StepHooksRepository.js";
+import { StepHooksGateway } from "../../../../features/StepHooks/abstractions/StepHooksGateway.js";
+import { StepHooksRepository as StepHooksRepositoryRegistration } from "../../../../features/StepHooks/StepHooksRepository.js";
 import { StepHooksPresenter } from "../abstractions/StepHooksPresenter.js";
 import { StepHooksPresenter as StepHooksPresenterRegistration } from "../StepHooksPresenter.js";
 

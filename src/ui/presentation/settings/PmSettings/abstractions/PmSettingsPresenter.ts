@@ -1,6 +1,6 @@
 import { createAbstraction } from "#shared/index.js";
 import type { PackageManagerId, FieldInputType } from "#shared/security/index.js";
-import type { IConfigError } from "../../../../features/settings/abstractions/PmSettingsGateway.js";
+import type { IConfigError } from "../../../../features/Settings/abstractions/PmSettingsGateway.js";
 
 export interface ISecuritySettingViewModel {
     id: string;

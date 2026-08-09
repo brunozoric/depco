@@ -1,6 +1,6 @@
 import { UpdateScanScheduleDefaultUseCase as Abstraction } from "./abstractions/UpdateScanScheduleDefaultUseCase.js";
-import { ScanSchedulesGateway } from "../../../features/scanSchedules/abstractions/ScanSchedulesGateway.js";
-import { ScanSchedulesRepository } from "../../../features/scanSchedules/abstractions/ScanSchedulesRepository.js";
+import { ScanSchedulesGateway } from "../../../features/ScanSchedules/abstractions/ScanSchedulesGateway.js";
+import { ScanSchedulesRepository } from "../../../features/ScanSchedules/abstractions/ScanSchedulesRepository.js";
 
 class UpdateScanScheduleDefaultUseCaseImpl implements Abstraction.Interface {
     public constructor(

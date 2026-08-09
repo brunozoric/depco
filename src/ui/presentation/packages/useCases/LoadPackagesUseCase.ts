@@ -1,6 +1,6 @@
 import { LoadPackagesUseCase as Abstraction } from "./abstractions/LoadPackagesUseCase.js";
-import { PackagesGateway } from "../../../features/packages/abstractions/PackagesGateway.js";
-import { PackagesRepository } from "../../../features/packages/abstractions/PackagesRepository.js";
+import { PackagesGateway } from "../../../features/Packages/abstractions/PackagesGateway.js";
+import { PackagesRepository } from "../../../features/Packages/abstractions/PackagesRepository.js";
 
 class LoadPackagesUseCaseImpl implements Abstraction.Interface {
     public constructor(

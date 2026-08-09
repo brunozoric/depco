@@ -1,5 +1,5 @@
 import { createAbstraction } from "#shared/index.js";
-import type { VulnerabilitiesGateway } from "../../../../features/vulnerabilities/abstractions/VulnerabilitiesGateway.js";
+import type { VulnerabilitiesGateway } from "../../../../features/Vulnerabilities/abstractions/VulnerabilitiesGateway.js";
 
 export interface IScanVulnerabilitiesUseCase {
     execute(projectId: string): Promise<VulnerabilitiesGateway.ScanResult>;
