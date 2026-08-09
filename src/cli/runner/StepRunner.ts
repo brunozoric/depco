@@ -1,6 +1,8 @@
 import { StepRunner as Abstraction } from "./abstractions/StepRunner.js";
 import type { IStep, IStepContext } from "./abstractions/Step.js";
 
+class StepExecutionError extends Error {}
+
 class StepRunnerImpl implements Abstraction.Interface {
     public async run(args: Abstraction.Args): Promise<void> {
         const { steps, context } = args;
@@ -25,7 +27,7 @@ class StepRunnerImpl implements Abstraction.Interface {
                         `\x1b[31m✗ ${label}${result.message ? `: ${result.message}` : ""}\x1b[0m`
                     );
                     await this.rollback(completed, context);
-                    throw new Error(
+                    throw new StepExecutionError(
                         `Step "${step.name}" failed${result.message ? `: ${result.message}` : ""}`
                     );
                 }
@@ -33,12 +35,12 @@ class StepRunnerImpl implements Abstraction.Interface {
                 console.log(`\x1b[32m✓ ${label}\x1b[0m`);
                 completed.push(step);
             } catch (error) {
-                if (error instanceof Error && error.message.startsWith('Step "')) {
+                if (error instanceof StepExecutionError) {
                     throw error;
                 }
                 console.log(`\x1b[31m✗ ${label}\x1b[0m`);
                 await this.rollback(completed, context);
-                throw new Error(
+                throw new StepExecutionError(
                     `Step "${step.name}" threw: ${error instanceof Error ? error.message : String(error)}`
                 );
             }
