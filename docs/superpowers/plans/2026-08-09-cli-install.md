@@ -477,7 +477,7 @@ import { tmpdir } from "node:os";
 import { createContainer } from "#shared/index.js";
 import { EnsureDataDirectoryStepFeature } from "../feature.js";
 import { EnsureDataDirectoryStep } from "../abstractions/EnsureDataDirectoryStep.js";
-import type { IStepContext } from "../../../../../../cli/runner/abstractions/Step.js";
+import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
 
 function createTestContext(dataDirectory: string): IStepContext {
     return {
@@ -542,7 +542,7 @@ yarn test src/cli/commands/init/steps/EnsureDataDirectory/__tests__/EnsureDataDi
 ```typescript
 // src/cli/commands/init/steps/EnsureDataDirectory/abstractions/EnsureDataDirectoryStep.ts
 import { createAbstraction } from "#shared/index.js";
-import type { IStep } from "../../../../../../cli/runner/abstractions/Step.js";
+import type { IStep } from "../../../../../runner/abstractions/Step.js";
 
 export const EnsureDataDirectoryStep = createAbstraction<IStep>("Cli/EnsureDataDirectoryStep");
 
@@ -562,7 +562,7 @@ export { EnsureDataDirectoryStep } from "./EnsureDataDirectoryStep.js";
 // src/cli/commands/init/steps/EnsureDataDirectory/EnsureDataDirectoryStep.ts
 import { existsSync, mkdirSync, rmSync, readdirSync } from "node:fs";
 import { EnsureDataDirectoryStep as Abstraction } from "./abstractions/EnsureDataDirectoryStep.js";
-import type { IStepContext, IStepResult } from "../../../../../cli/runner/abstractions/Step.js";
+import type { IStepContext, IStepResult } from "../../../../runner/abstractions/Step.js";
 
 class EnsureDataDirectoryStepImpl implements Abstraction.Interface {
     public name = "ensure-data-directory";
@@ -653,7 +653,7 @@ import { tmpdir } from "node:os";
 import { createContainer } from "#shared/index.js";
 import { RunMigrationsStepFeature } from "../feature.js";
 import { RunMigrationsStep } from "../abstractions/RunMigrationsStep.js";
-import type { IStepContext } from "../../../../../../cli/runner/abstractions/Step.js";
+import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
 
 function createTestContext(dataDirectory: string): IStepContext {
     return {
@@ -700,7 +700,7 @@ yarn test src/cli/commands/init/steps/RunMigrations/__tests__/RunMigrationsStep.
 ```typescript
 // src/cli/commands/init/steps/RunMigrations/abstractions/RunMigrationsStep.ts
 import { createAbstraction } from "#shared/index.js";
-import type { IStep } from "../../../../../../cli/runner/abstractions/Step.js";
+import type { IStep } from "../../../../../runner/abstractions/Step.js";
 
 export const RunMigrationsStep = createAbstraction<IStep>("Cli/RunMigrationsStep");
 
@@ -722,7 +722,7 @@ import { join } from "node:path";
 import { RunMigrationsStep as Abstraction } from "./abstractions/RunMigrationsStep.js";
 import { createDatabaseClient } from "#api/db/client.js";
 import { runMigrations } from "#api/db/migrate.js";
-import type { IStepContext, IStepResult } from "../../../../../cli/runner/abstractions/Step.js";
+import type { IStepContext, IStepResult } from "../../../../runner/abstractions/Step.js";
 
 class RunMigrationsStepImpl implements Abstraction.Interface {
     public name = "run-migrations";
@@ -798,7 +798,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { GenerateEncryptionKeyStepFeature } from "../feature.js";
 import { GenerateEncryptionKeyStep } from "../abstractions/GenerateEncryptionKeyStep.js";
-import type { IStepContext } from "../../../../../../cli/runner/abstractions/Step.js";
+import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
 
 function createTestContext(): IStepContext {
     return {
@@ -846,7 +846,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { SelectPortStepFeature } from "../feature.js";
 import { SelectPortStep } from "../abstractions/SelectPortStep.js";
-import type { IStepContext } from "../../../../../../cli/runner/abstractions/Step.js";
+import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
 
 vi.mock("@inquirer/prompts", () => ({
     input: vi.fn().mockResolvedValue("4000")
@@ -893,7 +893,7 @@ Follow exact same file structure as EnsureDataDirectory (Task 4). Implementation
 // src/cli/commands/init/steps/GenerateEncryptionKey/GenerateEncryptionKeyStep.ts
 import { randomBytes } from "node:crypto";
 import { GenerateEncryptionKeyStep as Abstraction } from "./abstractions/GenerateEncryptionKeyStep.js";
-import type { IStepContext, IStepResult } from "../../../../../cli/runner/abstractions/Step.js";
+import type { IStepContext, IStepResult } from "../../../../runner/abstractions/Step.js";
 
 class GenerateEncryptionKeyStepImpl implements Abstraction.Interface {
     public name = "generate-encryption-key";
@@ -918,7 +918,7 @@ export const GenerateEncryptionKeyStep = Abstraction.createImplementation({
 // src/cli/commands/init/steps/SelectPort/SelectPortStep.ts
 import { input } from "@inquirer/prompts";
 import { SelectPortStep as Abstraction } from "./abstractions/SelectPortStep.js";
-import type { IStepContext, IStepResult } from "../../../../../cli/runner/abstractions/Step.js";
+import type { IStepContext, IStepResult } from "../../../../runner/abstractions/Step.js";
 
 class SelectPortStepImpl implements Abstraction.Interface {
     public name = "select-port";
@@ -987,7 +987,7 @@ import { runMigrations } from "#api/db/migrate.js";
 import { users } from "#api/db/schema.js";
 import { CreateAdminUserStepFeature } from "../feature.js";
 import { CreateAdminUserStep } from "../abstractions/CreateAdminUserStep.js";
-import type { IStepContext } from "../../../../../../cli/runner/abstractions/Step.js";
+import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
 
 vi.mock("@inquirer/prompts", () => ({
     input: vi.fn()
@@ -1080,7 +1080,7 @@ import { sql } from "drizzle-orm";
 import { CreateAdminUserStep as Abstraction } from "./abstractions/CreateAdminUserStep.js";
 import { createDatabaseClient } from "#api/db/client.js";
 import { users } from "#api/db/schema.js";
-import type { IStepContext, IStepResult } from "../../../../../cli/runner/abstractions/Step.js";
+import type { IStepContext, IStepResult } from "../../../../runner/abstractions/Step.js";
 
 class CreateAdminUserStepImpl implements Abstraction.Interface {
     public name = "create-admin-user";
@@ -1197,7 +1197,7 @@ import { tmpdir } from "node:os";
 import { createContainer } from "#shared/index.js";
 import { WriteEnvFileStepFeature } from "../feature.js";
 import { WriteEnvFileStep } from "../abstractions/WriteEnvFileStep.js";
-import type { IStepContext } from "../../../../../../cli/runner/abstractions/Step.js";
+import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
 
 describe("WriteEnvFileStep", () => {
     let workDir: string;
@@ -1275,7 +1275,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { PrintNextStepsStepFeature } from "../feature.js";
 import { PrintNextStepsStep } from "../abstractions/PrintNextStepsStep.js";
-import type { IStepContext } from "../../../../../../cli/runner/abstractions/Step.js";
+import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
 
 describe("PrintNextStepsStep", () => {
     let container: ReturnType<typeof createContainer>;
@@ -1316,7 +1316,7 @@ describe("PrintNextStepsStep", () => {
 // src/cli/commands/init/steps/WriteEnvFile/WriteEnvFileStep.ts
 import { existsSync, writeFileSync, rmSync } from "node:fs";
 import { WriteEnvFileStep as Abstraction } from "./abstractions/WriteEnvFileStep.js";
-import type { IStepContext, IStepResult } from "../../../../../cli/runner/abstractions/Step.js";
+import type { IStepContext, IStepResult } from "../../../../runner/abstractions/Step.js";
 
 class WriteEnvFileStepImpl implements Abstraction.Interface {
     public name = "write-env-file";
@@ -1360,7 +1360,7 @@ export const WriteEnvFileStep = Abstraction.createImplementation({
 ```typescript
 // src/cli/commands/init/steps/PrintNextSteps/PrintNextStepsStep.ts
 import { PrintNextStepsStep as Abstraction } from "./abstractions/PrintNextStepsStep.js";
-import type { IStepContext, IStepResult } from "../../../../../cli/runner/abstractions/Step.js";
+import type { IStepContext, IStepResult } from "../../../../runner/abstractions/Step.js";
 
 class PrintNextStepsStepImpl implements Abstraction.Interface {
     public name = "print-next-steps";
@@ -1489,7 +1489,7 @@ import { SelectPortStep } from "./steps/SelectPort/index.js";
 import { CreateAdminUserStep } from "./steps/CreateAdminUser/index.js";
 import { WriteEnvFileStep } from "./steps/WriteEnvFile/index.js";
 import { PrintNextStepsStep } from "./steps/PrintNextSteps/index.js";
-import type { Step } from "../../../cli/runner/abstractions/Step.js";
+import type { Step } from "../../runner/abstractions/Step.js";
 
 class InitCommandImpl implements Abstraction.Interface {
     public name = "init";
@@ -1651,7 +1651,7 @@ import { tmpdir } from "node:os";
 import { createContainer } from "#shared/index.js";
 import { ValidateEnvironmentStepFeature } from "../feature.js";
 import { ValidateEnvironmentStep } from "../abstractions/ValidateEnvironmentStep.js";
-import type { IStepContext } from "../../../../../../cli/runner/abstractions/Step.js";
+import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
 
 describe("ValidateEnvironmentStep", () => {
     let workDir: string;
