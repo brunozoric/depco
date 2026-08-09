@@ -105,78 +105,78 @@ src/
     index.ts          — DI barrel export
   ui/
     httpClient/       — HTTPClient DI abstraction (fetch-based, mockable), cleanQuery helper (strips undefined values from query objects to prevent `teamId=undefined` serialization)
-    features/         — headless layer (Gateways + Repositories)
-      projects/       — ProjectsGateway, ProjectsRepository
-      upgrades/       — UpgradesGateway, UpgradesRepository
-      settings/       — PmSettingsGateway, PmSettingsRepository (renamed from SecuritySettings)
-      jobs/           — JobsGateway, JobsRepository
-      filesystem/     — FilesystemGateway (browse directories, scan for projects with package.json)
-      packages/       — PackagesGateway, PackagesRepository (global cross-project package view)
-      upgradeSessions/ — UpgradeSessionsGateway, UpgradeSessionsRepository (upgrade wizard sessions, includes stepOrder)
-      stepHooks/    — StepHooksGateway, StepHooksRepository (custom pre/post step hook CRUD)
-      appSettings/    — AppSettingsGateway, AppSettingsRepository (app_settings key-value CRUD)
-      appLogs/        — AppLogsGateway, AppLogsRepository (app_logs with filtering + bulk delete)
-      backup/         — BackupGateway (export/import zip backup)
-      dashboard/      — DashboardGateway, DashboardRepository (health snapshots, trend data, activity, staleness, security aggregation, vulnerability trend points, license compliance summary, open auto-fix PR count)
-      scanSchedules/  — ScanSchedulesGateway, ScanSchedulesRepository (per-project + global default scan schedule management)
-      vulnerabilities/ — VulnerabilitiesGateway, VulnerabilitiesRepository (vulnerability list with projectIds/includeDismissed/scannedDate filters, per-project vulnerabilities, summary, scan trigger, OSV cache refresh, bulkAction dismiss/snooze/undismiss, bulkRescan, getExportUrl, getDetail for single-vulnerability detail page with OSV enrichment, getExpiredSnoozes for snooze expiry notifications)
-      licenses/       — LicensesGateway, LicensesRepository (license list with projectId/riskTier/packageName/spdxId filters, per-project licenses, compliance summary, scan trigger, policy rule CRUD, violation list + summary)
-      autoFix/        — AutoFixGateway, AutoFixRepository (per-project settings get/update, pull request list across all projects + per-project with status filter, generate trigger, delete pull request record)
-      dependencyGraph/ — DependencyGraphGateway, DependencyGraphRepository (per-project dependency graph edges, BFS paths to a target package, summary stats, refresh trigger)
-      sbom/           — SbomGateway, SbomRepository (per-project and aggregate SBOM export in CycloneDX/SPDX formats, raw fetch for blob download)
-      trends/         — TrendsGateway, TrendsRepository (staleness/license/auto-fix trend data, dependency changes list with filters)
-      teams/          — TeamsGateway, TeamsRepository (team CRUD with aggregate stats, project team assignment)
-      teamFilter/     — TeamFilterService (MobX observable selectedTeamId + localStorage persistence via @webiny/stdlib Cache), TeamListService (team list for header dropdown)
-      urlFilter/      — UrlFilterService (DI singleton, reads/writes URL search params with Zod schema generics for type safety: read<TSchema>(schema) parses URLSearchParams through schema.partial().safeParse(), update<TSchema>(schema, params) merges into URL via immediate pushState then dispatches popstate after 300ms debounce, onChange(callback) listens for popstate. Debounce design: URL write is immediate (read-after-write works synchronously), only popstate dispatch is debounced (coalesces rapid text input into single API reload). Tests use vi.useFakeTimers() + vi.advanceTimersByTime(300) for reload assertions). Used by LicensesPresenter, VulnerabilitiesPresenter, PackagesPresenter for shareable filtered URLs.
-    presentation/     — MVP presentation layer
-      projects/
+    features/         — PascalCase folder-per-feature headless layer (Gateways + Repositories). Each folder: abstractions/, implementation, feature.ts.
+      Projects/       — ProjectsGateway, ProjectsRepository
+      Upgrades/       — UpgradesGateway, UpgradesRepository
+      Settings/       — PmSettingsGateway, PmSettingsRepository (renamed from SecuritySettings)
+      Jobs/           — JobsGateway, JobsRepository
+      Filesystem/     — FilesystemGateway (browse directories, scan for projects with package.json)
+      Packages/       — PackagesGateway, PackagesRepository (global cross-project package view)
+      UpgradeSessions/ — UpgradeSessionsGateway, UpgradeSessionsRepository (upgrade wizard sessions, includes stepOrder)
+      StepHooks/    — StepHooksGateway, StepHooksRepository (custom pre/post step hook CRUD)
+      AppSettings/    — AppSettingsGateway, AppSettingsRepository (app_settings key-value CRUD)
+      AppLogs/        — AppLogsGateway, AppLogsRepository (app_logs with filtering + bulk delete)
+      Backup/         — BackupGateway (export/import zip backup)
+      Dashboard/      — DashboardGateway, DashboardRepository (health snapshots, trend data, activity, staleness, security aggregation, vulnerability trend points, license compliance summary, open auto-fix PR count)
+      ScanSchedules/  — ScanSchedulesGateway, ScanSchedulesRepository (per-project + global default scan schedule management)
+      Vulnerabilities/ — VulnerabilitiesGateway, VulnerabilitiesRepository (vulnerability list with projectIds/includeDismissed/scannedDate filters, per-project vulnerabilities, summary, scan trigger, OSV cache refresh, bulkAction dismiss/snooze/undismiss, bulkRescan, getExportUrl, getDetail for single-vulnerability detail page with OSV enrichment, getExpiredSnoozes for snooze expiry notifications)
+      Licenses/       — LicensesGateway, LicensesRepository (license list with projectId/riskTier/packageName/spdxId filters, per-project licenses, compliance summary, scan trigger, policy rule CRUD, violation list + summary)
+      AutoFix/        — AutoFixGateway, AutoFixRepository (per-project settings get/update, pull request list across all projects + per-project with status filter, generate trigger, delete pull request record)
+      DependencyGraph/ — DependencyGraphGateway, DependencyGraphRepository (per-project dependency graph edges, BFS paths to a target package, summary stats, refresh trigger)
+      Sbom/           — SbomGateway, SbomRepository (per-project and aggregate SBOM export in CycloneDX/SPDX formats, raw fetch for blob download)
+      Trends/         — TrendsGateway, TrendsRepository (staleness/license/auto-fix trend data, dependency changes list with filters)
+      Teams/          — TeamsGateway, TeamsRepository (team CRUD with aggregate stats, project team assignment)
+      TeamFilter/     — TeamFilterService (MobX observable selectedTeamId + localStorage persistence via @webiny/stdlib Cache), TeamListService (team list for header dropdown)
+      UrlFilter/      — UrlFilterService (DI singleton, reads/writes URL search params with Zod schema generics for type safety: read<TSchema>(schema) parses URLSearchParams through schema.partial().safeParse(), update<TSchema>(schema, params) merges into URL via immediate pushState then dispatches popstate after 300ms debounce, onChange(callback) listens for popstate. Debounce design: URL write is immediate (read-after-write works synchronously), only popstate dispatch is debounced (coalesces rapid text input into single API reload). Tests use vi.useFakeTimers() + vi.advanceTimersByTime(300) for reload assertions). Used by LicensesPresenter, VulnerabilitiesPresenter, PackagesPresenter for shareable filtered URLs.
+    presentation/     — PascalCase folder-per-domain MVP presentation layer. Top-level feature.ts (PresentationFeature) composes all sub-features — App.tsx imports only this one compositor.
+      Projects/
         ProjectList/  — Presenter, Provider, React components. ProjectRow shows team badges (colored by team color) next to project name, clickable project name navigates to detail. Search bar (name/path/PM, case-insensitive client-side). Per-project Scan action in row dropdown. Filters by global team selection via TeamFilterService. API includes team assignments per project.
         ProjectDetail/ — Presenter, Provider, React components. DependencyTable shows vulnerability badges (count + max severity color) per package via VulnerabilitiesGateway.getByProject(), and license name + risk tier badge per package via LicensesGateway.getByProject(). AutoFixSection (Accordion): settings form (enable toggle, upgrade type checkboxes, grouping strategy select, branch prefix input, Save Settings + Generate PRs buttons) + pull request table (packages, from→to versions, upgrade type, status badge, PR link)
         useCases/     — LoadProjects, AddProject, RemoveProject, Scan, CheckSecurity
-      upgrades/
+      Upgrades/
         useCases/     — UpgradePackages, RefreshTransient, UpdatePackageManager, GetJob, GetJobs
-      settings/
+      Settings/
         PmSettings/   — Presenter, Provider, PmSettingsPage (tabbed: Security/Install/General, inline CRUD, reset to defaults, editable install flags/registry URL/upgrade strategy with confirmation dialog, file write via PUT /api/settings/pm/:pm)
         AppSettings/  — Presenter, Provider, AppSettingsPage (branch/commit template editing at /settings/app)
         useCases/     — LoadSecuritySettings, CreateSecuritySetting, UpdateSecuritySetting, ToggleSecuritySetting, ResetSecuritySettings, LoadPmConfig, SavePmConfig
-        appSettingsUseCases/ — LoadAppSettings, UpsertAppSetting
-      packages/
+        AppSettingsUseCases/ — LoadAppSettings, UpsertAppSetting
+      Packages/
         PackageList/  — Presenter, Provider, PackagesPage (global /packages page, search, filters, pagination at top + bottom, sorting, expandable rows with per-project upgrade button + paginated dependency list). Column components extracted to columns/ (PackageName, UpgradeType, LastRelease, ChangelogButton, RescanButton) + ExpandedDependencies
         useCases/     — LoadPackages
-      projects/
+      Projects/
         UpgradeWizard/ — Presenter, Provider, UpgradeWizardPage (dynamic stepper with grouped custom steps) + 7 built-in step components (SelectPackages, Branch, Upgrade, RefreshTransient, Commit, Push, PrStep) + CustomStep
         StepHooks/    — Presenter, Provider, StepHooksPage (CRUD for custom pre/post step hooks per project)
-      jobs/
+      Jobs/
         JobProgress/  — Presenter, React components (WS-driven)
         JobManager/   — Presenter, Provider, JobManagerPage (global /jobs page, status/type/reference/date filters, pagination 25/page, bulk delete, expandable rows with logs/warnings). Reference column branches on referenceType: project names linked, package names plain text. Changelog type in filter options.
-      logs/
+      Logs/
         LogBrowser/   — Presenter, Provider, LogBrowserPage (global /logs page, level/source/project/date filters, pagination, bulk delete, real-time WS updates)
         useCases/     — LoadAppLogs, DeleteAppLogs
-      backup/
+      Backup/
         BackupPage/   — Presenter, Provider, BackupPage (dedicated /backup page, export zip download, import zip upload with results table)
-      vulnerabilities/
+      Vulnerabilities/
         VulnerabilityList/ — Presenter, Provider, VulnerabilitiesPage (dedicated /vulnerabilities page, "transitive" badge on packages not in direct deps, severity/package/source/project/scannedDate/dependencyType(all/direct/transitive) filters, sortable columns, pagination 25/page, debounced search, request sequence counter for stale-response protection, advisory URL scheme validation, bulk selection with checkbox column, bulk action bar (dismiss/snooze 7d|30d|90d/undismiss/rescan/export selected), "Show dismissed" toggle, "Group by project" toggle (collapsible Accordion sections with per-project severity count badges, auto-enabled on scannedDate drill-down, controlled expansion state), CSV/JSON export button, ConfirmDialog for destructive bulk actions, scannedDate badge with clear button for trend drill-down, expired snooze toast on page load)
         VulnerabilityDetail/ — Presenter (MobX, load-sequence race guard), Provider, VulnerabilityDetailPage (full page at /vulnerabilities/:vulnerabilityId with OSV enrichment: description rendered as markdown via react-markdown + rehype-sanitize + Typography wrapper (images suppressed, links open in new tab), affected versions, CVSS score, references, dismiss/snooze/undismiss actions with ConfirmDialog). LoadVulnerabilityDetailUseCase.
         useCases/     — LoadVulnerabilities, LoadVulnSummary, ScanVulnerabilities, RefreshOsvCache, BulkVulnerabilityAction, BulkRescanVulnerabilities, ExportVulnerabilities
-      licenses/
+      Licenses/
         LicensesList/ — Presenter, Provider, LicensesPage (dedicated /licenses page: compliance summary cards (total packages, compliant %, deny/warn violation counts), riskTier/packageName/project/violationAction filters — ALL server-side via API query params, synced to URL via UrlFilterService for shareable filtered views, license table with risk tier + violation badges, per-project scan trigger buttons, policy rules accordion with add/edit modal + delete ConfirmDialog)
         useCases/     — LoadLicensesUseCase (parallel fetch of licenses + violations + summary), ScanLicensesUseCase, ManagePolicyRulesUseCase (create/update/delete policy rule)
-      autoFix/
+      AutoFix/
         useCases/     — LoadAutoFixUseCase, GenerateAutoFixPrsUseCase, UpdateAutoFixSettingsUseCase — consumed by ProjectDetailPresenter (no standalone page; rendered via AutoFixSection on ProjectDetail)
-      dependencyGraph/
+      DependencyGraph/
         GraphPage/    — Presenter, Provider, DependencyGraphPage (route `/projects/:projectId/graph`, linked from ProjectDetailPage via a button) — summary cards (total packages, max depth, edges), Tree/Graph SegmentedControl toggle, package search with debounced autocomplete (via `DependencyGraphGateway.searchPackages`, `selectSuggestion`) and BFS path highlighting, dim/matchesOnly display-mode toggle (`DependencyGraphSearchMode`: "dim" fades non-matching nodes, "matchesOnly" hides them), dependencyKind and maxDepth filters (`Filters` in the presenter abstraction, applied client-side over already-loaded edges before rendering), DependencyTreeView (nested tree list) and DependencyGraphView (`@xyflow/react` ReactFlow canvas: Background/Controls/MiniMap, click-to-expand nodes, non-draggable/non-connectable, colored dependency-kind dots per node, search + selected-package highlighting)
         useCases/     — LoadDependencyGraphUseCase (parallel fetch of graph + stats), RefreshDependencyGraphUseCase (triggers lockfile re-parse, then reloads graph + stats)
-      sbom/
+      Sbom/
         SbomPage/     — Presenter, SbomExportDialog (modal triggered from nav menu, not a page — includes SBOM description text, format SegmentedControl CycloneDX/SPDX, project Select, "Export Project" + "Export All Projects" buttons, blob download via shared downloadBlob utility). Per-project export also available on ProjectDetailPage
         useCases/     — ExportSbomUseCase (calls gateway, triggers browser download)
-      trends/
+      Trends/
         TrendsPage/   — Presenter, Provider, TrendsPage (dedicated `/trends` page, 5 sections: StalenessTrendChart (3 stacked area lines patch/minor/major), LicenseComplianceTrendChart (3 lines compliant/warned/denied), AutoFixTrendChart (4 lines created/merged/closed/failed), PackageCountTrendChart (single line, shares staleness range), DependencyChangesTable (color-coded badges, project filter)). Independent per-chart range toggles (7/30/90/all). Recharts.
         useCases/     — LoadTrendsUseCase (parallel fetch of staleness/license/auto-fix trends), LoadDependencyChangesUseCase (dependency changes with project filter)
-      teams/
+      Teams/
         TeamsPage/    — Presenter, Provider, TeamsPage (dedicated `/teams` page, team table with color dot/name (clickable, navigates to /teams/:id)/project count/vulnerability count/compliance %/avg health score, create/edit modal with ColorInput + MultiSelect for project assignment, delete via ConfirmDialog, mutationError separate from page-level error)
         TeamDetail/   — Presenter, Provider, TeamDetailPage (at `/teams/:id`, team header with color swatch + name + project count badge, renders DashboardPage scoped to team via TeamFilterService — sets filter on load, restores on dispose)
         useCases/     — LoadTeamsUseCase, ManageTeamUseCase (create/update/delete with list refresh)
-      dashboard/
+      Dashboard/
         Dashboard/    — Presenter, Provider, DashboardPage (home page `/`, 12 widgets: SummaryCards (total projects, avg health score, worst project with outdated package breakdown, open auto-fix PR count), ProjectHealthTable (clickable score badges open ScoreDetailModal — full-width modal with formula breakdown (base score - vulnerability penalty = final), outdated packages table with per-package score impact, active vulnerabilities with per-item penalty, lazy-loaded detail via GET /api/dashboard/health/:projectId/score-detail, stale-response race guard), HealthTrendChart, VulnerabilityTrendChart (full-width, 4 severity lines, independent 7d/30d/90d/all range toggle, clickable date points drill-down to /vulnerabilities?scannedDate=YYYY-MM-DD), RecentActivityWidget, ScanFreshnessWidget, SecurityOverviewWidget, VulnerabilitySummaryWidget, LicenseComplianceWidget, StalenessSummaryCard, LicenseComplianceSummaryCard, AutoFixSummaryCard (sparkline cards linking to /trends)). Recharts for trend charts. WS auto-refresh on scan:complete and job:status. TeamFilterService integration — reloads on team change.
         useCases/     — LoadDashboardUseCase (parallel fetch of 11 dashboard endpoints including vulnerability summary, license compliance summary, open auto-fix PR count, and 3 sparkline trends), LoadVulnerabilityTrendUseCase (fetches vulnerability trend independently from dashboard load)
     shared/
@@ -295,10 +295,10 @@ docs/
 - **PackagesPage** → global `/packages` route. All filters (search, upgradeType, projectId, hasChangelog), sort (name, lastPublishedAt), and pagination sync to URL via UrlFilterService — shareable links, browser back/forward. Table with search, upgrade type filter (all/none/patch/minor/major), project filter, hasChangelog toggle. Pagination via Mantine Pagination. Sortable columns (Name, Last Release). Compact main row shows package name, project count, highest upgrade badge. Click expands nested table with per-project details (current/latest version, upgrade badge, Upgrade button). Upgrade dialog offers version prefix selector (^/~/exact) and triggers single-package upgrade for that project.
 - **UpgradeWizardPage** → `/projects/:id/upgrade` route. Dynamic stepper with grouped custom steps (pre/post hooks nested under parent built-in step). SelectPackagesStep loads deps via gateway, shows table with selection + changelog drawer. BranchStep offers branch creation with template-resolved name. UpgradeStep auto-executes and shows streaming logs. RefreshTransientStep offers refresh/skip. CommitStep shows editable commit message from template. "Upgrade Selected" button on project detail navigates here with pre-selected packages via URL params.
 - **VulnerabilitiesPage** → `/vulnerabilities` route. All filters (severity, packageName, source, projectIds, includeDismissed, scannedDate, dependencyType), sort (severity, packageName, projectName), and pagination sync to URL via UrlFilterService. Server-side sort + paginate in JS after enrichment/dependencyType filtering (enrichment requires post-query logic). Bulk actions: dismiss, snooze (7/30/90 days), undismiss, rescan. Export CSV/JSON. Group-by-project toggle (auto-enabled when scannedDate URL param present). `dependencyType` filtering is API-side only (no client-side filtering).
-- **UrlFilterService** → DI singleton (`src/ui/features/urlFilter/`). Reads/writes URL query params with Zod schema generics. API: `read(schema)` returns typed partial from `window.location.search`, `update(schema, params)` sets/removes params via `pushState` + `popstate` dispatch, `onChange(callback)` subscribes to `popstate`. Standard pattern for all list pages: presenter reads filter values from URL in `vm` getter and `buildFilters`, setters call `update()`, `onChange` triggers reload. Used by: LicensesPresenter, VulnerabilitiesPresenter, PackagesPresenter.
+- **UrlFilterService** → DI singleton (`src/ui/features/UrlFilter/`). Reads/writes URL query params with Zod schema generics. API: `read(schema)` returns typed partial from `window.location.search`, `update(schema, params)` sets/removes params via `pushState` + `popstate` dispatch, `onChange(callback)` subscribes to `popstate`. Standard pattern for all list pages: presenter reads filter values from URL in `vm` getter and `buildFilters`, setters call `update()`, `onChange` triggers reload. Used by: LicensesPresenter, VulnerabilitiesPresenter, PackagesPresenter.
 - **EventBridge** (`src/ui/events/`) → source-agnostic pub/sub abstraction (`IEventBridge`: `on`/`off`/`emit`, keyed by `IEventMap` — extensible via `declare module` augmentation, same pattern as the API-side `EventBus`). Presenters subscribe to events via `EventBridge`, not `WebSocketListener`, directly — decouples presentation from transport. `src/ui/events/eventMap.ts` maps `WSEventMap` onto `IEventMap`.
 - **WebSocketListener** → now a thin transport adapter: `connect()`/`disconnect()` only (auto-reconnect with exponential backoff), no `on`/`off` of its own. On each inbound message it parses the JSON envelope and calls `eventBridge.emit(message.type, message.data)` — it pushes events into `EventBridge` rather than exposing subscriptions itself. Presenters that used to call `webSocketListener.on(...)` now call `eventBridge.on(...)`.
-- **ChangelogTracker** (`src/ui/presentation/shared/ChangelogTracker.ts`) → shared MobX class (`makeAutoObservable`, computed `state`) encapsulating the changelog-streaming subscription logic used by both ChangelogModal and ChangelogDrawer. Subscribes to `changelog:resolved` and `job:status` via `EventBridge` in its constructor, tracks entries/resolving/resolvedCount/totalToResolve for one in-flight package at a time (`startTracking`/`stopTracking`), and `dispose()`s its listeners. Instantiated by ProjectDetailPresenter, PackagesPresenter, and UpgradeWizardPresenter (one instance each) instead of each presenter hand-rolling the WS wiring.
+- **ChangelogTracker** (`src/ui/presentation/Shared/ChangelogTracker.ts`) → shared MobX class (`makeAutoObservable`, computed `state`) encapsulating the changelog-streaming subscription logic used by both ChangelogModal and ChangelogDrawer. Subscribes to `changelog:resolved` and `job:status` via `EventBridge` in its constructor, tracks entries/resolving/resolvedCount/totalToResolve for one in-flight package at a time (`startTracking`/`stopTracking`), and `dispose()`s its listeners. Instantiated by ProjectDetailPresenter, PackagesPresenter, and UpgradeWizardPresenter (one instance each) instead of each presenter hand-rolling the WS wiring.
 - **Job notification toasts** → `@mantine/notifications` with `<Notifications position="top-right" />` in App.tsx. `JobNotificationListener` (render-less component) subscribes to `job:status` WS events via `createJobStatusNotificationHandler` factory (receives DI container, resolves ProjectsRepository for project name lookup). Shows toast on terminal statuses (completed/failed/cancelled/interrupted). Branches on `referenceType`: project jobs show project name suffix, package jobs show referenceId (package name). Green/red/yellow color, failed toasts sticky. Click navigates to `/jobs`.
 - **ConfigErrorNotifier** → checks both `PmSettingsGateway.listPmConfig()` and `AppSettingsGateway.list()` for config file errors on app mount. Shows yellow toast if either reports an error.
 - **AddProjectModal** → 4 tabs: Browse (folder selection), Manual (path input), Clone (GitHub), Scan (directory scanner). Scan tab: browse to directory, configurable depth (1-5 stepper), scan for `package.json` in subdirectories. Workspace-aware — shows "Resolved from workspaces" or "Scanned to depth N" after scan. Select and bulk-add discovered projects. Two-phase UI (navigate then results).

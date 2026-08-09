@@ -3,7 +3,7 @@ import { createContainer } from "#shared/index.js";
 import { WebSocketListener } from "../abstractions/WebSocketListener.js";
 import { WebSocketListener as WebSocketListenerRegistration } from "../WebSocketListener.js";
 import { EventBridge } from "../../events/abstractions/EventBridge.js";
-import { AuthRepository } from "../../features/auth/abstractions/AuthRepository.js";
+import { AuthRepository } from "../../features/Auth/abstractions/AuthRepository.js";
 import "../../events/eventMap.js";
 
 type MockListener = (event: { data?: string }) => void;

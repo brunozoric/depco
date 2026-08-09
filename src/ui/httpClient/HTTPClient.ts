@@ -1,7 +1,7 @@
 import type { RouteDefinition, HTTPMethod, IRequestArgs } from "#shared/routing/index.js";
 import { interpolatePath } from "#shared/routing/index.js";
 import { HTTPClient as Abstraction } from "./abstractions/HTTPClient.js";
-import { AuthRepository } from "../features/auth/abstractions/AuthRepository.js";
+import { AuthRepository } from "../features/Auth/abstractions/AuthRepository.js";
 
 class HTTPClientImpl implements Abstraction.Interface {
     public constructor(private readonly authRepository: AuthRepository.Interface) {}

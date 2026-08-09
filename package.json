@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
-    "@fastify/compress": "^9.1.0",
+    "@fastify/compress": "^9.1.1",
     "@fastify/rate-limit": "^11.2.0",
     "@fastify/static": "^10.1.2",
     "@fastify/websocket": "^11.3.0",
@@ -32,7 +32,7 @@
     "@webiny/stdlib": "^0.0.17",
     "@xyflow/react": "^12.11.2",
     "argon2": "^0.45.1",
-    "better-sqlite3": "^13.0.2",
+    "better-sqlite3": "^13.0.3",
     "bree": "^9.2.9",
     "concurrently": "^10.0.4",
     "dotenv": "^17.4.2",
@@ -70,7 +70,7 @@
     "jsdom": "^30.0.1",
     "oxfmt": "^0.62.0",
     "oxlint": "^1.77.0",
-    "tsx": "^4.23.5",
+    "tsx": "^4.23.8",
     "vite": "^8.2.0",
     "vitest": "^4.1.10"
   },

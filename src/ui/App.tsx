@@ -15,189 +15,66 @@ import "@mantine/core/styles.css";
 import { Notifications } from "@mantine/notifications";
 import "@mantine/notifications/styles.css";
 import { observer } from "mobx-react-lite";
-import type { AnyFeature } from "#shared/index.js";
 import { createJobStatusNotificationHandler } from "./shared/notifications/jobNotifications.js";
 import { showConfigErrorToast } from "./shared/notifications/configErrorNotification.js";
 import { handleSnoozeExpired } from "./shared/notifications/snoozeNotifications.js";
 import { ContainerProvider, useContainer } from "#ui/shared/di/ContainerProvider.js";
 import { useFeature } from "#ui/shared/di/useFeature.js";
 import { navigate, useCurrentPath } from "#ui/shared/router/router.js";
-import { AuthGateway } from "#ui/features/auth/abstractions/AuthGateway.js";
-import { AuthRepository } from "#ui/features/auth/abstractions/AuthRepository.js";
-import { AuthFeature } from "#ui/features/auth/feature.js";
-import { LoginPageFeature } from "./presentation/auth/LoginPage/feature.js";
-import { LoginPage } from "./presentation/auth/LoginPage/LoginPage.js";
-import { PmSettingsGateway } from "#ui/features/settings/abstractions/PmSettingsGateway.js";
-import { AppSettingsGateway } from "#ui/features/appSettings/abstractions/AppSettingsGateway.js";
-import { HTTPClientFeature } from "#ui/httpClient/index.js";
-import { ProjectsFeature } from "#ui/features/projects/index.js";
-import { UpgradesFeature } from "#ui/features/upgrades/index.js";
-import { PmSettingsFeature } from "#ui/features/settings/index.js";
-import { WebSocketFeature, WebSocketListener } from "#ui/websocket/index.js";
+import { AuthGateway } from "#ui/features/Auth/abstractions/AuthGateway.js";
+import { AuthRepository } from "#ui/features/Auth/abstractions/AuthRepository.js";
+import { PmSettingsGateway } from "#ui/features/Settings/abstractions/PmSettingsGateway.js";
+import { AppSettingsGateway } from "#ui/features/AppSettings/abstractions/AppSettingsGateway.js";
+import { WebSocketListener } from "#ui/websocket/index.js";
 import { EventBridge } from "#ui/events/abstractions/EventBridge.js";
-import { EventBridgeFeature } from "#ui/events/index.js";
 import "#ui/events/eventMap.js";
-import { ProjectsUseCasesFeature } from "./presentation/projects/useCases/feature.js";
-import { UpgradesUseCasesFeature } from "./presentation/upgrades/useCases/feature.js";
-import { ProjectListFeature } from "./presentation/projects/ProjectList/feature.js";
-import { ProjectListProvider } from "./presentation/projects/ProjectList/ProjectListProvider.js";
-import { ProjectListPage } from "./presentation/projects/ProjectList/components/ProjectListPage.js";
-import { ProjectDetailFeature } from "./presentation/projects/ProjectDetail/feature.js";
-import { ProjectDetailProvider } from "./presentation/projects/ProjectDetail/ProjectDetailProvider.js";
-import { ProjectDetailPage } from "./presentation/projects/ProjectDetail/components/ProjectDetailPage.js";
-import { JobProgressFeature } from "./presentation/jobs/JobProgress/feature.js";
-import { SecuritySettingsUseCasesFeature } from "./presentation/settings/useCases/feature.js";
-import { PmSettingsPresentationFeature } from "./presentation/settings/PmSettings/feature.js";
-import { PmSettingsProvider } from "./presentation/settings/PmSettings/PmSettingsProvider.js";
-import { PmSettingsPage } from "./presentation/settings/PmSettings/components/PmSettingsPage.js";
-import { JobsFeature } from "#ui/features/jobs/index.js";
-import { JobManagerUseCasesFeature } from "./presentation/jobs/JobManager/useCases/feature.js";
-import { JobManagerPresentationFeature } from "./presentation/jobs/JobManager/feature.js";
-import { JobManagerProvider } from "./presentation/jobs/JobManager/JobManagerProvider.js";
-import { JobManagerPage } from "./presentation/jobs/JobManager/components/JobManagerPage.js";
-import { PackagesFeature } from "./features/packages/feature.js";
-import { PackagesUseCasesFeature } from "./presentation/packages/useCases/feature.js";
-import { PackageListFeature } from "./presentation/packages/PackageList/feature.js";
-import { PackagesProvider } from "./presentation/packages/PackageList/PackagesProvider.js";
-import { PackagesPage } from "./presentation/packages/PackageList/components/PackagesPage.js";
-import { UpgradeWizardFeature } from "./presentation/projects/UpgradeWizard/feature.js";
-import { UpgradeWizardProvider } from "./presentation/projects/UpgradeWizard/UpgradeWizardProvider.js";
-import { UpgradeWizardPage } from "./presentation/projects/UpgradeWizard/components/UpgradeWizardPage.js";
-import { AppSettingsFeature } from "./features/appSettings/feature.js";
-import { AppSettingsUseCasesFeature } from "./presentation/settings/appSettingsUseCases/feature.js";
-import { AppSettingsPresentationFeature } from "./presentation/settings/AppSettings/feature.js";
-import { AppSettingsProvider } from "./presentation/settings/AppSettings/AppSettingsProvider.js";
-import { AppSettingsPage } from "./presentation/settings/AppSettings/components/AppSettingsPage.js";
-import { AppLogsFeature } from "./features/appLogs/feature.js";
-import { AppLogsUseCasesFeature } from "./presentation/logs/useCases/feature.js";
-import { LogBrowserPresentationFeature } from "./presentation/logs/LogBrowser/feature.js";
-import { LogBrowserProvider } from "./presentation/logs/LogBrowser/LogBrowserProvider.js";
-import { LogBrowserPage } from "./presentation/logs/LogBrowser/components/LogBrowserPage.js";
-import { BackupFeature } from "./features/backup/feature.js";
-import { BackupUseCasesFeature } from "./presentation/backup/useCases/feature.js";
-import { BackupPresentationFeature } from "./presentation/backup/BackupPage/feature.js";
-import { BackupProvider } from "./presentation/backup/BackupPage/BackupProvider.js";
-import { BackupPage } from "./presentation/backup/BackupPage/components/BackupPage.js";
-import { StepHooksFeature } from "./features/stepHooks/index.js";
-import { StepHooksPresentationFeature } from "./presentation/projects/StepHooks/feature.js";
-import { StepHooksProvider } from "./presentation/projects/StepHooks/StepHooksProvider.js";
-import { StepHooksPage } from "./presentation/projects/StepHooks/components/StepHooksPage.js";
-import { DashboardPresentationFeature } from "./presentation/dashboard/Dashboard/feature.js";
-import { DashboardProvider } from "./presentation/dashboard/Dashboard/DashboardProvider.js";
-import { DashboardPage } from "./presentation/dashboard/Dashboard/components/DashboardPage.js";
-import { ScanSchedulesFeature } from "./features/scanSchedules/index.js";
-import { ScanSchedulesUseCasesFeature } from "./presentation/scanSchedules/useCases/feature.js";
-import { VulnerabilitiesFeature } from "./features/vulnerabilities/feature.js";
-import { VulnerabilitiesUseCasesFeature } from "./presentation/vulnerabilities/useCases/feature.js";
-import { VulnerabilityListFeature } from "./presentation/vulnerabilities/VulnerabilityList/feature.js";
-import { VulnerabilitiesProvider } from "./presentation/vulnerabilities/VulnerabilityList/VulnerabilitiesProvider.js";
-import { VulnerabilitiesPage } from "./presentation/vulnerabilities/VulnerabilityList/components/VulnerabilitiesPage.js";
-import { VulnerabilityDetailFeature } from "./presentation/vulnerabilities/VulnerabilityDetail/feature.js";
-import { VulnerabilityDetailProvider } from "./presentation/vulnerabilities/VulnerabilityDetail/components/VulnerabilityDetailProvider.js";
-import { VulnerabilityDetailPage } from "./presentation/vulnerabilities/VulnerabilityDetail/components/VulnerabilityDetailPage.js";
-import { LicensesFeature } from "./features/licenses/feature.js";
-import { LicensesUseCasesFeature } from "./presentation/licenses/useCases/feature.js";
-import { LicenseListFeature } from "./presentation/licenses/LicensesList/feature.js";
-import { LicensesProvider } from "./presentation/licenses/LicensesList/LicensesProvider.js";
-import { LicensesPage } from "./presentation/licenses/LicensesList/components/LicensesPage.js";
-import { AutoFixFeature } from "./features/autoFix/feature.js";
-import { AutoFixUseCasesFeature } from "./presentation/autoFix/useCases/feature.js";
-import { DependencyGraphFeature } from "./features/dependencyGraph/feature.js";
-import { DependencyGraphUseCasesFeature } from "./presentation/dependencyGraph/useCases/feature.js";
-import { DependencyGraphPageFeature } from "./presentation/dependencyGraph/GraphPage/feature.js";
-import { DependencyGraphProvider } from "./presentation/dependencyGraph/GraphPage/DependencyGraphProvider.js";
-import { DependencyGraphPage } from "./presentation/dependencyGraph/GraphPage/components/DependencyGraphPage.js";
-import { SbomFeature } from "./features/sbom/feature.js";
-import { SbomUseCasesFeature } from "./presentation/sbom/useCases/feature.js";
-import { SbomPageFeature } from "./presentation/sbom/SbomPage/feature.js";
-import { SbomExportDialog } from "./presentation/sbom/SbomPage/components/SbomExportDialog.js";
-import { SbomPresenter } from "./presentation/sbom/SbomPage/abstractions/SbomPresenter.js";
-import { TrendsFeature } from "./features/trends/feature.js";
-import { TrendsUseCasesFeature } from "./presentation/trends/useCases/feature.js";
-import { TrendsPageFeature } from "./presentation/trends/TrendsPage/feature.js";
-import { TrendsProvider } from "./presentation/trends/TrendsPage/TrendsProvider.js";
-import { TrendsPage } from "./presentation/trends/TrendsPage/components/TrendsPage.js";
-import { TeamFilterFeature } from "#ui/features/teamFilter/feature.js";
-import { TeamFilterService } from "#ui/features/teamFilter/abstractions/TeamFilterService.js";
-import { TeamListService } from "#ui/features/teamFilter/abstractions/TeamListService.js";
-import { TeamsFeature } from "./features/teams/feature.js";
-import { TeamsUseCasesFeature } from "./presentation/teams/useCases/feature.js";
-import { TeamsPageFeature } from "./presentation/teams/TeamsPage/feature.js";
-import { TeamsProvider } from "./presentation/teams/TeamsPage/TeamsProvider.js";
-import { TeamsPage } from "./presentation/teams/TeamsPage/components/TeamsPage.js";
-import { TeamDetailFeature } from "./presentation/teams/TeamDetail/feature.js";
-import { TeamDetailProvider } from "./presentation/teams/TeamDetail/TeamDetailProvider.js";
-import { TeamDetailPage } from "./presentation/teams/TeamDetail/components/TeamDetailPage.js";
-import { UsersFeature } from "./features/users/feature.js";
-import { UsersUseCasesFeature } from "./presentation/users/useCases/feature.js";
-import { UserListFeature } from "./presentation/users/UserList/feature.js";
-import { UserListProvider } from "./presentation/users/UserList/UserListProvider.js";
-import { UserListPage } from "./presentation/users/UserList/components/UserListPage.js";
+import { TeamFilterService } from "#ui/features/TeamFilter/abstractions/TeamFilterService.js";
+import { TeamListService } from "#ui/features/TeamFilter/abstractions/TeamListService.js";
+import { PresentationFeature } from "./presentation/feature.js";
+import { LoginPageFeature } from "./presentation/Auth/LoginPage/feature.js";
+import { LoginPage } from "./presentation/Auth/LoginPage/LoginPage.js";
+import { ProjectListProvider } from "./presentation/Projects/ProjectList/ProjectListProvider.js";
+import { ProjectListPage } from "./presentation/Projects/ProjectList/components/ProjectListPage.js";
+import { ProjectDetailProvider } from "./presentation/Projects/ProjectDetail/ProjectDetailProvider.js";
+import { ProjectDetailPage } from "./presentation/Projects/ProjectDetail/components/ProjectDetailPage.js";
+import { PmSettingsProvider } from "./presentation/Settings/PmSettings/PmSettingsProvider.js";
+import { PmSettingsPage } from "./presentation/Settings/PmSettings/components/PmSettingsPage.js";
+import { JobManagerProvider } from "./presentation/Jobs/JobManager/JobManagerProvider.js";
+import { JobManagerPage } from "./presentation/Jobs/JobManager/components/JobManagerPage.js";
+import { PackagesProvider } from "./presentation/Packages/PackageList/PackagesProvider.js";
+import { PackagesPage } from "./presentation/Packages/PackageList/components/PackagesPage.js";
+import { UpgradeWizardProvider } from "./presentation/Projects/UpgradeWizard/UpgradeWizardProvider.js";
+import { UpgradeWizardPage } from "./presentation/Projects/UpgradeWizard/components/UpgradeWizardPage.js";
+import { AppSettingsProvider } from "./presentation/Settings/AppSettings/AppSettingsProvider.js";
+import { AppSettingsPage } from "./presentation/Settings/AppSettings/components/AppSettingsPage.js";
+import { LogBrowserProvider } from "./presentation/Logs/LogBrowser/LogBrowserProvider.js";
+import { LogBrowserPage } from "./presentation/Logs/LogBrowser/components/LogBrowserPage.js";
+import { BackupProvider } from "./presentation/Backup/BackupPage/BackupProvider.js";
+import { BackupPage } from "./presentation/Backup/BackupPage/components/BackupPage.js";
+import { StepHooksProvider } from "./presentation/Projects/StepHooks/StepHooksProvider.js";
+import { StepHooksPage } from "./presentation/Projects/StepHooks/components/StepHooksPage.js";
+import { DashboardProvider } from "./presentation/Dashboard/Dashboard/DashboardProvider.js";
+import { DashboardPage } from "./presentation/Dashboard/Dashboard/components/DashboardPage.js";
+import { VulnerabilitiesProvider } from "./presentation/Vulnerabilities/VulnerabilityList/VulnerabilitiesProvider.js";
+import { VulnerabilitiesPage } from "./presentation/Vulnerabilities/VulnerabilityList/components/VulnerabilitiesPage.js";
+import { VulnerabilityDetailProvider } from "./presentation/Vulnerabilities/VulnerabilityDetail/components/VulnerabilityDetailProvider.js";
+import { VulnerabilityDetailPage } from "./presentation/Vulnerabilities/VulnerabilityDetail/components/VulnerabilityDetailPage.js";
+import { LicensesProvider } from "./presentation/Licenses/LicensesList/LicensesProvider.js";
+import { LicensesPage } from "./presentation/Licenses/LicensesList/components/LicensesPage.js";
+import { DependencyGraphProvider } from "./presentation/DependencyGraph/GraphPage/DependencyGraphProvider.js";
+import { DependencyGraphPage } from "./presentation/DependencyGraph/GraphPage/components/DependencyGraphPage.js";
+import { SbomExportDialog } from "./presentation/Sbom/SbomPage/components/SbomExportDialog.js";
+import { SbomPresenter } from "./presentation/Sbom/SbomPage/abstractions/SbomPresenter.js";
+import { TrendsProvider } from "./presentation/Trends/TrendsPage/TrendsProvider.js";
+import { TrendsPage } from "./presentation/Trends/TrendsPage/components/TrendsPage.js";
+import { TeamsProvider } from "./presentation/Teams/TeamsPage/TeamsProvider.js";
+import { TeamsPage } from "./presentation/Teams/TeamsPage/components/TeamsPage.js";
+import { TeamDetailProvider } from "./presentation/Teams/TeamDetail/TeamDetailProvider.js";
+import { TeamDetailPage } from "./presentation/Teams/TeamDetail/components/TeamDetailPage.js";
+import { UserListProvider } from "./presentation/Users/UserList/UserListProvider.js";
+import { UserListPage } from "./presentation/Users/UserList/components/UserListPage.js";
 
-const ALL_FEATURES: AnyFeature[] = [
-    HTTPClientFeature,
-    AuthFeature,
-    LoginPageFeature,
-    ProjectsFeature,
-    UpgradesFeature,
-    ProjectsUseCasesFeature,
-    UpgradesUseCasesFeature,
-    ProjectListFeature,
-    ProjectDetailFeature,
-    JobProgressFeature,
-    PmSettingsFeature,
-    SecuritySettingsUseCasesFeature,
-    PmSettingsPresentationFeature,
-    JobsFeature,
-    JobManagerUseCasesFeature,
-    JobManagerPresentationFeature,
-    WebSocketFeature,
-    EventBridgeFeature,
-    PackagesFeature,
-    PackagesUseCasesFeature,
-    PackageListFeature,
-    UpgradeWizardFeature,
-    AppSettingsFeature,
-    AppSettingsUseCasesFeature,
-    AppSettingsPresentationFeature,
-    AppLogsFeature,
-    AppLogsUseCasesFeature,
-    LogBrowserPresentationFeature,
-    BackupFeature,
-    BackupUseCasesFeature,
-    BackupPresentationFeature,
-    StepHooksFeature,
-    StepHooksPresentationFeature,
-    VulnerabilitiesFeature,
-    VulnerabilitiesUseCasesFeature,
-    VulnerabilityListFeature,
-    VulnerabilityDetailFeature,
-    DashboardPresentationFeature,
-    ScanSchedulesFeature,
-    ScanSchedulesUseCasesFeature,
-    LicensesFeature,
-    LicensesUseCasesFeature,
-    LicenseListFeature,
-    AutoFixFeature,
-    AutoFixUseCasesFeature,
-    DependencyGraphFeature,
-    DependencyGraphUseCasesFeature,
-    DependencyGraphPageFeature,
-    SbomFeature,
-    SbomUseCasesFeature,
-    SbomPageFeature,
-    TrendsFeature,
-    TrendsUseCasesFeature,
-    TrendsPageFeature,
-    TeamFilterFeature,
-    TeamsFeature,
-    TeamsUseCasesFeature,
-    TeamsPageFeature,
-    TeamDetailFeature,
-    UsersFeature,
-    UsersUseCasesFeature,
-    UserListFeature
-];
+const ALL_FEATURES = [PresentationFeature];
 
 const UPGRADE_WIZARD_PATH_PATTERN = /^\/projects\/([^/]+)\/upgrade$/;
 const STEP_HOOKS_PATH_PATTERN = /^\/projects\/([^/]+)\/step-hooks$/;

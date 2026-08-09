@@ -14,7 +14,7 @@ vi.mock("../../router/router.js", () => ({
 import { createJobStatusNotificationHandler } from "../jobNotifications.js";
 import { notifications } from "@mantine/notifications";
 import { navigate } from "../../router/router.js";
-import { ProjectsRepository } from "#ui/features/projects/abstractions/ProjectsRepository.js";
+import { ProjectsRepository } from "#ui/features/Projects/abstractions/ProjectsRepository.js";
 
 interface NotificationClickHandler {
     onClick: () => void;
