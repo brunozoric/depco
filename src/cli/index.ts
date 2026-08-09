@@ -24,4 +24,11 @@ cli = cli.command("start", "Start the depco server", {}, async () => {
     await runner.run({ steps: command.steps(), context: command.context() });
 });
 
-cli.help().parse();
+cli.demandCommand(1, "Please specify a command: init or start")
+    .strict()
+    .help()
+    .parseAsync()
+    .catch(error => {
+        console.error(error);
+        process.exit(1);
+    });
