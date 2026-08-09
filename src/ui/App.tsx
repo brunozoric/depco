@@ -20,7 +20,7 @@ import { showConfigErrorToast } from "./infrastructure/Shared/notifications/conf
 import { handleSnoozeExpired } from "./infrastructure/Shared/notifications/snoozeNotifications.js";
 import { ContainerProvider, useContainer } from "#ui/infrastructure/Shared/di/ContainerProvider.js";
 import { useFeature } from "#ui/infrastructure/Shared/di/useFeature.js";
-import { navigate, useCurrentPath } from "#ui/infrastructure/Shared/router/router.js";
+import { navigate } from "#ui/infrastructure/Shared/router/router.js";
 import { AuthGateway } from "#ui/features/Auth/abstractions/AuthGateway.js";
 import { AuthRepository } from "#ui/features/Auth/abstractions/AuthRepository.js";
 import { PmSettingsGateway } from "#ui/features/Settings/abstractions/PmSettingsGateway.js";
@@ -33,55 +33,11 @@ import { TeamListService } from "#ui/features/TeamFilter/abstractions/TeamListSe
 import { PresentationFeature } from "./presentation/feature.js";
 import { LoginPageFeature } from "./presentation/Auth/LoginPage/feature.js";
 import { LoginPage } from "./presentation/Auth/LoginPage/LoginPage.js";
-import { ProjectListProvider } from "./presentation/Projects/ProjectList/ProjectListProvider.js";
-import { ProjectListPage } from "./presentation/Projects/ProjectList/components/ProjectListPage.js";
-import { ProjectDetailProvider } from "./presentation/Projects/ProjectDetail/ProjectDetailProvider.js";
-import { ProjectDetailPage } from "./presentation/Projects/ProjectDetail/components/ProjectDetailPage.js";
-import { PmSettingsProvider } from "./presentation/Settings/PmSettings/PmSettingsProvider.js";
-import { PmSettingsPage } from "./presentation/Settings/PmSettings/components/PmSettingsPage.js";
-import { JobManagerProvider } from "./presentation/Jobs/JobManager/JobManagerProvider.js";
-import { JobManagerPage } from "./presentation/Jobs/JobManager/components/JobManagerPage.js";
-import { PackagesProvider } from "./presentation/Packages/PackageList/PackagesProvider.js";
-import { PackagesPage } from "./presentation/Packages/PackageList/components/PackagesPage.js";
-import { UpgradeWizardProvider } from "./presentation/Projects/UpgradeWizard/UpgradeWizardProvider.js";
-import { UpgradeWizardPage } from "./presentation/Projects/UpgradeWizard/components/UpgradeWizardPage.js";
-import { AppSettingsProvider } from "./presentation/Settings/AppSettings/AppSettingsProvider.js";
-import { AppSettingsPage } from "./presentation/Settings/AppSettings/components/AppSettingsPage.js";
-import { LogBrowserProvider } from "./presentation/Logs/LogBrowser/LogBrowserProvider.js";
-import { LogBrowserPage } from "./presentation/Logs/LogBrowser/components/LogBrowserPage.js";
-import { BackupProvider } from "./presentation/Backup/BackupPage/BackupProvider.js";
-import { BackupPage } from "./presentation/Backup/BackupPage/components/BackupPage.js";
-import { StepHooksProvider } from "./presentation/Projects/StepHooks/StepHooksProvider.js";
-import { StepHooksPage } from "./presentation/Projects/StepHooks/components/StepHooksPage.js";
-import { DashboardProvider } from "./presentation/Dashboard/Dashboard/DashboardProvider.js";
-import { DashboardPage } from "./presentation/Dashboard/Dashboard/components/DashboardPage.js";
-import { VulnerabilitiesProvider } from "./presentation/Vulnerabilities/VulnerabilityList/VulnerabilitiesProvider.js";
-import { VulnerabilitiesPage } from "./presentation/Vulnerabilities/VulnerabilityList/components/VulnerabilitiesPage.js";
-import { VulnerabilityDetailProvider } from "./presentation/Vulnerabilities/VulnerabilityDetail/components/VulnerabilityDetailProvider.js";
-import { VulnerabilityDetailPage } from "./presentation/Vulnerabilities/VulnerabilityDetail/components/VulnerabilityDetailPage.js";
-import { LicensesProvider } from "./presentation/Licenses/LicensesList/LicensesProvider.js";
-import { LicensesPage } from "./presentation/Licenses/LicensesList/components/LicensesPage.js";
-import { DependencyGraphProvider } from "./presentation/DependencyGraph/GraphPage/DependencyGraphProvider.js";
-import { DependencyGraphPage } from "./presentation/DependencyGraph/GraphPage/components/DependencyGraphPage.js";
 import { SbomExportDialog } from "./presentation/Sbom/SbomPage/components/SbomExportDialog.js";
 import { SbomPresenter } from "./presentation/Sbom/SbomPage/abstractions/SbomPresenter.js";
-import { TrendsProvider } from "./presentation/Trends/TrendsPage/TrendsProvider.js";
-import { TrendsPage } from "./presentation/Trends/TrendsPage/components/TrendsPage.js";
-import { TeamsProvider } from "./presentation/Teams/TeamsPage/TeamsProvider.js";
-import { TeamsPage } from "./presentation/Teams/TeamsPage/components/TeamsPage.js";
-import { TeamDetailProvider } from "./presentation/Teams/TeamDetail/TeamDetailProvider.js";
-import { TeamDetailPage } from "./presentation/Teams/TeamDetail/components/TeamDetailPage.js";
-import { UserListProvider } from "./presentation/Users/UserList/UserListProvider.js";
-import { UserListPage } from "./presentation/Users/UserList/components/UserListPage.js";
+import { RouterComponent } from "./infrastructure/Router/index.js";
 
 const ALL_FEATURES = [PresentationFeature];
-
-const UPGRADE_WIZARD_PATH_PATTERN = /^\/projects\/([^/]+)\/upgrade$/;
-const STEP_HOOKS_PATH_PATTERN = /^\/projects\/([^/]+)\/step-hooks$/;
-const DEPENDENCY_GRAPH_PATH_PATTERN = /^\/projects\/([^/]+)\/graph$/;
-const PROJECT_DETAIL_PATH_PATTERN = /^\/projects\/([^/]+)$/;
-const VULNERABILITY_DETAIL_PATH_PATTERN = /^\/vulnerabilities\/([^/]+)$/;
-const TEAM_DETAIL_PATH_PATTERN = /^\/teams\/([^/]+)$/;
 
 // Establishes the WebSocket connection once on app mount and tears it down
 // on unmount. Renders nothing — it only manages the connection lifecycle.
@@ -318,192 +274,6 @@ function SbomDialogContainer({
     return <SbomExportDialog opened={opened} onClose={onClose} presenter={presenter} />;
 }
 
-function AppRoutes(): React.ReactNode {
-    const path = useCurrentPath();
-
-    if (path === "/jobs") {
-        return (
-            <JobManagerProvider>
-                {({ presenter }) => <JobManagerPage presenter={presenter} />}
-            </JobManagerProvider>
-        );
-    }
-
-    if (path === "/settings") {
-        return (
-            <PmSettingsProvider>
-                {({ presenter }) => <PmSettingsPage presenter={presenter} />}
-            </PmSettingsProvider>
-        );
-    }
-
-    if (path === "/settings/app") {
-        return (
-            <AppSettingsProvider>
-                {({ presenter }) => <AppSettingsPage presenter={presenter} />}
-            </AppSettingsProvider>
-        );
-    }
-
-    if (path === "/logs") {
-        return (
-            <LogBrowserProvider>
-                {({ presenter }) => <LogBrowserPage presenter={presenter} />}
-            </LogBrowserProvider>
-        );
-    }
-
-    if (path === "/backup") {
-        return (
-            <BackupProvider>
-                {({ presenter }) => <BackupPage presenter={presenter} />}
-            </BackupProvider>
-        );
-    }
-
-    const vulnerabilityDetailMatch = VULNERABILITY_DETAIL_PATH_PATTERN.exec(path);
-    const vulnerabilityId = vulnerabilityDetailMatch?.[1];
-
-    if (vulnerabilityId) {
-        return (
-            <VulnerabilityDetailProvider>
-                {({ presenter }) => (
-                    <VulnerabilityDetailPage
-                        presenter={presenter}
-                        vulnerabilityId={vulnerabilityId}
-                    />
-                )}
-            </VulnerabilityDetailProvider>
-        );
-    }
-
-    if (path === "/vulnerabilities") {
-        return (
-            <VulnerabilitiesProvider>
-                {({ presenter }) => <VulnerabilitiesPage presenter={presenter} />}
-            </VulnerabilitiesProvider>
-        );
-    }
-
-    if (path === "/licenses") {
-        return (
-            <LicensesProvider>
-                {({ presenter }) => <LicensesPage presenter={presenter} />}
-            </LicensesProvider>
-        );
-    }
-
-    if (path === "/trends") {
-        return (
-            <TrendsProvider>
-                {({ presenter }) => <TrendsPage presenter={presenter} />}
-            </TrendsProvider>
-        );
-    }
-
-    const teamDetailMatch = TEAM_DETAIL_PATH_PATTERN.exec(path);
-    const teamDetailId = teamDetailMatch?.[1];
-
-    if (teamDetailId) {
-        return (
-            <TeamDetailProvider>
-                {({ presenter }) => <TeamDetailPage presenter={presenter} teamId={teamDetailId} />}
-            </TeamDetailProvider>
-        );
-    }
-
-    if (path === "/teams") {
-        return (
-            <TeamsProvider>{({ presenter }) => <TeamsPage presenter={presenter} />}</TeamsProvider>
-        );
-    }
-
-    if (path === "/users") {
-        return (
-            <UserListProvider>
-                {({ presenter }) => <UserListPage presenter={presenter} />}
-            </UserListProvider>
-        );
-    }
-
-    if (path === "/packages") {
-        return (
-            <PackagesProvider>
-                {({ presenter }) => <PackagesPage presenter={presenter} />}
-            </PackagesProvider>
-        );
-    }
-
-    const upgradeWizardMatch = UPGRADE_WIZARD_PATH_PATTERN.exec(path);
-    const upgradeWizardProjectId = upgradeWizardMatch?.[1];
-
-    if (upgradeWizardProjectId) {
-        return (
-            <UpgradeWizardProvider>
-                {({ presenter }) => (
-                    <UpgradeWizardPage presenter={presenter} projectId={upgradeWizardProjectId} />
-                )}
-            </UpgradeWizardProvider>
-        );
-    }
-
-    const stepHooksMatch = STEP_HOOKS_PATH_PATTERN.exec(path);
-    const stepHooksProjectId = stepHooksMatch?.[1];
-
-    if (stepHooksProjectId) {
-        return (
-            <StepHooksProvider>
-                {({ presenter }) => (
-                    <StepHooksPage presenter={presenter} projectId={stepHooksProjectId} />
-                )}
-            </StepHooksProvider>
-        );
-    }
-
-    const dependencyGraphMatch = DEPENDENCY_GRAPH_PATH_PATTERN.exec(path);
-    const dependencyGraphProjectId = dependencyGraphMatch?.[1];
-
-    if (dependencyGraphProjectId) {
-        return (
-            <DependencyGraphProvider>
-                {({ presenter }) => (
-                    <DependencyGraphPage
-                        presenter={presenter}
-                        projectId={dependencyGraphProjectId}
-                    />
-                )}
-            </DependencyGraphProvider>
-        );
-    }
-
-    if (path === "/projects") {
-        return (
-            <ProjectListProvider>
-                {({ presenter }) => <ProjectListPage presenter={presenter} />}
-            </ProjectListProvider>
-        );
-    }
-
-    const projectDetailMatch = PROJECT_DETAIL_PATH_PATTERN.exec(path);
-    const projectId = projectDetailMatch?.[1];
-
-    if (projectId) {
-        return (
-            <ProjectDetailProvider>
-                {({ presenter }) => (
-                    <ProjectDetailPage presenter={presenter} projectId={projectId} />
-                )}
-            </ProjectDetailProvider>
-        );
-    }
-
-    return (
-        <DashboardProvider>
-            {({ presenter }) => <DashboardPage presenter={presenter} />}
-        </DashboardProvider>
-    );
-}
-
 export function App(): React.ReactNode {
     const [sbomDialogOpened, setSbomDialogOpened] = useState(false);
 
@@ -598,7 +368,7 @@ export function App(): React.ReactNode {
                             </Group>
                         </AppShell.Header>
                         <AppShell.Main>
-                            <AppRoutes />
+                            <RouterComponent />
                         </AppShell.Main>
                     </AppShell>
                     <SbomDialogContainer

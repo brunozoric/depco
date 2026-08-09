@@ -122,6 +122,7 @@ src/
       HttpClient/     — HTTPClient DI abstraction (fetch-based, mockable), cleanQuery helper (strips undefined values from query objects to prevent `teamId=undefined` serialization)
       Events/         — EventBridge pub/sub abstraction (IEventBridge: on/off/emit, keyed by IEventMap), eventMap.ts maps WSEventMap onto IEventMap
       WebSocket/      — WebSocketListener thin transport adapter (connect/disconnect, auto-reconnect with exponential backoff, pushes events into EventBridge)
+      Router/          — Route abstraction (IRoute: matchPath, validateQueryString, render), RouteRegistry (first-match resolution), RouterComponent. Each page has its own route abstraction registered via domain feature compositor.
       Shared/         — shared UI utilities (di/, router/, components/, notifications/, download/, vulnerabilities/, licenses/)
     features/         — PascalCase folder-per-feature headless layer (Gateways + Repositories). Each folder: abstractions/, implementation, feature.ts.
       Projects/       — ProjectsGateway, ProjectsRepository
@@ -205,7 +206,7 @@ src/
       licenses/       — RISK_TIER_COLORS constant (permissive=green, weak-copyleft=yellow, copyleft=orange, proprietary=red, unknown=gray)
       notifications/  — jobNotifications (toast on job completion), snoozeNotifications (toast on snoozed vulnerability expiry, 60s dedup window)
       download/       — downloadBlob utility (shared by backup and SBOM export)
-    App.tsx           — app shell with Mantine + routing + ConfigErrorNotifier (global toast for config file errors) + JobNotificationListener + SnoozeExpiryListener (WS-driven) + TeamListLoader (loads team list on mount) + TeamFilterSelect (global team Select in header)
+    App.tsx           — app shell with Mantine + renders RouterComponent (DI-resolved RouteRegistry, no inline route table) + ConfigErrorNotifier (global toast for config file errors) + JobNotificationListener + SnoozeExpiryListener (WS-driven) + TeamListLoader (loads team list on mount) + TeamFilterSelect (global team Select in header)
     main.tsx          — entry point
   testing/
     helpers/          — createTestDb (runs production migrations via runMigrations — single source of truth), registerEncryption (test helper for EncryptionService DI setup), seedYarnSecuritySettings, seedNpmSecuritySettings, seedPnpmSecuritySettings
