@@ -5,23 +5,23 @@ import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { CommandRunner } from "../../services/abstractions/CommandRunner.js";
-import { EmailService } from "../../services/abstractions/EmailService.js";
-import { UserService as UserServiceRegistration } from "../../services/UserService.js";
-import { AuthService as AuthServiceRegistration } from "../../services/AuthService.js";
+import { CommandRunner } from "../../services/CommandRunner/index.js";
+import { EmailService } from "../../services/Email/index.js";
+import { UserService as UserServiceRegistration } from "../../services/Auth/UserService.js";
+import { AuthService as AuthServiceRegistration } from "../../services/Auth/AuthService.js";
 import { createAuthHook } from "../../middleware/authHook.js";
-import { FileConfigService } from "../../services/abstractions/FileConfigService.js";
-import { RegistryCacheService as RegistryCacheServiceReg } from "../../services/RegistryCacheService.js";
-import { ChangelogService as ChangelogServiceReg } from "../../services/ChangelogService.js";
-import { GitHubReleasesResolver } from "../../services/changelogResolvers/GitHubReleasesResolver.js";
-import { ChangelogFileResolver } from "../../services/changelogResolvers/ChangelogFileResolver.js";
-import { NpmReadmeResolver } from "../../services/changelogResolvers/NpmReadmeResolver.js";
-import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../services/packageManagers/PackageManagerDriverRegistry.js";
+import { FileConfigService } from "../../services/FileConfig/index.js";
+import { RegistryCacheService as RegistryCacheServiceReg } from "../../services/RegistryCache/RegistryCacheService.js";
+import { ChangelogService as ChangelogServiceReg } from "../../services/Changelog/ChangelogService.js";
+import { GitHubReleasesResolver } from "../../services/Changelog/resolvers/GitHubReleasesResolver.js";
+import { ChangelogFileResolver } from "../../services/Changelog/resolvers/ChangelogFileResolver.js";
+import { NpmReadmeResolver } from "../../services/Changelog/resolvers/NpmReadmeResolver.js";
+import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../services/PackageManager/PackageManagerDriverRegistry.js";
 import { generateId } from "@webiny/stdlib";
 import { changelogs, dependencies, dependencyVersions, upgradeJobs } from "#api/db/schema.js";
 import { changelogRoutes } from "../changelogs.js";
 import { eq } from "drizzle-orm";
-import { JobWorker } from "../../services/abstractions/JobWorker.js";
+import { JobWorker } from "../../services/JobExecution/index.js";
 
 function createStubFileConfigService(): FileConfigService.Interface {
     return {

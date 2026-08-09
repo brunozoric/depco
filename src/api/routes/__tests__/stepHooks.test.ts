@@ -10,13 +10,13 @@ import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { EmailService } from "#api/services/abstractions/EmailService.js";
-import { UserService as UserServiceRegistration } from "#api/services/UserService.js";
-import { AuthService as AuthServiceRegistration } from "#api/services/AuthService.js";
+import { EmailService } from "#api/services/Email/index.js";
+import { UserService as UserServiceRegistration } from "#api/services/Auth/UserService.js";
+import { AuthService as AuthServiceRegistration } from "#api/services/Auth/AuthService.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
 import { projects, projectStepHooks } from "#api/db/schema.js";
-import { FileConfigService } from "../../services/FileConfigService.js";
-import { PackageJsonService } from "../../services/PackageJsonService.js";
+import { FileConfigService } from "../../services/FileConfig/FileConfigService.js";
+import { PackageJsonService } from "../../services/PackageJson/PackageJsonService.js";
 import { stepHooksRoutes } from "../stepHooks.js";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;

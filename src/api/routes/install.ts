@@ -5,9 +5,9 @@ import { registerRoute, sendOne, sendList, sendError } from "#shared/routing/ind
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { installProjectRoute, getInstallOptionsRoute } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { PackageManagerDriverRegistry } from "#api/services/packageManagers/abstractions/PackageManagerDriverRegistry.js";
-import type { PackageManagerDriver } from "#api/services/packageManagers/abstractions/PackageManagerDriver.js";
-import { JobWorker } from "#api/services/abstractions/JobWorker.js";
+import { PackageManagerDriverRegistry } from "#api/services/PackageManager/abstractions/PackageManagerDriverRegistry.js";
+import type { PackageManagerDriver } from "#api/services/PackageManager/abstractions/PackageManagerDriver.js";
+import { JobWorker } from "#api/services/JobExecution/index.js";
 import { projects } from "#api/db/schema.js";
 
 interface PluginOptions extends FastifyPluginOptions {

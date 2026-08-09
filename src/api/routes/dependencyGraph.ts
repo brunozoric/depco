@@ -10,7 +10,7 @@ import {
     searchDependencyPackagesRoute
 } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { DependencyGraphService } from "#api/services/abstractions/DependencyGraphService.js";
+import { DependencyGraphService } from "#api/services/DependencyGraph/index.js";
 import { projects } from "#api/db/schema.js";
 
 interface PluginOptions extends FastifyPluginOptions {

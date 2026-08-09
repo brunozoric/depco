@@ -9,7 +9,7 @@ import {
     skipUpgradeStepRoute,
     abortUpgradeSessionRoute
 } from "#shared/routes/index.js";
-import { UpgradeSessionService } from "#api/services/abstractions/UpgradeSessionService.js";
+import { UpgradeSessionService } from "#api/services/UpgradeSession/index.js";
 
 interface PluginOptions extends FastifyPluginOptions {
     container: Container;

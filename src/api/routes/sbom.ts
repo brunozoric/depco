@@ -3,8 +3,8 @@ import type { Container } from "@webiny/di";
 import { eq } from "drizzle-orm";
 import { registerRoute, sendError, sendBlob } from "#shared/routing/index.js";
 import { exportAllSbomRoute, exportProjectSbomRoute } from "#shared/routes/index.js";
-import { SbomService } from "../services/abstractions/SbomService.js";
-import { SbomFormatterRegistry } from "../services/abstractions/SbomFormatterRegistry.js";
+import { SbomService } from "../services/Sbom/index.js";
+import { SbomFormatterRegistry } from "../services/Sbom/index.js";
 import { projects } from "#api/db/schema.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 

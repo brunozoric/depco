@@ -3,7 +3,7 @@ import type { Container } from "@webiny/di";
 import { registerRoute, sendNone } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { clearCacheRoute, clearPackageCacheRoute } from "#shared/routes/index.js";
-import { RegistryCacheService } from "../services/abstractions/RegistryCacheService.js";
+import { RegistryCacheService } from "../services/RegistryCache/index.js";
 
 interface PluginOptions extends FastifyPluginOptions {
     container: Container;

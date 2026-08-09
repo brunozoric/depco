@@ -13,7 +13,7 @@ import {
     deleteJobsRoute
 } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { JobWorker } from "../services/abstractions/JobWorker.js";
+import { JobWorker } from "../services/JobExecution/index.js";
 import { projects, scanResults, upgradeJobs } from "#api/db/schema.js";
 
 interface PluginOptions extends FastifyPluginOptions {

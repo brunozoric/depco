@@ -10,8 +10,8 @@ import {
     getMeRoute,
     logoutRoute
 } from "#shared/routes/index.js";
-import { AuthService } from "#api/services/abstractions/AuthService.js";
-import { UserService } from "#api/services/abstractions/UserService.js";
+import { AuthService } from "#api/services/Auth/index.js";
+import { UserService } from "#api/services/Auth/index.js";
 import type { IAuthenticatedRequest } from "#api/middleware/authHook.js";
 
 interface PluginOptions extends FastifyPluginOptions {

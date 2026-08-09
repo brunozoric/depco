@@ -9,8 +9,8 @@ import {
     deleteUserRoute,
     forceLogoutUserRoute
 } from "#shared/routes/index.js";
-import { UserService } from "#api/services/abstractions/UserService.js";
-import { AuthService } from "#api/services/abstractions/AuthService.js";
+import { UserService } from "#api/services/Auth/index.js";
+import { AuthService } from "#api/services/Auth/index.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import type { IAuthenticatedRequest } from "#api/middleware/authHook.js";

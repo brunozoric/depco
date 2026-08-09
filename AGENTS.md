@@ -59,17 +59,38 @@ src/
   api/
     db/               — Drizzle schema, migrations, DatabaseClient abstraction
     routes/           — Fastify route plugins (projects, jobs, packageManager, cache, settings, appSettings, install, changelogs, packages, upgradeSessions, stepHooks, logs, backup, filesystem, dashboard, scanSchedules, vulnerabilities, licenses, licensePolicies, autoFixSettings, autoFixPrs, sbom, teams)
-    services/         — DI-wired services (SecurityService, ScanService, PackageManagerService, ChangelogService, GitService, ForgeService (GitHub/GitLab PR creation via @octokit/rest + @gitbeaker/rest), UpgradeSessionService, AppLogService, ErrorReporter, FileConfigService, PackageJsonService, ScanSchedulerService (bree-based scheduled scans), AuditParserService (PM audit JSON normalization), OsvCacheService (OSV.dev batch query + TTL cache), VulnerabilityService (audit + OSV merge, health score penalty), EventBus (typed pub/sub, IEventMap extensible via declare module), LicenseCheckerService (resolves licenses from npm registry metadata via RegistryCacheService — reads packages from scan_results, no external CLI tool), EncryptionService (AES-256-GCM + argon2id KDF from ENCRYPTION_KEY env var, used for GitHub/GitLab token storage), LicensePolicyService (evaluates licenses against policy rules, persists violations), AutoFixSettingsService (per-project auto-fix config CRUD with defaults fallback), AutoFixPrService (orchestrates eligible-package selection, license-deny filtering, grouping strategies, PR body generation), SbomService (collects package/license/vulnerability/dependency data for SBOM export), DependencyChangeService (detects added/removed/version-changed packages between scans))
-      jobExecutors/   — JobExecutor strategy pattern: per-type executors, all converted to DI via createAbstraction/createImplementation (abstractions in abstractions/*.ts). JobExecutorRegistry receives all 13 executors as DI-injected abstractions (no manual `new`). ChangelogJobExecutor receives resolvers via { multiple: true }. ScanJobExecutor is a thin orchestrator — chains child jobs (package-scan, vulnerability-scan, license-scan, graph-refresh, optionally transitive-resolve) and waits for them via JobWorker.waitForJob/waitForJobs. PackageScanJobExecutor does the core scan (lockfile parse, registry lookups, scan_results, changelog placeholders, project update). VulnerabilityScanJobExecutor runs vulnerability scan + health snapshot. LicenseScanJobExecutor runs license detection + policy evaluation + snapshot. GraphRefreshJobExecutor refreshes dependency_edges from lockfile. JobWorkerProvider breaks the circular DI dependency (ScanJobExecutor needs JobWorker, JobWorker needs JobExecutorRegistry which needs ScanJobExecutor) via registerFactory lazy accessor.
-      sbomFormatters/ — CycloneDxFormatter (1.5) and SpdxFormatter (2.3) strategy implementations via DI createImplementation, SbomFormatterRegistry receives formatters via { multiple: true } binding
-      packageManagers/ — PackageManagerDriver abstraction, per-PM drivers (Yarn/Npm/Pnpm/Bun), registry, normalizeRepoUrl helper
-      changelogResolvers/ — IChangelogResolver interface (createAbstraction), GitHubReleasesResolver, ChangelogFileResolver, NpmReadmeResolver — each using createImplementation with DI dependencies, injected via { multiple: true } binding into ChangelogService and ChangelogJobExecutor
-      stepResolvers/  — StepResolver abstraction (createAbstraction), 7 built-in resolvers (select-packages, branch, upgrade, refresh-transient, commit, push, create-pr) each using createImplementation with DI dependencies, execute uses object params (IStepExecuteParams: { projectPath, context, input, onProgress? }). CustomStepResolver (runtime-created plain class for project step hooks — factory pattern, not DI). UpgradeSessionStepResolverRegistry (own abstraction file, resolves all StepResolver implementations via { multiple: true } binding, getResolver accepts optional customResolvers array). stepPipeline utilities (toSlug/buildStepOrder/createSessionSteps)
-      workers/        — bree worker scripts (scanWorker.js — plain JS, runs in worker thread, posts projectId to parent)
-      registerProject.ts — shared project registration helper
+    services/         — PascalCase folder-per-service structure. Each folder contains: abstractions/ (createAbstraction + interface), implementation file(s), feature.ts (createFeature for DI registration), index.ts (exports abstractions + feature only, never implementations), __tests__/. Top-level feature.ts composes all sub-features.
+      AppLog/         — AppLogService (configurable log level, DB + WS broadcast)
+      Auth/           — AuthService + UserService (login/register/session/CRUD)
+      AutoFix/        — AutoFixSettingsService (per-project config CRUD) + AutoFixPrService (eligible-package selection, license-deny filtering, grouping strategies, PR body generation)
+      Changelog/      — ChangelogService + resolvers/ subfolder (GitHubReleasesResolver, ChangelogFileResolver, NpmReadmeResolver via { multiple: true } binding). Helpers: extractOwnerRepo, parseVersionSections
+      CommandRunner/  — CommandRunner (execa wrapper with signal support)
+      DependencyChange/ — DependencyChangeService (detects added/removed/version-changed packages between scans)
+      DependencyGraph/ — DependencyGraphService + LockfileParserService (lockfile parsing for all 4 PMs, BFS path finding, search)
+      Email/          — ConsoleEmailService (EmailService abstraction, console-based impl)
+      Encryption/     — EncryptionService (AES-256-GCM + argon2id KDF from ENCRYPTION_KEY env var)
+      ErrorReporter/  — ErrorReporter (domain-specific convenience wrapper around AppLogService)
+      EventBus/       — EventBus (typed pub/sub, IEventMap extensible via declare module)
+      FileConfig/     — FileConfigService (reads .dependency-upgrader.json global/project config)
+      Git/            — GitService (local git ops) + ForgeService (GitHub/GitLab PR creation via @octokit/rest + @gitbeaker/rest)
+      JobExecution/   — JobWorker + executors/ subfolder (JobExecutorRegistry + 13 executors: Changelog, Dependency, Transient, PackageManager, Install, Clone, AutoFixPr, Scan, TransitiveResolve, PackageScan, VulnerabilityScan, LicenseScan, GraphRefresh). JobWorkerProvider breaks circular DI via registerFactory
+      License/        — LicenseCheckerService (resolves from npm registry metadata) + LicensePolicyService (glob-based rule evaluation, persists violations)
+      PackageJson/    — PackageJsonService (reads package.json scripts for step hook discovery)
+      PackageManager/ — PackageManagerService + PackageManagerDriverRegistry + drivers/ subfolder (Yarn/Npm/Pnpm/Bun). Helpers: normalizeRepoUrl, parseLicense, registrySchema
+      RegistryCache/  — RegistryCacheService (npm registry lookups with in-flight dedup)
+      Sbom/           — SbomService + SbomFormatterRegistry + formatters/ subfolder (CycloneDxFormatter 1.5, SpdxFormatter 2.3)
+      Scan/           — ScanService (workspace-aware, PM-aware, concurrent registry lookups)
+      ScanScheduler/  — ScanSchedulerService (bree-based scheduled auto-scan)
+      Security/       — SecurityService (config-driven PM security checks)
+      StepHook/       — StepHookService (custom pre/post step hooks, file config + DB fallback)
+      Upgrade/        — UpgradeService (single-package upgrade via PM driver)
+      UpgradeSession/ — UpgradeSessionService + stepResolvers/ subfolder (7 built-in resolvers + CustomStepResolver + StepResolverRegistry + stepPipeline utilities)
+      Vulnerability/  — VulnerabilityService (audit + OSV merge, health score penalty) + OsvCacheService (OSV.dev batch query + TTL cache) + AuditParserService (PM audit JSON normalization)
+    utils/            — registerProject.ts (shared project registration helper)
+    workers/          — bree worker scripts (scanWorker.js)
     websocket/        — WebSocketBroadcaster abstraction + Fastify WS plugin
     server.ts         — Fastify setup, migration runner, stale job recovery, job worker loop. Loads `.env` via dotenv. DB path configurable via `DB_PATH` env var (default: `./data/manager.db`). Requires `ENCRYPTION_KEY` env var for token storage
-    feature.ts        — API DI registration
+    feature.ts        — API DI compositor (imports and registers all sub-features, no implementation imports)
   shared/
     di/               — createAbstraction, createFeature, createContainer
     routing/          — defineRoute, registerRoute, response helpers (sendOne/sendList/sendNone/sendError), interpolatePath
