@@ -19,6 +19,8 @@ import { UpgradeService as UpgradeServiceRegistration } from "../../Upgrade/Upgr
 import { PackageManagerService as PackageManagerServiceRegistration } from "../../PackageManager/PackageManagerService.js";
 import { AuditParserService as AuditParserServiceRegistration } from "../../Vulnerability/AuditParserService.js";
 import { OsvCacheService as OsvCacheServiceRegistration } from "../../Vulnerability/OsvCacheService.js";
+import { AuditParserService as SharedAuditParserServiceRegistration } from "#shared/vulnerabilities/AuditParserService.js";
+import { OsvQueryService as SharedOsvQueryServiceRegistration } from "#shared/vulnerabilities/OsvQueryService.js";
 import { VulnerabilityService as VulnerabilityServiceRegistration } from "../../Vulnerability/VulnerabilityService.js";
 import { LicenseCheckerService as LicenseCheckerServiceRegistration } from "../../License/LicenseCheckerService.js";
 import { LicensePolicyService as LicensePolicyServiceRegistration } from "../../License/LicensePolicyService.js";
@@ -145,8 +147,10 @@ describe("JobWorker", () => {
         container.register(SecurityServiceRegistration).inSingletonScope();
         container.register(UpgradeServiceRegistration).inSingletonScope();
         container.register(PackageManagerDriverRegistryRegistration).inSingletonScope();
+        container.register(SharedAuditParserServiceRegistration).inSingletonScope();
         container.register(AuditParserServiceRegistration).inSingletonScope();
         container.register(PackageManagerServiceRegistration).inSingletonScope();
+        container.register(SharedOsvQueryServiceRegistration).inSingletonScope();
         container.register(OsvCacheServiceRegistration).inSingletonScope();
         container.register(VulnerabilityServiceRegistration).inSingletonScope();
         container.register(LicenseCheckerServiceRegistration).inSingletonScope();

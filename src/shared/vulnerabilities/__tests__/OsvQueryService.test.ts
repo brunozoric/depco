@@ -1,0 +1,94 @@
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { createContainer, registerFeatures } from "#shared/index.js";
+import { OsvQueryService, mapCvssScoreToSeverity } from "../abstractions/OsvQueryService.js";
+import { SharedVulnerabilityFeature } from "../feature.js";
+
+describe("OsvQueryService", () => {
+    let service: OsvQueryService.Interface;
+
+    beforeEach(() => {
+        const container = createContainer();
+        registerFeatures(container, [SharedVulnerabilityFeature]);
+        service = container.resolve(OsvQueryService);
+    });
+
+    describe("queryBatch", () => {
+        it("returns advisories grouped by cache key", async () => {
+            const mockResponse = {
+                results: [
+                    {
+                        vulns: [
+                            {
+                                id: "GHSA-1234",
+                                summary: "XSS in foo",
+                                aliases: ["CVE-2024-1234"],
+                                severity: [
+                                    {
+                                        type: "CVSS_V3",
+                                        score: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+                                    }
+                                ],
+                                affected: [
+                                    {
+                                        ranges: [
+                                            {
+                                                type: "ECOSYSTEM",
+                                                events: [{ introduced: "0" }, { fixed: "2.0.0" }]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    { vulns: [] }
+                ]
+            };
+
+            vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+                new Response(JSON.stringify(mockResponse), { status: 200 })
+            );
+
+            const result = await service.queryBatch({
+                packages: [
+                    { name: "foo", version: "1.0.0" },
+                    { name: "bar", version: "2.0.0" }
+                ]
+            });
+
+            expect(result.get("foo@1.0.0")).toHaveLength(1);
+            expect(result.get("foo@1.0.0")![0]!.id).toBe("GHSA-1234");
+            expect(result.get("foo@1.0.0")![0]!.severity).toBe("moderate");
+            expect(result.get("bar@2.0.0") ?? []).toEqual([]);
+        });
+
+        it("returns empty map on network error", async () => {
+            vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("Network error"));
+
+            const result = await service.queryBatch({
+                packages: [{ name: "foo", version: "1.0.0" }]
+            });
+
+            expect(result.size).toBe(0);
+        });
+
+        it("handles empty package list", async () => {
+            const result = await service.queryBatch({ packages: [] });
+            expect(result.size).toBe(0);
+        });
+    });
+
+    describe("mapCvssScoreToSeverity", () => {
+        it("maps scores to correct severity", () => {
+            expect(mapCvssScoreToSeverity(9.5)).toBe("critical");
+            expect(mapCvssScoreToSeverity(9.0)).toBe("critical");
+            expect(mapCvssScoreToSeverity(7.5)).toBe("high");
+            expect(mapCvssScoreToSeverity(7.0)).toBe("high");
+            expect(mapCvssScoreToSeverity(5.0)).toBe("moderate");
+            expect(mapCvssScoreToSeverity(4.0)).toBe("moderate");
+            expect(mapCvssScoreToSeverity(2.0)).toBe("low");
+            expect(mapCvssScoreToSeverity(0.1)).toBe("low");
+            expect(mapCvssScoreToSeverity(0.0)).toBe("info");
+        });
+    });
+});

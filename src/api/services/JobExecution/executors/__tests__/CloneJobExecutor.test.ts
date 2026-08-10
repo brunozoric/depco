@@ -10,6 +10,7 @@ import { CommandRunner } from "../../../CommandRunner/index.js";
 import { SecurityService as SecurityServiceReg } from "../../../Security/SecurityService.js";
 import { PackageManagerService as PackageManagerServiceReg } from "../../../PackageManager/PackageManagerService.js";
 import { AuditParserService as AuditParserServiceReg } from "../../../Vulnerability/AuditParserService.js";
+import { AuditParserService as SharedAuditParserServiceRegistration } from "#shared/vulnerabilities/AuditParserService.js";
 import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../../PackageManager/PackageManagerDriverRegistry.js";
 import { projects } from "#api/db/schema.js";
 import { CloneJobExecutor } from "../abstractions/CloneJobExecutor.js";
@@ -51,6 +52,7 @@ describe("CloneJobExecutor", () => {
         container.registerInstance(DatabaseClient, { db });
         container.registerInstance(CommandRunner, commandRunnerMock);
         container.register(PackageManagerDriverRegistryReg).inSingletonScope();
+        container.register(SharedAuditParserServiceRegistration).inSingletonScope();
         container.register(AuditParserServiceReg).inSingletonScope();
         container.register(PackageManagerServiceReg).inSingletonScope();
         container.register(SecurityServiceReg).inSingletonScope();

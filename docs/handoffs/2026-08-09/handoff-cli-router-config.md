@@ -3,6 +3,7 @@
 ## What was done
 
 **Infrastructure restructure (from previous branch merge):**
+
 - Moved events/, httpClient/, websocket/, shared/ under src/ui/infrastructure/ with PascalCase
 - Created 18 per-domain presentation compositors (PresentationFeature: 38 entries down to 18)
 - Built DI Router system: 19 route abstractions (Route + RouteRegistry + RouterComponent), each page is a DI citizen
@@ -10,6 +11,7 @@
 - Extracted App.tsx from 382 lines to 40 (AppLifecycle + AppHeader as siblings)
 
 **CLI install feature:**
+
 - `depco init` — 7 DI steps: EnsureDataDirectory, RunMigrations, GenerateEncryptionKey, SelectPort, CreateAdminUser, WriteEnvFile (0o600 permissions), PrintNextSteps
 - `depco start` — 2 DI steps: ValidateEnvironment, StartServer
 - StepRunner with progress display, rollback on failure, custom StepExecutionError
@@ -18,6 +20,7 @@
 - Full integration test for init flow
 
 **CLI scan feature (standalone, no server/DB):**
+
 - `depco scan` — 4 DI steps: DetectPackageManager, LoadConfig, ParseLockfile, CheckLicenses
 - Parses lockfile via LockfileParserService (zero deps, pure parser)
 - Fetches licenses from npm registry, classifies via classifyLicenseRiskTier
@@ -25,6 +28,7 @@
 - Exit code 1 on non-permissive licenses
 
 **depco.config.ts:**
+
 - TypeScript config file with defineConfig() for type-safe autocomplete
 - Exported via package.json exports as @fundus/depco/config
 - Zod-validated (external user input)

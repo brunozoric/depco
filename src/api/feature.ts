@@ -6,6 +6,7 @@ import {
     ProcessEnvFeature
 } from "@webiny/stdlib/node";
 import { createFeature } from "#shared/index.js";
+import { SharedVulnerabilityFeature } from "#shared/vulnerabilities/feature.js";
 import { DatabaseClient } from "./db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "./websocket/WebSocketBroadcaster.js";
 
@@ -77,6 +78,7 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
         GitFeature.register(container);
         AutoFixFeature.register(container);
         LicenseFeature.register(container);
+        SharedVulnerabilityFeature.register(container);
         VulnerabilityFeature.register(container);
         DependencyGraphFeature.register(container);
         UpgradeSessionFeature.register(container);

@@ -8,6 +8,7 @@ import { PackageManagerService } from "../abstractions/PackageManagerService.js"
 import { PackageManagerService as PackageManagerServiceRegistration } from "../PackageManagerService.js";
 import { PackageManagerDriverRegistry as RegistryRegistration } from "../PackageManagerDriverRegistry.js";
 import { AuditParserService as AuditParserServiceRegistration } from "../../Vulnerability/AuditParserService.js";
+import { AuditParserService as SharedAuditParserServiceRegistration } from "#shared/vulnerabilities/AuditParserService.js";
 
 function createMockCommandRunner(): CommandRunner.Interface {
     return {
@@ -25,6 +26,7 @@ describe("PackageManagerService", () => {
         commandRunner = createMockCommandRunner();
         container.registerInstance(CommandRunner, commandRunner);
         container.register(RegistryRegistration).inSingletonScope();
+        container.register(SharedAuditParserServiceRegistration).inSingletonScope();
         container.register(AuditParserServiceRegistration).inSingletonScope();
         container.register(PackageManagerServiceRegistration).inSingletonScope();
         service = container.resolve(PackageManagerService);

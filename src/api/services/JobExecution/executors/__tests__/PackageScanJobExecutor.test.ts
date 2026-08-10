@@ -13,6 +13,7 @@ import { FileConfigService } from "../../../FileConfig/index.js";
 import { ScanService as ScanServiceReg } from "../../../Scan/ScanService.js";
 import { PackageManagerService as PackageManagerServiceReg } from "../../../PackageManager/PackageManagerService.js";
 import { AuditParserService as AuditParserServiceReg } from "../../../Vulnerability/AuditParserService.js";
+import { AuditParserService as SharedAuditParserServiceRegistration } from "#shared/vulnerabilities/AuditParserService.js";
 import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../../PackageManager/PackageManagerDriverRegistry.js";
 import { RegistryCacheService as RegistryCacheServiceReg } from "../../../RegistryCache/RegistryCacheService.js";
 import { LockfileParserService } from "../../../DependencyGraph/index.js";
@@ -200,6 +201,7 @@ describe("PackageScanJobExecutor", () => {
         container.registerInstance(DatabaseClient, { db });
         container.registerInstance(CommandRunner, commandRunner);
         container.register(PackageManagerDriverRegistryReg).inSingletonScope();
+        container.register(SharedAuditParserServiceRegistration).inSingletonScope();
         container.register(AuditParserServiceReg).inSingletonScope();
         container.register(PackageManagerServiceReg).inSingletonScope();
         container.registerInstance(FileConfigService, createStubFileConfigService());

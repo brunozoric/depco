@@ -23,6 +23,8 @@ import { ScanService as ScanServiceReg } from "../../services/Scan/ScanService.j
 import { PackageManagerService as PackageManagerServiceReg } from "../../services/PackageManager/PackageManagerService.js";
 import { AuditParserService as AuditParserServiceReg } from "../../services/Vulnerability/AuditParserService.js";
 import { OsvCacheService as OsvCacheServiceReg } from "../../services/Vulnerability/OsvCacheService.js";
+import { AuditParserService as SharedAuditParserServiceRegistration } from "#shared/vulnerabilities/AuditParserService.js";
+import { OsvQueryService as SharedOsvQueryServiceRegistration } from "#shared/vulnerabilities/OsvQueryService.js";
 import { VulnerabilityService as VulnerabilityServiceReg } from "../../services/Vulnerability/VulnerabilityService.js";
 import { LicenseCheckerService as LicenseCheckerServiceReg } from "../../services/License/LicenseCheckerService.js";
 import { LicensePolicyService as LicensePolicyServiceReg } from "../../services/License/LicensePolicyService.js";
@@ -153,8 +155,10 @@ describe("project routes", () => {
         container.register(SecurityServiceReg);
         container.register(ScanServiceReg);
         container.register(PackageManagerDriverRegistryReg).inSingletonScope();
+        container.register(SharedAuditParserServiceRegistration).inSingletonScope();
         container.register(AuditParserServiceReg);
         container.register(PackageManagerServiceReg);
+        container.register(SharedOsvQueryServiceRegistration).inSingletonScope();
         container.register(OsvCacheServiceReg).inSingletonScope();
         container.register(VulnerabilityServiceReg).inSingletonScope();
         container.register(LicenseCheckerServiceReg).inSingletonScope();
