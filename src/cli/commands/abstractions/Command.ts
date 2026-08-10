@@ -5,7 +5,7 @@ export interface ICommand {
     name: string;
     description: string;
     steps(): Step.Interface[];
-    context(): Step.Context;
+    context(argv?: Record<string, unknown>): Step.Context;
 }
 
 export const Command = createAbstraction<ICommand>("Cli/Command");

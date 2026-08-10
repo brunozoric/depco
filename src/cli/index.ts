@@ -34,12 +34,13 @@ cli = cli.command(
     yargs =>
         yargs.option("check", {
             type: "string",
-            description: "Check to run (license)",
-            default: "license"
+            description: "Check to run",
+            default: "license",
+            choices: ["license", "vulnerability", "all"]
         }),
-    async () => {
+    async argv => {
         const command = container.resolve(ScanCommand);
-        await runner.run({ steps: command.steps(), context: command.context() });
+        await runner.run({ steps: command.steps(), context: command.context(argv) });
     }
 );
 
