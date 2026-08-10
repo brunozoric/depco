@@ -64,9 +64,9 @@ describe("ValidateConfigStep", () => {
 
         expect(result.success).toBe(false);
         expect(consoleLogSpy).toHaveBeenCalledWith("depco.config.ts is invalid:");
-        const loggedLines = consoleLogSpy.mock.calls.map(call => call[0] as string);
-        expect(loggedLines.some(line => line.includes("scan.license.allowedRiskTiers.0"))).toBe(
-            true
-        );
+        const loggedLines = consoleLogSpy.mock.calls.map((call: unknown[]) => call[0] as string);
+        expect(
+            loggedLines.some((line: string) => line.includes("scan.license.allowedRiskTiers.0"))
+        ).toBe(true);
     });
 });
