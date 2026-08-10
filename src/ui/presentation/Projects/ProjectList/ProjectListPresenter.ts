@@ -12,6 +12,8 @@ import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBr
 import "../../../infrastructure/Events/eventMap.js";
 import { FilesystemGateway } from "../../../features/Filesystem/abstractions/FilesystemGateway.js";
 import { TeamFilterService } from "../../../features/TeamFilter/abstractions/TeamFilterService.js";
+import { CloneManager } from "./CloneManager.js";
+import { DirectoryScanManager } from "./DirectoryScanManager.js";
 
 class ProjectListPresenterImpl implements Abstraction.Interface {
     private loading = false;
@@ -19,18 +21,13 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
     private addProjectPathValue = "";
     private addProjectLoading = false;
     private addProjectError: string | null = null;
-    private cloneUrl = "";
-    private cloneFolderName = "";
-    private cloneLoading = false;
-    private cloneError: string | null = null;
     private browsePath = "";
     private browseItems: Abstraction.BrowseItem[] = [];
     private browseLoading = false;
-    private scanResults: Abstraction.BrowseItem[] = [];
-    private scanLoading = false;
-    private scanSummary: Abstraction.ScanSummary | null = null;
-    private scanDepth = 1;
     private searchQuery = "";
+
+    public readonly cloneManager: CloneManager;
+    public readonly directoryScanManager: DirectoryScanManager;
     private readonly scanStatuses = new Map<string, Abstraction.ScanStatus>();
 
     private readonly handleScanProgress: EventBridge.Callback<"scan:progress">;
@@ -52,6 +49,16 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
         private readonly filesystemGateway: FilesystemGateway.Interface,
         private readonly teamFilterService: TeamFilterService.Interface
     ) {
+        this.cloneManager = new CloneManager({
+            cloneProjectUseCase: this.cloneProjectUseCase,
+            getBrowsePath: () => this.browsePath,
+            onCloned: () => this.load()
+        });
+        this.directoryScanManager = new DirectoryScanManager({
+            filesystemGateway: this.filesystemGateway,
+            getBrowsePath: () => this.browsePath
+        });
+
         makeAutoObservable(this, { vm: computed });
 
         this.handleScanProgress = data => {
@@ -148,17 +155,17 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
             addProjectPath: this.addProjectPathValue,
             addProjectLoading: this.addProjectLoading,
             addProjectError: this.addProjectError,
-            cloneUrl: this.cloneUrl,
-            cloneFolderName: this.cloneFolderName,
-            cloneLoading: this.cloneLoading,
-            cloneError: this.cloneError,
+            cloneUrl: this.cloneManager.url,
+            cloneFolderName: this.cloneManager.folderName,
+            cloneLoading: this.cloneManager.loading,
+            cloneError: this.cloneManager.error,
             browsePath: this.browsePath,
             browseItems: this.browseItems,
             browseLoading: this.browseLoading,
-            scanResults: this.scanResults,
-            scanLoading: this.scanLoading,
-            scanSummary: this.scanSummary,
-            scanDepth: this.scanDepth,
+            scanResults: this.directoryScanManager.results,
+            scanLoading: this.directoryScanManager.loading,
+            scanSummary: this.directoryScanManager.summary,
+            scanDepth: this.directoryScanManager.depth,
             searchQuery: this.searchQuery
         };
     }
@@ -255,15 +262,11 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
     };
 
     public setCloneUrl = (url: string): void => {
-        this.cloneUrl = url;
-        const match = url.match(/\/([^/]+?)(?:\.git)?$/);
-        if (match) {
-            this.cloneFolderName = match[1]!;
-        }
+        this.cloneManager.setUrl(url);
     };
 
     public setCloneFolderName = (name: string): void => {
-        this.cloneFolderName = name;
+        this.cloneManager.setFolderName(name);
     };
 
     public browseTo = async (path: string): Promise<void> => {
@@ -293,37 +296,20 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
     };
 
     public scanDirectory = async (): Promise<void> => {
-        this.scanLoading = true;
-        try {
-            const result = await this.filesystemGateway.scan(this.browsePath, this.scanDepth);
+        const error = await this.directoryScanManager.scan();
+        if (error) {
             runInAction(() => {
-                this.scanResults = result.items;
-                this.scanSummary = {
-                    scannedPath: result.scannedPath,
-                    scannedCount: result.scannedCount,
-                    filteredCount: result.filteredCount,
-                    mode: result.mode
-                };
-            });
-        } catch (error) {
-            runInAction(() => {
-                this.addProjectError =
-                    error instanceof Error ? error.message : "Failed to scan directory";
-            });
-        } finally {
-            runInAction(() => {
-                this.scanLoading = false;
+                this.addProjectError = error;
             });
         }
     };
 
     public clearScan = (): void => {
-        this.scanResults = [];
-        this.scanSummary = null;
+        this.directoryScanManager.clear();
     };
 
     public setScanDepth = (depth: number): void => {
-        this.scanDepth = Math.max(1, Math.min(5, depth));
+        this.directoryScanManager.setDepth(depth);
     };
 
     public setSearchQuery = (value: string): void => {
@@ -346,27 +332,7 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
     };
 
     public cloneProject = async (): Promise<void> => {
-        this.cloneLoading = true;
-        this.cloneError = null;
-        try {
-            await this.cloneProjectUseCase.execute(
-                this.cloneUrl,
-                this.browsePath,
-                this.cloneFolderName || undefined
-            );
-            runInAction(() => {
-                this.cloneLoading = false;
-                this.cloneUrl = "";
-                this.cloneFolderName = "";
-            });
-            await this.load();
-        } catch (error) {
-            runInAction(() => {
-                this.cloneLoading = false;
-                this.cloneError =
-                    error instanceof Error ? error.message : "Failed to clone project";
-            });
-        }
+        await this.cloneManager.clone();
     };
 }
 

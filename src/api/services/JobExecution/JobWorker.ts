@@ -9,6 +9,7 @@ import { JobExecutorRegistry } from "./executors/abstractions/JobExecutorRegistr
 import type { ISetProgressInput } from "./executors/abstractions/JobExecutor.js";
 import { ErrorReporter } from "../ErrorReporter/index.js";
 import { projects, upgradeJobs } from "#api/db/schema.js";
+import { chainRefreshTransientIfNeeded, chainScanAfterJobIfNeeded } from "./JobChaining.js";
 
 const PROGRESS_DB_WRITE_THROTTLE_MS = 1000;
 const LOG_DB_FLUSH_INTERVAL_MS = 2000;
@@ -254,8 +255,13 @@ class JobWorkerImpl implements Abstraction.Interface {
                 });
             }
 
-            await this.chainRefreshTransientIfNeeded(job, appendLog);
-            await this.chainScanAfterJobIfNeeded(job, appendLog);
+            const enqueue = this.enqueue.bind(this);
+            await chainRefreshTransientIfNeeded(job, appendLog, {
+                enqueue,
+                isRefreshTransientFlagged: id => this.#refreshTransientJobIds.has(id),
+                clearRefreshTransientFlag: id => this.#refreshTransientJobIds.delete(id)
+            });
+            await chainScanAfterJobIfNeeded(job, appendLog, enqueue);
 
             await this.finishJob({
                 jobId: job.id,
@@ -299,63 +305,6 @@ class JobWorkerImpl implements Abstraction.Interface {
         } finally {
             clearInterval(logFlushTimer);
             this.#controllers.delete(job.id);
-        }
-    }
-
-    private async chainRefreshTransientIfNeeded(
-        job: Abstraction.Job,
-        appendLog: (line: string) => void
-    ): Promise<void> {
-        if (job.type !== "dependency" || !this.#refreshTransientJobIds.has(job.id)) {
-            return;
-        }
-
-        this.#refreshTransientJobIds.delete(job.id);
-
-        let packageNames: string | undefined;
-        if (job.packages) {
-            try {
-                const parsed = JSON.parse(job.packages) as Array<{ name: string }>;
-                const names = parsed.map(p => p.name);
-                if (names.length > 0) {
-                    packageNames = JSON.stringify(names);
-                }
-            } catch {
-                // fall through — refresh all
-            }
-        }
-
-        try {
-            await this.enqueue({
-                referenceId: job.referenceId,
-                referenceType: "project",
-                type: "transient",
-                packages: packageNames,
-                parentJobId: job.id
-            });
-        } catch (error) {
-            appendLog(`Failed to enqueue transient refresh: ${String(error)}`);
-        }
-    }
-
-    private async chainScanAfterJobIfNeeded(
-        job: Abstraction.Job,
-        appendLog: (line: string) => void
-    ): Promise<void> {
-        if (job.type !== "install" && job.type !== "dependency" && job.type !== "transient") {
-            return;
-        }
-
-        try {
-            await this.enqueue({
-                referenceId: job.referenceId,
-                referenceType: "project",
-                type: "scan",
-                parentJobId: job.id
-            });
-            appendLog(`Auto-scan enqueued after ${job.type}`);
-        } catch (error) {
-            appendLog(`Failed to enqueue auto-scan: ${String(error)}`);
         }
     }
 
