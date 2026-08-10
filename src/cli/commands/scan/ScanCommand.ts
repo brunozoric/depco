@@ -4,6 +4,7 @@ import { LoadConfigStep } from "./steps/LoadConfig/index.js";
 import { ParseLockfileStep } from "./steps/ParseLockfile/index.js";
 import { CheckLicensesStep } from "./steps/CheckLicenses/index.js";
 import { CheckVulnerabilitiesStep } from "./steps/CheckVulnerabilities/index.js";
+import { RenderOutputStep } from "./steps/RenderOutput/index.js";
 import type { Step } from "../../runner/abstractions/Step.js";
 
 class ScanCommandImpl implements Abstraction.Interface {
@@ -15,7 +16,8 @@ class ScanCommandImpl implements Abstraction.Interface {
         private loadConfig: Step.Interface,
         private parseLockfile: Step.Interface,
         private checkLicenses: Step.Interface,
-        private checkVulnerabilities: Step.Interface
+        private checkVulnerabilities: Step.Interface,
+        private renderOutput: Step.Interface
     ) {}
 
     public steps(): Step.Interface[] {
@@ -24,7 +26,8 @@ class ScanCommandImpl implements Abstraction.Interface {
             this.loadConfig,
             this.parseLockfile,
             this.checkLicenses,
-            this.checkVulnerabilities
+            this.checkVulnerabilities,
+            this.renderOutput
         ];
     }
 
@@ -32,7 +35,7 @@ class ScanCommandImpl implements Abstraction.Interface {
         return {
             dataDirectory: process.cwd(),
             envFilePath: "./.env",
-            options: { check: argv?.["check"] ?? "license" },
+            options: { check: argv?.["check"] ?? "license", format: argv?.["format"] ?? "table" },
             results: new Map()
         };
     }
@@ -45,6 +48,7 @@ export const ScanCommand = Abstraction.createImplementation({
         LoadConfigStep,
         ParseLockfileStep,
         CheckLicensesStep,
-        CheckVulnerabilitiesStep
+        CheckVulnerabilitiesStep,
+        RenderOutputStep
     ]
 });

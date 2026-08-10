@@ -24,6 +24,7 @@ describe("CheckLicensesStep", () => {
 
     afterEach(() => {
         globalThis.fetch = originalFetch;
+        vi.restoreAllMocks();
     });
 
     it("passes when all licenses are permissive", async () => {
@@ -41,6 +42,21 @@ describe("CheckLicensesStep", () => {
         const result = await step.execute(context);
 
         expect(result.success).toBe(true);
+    });
+
+    it("does not write to the console", async () => {
+        const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+        globalThis.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ license: "GPL-3.0" })
+        }) as unknown as typeof fetch;
+
+        const step = container.resolve(CheckLicensesStep);
+        const context = createTestContext([{ name: "gpl-pkg", version: "1.0.0" }]);
+        context.results.set("config", {});
+        await step.execute(context);
+
+        expect(consoleLogSpy).not.toHaveBeenCalled();
     });
 
     it("fails when non-permissive license found", async () => {

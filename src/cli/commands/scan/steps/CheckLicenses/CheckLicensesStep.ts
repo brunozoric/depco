@@ -95,8 +95,6 @@ class CheckLicensesStepImpl implements Abstraction.Interface {
         const allIgnored = new Set([...licenseIgnored, ...globalIgnored]);
         const registryUrl = config.scan?.registryUrl ?? "https://registry.npmjs.org";
 
-        console.log(`\nScanning ${packages.length} packages for license issues...\n`);
-
         const results = await fetchInBatches({ packages, registryUrl });
         const violations = results.filter(
             result => !allIgnored.has(result.packageName) && !allowedTiers.includes(result.riskTier)
@@ -105,27 +103,11 @@ class CheckLicensesStepImpl implements Abstraction.Interface {
         context.results.set("violations", violations);
 
         if (violations.length === 0) {
-            console.log(`All ${results.length} packages have permissive licenses.\n`);
-            return { success: true };
+            return {
+                success: true,
+                message: `All ${results.length} packages have permissive licenses`
+            };
         }
-
-        console.log(`\x1b[31m${violations.length} non-permissive license(s) found:\x1b[0m\n`);
-
-        const nameWidth = Math.max(7, ...violations.map(violation => violation.packageName.length));
-        const licenseWidth = Math.max(7, ...violations.map(violation => violation.license.length));
-
-        console.log(
-            `  ${"Package".padEnd(nameWidth)}  ${"License".padEnd(licenseWidth)}  Risk Tier`
-        );
-        console.log(`  ${"─".repeat(nameWidth)}  ${"─".repeat(licenseWidth)}  ${"─".repeat(12)}`);
-
-        for (const violation of violations) {
-            console.log(
-                `  ${violation.packageName.padEnd(nameWidth)}  ${violation.license.padEnd(licenseWidth)}  ${violation.riskTier}`
-            );
-        }
-
-        console.log(`\n${violations.length} non-permissive license(s). Exit code 1.\n`);
 
         return { success: false, message: `${violations.length} non-permissive license(s) found` };
     }

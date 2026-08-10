@@ -4,6 +4,8 @@ import { LoadConfigStepFeature } from "./steps/LoadConfig/index.js";
 import { ParseLockfileStepFeature } from "./steps/ParseLockfile/index.js";
 import { CheckLicensesStepFeature } from "./steps/CheckLicenses/index.js";
 import { CheckVulnerabilitiesStepFeature } from "./steps/CheckVulnerabilities/index.js";
+import { RenderOutputStepFeature } from "./steps/RenderOutput/index.js";
+import { OutputFormatterFeature } from "./formatters/feature.js";
 import { ScanCommand } from "./ScanCommand.js";
 
 export const ScanCommandFeature = createFeature({
@@ -13,7 +15,9 @@ export const ScanCommandFeature = createFeature({
         LoadConfigStepFeature,
         ParseLockfileStepFeature,
         CheckLicensesStepFeature,
-        CheckVulnerabilitiesStepFeature
+        CheckVulnerabilitiesStepFeature,
+        RenderOutputStepFeature,
+        OutputFormatterFeature
     ],
     register(container) {
         container.register(ScanCommand).inSingletonScope();

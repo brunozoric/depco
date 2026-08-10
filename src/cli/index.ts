@@ -32,12 +32,19 @@ cli = cli.command(
     "scan",
     "Scan current directory for dependency issues",
     yargs =>
-        yargs.option("check", {
-            type: "string",
-            description: "Check to run",
-            default: "license",
-            choices: ["license", "vulnerability", "all"]
-        }),
+        yargs
+            .option("check", {
+                type: "string",
+                description: "Check to run",
+                default: "license",
+                choices: ["license", "vulnerability", "all"]
+            })
+            .option("format", {
+                type: "string",
+                description: "Output format",
+                default: "table",
+                choices: ["table", "json", "csv", "sarif"]
+            }),
     async argv => {
         const command = container.resolve(ScanCommand);
         await runner.run({ steps: command.steps(), context: command.context(argv) });

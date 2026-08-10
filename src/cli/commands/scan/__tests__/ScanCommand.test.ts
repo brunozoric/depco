@@ -11,16 +11,17 @@ describe("ScanCommand", () => {
         registerFeatures(container, [ScanCommandFeature]);
     });
 
-    it("returns 5 steps in correct order", () => {
+    it("returns 6 steps in correct order", () => {
         const command = container.resolve(ScanCommand);
         const steps = command.steps();
-        expect(steps).toHaveLength(5);
+        expect(steps).toHaveLength(6);
         expect(steps.map(step => step.name)).toEqual([
             "detect-package-manager",
             "load-config",
             "parse-lockfile",
             "check-licenses",
-            "check-vulnerabilities"
+            "check-vulnerabilities",
+            "render-output"
         ]);
     });
 
@@ -37,10 +38,22 @@ describe("ScanCommand", () => {
         expect(context.options["check"]).toBe("license");
     });
 
+    it("defaults options.format to 'table' when no argv is given", () => {
+        const command = container.resolve(ScanCommand);
+        const context = command.context();
+        expect(context.options["format"]).toBe("table");
+    });
+
     it("forwards argv.check into context.options", () => {
         const command = container.resolve(ScanCommand);
         const context = command.context({ check: "vulnerability" });
         expect(context.options["check"]).toBe("vulnerability");
+    });
+
+    it("forwards argv.format into context.options", () => {
+        const command = container.resolve(ScanCommand);
+        const context = command.context({ format: "json" });
+        expect(context.options["format"]).toBe("json");
     });
 
     it("has correct name and description", () => {
