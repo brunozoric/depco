@@ -61,7 +61,14 @@ Subpath imports via package.json `imports` with conditional resolution:
 src/
   api/
     db/               — Drizzle schema, migrations, DatabaseClient abstraction
-    routes/           — Fastify route plugins (projects, jobs, packageManager, cache, settings, appSettings, install, changelogs, packages, upgradeSessions, stepHooks, logs, backup, filesystem, dashboard, scanSchedules, vulnerabilities, licenses, licensePolicies, autoFixSettings, autoFixPrs, sbom, teams)
+    routes/           — Fastify route plugins. Large route files split into sub-directories with thin router + handler modules:
+      projects/       — projectCrudRoutes, projectBulkRoutes, projectDetailRoutes (CRUD, import/export/clone, scan/deps/security/teams)
+      settings/       — securitySettingsRoutes, pmConfigRoutes (security field CRUD, PM install flags/registry)
+      vulnerabilities/ — vulnerabilityQueryRoutes, vulnerabilityActionRoutes (listing/export, bulk actions/scan)
+      licenses/       — licenseQueryRoutes, licenseViolationRoutes (license listing/scan, violations)
+      backup/         — backupExportRoutes, backupImportRoutes (ZIP export/import)
+      teams/          — teamStatsHelper (computeStatsByTeam SQL aggregation)
+      Other route files: jobs, packageManager, cache, appSettings, install, changelogs, packages, upgradeSessions, stepHooks, logs, filesystem, dashboard, scanSchedules, licensePolicies, autoFixSettings, autoFixPrs, sbom
     services/         — PascalCase folder-per-service structure. Each folder contains: abstractions/ (createAbstraction + interface), implementation file(s), feature.ts (createFeature for DI registration), index.ts (exports abstractions + feature only, never implementations), __tests__/. Top-level feature.ts composes all sub-features.
       AppLog/         — AppLogService (configurable log level, DB + WS broadcast)
       Auth/           — AuthService + UserService (login/register/session/CRUD)
@@ -69,14 +76,14 @@ src/
       Changelog/      — ChangelogService + resolvers/ subfolder (GitHubReleasesResolver, ChangelogFileResolver, NpmReadmeResolver via { multiple: true } binding). Helpers: extractOwnerRepo, parseVersionSections
       CommandRunner/  — CommandRunner (execa wrapper with signal support)
       DependencyChange/ — DependencyChangeService (detects added/removed/version-changed packages between scans)
-      DependencyGraph/ — DependencyGraphService + LockfileParserService (lockfile parsing for all 4 PMs, BFS path finding, search)
+      DependencyGraph/ — DependencyGraphService + LockfileParserService (thin router, delegates to parsers/ subfolder: parseNpmLockfile, parseYarnLockfile, parsePnpmLockfile, parseBunLockfile + shared types.ts). BFS path finding, search
       Email/          — ConsoleEmailService (EmailService abstraction, console-based impl)
       Encryption/     — EncryptionService (AES-256-GCM + argon2id KDF from ENCRYPTION_KEY env var)
       ErrorReporter/  — ErrorReporter (domain-specific convenience wrapper around AppLogService)
       EventBus/       — EventBus (typed pub/sub, IEventMap extensible via declare module)
       FileConfig/     — FileConfigService (reads .dependency-upgrader.json global/project config)
       Git/            — GitService (local git ops) + ForgeService (GitHub/GitLab PR creation via @octokit/rest + @gitbeaker/rest)
-      JobExecution/   — JobWorker + executors/ subfolder (JobExecutorRegistry + 13 executors: Changelog, Dependency, Transient, PackageManager, Install, Clone, AutoFixPr, Scan, TransitiveResolve, PackageScan, VulnerabilityScan, LicenseScan, GraphRefresh). JobWorkerProvider breaks circular DI via registerFactory
+      JobExecution/   — JobWorker + JobChaining.ts (standalone chainRefreshTransientIfNeeded/chainScanAfterJobIfNeeded) + executors/ subfolder (JobExecutorRegistry + 13 executors: Changelog, Dependency, Transient, PackageManager, Install, Clone, AutoFixPr, Scan, TransitiveResolve, PackageScan, VulnerabilityScan, LicenseScan, GraphRefresh) + executors/packageScanHelpers.ts (insertChangelogPlaceholders, resolveMinimalAgeSeconds, hasPackageJsonDependencies). JobWorkerProvider breaks circular DI via registerFactory
       License/        — LicenseCheckerService (resolves from npm registry metadata) + LicensePolicyService (glob-based rule evaluation, persists violations)
       PackageJson/    — PackageJsonService (reads package.json scripts for step hook discovery)
       PackageManager/ — PackageManagerService + PackageManagerDriverRegistry + drivers/ subfolder (Yarn/Npm/Pnpm/Bun). Helpers: normalizeRepoUrl, parseLicense, registrySchema
@@ -88,8 +95,8 @@ src/
       StepHook/       — StepHookService (custom pre/post step hooks, file config + DB fallback)
       Upgrade/        — UpgradeService (single-package upgrade via PM driver)
       UpgradeSession/ — UpgradeSessionService + stepResolvers/ subfolder (7 built-in resolvers + CustomStepResolver + StepResolverRegistry + stepPipeline utilities)
-      Vulnerability/  — VulnerabilityService (delegates to shared VulnerabilityMerger for audit+OSV merge, adds DB persistence + dismiss/snooze, health score penalty) + OsvCacheService (wraps shared OsvQueryService with 24h DB TTL cache + in-flight dedup) + AuditParserService (delegates to shared AuditParserService)
-    utils/            — registerProject.ts (shared project registration helper)
+      Vulnerability/  — VulnerabilityService (delegates to shared VulnerabilityMerger for audit+OSV merge, adds DB persistence + dismiss/snooze, health score penalty) + vulnerabilityEnrichment.ts (standalone enrichWithProjectNames, filterByDependencyType, sortEnrichedVulnerabilities functions) + OsvCacheService (wraps shared OsvQueryService with 24h DB TTL cache + in-flight dedup) + AuditParserService (delegates to shared AuditParserService)
+    utils/            — registerProject.ts (shared project registration helper), globWorkspacePattern.ts (shared workspace glob for ScanService + filesystem routes)
     workers/          — bree worker scripts (scanWorker.js)
     websocket/        — WebSocketBroadcaster abstraction + Fastify WS plugin
     server.ts         — Fastify setup, migration runner, stale job recovery, job worker loop. Loads `.env` via dotenv. DB path configurable via `DB_PATH` env var (default: `./data/manager.db`). Requires `ENCRYPTION_KEY` env var for token storage
@@ -113,7 +120,7 @@ src/
   shared/
     types/            — IPackageEntry (shared { name, version } interface used by CLI steps and vulnerability services)
     di/               — createAbstraction, createFeature, createContainer, registerFeatures
-    routing/          — defineRoute, registerRoute, response helpers (sendOne/sendList/sendNone/sendError), interpolatePath
+    routing/          — defineRoute, registerRoute, response helpers (sendOne/sendList/sendNone/sendError — all use object params with named interfaces: ISendOneInput, ISendListInput, ISendErrorInput, ISendBlobInput), interpolatePath
     routes/           — shared Zod route definitions (projects, jobs, packageManager, cache, settings, appSettings, install, changelogs, packages, upgradeSessions, stepHooks, logs, backup, filesystem, pmSettings, dashboard, scanSchedules, vulnerabilities, licenses, autoFix)
     templates/        — resolveTemplate utility for branch/commit/PR message token replacement (YYYY/MM/DD/BRANCH/PROJECT/COUNT/PACKAGES_TABLE)
     schedules/        — ScanInterval type, INTERVAL_MS, SCAN_INTERVALS constants
@@ -156,8 +163,8 @@ src/
       UrlFilter/      — UrlFilterService (DI singleton, reads/writes URL search params with Zod schema generics for type safety: read<TSchema>(schema) parses URLSearchParams through schema.partial().safeParse(), update<TSchema>(schema, params) merges into URL via immediate pushState then dispatches popstate after 300ms debounce, onChange(callback) listens for popstate. Debounce design: URL write is immediate (read-after-write works synchronously), only popstate dispatch is debounced (coalesces rapid text input into single API reload). Tests use vi.useFakeTimers() + vi.advanceTimersByTime(300) for reload assertions). Used by LicensesPresenter, VulnerabilitiesPresenter, PackagesPresenter for shareable filtered URLs.
     presentation/     — PascalCase folder-per-domain MVP presentation layer. Top-level feature.ts (PresentationFeature) composes all sub-features — App.tsx imports only this one compositor.
       Projects/
-        ProjectList/  — Presenter, Provider, React components. ProjectRow shows team badges (colored by team color) next to project name, clickable project name navigates to detail. Search bar (name/path/PM, case-insensitive client-side). Per-project Scan action in row dropdown. Filters by global team selection via TeamFilterService. API includes team assignments per project.
-        ProjectDetail/ — Presenter, Provider, React components. DependencyTable shows vulnerability badges (count + max severity color) per package via VulnerabilitiesGateway.getByProject(), and license name + risk tier badge per package via LicensesGateway.getByProject(). AutoFixSection (Accordion): settings form (enable toggle, upgrade type checkboxes, grouping strategy select, branch prefix input, Save Settings + Generate PRs buttons) + pull request table (packages, from→to versions, upgrade type, status badge, PR link)
+        ProjectList/  — Presenter (decomposed: CloneManager, DirectoryScanManager sub-managers), Provider, React components. ProjectRow shows team badges (colored by team color) next to project name, clickable project name navigates to detail. Search bar (name/path/PM, case-insensitive client-side). Per-project Scan action in row dropdown. Filters by global team selection via TeamFilterService. API includes team assignments per project.
+        ProjectDetail/ — Presenter (decomposed: AutoFixManager, SbomExportManager, DependencySelectionManager sub-managers), Provider, React components (ProjectDetailHeader, ProjectActionButtons extracted). DependencyTable shows vulnerability badges (count + max severity color) per package via VulnerabilitiesGateway.getByProject(), and license name + risk tier badge per package via LicensesGateway.getByProject(). AutoFixSection (Accordion): settings form + PR table
         useCases/     — LoadProjects, AddProject, RemoveProject, Scan, CheckSecurity
       Upgrades/
         useCases/     — UpgradePackages, RefreshTransient, UpdatePackageManager, GetJob, GetJobs
@@ -174,7 +181,7 @@ src/
         StepHooks/    — Presenter, Provider, StepHooksPage (CRUD for custom pre/post step hooks per project)
       Jobs/
         JobProgress/  — Presenter, React components (WS-driven)
-        JobManager/   — Presenter, Provider, JobManagerPage (global /jobs page, status/type/reference/date filters, pagination 25/page, bulk delete, expandable rows with logs/warnings). Reference column branches on referenceType: project names linked, package names plain text. Changelog type in filter options.
+        JobManager/   — Presenter, Provider, JobManagerPage (decomposed: JobsFilterBar, JobsTable) (global /jobs page, status/type/reference/date filters, pagination 25/page, bulk delete, expandable rows with logs/warnings). Reference column branches on referenceType: project names linked, package names plain text. Changelog type in filter options.
       Logs/
         LogBrowser/   — Presenter, Provider, LogBrowserPage (global /logs page, level/source/project/date filters, pagination, bulk delete, real-time WS updates)
         useCases/     — LoadAppLogs, DeleteAppLogs
@@ -182,15 +189,15 @@ src/
         BackupPage/   — Presenter, Provider, BackupPage (dedicated /backup page, export zip download, import zip upload with results table)
       Vulnerabilities/
         VulnerabilityList/ — Presenter (decomposed into 4 sub-managers: VulnerabilityFilterManager, VulnerabilitySelectionManager, VulnerabilityBulkActions, VulnerabilityExportActions + standalone functions computeVulnerabilityProjectGroups/toVulnerabilityRowViewModel + constants file), Provider, VulnerabilitiesPage (decomposed into 5 sub-components: VulnerabilityFilters, VulnerabilityBulkBar, VulnerabilityTable, VulnerabilityGroupedView, VulnerabilityConfirmDialogs + shared VulnerabilityRow component) (dedicated /vulnerabilities page, "transitive" badge on packages not in direct deps, severity/package/source/project/scannedDate/dependencyType(all/direct/transitive) filters, sortable columns, pagination 25/page, debounced search, request sequence counter for stale-response protection, advisory URL scheme validation, bulk selection with checkbox column, bulk action bar (dismiss/snooze 7d|30d|90d/undismiss/rescan/export selected), "Show dismissed" toggle, "Group by project" toggle (collapsible Accordion sections with per-project severity count badges, auto-enabled on scannedDate drill-down, controlled expansion state), CSV/JSON export button, ConfirmDialog for destructive bulk actions, scannedDate badge with clear button for trend drill-down, expired snooze toast on page load)
-        VulnerabilityDetail/ — Presenter (MobX, load-sequence race guard), Provider, VulnerabilityDetailPage (full page at /vulnerabilities/:vulnerabilityId with OSV enrichment: description rendered as markdown via react-markdown + rehype-sanitize + Typography wrapper (images suppressed, links open in new tab), affected versions, CVSS score, references, dismiss/snooze/undismiss actions with ConfirmDialog). LoadVulnerabilityDetailUseCase.
+        VulnerabilityDetail/ — Presenter (MobX, load-sequence race guard), Provider, VulnerabilityDetailPage (decomposed: VulnerabilityMetadataCard, VulnerabilityStatusCard, VulnerabilityReferencesCard) (full page at /vulnerabilities/:vulnerabilityId with OSV enrichment: description rendered as markdown via react-markdown + rehype-sanitize + Typography wrapper (images suppressed, links open in new tab), affected versions, CVSS score, references, dismiss/snooze/undismiss actions with ConfirmDialog). LoadVulnerabilityDetailUseCase.
         useCases/     — LoadVulnerabilities, LoadVulnSummary, ScanVulnerabilities, RefreshOsvCache, BulkVulnerabilityAction, BulkRescanVulnerabilities, ExportVulnerabilities
       Licenses/
-        LicensesList/ — Presenter, Provider, LicensesPage (dedicated /licenses page: compliance summary cards (total packages, compliant %, deny/warn violation counts), riskTier/packageName/project/violationAction filters — ALL server-side via API query params, synced to URL via UrlFilterService for shareable filtered views, license table with risk tier + violation badges, per-project scan trigger buttons, policy rules accordion with add/edit modal + delete ConfirmDialog)
+        LicensesList/ — Presenter, Provider, LicensesPage (decomposed: LicensesSummaryCards, LicensesFilters, LicensesTable, PolicyRuleModal, PolicyRulesSection) (dedicated /licenses page: compliance summary cards (total packages, compliant %, deny/warn violation counts), riskTier/packageName/project/violationAction filters — ALL server-side via API query params, synced to URL via UrlFilterService for shareable filtered views, license table with risk tier + violation badges, per-project scan trigger buttons, policy rules accordion with add/edit modal + delete ConfirmDialog)
         useCases/     — LoadLicensesUseCase (parallel fetch of licenses + violations + summary), ScanLicensesUseCase, ManagePolicyRulesUseCase (create/update/delete policy rule)
       AutoFix/
         useCases/     — LoadAutoFixUseCase, GenerateAutoFixPrsUseCase, UpdateAutoFixSettingsUseCase — consumed by ProjectDetailPresenter (no standalone page; rendered via AutoFixSection on ProjectDetail)
       DependencyGraph/
-        GraphPage/    — Presenter, Provider, DependencyGraphPage (route `/projects/:projectId/graph`, linked from ProjectDetailPage via a button) — summary cards (total packages, max depth, edges), Tree/Graph SegmentedControl toggle, package search with debounced autocomplete (via `DependencyGraphGateway.searchPackages`, `selectSuggestion`) and BFS path highlighting, dim/matchesOnly display-mode toggle (`DependencyGraphSearchMode`: "dim" fades non-matching nodes, "matchesOnly" hides them), dependencyKind and maxDepth filters (`Filters` in the presenter abstraction, applied client-side over already-loaded edges before rendering), DependencyTreeView (nested tree list) and DependencyGraphView (`@xyflow/react` ReactFlow canvas: Background/Controls/MiniMap, click-to-expand nodes, non-draggable/non-connectable, colored dependency-kind dots per node, search + selected-package highlighting)
+        GraphPage/    — Presenter, Provider, DependencyGraphPage (route `/projects/:projectId/graph`, linked from ProjectDetailPage via a button) — summary cards, Tree/Graph toggle, search with autocomplete + BFS path highlighting, dim/matchesOnly display-mode toggle, dependencyKind and maxDepth filters. DependencyTreeView (nested tree list) and DependencyGraphView (decomposed: dependencyGraphViewUtils.tsx with buildGraphElements + depth/color utils, DependencyKindDot.tsx sub-component) (`@xyflow/react` ReactFlow canvas)
         useCases/     — LoadDependencyGraphUseCase (parallel fetch of graph + stats), RefreshDependencyGraphUseCase (triggers lockfile re-parse, then reloads graph + stats)
       Sbom/
         SbomPage/     — Presenter, SbomExportDialog (modal triggered from nav menu, not a page — includes SBOM description text, format SegmentedControl CycloneDX/SPDX, project Select, "Export Project" + "Export All Projects" buttons, blob download via shared downloadBlob utility). Per-project export also available on ProjectDetailPage
