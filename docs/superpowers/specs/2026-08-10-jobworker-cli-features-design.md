@@ -11,6 +11,7 @@ Add error logging to 2 empty catch blocks in `src/api/services/JobExecution/JobW
 ### Changes
 
 In `JobWorker.ts`:
+
 - Line 153: `catch {}` after `db.update(upgradeJobs).set({ logs })` — add `console.error("Failed to flush job logs to database:", error)`
 - Line 190: `catch {}` after `db.update(upgradeJobs).set({ progress })` — add `console.error("Failed to write job progress to database:", error)`
 

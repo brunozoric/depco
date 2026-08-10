@@ -9,6 +9,7 @@ Extract PmSettingsPage.tsx (524 lines) into focused tab components. Improve code
 ## Current Structure
 
 Single 524-line observer component with:
+
 - Header + PM selector (lines 86-102)
 - Error alerts (lines 104-117)
 - Three tab panels: security (258 lines), install (63 lines), general (41 lines)
@@ -18,6 +19,7 @@ Single 524-line observer component with:
 ## Extraction Plan
 
 **SecuritySettingsTab** — largest section (258 lines):
+
 - Security settings table with add/edit/delete
 - "Add setting" menu with field type options
 - Inline edit form
@@ -26,11 +28,13 @@ Single 524-line observer component with:
 - File: `src/ui/presentation/Settings/PmSettings/components/SecuritySettingsTab.tsx`
 
 **InstallFlagsTab** — medium section (63 lines):
+
 - Install flags table with toggle switches
 - Props: install flags data + toggle callback
 - File: `src/ui/presentation/Settings/PmSettings/components/InstallFlagsTab.tsx`
 
 **GeneralSettingsTab** — small section (41 lines):
+
 - Registry URL text input + save
 - Upgrade strategy select + save
 - Props: general settings data + save callbacks
@@ -38,11 +42,13 @@ Single 524-line observer component with:
 - File: `src/ui/presentation/Settings/PmSettings/components/GeneralSettingsTab.tsx`
 
 **PmSettingsConfirmDialog** — confirmation modal:
+
 - Generic mutation confirmation dialog
 - Props: open state, action description, confirm/cancel callbacks
 - File: `src/ui/presentation/Settings/PmSettings/components/PmSettingsConfirmDialog.tsx`
 
 **PmSettingsPage** stays as tab shell:
+
 - Header, PM selector, error alerts, tab navigation
 - Wires tab components to presenter
 - Owns: confirmation dialog state, active tab state

@@ -30,6 +30,7 @@ When these fields move into `VulnerabilitySelectionManager` and `VulnerabilityBu
 ## Task 1: Extract `VulnerabilityFilterManager` + standalone view-model mapping functions
 
 **Files:**
+
 - Create: `src/ui/presentation/Vulnerabilities/VulnerabilityList/vulnerabilityListConstants.ts`
 - Create: `src/ui/presentation/Vulnerabilities/VulnerabilityList/VulnerabilityFilterManager.ts`
 - Create: `src/ui/presentation/Vulnerabilities/VulnerabilityList/vulnerabilityViewModelMapping.ts`
@@ -37,6 +38,7 @@ When these fields move into `VulnerabilitySelectionManager` and `VulnerabilityBu
 - Test (no changes expected, run only): `src/ui/presentation/Vulnerabilities/VulnerabilityList/__tests__/VulnerabilitiesPresenter.test.ts`
 
 **Interfaces:**
+
 - Produces: `DEFAULT_PAGE_SIZE: number` (from `vulnerabilityListConstants.ts`)
 - Produces: `IVulnerabilityUrlFilters` interface, `VulnerabilityFilterManager` class with methods `read(): IVulnerabilityUrlFilters`, `setSeverity(value: string | null): void`, `setPackageName(value: string): void`, `setSource(value: string | null): void`, `setPage(page: number): void`, `setSortBy(sortBy: string): void`, `setProjectIds(ids: string[]): void`, `setIncludeDismissed(value: boolean): void`, `setDependencyType(value: "all" | "direct" | "transitive"): void`, `clearScannedDate(): void` (from `VulnerabilityFilterManager.ts`)
 - Produces: `toVulnerabilityRowViewModel(item: VulnerabilitiesGateway.VulnerabilityItem): Abstraction.VulnerabilityRow`, `computeVulnerabilityProjectGroups(items: Abstraction.VulnerabilityRow[]): Abstraction.ProjectGroup[]` (from `vulnerabilityViewModelMapping.ts`)
@@ -58,107 +60,107 @@ import { listVulnerabilitiesRoute } from "#shared/routes/index.js";
 import { UrlFilterService } from "../../../features/UrlFilter/abstractions/UrlFilterService.js";
 
 const FILTER_SCHEMA = listVulnerabilitiesRoute.querystring as NonNullable<
-    typeof listVulnerabilitiesRoute.querystring
+  typeof listVulnerabilitiesRoute.querystring
 > &
-    z.ZodObject<z.ZodRawShape>;
+  z.ZodObject<z.ZodRawShape>;
 
 export interface IVulnerabilityUrlFilters {
-    severity?: string;
-    packageName?: string;
-    source?: string;
-    projectIds?: string;
-    includeDismissed?: "true" | "false";
-    scannedDate?: string;
-    teamId?: string;
-    dependencyType?: "all" | "direct" | "transitive";
-    page?: number;
-    pageSize?: number;
-    sortBy?: "severity" | "packageName" | "projectName";
-    sortOrder?: "asc" | "desc";
+  severity?: string;
+  packageName?: string;
+  source?: string;
+  projectIds?: string;
+  includeDismissed?: "true" | "false";
+  scannedDate?: string;
+  teamId?: string;
+  dependencyType?: "all" | "direct" | "transitive";
+  page?: number;
+  pageSize?: number;
+  sortBy?: "severity" | "packageName" | "projectName";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface IVulnerabilityFilterManagerDependencies {
-    urlFilterService: UrlFilterService.Interface;
-    onFilterChange: () => void;
+  urlFilterService: UrlFilterService.Interface;
+  onFilterChange: () => void;
 }
 
 export class VulnerabilityFilterManager {
-    private readonly urlFilterService: UrlFilterService.Interface;
-    private readonly onFilterChange: () => void;
+  private readonly urlFilterService: UrlFilterService.Interface;
+  private readonly onFilterChange: () => void;
 
-    public constructor(dependencies: IVulnerabilityFilterManagerDependencies) {
-        this.urlFilterService = dependencies.urlFilterService;
-        this.onFilterChange = dependencies.onFilterChange;
-    }
+  public constructor(dependencies: IVulnerabilityFilterManagerDependencies) {
+    this.urlFilterService = dependencies.urlFilterService;
+    this.onFilterChange = dependencies.onFilterChange;
+  }
 
-    public read(): IVulnerabilityUrlFilters {
-        return this.urlFilterService.read(FILTER_SCHEMA);
-    }
+  public read(): IVulnerabilityUrlFilters {
+    return this.urlFilterService.read(FILTER_SCHEMA);
+  }
 
-    public setSeverity(value: string | null): void {
-        this.onFilterChange();
-        this.urlFilterService.update(FILTER_SCHEMA, { severity: value, page: null });
-    }
+  public setSeverity(value: string | null): void {
+    this.onFilterChange();
+    this.urlFilterService.update(FILTER_SCHEMA, { severity: value, page: null });
+  }
 
-    public setPackageName(value: string): void {
-        this.onFilterChange();
-        this.urlFilterService.update(FILTER_SCHEMA, { packageName: value || null, page: null });
-    }
+  public setPackageName(value: string): void {
+    this.onFilterChange();
+    this.urlFilterService.update(FILTER_SCHEMA, { packageName: value || null, page: null });
+  }
 
-    public setSource(value: string | null): void {
-        this.onFilterChange();
-        this.urlFilterService.update(FILTER_SCHEMA, { source: value, page: null });
-    }
+  public setSource(value: string | null): void {
+    this.onFilterChange();
+    this.urlFilterService.update(FILTER_SCHEMA, { source: value, page: null });
+  }
 
-    public setPage(page: number): void {
-        this.onFilterChange();
-        this.urlFilterService.update(FILTER_SCHEMA, { page: String(page) });
-    }
+  public setPage(page: number): void {
+    this.onFilterChange();
+    this.urlFilterService.update(FILTER_SCHEMA, { page: String(page) });
+  }
 
-    public setSortBy(sortBy: string): void {
-        const urlFilters = this.read();
-        const currentSortBy = urlFilters.sortBy ?? "severity";
-        const newSortOrder =
-            currentSortBy === sortBy
-                ? (urlFilters.sortOrder ?? "desc") === "asc"
-                    ? "desc"
-                    : "asc"
-                : "desc";
-        this.onFilterChange();
-        this.urlFilterService.update(FILTER_SCHEMA, {
-            sortBy,
-            sortOrder: newSortOrder,
-            page: null
-        });
-    }
+  public setSortBy(sortBy: string): void {
+    const urlFilters = this.read();
+    const currentSortBy = urlFilters.sortBy ?? "severity";
+    const newSortOrder =
+      currentSortBy === sortBy
+        ? (urlFilters.sortOrder ?? "desc") === "asc"
+          ? "desc"
+          : "asc"
+        : "desc";
+    this.onFilterChange();
+    this.urlFilterService.update(FILTER_SCHEMA, {
+      sortBy,
+      sortOrder: newSortOrder,
+      page: null
+    });
+  }
 
-    public setProjectIds(ids: string[]): void {
-        this.onFilterChange();
-        this.urlFilterService.update(FILTER_SCHEMA, {
-            projectIds: ids.length > 0 ? ids.join(",") : null,
-            page: null
-        });
-    }
+  public setProjectIds(ids: string[]): void {
+    this.onFilterChange();
+    this.urlFilterService.update(FILTER_SCHEMA, {
+      projectIds: ids.length > 0 ? ids.join(",") : null,
+      page: null
+    });
+  }
 
-    public setIncludeDismissed(value: boolean): void {
-        this.onFilterChange();
-        this.urlFilterService.update(FILTER_SCHEMA, {
-            includeDismissed: value ? "true" : null,
-            page: null
-        });
-    }
+  public setIncludeDismissed(value: boolean): void {
+    this.onFilterChange();
+    this.urlFilterService.update(FILTER_SCHEMA, {
+      includeDismissed: value ? "true" : null,
+      page: null
+    });
+  }
 
-    public setDependencyType(value: "all" | "direct" | "transitive"): void {
-        this.onFilterChange();
-        this.urlFilterService.update(FILTER_SCHEMA, {
-            dependencyType: value === "all" ? null : value,
-            page: null
-        });
-    }
+  public setDependencyType(value: "all" | "direct" | "transitive"): void {
+    this.onFilterChange();
+    this.urlFilterService.update(FILTER_SCHEMA, {
+      dependencyType: value === "all" ? null : value,
+      page: null
+    });
+  }
 
-    public clearScannedDate(): void {
-        this.urlFilterService.update(FILTER_SCHEMA, { scannedDate: null, page: null });
-    }
+  public clearScannedDate(): void {
+    this.urlFilterService.update(FILTER_SCHEMA, { scannedDate: null, page: null });
+  }
 }
 ```
 
@@ -173,69 +175,68 @@ import type { VulnerabilitiesGateway } from "../../../features/Vulnerabilities/a
 import type { VulnerabilitySeverityCounts } from "#shared/vulnerabilities/types.js";
 
 export function toVulnerabilityRowViewModel(
-    item: VulnerabilitiesGateway.VulnerabilityItem
+  item: VulnerabilitiesGateway.VulnerabilityItem
 ): Abstraction.VulnerabilityRow {
-    const isDismissed =
-        item.dismissedAt != null &&
-        (item.dismissedUntil == null || item.dismissedUntil > Date.now());
-    const dismissLabel =
-        item.dismissedAt == null
-            ? null
-            : item.dismissedUntil != null
-              ? `Snoozed until ${new Date(item.dismissedUntil).toLocaleDateString()}`
-              : "Dismissed";
+  const isDismissed =
+    item.dismissedAt != null && (item.dismissedUntil == null || item.dismissedUntil > Date.now());
+  const dismissLabel =
+    item.dismissedAt == null
+      ? null
+      : item.dismissedUntil != null
+        ? `Snoozed until ${new Date(item.dismissedUntil).toLocaleDateString()}`
+        : "Dismissed";
 
-    return {
-        id: item.id,
-        projectId: item.projectId,
-        projectName: item.projectName,
-        packageName: item.packageName,
-        severity: item.severity,
-        title: item.title,
-        advisoryUrl: item.advisoryUrl,
-        cveId: item.cveId,
-        fixVersion: item.fixVersion,
-        source: item.source,
-        installedVersion: item.installedVersion,
-        dependencyKind: item.dependencyKind ?? "dependency",
-        scannedAt: item.scannedAt,
-        dismissedAt: item.dismissedAt,
-        dismissedUntil: item.dismissedUntil,
-        isDismissed,
-        dismissLabel
-    };
+  return {
+    id: item.id,
+    projectId: item.projectId,
+    projectName: item.projectName,
+    packageName: item.packageName,
+    severity: item.severity,
+    title: item.title,
+    advisoryUrl: item.advisoryUrl,
+    cveId: item.cveId,
+    fixVersion: item.fixVersion,
+    source: item.source,
+    installedVersion: item.installedVersion,
+    dependencyKind: item.dependencyKind ?? "dependency",
+    scannedAt: item.scannedAt,
+    dismissedAt: item.dismissedAt,
+    dismissedUntil: item.dismissedUntil,
+    isDismissed,
+    dismissLabel
+  };
 }
 
 interface IProjectGroupAccumulator {
-    projectId: string;
-    projectName: string;
-    counts: VulnerabilitySeverityCounts;
-    vulnerabilities: Abstraction.VulnerabilityRow[];
+  projectId: string;
+  projectName: string;
+  counts: VulnerabilitySeverityCounts;
+  vulnerabilities: Abstraction.VulnerabilityRow[];
 }
 
 export function computeVulnerabilityProjectGroups(
-    items: Abstraction.VulnerabilityRow[]
+  items: Abstraction.VulnerabilityRow[]
 ): Abstraction.ProjectGroup[] {
-    const groupMap = new Map<string, IProjectGroupAccumulator>();
+  const groupMap = new Map<string, IProjectGroupAccumulator>();
 
-    for (const item of items) {
-        let group = groupMap.get(item.projectId);
-        if (!group) {
-            group = {
-                projectId: item.projectId,
-                projectName: item.projectName,
-                counts: { critical: 0, high: 0, moderate: 0, low: 0, info: 0 },
-                vulnerabilities: []
-            };
-            groupMap.set(item.projectId, group);
-        }
-        group.counts[item.severity]++;
-        group.vulnerabilities.push(item);
+  for (const item of items) {
+    let group = groupMap.get(item.projectId);
+    if (!group) {
+      group = {
+        projectId: item.projectId,
+        projectName: item.projectName,
+        counts: { critical: 0, high: 0, moderate: 0, low: 0, info: 0 },
+        vulnerabilities: []
+      };
+      groupMap.set(item.projectId, group);
     }
+    group.counts[item.severity]++;
+    group.vulnerabilities.push(item);
+  }
 
-    return Array.from(groupMap.values()).sort(
-        (a, b) => b.vulnerabilities.length - a.vulnerabilities.length
-    );
+  return Array.from(groupMap.values()).sort(
+    (a, b) => b.vulnerabilities.length - a.vulnerabilities.length
+  );
 }
 ```
 
@@ -244,6 +245,7 @@ This is a straight move of the two private methods out of the class body — log
 - [ ] **Step 4: Update `VulnerabilitiesPresenter.ts` — imports**
 
 Remove:
+
 ```ts
 import type { z } from "zod";
 import { listVulnerabilitiesRoute } from "#shared/routes/index.js";
@@ -251,12 +253,13 @@ import type { VulnerabilitySeverityCounts } from "#shared/vulnerabilities/types.
 ```
 
 Add:
+
 ```ts
 import { VulnerabilityFilterManager } from "./VulnerabilityFilterManager.js";
 import { DEFAULT_PAGE_SIZE } from "./vulnerabilityListConstants.js";
 import {
-    toVulnerabilityRowViewModel,
-    computeVulnerabilityProjectGroups
+  toVulnerabilityRowViewModel,
+  computeVulnerabilityProjectGroups
 } from "./vulnerabilityViewModelMapping.js";
 ```
 
@@ -270,9 +273,9 @@ Delete these two lines (the third, `EXPIRED_SNOOZE_LOOKBACK_MS`, and the `FILTER
 const DEFAULT_PAGE_SIZE = 25;
 
 const FILTER_SCHEMA = listVulnerabilitiesRoute.querystring as NonNullable<
-    typeof listVulnerabilitiesRoute.querystring
+  typeof listVulnerabilitiesRoute.querystring
 > &
-    z.ZodObject<z.ZodRawShape>;
+  z.ZodObject<z.ZodRawShape>;
 ```
 
 Keep `const EXPIRED_SNOOZE_LOOKBACK_MS = 300_000;` — it is only used by `checkExpiredSnoozes`, which stays on the main presenter, so it is not shared and does not need to move.
@@ -280,6 +283,7 @@ Keep `const EXPIRED_SNOOZE_LOOKBACK_MS = 300_000;` — it is only used by `check
 - [ ] **Step 6: Update `VulnerabilitiesPresenter.ts` — constructor**
 
 Replace:
+
 ```ts
     public constructor(
         private readonly loadVulnerabilities: LoadVulnerabilitiesUseCase.Interface,
@@ -309,6 +313,7 @@ Replace:
 ```
 
 with:
+
 ```ts
     private readonly filterManager: VulnerabilityFilterManager;
 
@@ -349,6 +354,7 @@ Note the `urlFilterService` constructor parameter drops `private readonly` — i
 - [ ] **Step 7: Update `VulnerabilitiesPresenter.ts` — `vm` getter**
 
 Replace the body of `public get vm()` so it starts with:
+
 ```ts
     public get vm(): Abstraction.ViewModel {
         const urlFilters = this.filterManager.read();
@@ -399,13 +405,17 @@ Everything except the first line (`this.urlFilterService.read(FILTER_SCHEMA)` �
 - [ ] **Step 8: Update `VulnerabilitiesPresenter.ts` — `load()`**
 
 The only line that changes inside `load()`:
+
 ```ts
-            const urlFilters = this.urlFilterService.read(FILTER_SCHEMA);
+const urlFilters = this.urlFilterService.read(FILTER_SCHEMA);
 ```
+
 becomes
+
 ```ts
-            const urlFilters = this.filterManager.read();
+const urlFilters = this.filterManager.read();
 ```
+
 Everything else in `load()` is unchanged.
 
 - [ ] **Step 9: Update `VulnerabilitiesPresenter.ts` — delegate the nine filter setters**
@@ -441,13 +451,17 @@ Delete `private toRowViewModel(...)` and `private computeProjectGroups(...)` fro
 - [ ] **Step 11: Update `VulnerabilitiesPresenter.ts` — `currentFilters()`**
 
 The only line that changes:
+
 ```ts
-        const urlFilters = this.urlFilterService.read(FILTER_SCHEMA);
+const urlFilters = this.urlFilterService.read(FILTER_SCHEMA);
 ```
+
 becomes
+
 ```ts
-        const urlFilters = this.filterManager.read();
+const urlFilters = this.filterManager.read();
 ```
+
 The rest of `currentFilters()` (the spread-based filter object construction) is unchanged, including its `pageSize: urlFilters.pageSize ?? DEFAULT_PAGE_SIZE` line, which now resolves to the imported constant.
 
 - [ ] **Step 12: Run the full verification pipeline**
@@ -470,10 +484,12 @@ git commit -m "refactor: extract VulnerabilityFilterManager and view-model mappi
 ## Task 2: Extract `VulnerabilitySelectionManager`
 
 **Files:**
+
 - Create: `src/ui/presentation/Vulnerabilities/VulnerabilityList/VulnerabilitySelectionManager.ts`
 - Modify: `src/ui/presentation/Vulnerabilities/VulnerabilityList/VulnerabilitiesPresenter.ts`
 
 **Interfaces:**
+
 - Consumes: nothing from Task 1 directly, but the `onFilterChange` callback wired in Task 1's constructor (`() => this.selectedIds.clear()`) is rewired here to call the new manager
 - Produces: `IVulnerabilitySelectableItem { id: string }`, `VulnerabilitySelectionManager` class with `get ids(): string[]`, `get size(): number`, `toggleSelected(id: string): void`, `selectAllOnPage(items: readonly IVulnerabilitySelectableItem[]): void`, `isAllSelected(items: readonly IVulnerabilitySelectableItem[]): boolean`, `clearSelection(): void`
 
@@ -484,48 +500,48 @@ git commit -m "refactor: extract VulnerabilityFilterManager and view-model mappi
 import { makeAutoObservable } from "mobx";
 
 export interface IVulnerabilitySelectableItem {
-    id: string;
+  id: string;
 }
 
 export class VulnerabilitySelectionManager {
-    private readonly selectedIds = new Set<string>();
+  private readonly selectedIds = new Set<string>();
 
-    public constructor() {
-        makeAutoObservable(this);
-    }
+  public constructor() {
+    makeAutoObservable(this);
+  }
 
-    public get ids(): string[] {
-        return [...this.selectedIds];
-    }
+  public get ids(): string[] {
+    return [...this.selectedIds];
+  }
 
-    public get size(): number {
-        return this.selectedIds.size;
-    }
+  public get size(): number {
+    return this.selectedIds.size;
+  }
 
-    public toggleSelected(id: string): void {
-        if (this.selectedIds.has(id)) {
-            this.selectedIds.delete(id);
-        } else {
-            this.selectedIds.add(id);
-        }
+  public toggleSelected(id: string): void {
+    if (this.selectedIds.has(id)) {
+      this.selectedIds.delete(id);
+    } else {
+      this.selectedIds.add(id);
     }
+  }
 
-    public selectAllOnPage(items: readonly IVulnerabilitySelectableItem[]): void {
-        const allSelected = this.isAllSelected(items);
-        if (allSelected) {
-            items.forEach(item => this.selectedIds.delete(item.id));
-        } else {
-            items.forEach(item => this.selectedIds.add(item.id));
-        }
+  public selectAllOnPage(items: readonly IVulnerabilitySelectableItem[]): void {
+    const allSelected = this.isAllSelected(items);
+    if (allSelected) {
+      items.forEach(item => this.selectedIds.delete(item.id));
+    } else {
+      items.forEach(item => this.selectedIds.add(item.id));
     }
+  }
 
-    public isAllSelected(items: readonly IVulnerabilitySelectableItem[]): boolean {
-        return items.length > 0 && items.every(item => this.selectedIds.has(item.id));
-    }
+  public isAllSelected(items: readonly IVulnerabilitySelectableItem[]): boolean {
+    return items.length > 0 && items.every(item => this.selectedIds.has(item.id));
+  }
 
-    public clearSelection(): void {
-        this.selectedIds.clear();
-    }
+  public clearSelection(): void {
+    this.selectedIds.clear();
+  }
 }
 ```
 
@@ -534,6 +550,7 @@ This is a faithful extraction of `toggleSelected`, `selectAllOnPage`, `clearSele
 - [ ] **Step 2: Update `VulnerabilitiesPresenter.ts` — imports**
 
 Add:
+
 ```ts
 import { VulnerabilitySelectionManager } from "./VulnerabilitySelectionManager.js";
 ```
@@ -541,10 +558,13 @@ import { VulnerabilitySelectionManager } from "./VulnerabilitySelectionManager.j
 - [ ] **Step 3: Update `VulnerabilitiesPresenter.ts` — remove the `selectedIds` field, add `selectionManager`**
 
 Replace:
+
 ```ts
     private readonly selectedIds = new Set<string>();
 ```
+
 with:
+
 ```ts
     private readonly selectionManager: VulnerabilitySelectionManager;
 ```
@@ -552,24 +572,28 @@ with:
 - [ ] **Step 4: Update `VulnerabilitiesPresenter.ts` — constructor wiring**
 
 Replace:
+
 ```ts
-        this.filterManager = new VulnerabilityFilterManager({
-            urlFilterService,
-            onFilterChange: () => this.selectedIds.clear()
-        });
+this.filterManager = new VulnerabilityFilterManager({
+  urlFilterService,
+  onFilterChange: () => this.selectedIds.clear()
+});
 ```
+
 with:
+
 ```ts
-        this.selectionManager = new VulnerabilitySelectionManager();
-        this.filterManager = new VulnerabilityFilterManager({
-            urlFilterService,
-            onFilterChange: () => this.selectionManager.clearSelection()
-        });
+this.selectionManager = new VulnerabilitySelectionManager();
+this.filterManager = new VulnerabilityFilterManager({
+  urlFilterService,
+  onFilterChange: () => this.selectionManager.clearSelection()
+});
 ```
 
 - [ ] **Step 5: Update `VulnerabilitiesPresenter.ts` — `vm` getter**
 
 Replace these four lines:
+
 ```ts
             selectedIds: [...this.selectedIds],
             selectedCount: this.selectedIds.size,
@@ -577,7 +601,9 @@ Replace these four lines:
                 vulnerabilities.length > 0 &&
                 vulnerabilities.every(v => this.selectedIds.has(v.id)),
 ```
+
 with:
+
 ```ts
             selectedIds: this.selectionManager.ids,
             selectedCount: this.selectionManager.size,
@@ -587,6 +613,7 @@ with:
 - [ ] **Step 6: Update `VulnerabilitiesPresenter.ts` — delegate selection methods**
 
 Replace:
+
 ```ts
     public toggleSelected = (id: string): void => {
         if (this.selectedIds.has(id)) {
@@ -610,7 +637,9 @@ Replace:
         this.selectedIds.clear();
     };
 ```
+
 with:
+
 ```ts
     public toggleSelected = (id: string): void => this.selectionManager.toggleSelected(id);
 
@@ -664,10 +693,12 @@ git commit -m "refactor: extract VulnerabilitySelectionManager from Vulnerabilit
 ## Task 3: Extract `VulnerabilityBulkActions`
 
 **Files:**
+
 - Create: `src/ui/presentation/Vulnerabilities/VulnerabilityList/VulnerabilityBulkActions.ts`
 - Modify: `src/ui/presentation/Vulnerabilities/VulnerabilityList/VulnerabilitiesPresenter.ts`
 
 **Interfaces:**
+
 - Consumes: `VulnerabilitySelectionManager` from Task 2 (`.ids`, `.clearSelection()`)
 - Produces: `IVulnerabilityBulkActionsDependencies { selectionManager: VulnerabilitySelectionManager; bulkActionUseCase: BulkVulnerabilityActionUseCase.Interface; bulkRescanUseCase: BulkRescanVulnerabilitiesUseCase.Interface; reload: () => Promise<void>; }`, `VulnerabilityBulkActions` class with `get isRunning(): boolean`, `bulkDismiss(): Promise<void>`, `bulkSnooze(days: 7 | 30 | 90): Promise<void>`, `bulkUndismiss(): Promise<void>`, `bulkRescan(): Promise<void>`
 
@@ -681,111 +712,116 @@ import { BulkRescanVulnerabilitiesUseCase } from "../useCases/abstractions/BulkR
 import type { VulnerabilitySelectionManager } from "./VulnerabilitySelectionManager.js";
 
 export interface IVulnerabilityBulkActionsDependencies {
-    selectionManager: VulnerabilitySelectionManager;
-    bulkActionUseCase: BulkVulnerabilityActionUseCase.Interface;
-    bulkRescanUseCase: BulkRescanVulnerabilitiesUseCase.Interface;
-    reload: () => Promise<void>;
+  selectionManager: VulnerabilitySelectionManager;
+  bulkActionUseCase: BulkVulnerabilityActionUseCase.Interface;
+  bulkRescanUseCase: BulkRescanVulnerabilitiesUseCase.Interface;
+  reload: () => Promise<void>;
 }
 
 export class VulnerabilityBulkActions {
-    private running = false;
-    private readonly selectionManager: VulnerabilitySelectionManager;
-    private readonly bulkActionUseCase: BulkVulnerabilityActionUseCase.Interface;
-    private readonly bulkRescanUseCase: BulkRescanVulnerabilitiesUseCase.Interface;
-    private readonly reload: () => Promise<void>;
+  private running = false;
+  private readonly selectionManager: VulnerabilitySelectionManager;
+  private readonly bulkActionUseCase: BulkVulnerabilityActionUseCase.Interface;
+  private readonly bulkRescanUseCase: BulkRescanVulnerabilitiesUseCase.Interface;
+  private readonly reload: () => Promise<void>;
 
-    public constructor(dependencies: IVulnerabilityBulkActionsDependencies) {
-        this.selectionManager = dependencies.selectionManager;
-        this.bulkActionUseCase = dependencies.bulkActionUseCase;
-        this.bulkRescanUseCase = dependencies.bulkRescanUseCase;
-        this.reload = dependencies.reload;
-        makeAutoObservable(this);
+  public constructor(dependencies: IVulnerabilityBulkActionsDependencies) {
+    this.selectionManager = dependencies.selectionManager;
+    this.bulkActionUseCase = dependencies.bulkActionUseCase;
+    this.bulkRescanUseCase = dependencies.bulkRescanUseCase;
+    this.reload = dependencies.reload;
+    makeAutoObservable(this);
+  }
+
+  public get isRunning(): boolean {
+    return this.running;
+  }
+
+  public bulkDismiss = async (): Promise<void> => {
+    this.running = true;
+    try {
+      await this.bulkActionUseCase.execute({
+        ids: this.selectionManager.ids,
+        action: "dismiss"
+      });
+      this.selectionManager.clearSelection();
+      await this.reload();
+    } finally {
+      runInAction(() => {
+        this.running = false;
+      });
     }
+  };
 
-    public get isRunning(): boolean {
-        return this.running;
+  public bulkSnooze = async (days: 7 | 30 | 90): Promise<void> => {
+    this.running = true;
+    try {
+      await this.bulkActionUseCase.execute({
+        ids: this.selectionManager.ids,
+        action: "snooze",
+        snoozeDays: days
+      });
+      this.selectionManager.clearSelection();
+      await this.reload();
+    } finally {
+      runInAction(() => {
+        this.running = false;
+      });
     }
+  };
 
-    public bulkDismiss = async (): Promise<void> => {
-        this.running = true;
-        try {
-            await this.bulkActionUseCase.execute({
-                ids: this.selectionManager.ids,
-                action: "dismiss"
-            });
-            this.selectionManager.clearSelection();
-            await this.reload();
-        } finally {
-            runInAction(() => {
-                this.running = false;
-            });
-        }
-    };
+  public bulkUndismiss = async (): Promise<void> => {
+    this.running = true;
+    try {
+      await this.bulkActionUseCase.execute({
+        ids: this.selectionManager.ids,
+        action: "undismiss"
+      });
+      this.selectionManager.clearSelection();
+      await this.reload();
+    } finally {
+      runInAction(() => {
+        this.running = false;
+      });
+    }
+  };
 
-    public bulkSnooze = async (days: 7 | 30 | 90): Promise<void> => {
-        this.running = true;
-        try {
-            await this.bulkActionUseCase.execute({
-                ids: this.selectionManager.ids,
-                action: "snooze",
-                snoozeDays: days
-            });
-            this.selectionManager.clearSelection();
-            await this.reload();
-        } finally {
-            runInAction(() => {
-                this.running = false;
-            });
-        }
-    };
-
-    public bulkUndismiss = async (): Promise<void> => {
-        this.running = true;
-        try {
-            await this.bulkActionUseCase.execute({
-                ids: this.selectionManager.ids,
-                action: "undismiss"
-            });
-            this.selectionManager.clearSelection();
-            await this.reload();
-        } finally {
-            runInAction(() => {
-                this.running = false;
-            });
-        }
-    };
-
-    public bulkRescan = async (): Promise<void> => {
-        this.running = true;
-        try {
-            await this.bulkRescanUseCase.execute(this.selectionManager.ids);
-            this.selectionManager.clearSelection();
-            await this.reload();
-        } finally {
-            runInAction(() => {
-                this.running = false;
-            });
-        }
-    };
+  public bulkRescan = async (): Promise<void> => {
+    this.running = true;
+    try {
+      await this.bulkRescanUseCase.execute(this.selectionManager.ids);
+      this.selectionManager.clearSelection();
+      await this.reload();
+    } finally {
+      runInAction(() => {
+        this.running = false;
+      });
+    }
+  };
 }
 ```
 
 Two intentional, behavior-preserving simplifications versus the original:
+
 1. `this.selectionManager.clearSelection()` is called directly (not wrapped in `runInAction`) — `clearSelection()` is itself a MobX action (because `VulnerabilitySelectionManager` calls `makeAutoObservable(this)`), so it already batches its own state change correctly regardless of call site.
 2. `runInAction` is still required around `this.running = false` because that is a direct field assignment on `this` happening after an `await`, outside any action's synchronous call stack — dropping it would reproduce the exact staleness bug described in the Global Constraints reactivity note.
 
 - [ ] **Step 2: Update `VulnerabilitiesPresenter.ts` — imports and field**
 
 Add:
+
 ```ts
 import { VulnerabilityBulkActions } from "./VulnerabilityBulkActions.js";
 ```
 
 Replace:
+
 ```ts
     private bulkActionRunning = false;
 ```
+
 with:
+
 ```ts
     private readonly bulkActions: VulnerabilityBulkActions;
 ```
@@ -810,27 +846,31 @@ The `bulkActionUseCase` and `bulkRescanUseCase` constructor parameters drop `pri
 ```
 
 And add the instantiation alongside `selectionManager`/`filterManager`:
+
 ```ts
-        this.selectionManager = new VulnerabilitySelectionManager();
-        this.bulkActions = new VulnerabilityBulkActions({
-            selectionManager: this.selectionManager,
-            bulkActionUseCase,
-            bulkRescanUseCase,
-            reload: () => this.load()
-        });
-        this.filterManager = new VulnerabilityFilterManager({
-            urlFilterService,
-            onFilterChange: () => this.selectionManager.clearSelection()
-        });
+this.selectionManager = new VulnerabilitySelectionManager();
+this.bulkActions = new VulnerabilityBulkActions({
+  selectionManager: this.selectionManager,
+  bulkActionUseCase,
+  bulkRescanUseCase,
+  reload: () => this.load()
+});
+this.filterManager = new VulnerabilityFilterManager({
+  urlFilterService,
+  onFilterChange: () => this.selectionManager.clearSelection()
+});
 ```
 
 - [ ] **Step 4: Update `VulnerabilitiesPresenter.ts` — `vm` getter**
 
 Replace:
+
 ```ts
             bulkActionRunning: this.bulkActionRunning,
 ```
+
 with:
+
 ```ts
             bulkActionRunning: this.bulkActions.isRunning,
 ```
@@ -838,6 +878,7 @@ with:
 - [ ] **Step 5: Update `VulnerabilitiesPresenter.ts` — delegate bulk methods**
 
 Replace the four full method bodies of `bulkDismiss`, `bulkSnooze`, `bulkUndismiss`, `bulkRescan` with:
+
 ```ts
     public bulkDismiss = (): Promise<void> => this.bulkActions.bulkDismiss();
 
@@ -866,10 +907,12 @@ git commit -m "refactor: extract VulnerabilityBulkActions from VulnerabilitiesPr
 ## Task 4: Extract `VulnerabilityExportActions`
 
 **Files:**
+
 - Create: `src/ui/presentation/Vulnerabilities/VulnerabilityList/VulnerabilityExportActions.ts`
 - Modify: `src/ui/presentation/Vulnerabilities/VulnerabilityList/VulnerabilitiesPresenter.ts`
 
 **Interfaces:**
+
 - Consumes: `VulnerabilitySelectionManager` from Task 2 (`.ids`)
 - Produces: `IVulnerabilityExportActionsDependencies { selectionManager: VulnerabilitySelectionManager; exportUseCase: ExportVulnerabilitiesUseCase.Interface; getFilters: () => VulnerabilitiesGateway.ListFilters; getTeamId: () => string | undefined; }`, `VulnerabilityExportActions` class with `exportSelected(format: "csv" | "json"): void`, `exportAll(format: "csv" | "json"): void`
 
@@ -884,43 +927,43 @@ import type { VulnerabilitiesGateway } from "../../../features/Vulnerabilities/a
 import type { VulnerabilitySelectionManager } from "./VulnerabilitySelectionManager.js";
 
 export interface IVulnerabilityExportActionsDependencies {
-    selectionManager: VulnerabilitySelectionManager;
-    exportUseCase: ExportVulnerabilitiesUseCase.Interface;
-    getFilters: () => VulnerabilitiesGateway.ListFilters;
-    getTeamId: () => string | undefined;
+  selectionManager: VulnerabilitySelectionManager;
+  exportUseCase: ExportVulnerabilitiesUseCase.Interface;
+  getFilters: () => VulnerabilitiesGateway.ListFilters;
+  getTeamId: () => string | undefined;
 }
 
 export class VulnerabilityExportActions {
-    private readonly selectionManager: VulnerabilitySelectionManager;
-    private readonly exportUseCase: ExportVulnerabilitiesUseCase.Interface;
-    private readonly getFilters: () => VulnerabilitiesGateway.ListFilters;
-    private readonly getTeamId: () => string | undefined;
+  private readonly selectionManager: VulnerabilitySelectionManager;
+  private readonly exportUseCase: ExportVulnerabilitiesUseCase.Interface;
+  private readonly getFilters: () => VulnerabilitiesGateway.ListFilters;
+  private readonly getTeamId: () => string | undefined;
 
-    public constructor(dependencies: IVulnerabilityExportActionsDependencies) {
-        this.selectionManager = dependencies.selectionManager;
-        this.exportUseCase = dependencies.exportUseCase;
-        this.getFilters = dependencies.getFilters;
-        this.getTeamId = dependencies.getTeamId;
-    }
+  public constructor(dependencies: IVulnerabilityExportActionsDependencies) {
+    this.selectionManager = dependencies.selectionManager;
+    this.exportUseCase = dependencies.exportUseCase;
+    this.getFilters = dependencies.getFilters;
+    this.getTeamId = dependencies.getTeamId;
+  }
 
-    public exportSelected(format: "csv" | "json"): void {
-        const teamId = this.getTeamId();
-        this.exportUseCase.execute({
-            filters: this.getFilters(),
-            format,
-            ids: this.selectionManager.ids,
-            ...(teamId ? { teamId } : {})
-        });
-    }
+  public exportSelected(format: "csv" | "json"): void {
+    const teamId = this.getTeamId();
+    this.exportUseCase.execute({
+      filters: this.getFilters(),
+      format,
+      ids: this.selectionManager.ids,
+      ...(teamId ? { teamId } : {})
+    });
+  }
 
-    public exportAll(format: "csv" | "json"): void {
-        const teamId = this.getTeamId();
-        this.exportUseCase.execute({
-            filters: this.getFilters(),
-            format,
-            ...(teamId ? { teamId } : {})
-        });
-    }
+  public exportAll(format: "csv" | "json"): void {
+    const teamId = this.getTeamId();
+    this.exportUseCase.execute({
+      filters: this.getFilters(),
+      format,
+      ...(teamId ? { teamId } : {})
+    });
+  }
 }
 ```
 
@@ -929,11 +972,13 @@ No `makeAutoObservable` needed — this class holds no mutable state.
 - [ ] **Step 2: Update `VulnerabilitiesPresenter.ts` — imports and field**
 
 Add:
+
 ```ts
 import { VulnerabilityExportActions } from "./VulnerabilityExportActions.js";
 ```
 
 Add a field next to the other three managers:
+
 ```ts
     private readonly exportActions: VulnerabilityExportActions;
 ```
@@ -941,6 +986,7 @@ Add a field next to the other three managers:
 - [ ] **Step 3: Update `VulnerabilitiesPresenter.ts` — constructor**
 
 `exportUseCase` drops `private readonly`:
+
 ```ts
     public constructor(
         private readonly loadVulnerabilities: LoadVulnerabilitiesUseCase.Interface,
@@ -957,18 +1003,20 @@ Add a field next to the other three managers:
 ```
 
 Add the instantiation:
+
 ```ts
-        this.exportActions = new VulnerabilityExportActions({
-            selectionManager: this.selectionManager,
-            exportUseCase,
-            getFilters: () => this.currentFilters(),
-            getTeamId: () => this.teamFilterService.selectedTeamId ?? undefined
-        });
+this.exportActions = new VulnerabilityExportActions({
+  selectionManager: this.selectionManager,
+  exportUseCase,
+  getFilters: () => this.currentFilters(),
+  getTeamId: () => this.teamFilterService.selectedTeamId ?? undefined
+});
 ```
 
 - [ ] **Step 4: Update `VulnerabilitiesPresenter.ts` — delegate export methods**
 
 Replace:
+
 ```ts
     public exportSelected = (format: "csv" | "json"): void => {
         const teamId = this.teamFilterService.selectedTeamId ?? undefined;
@@ -989,7 +1037,9 @@ Replace:
         });
     };
 ```
+
 with:
+
 ```ts
     public exportSelected = (format: "csv" | "json"): void =>
         this.exportActions.exportSelected(format);
@@ -1004,6 +1054,7 @@ At this point `VulnerabilitiesPresenter.ts` should have no remaining references 
 ```bash
 grep -n "this\.selectedIds\|this\.bulkActionRunning\|this\.urlFilterService\|this\.bulkActionUseCase\|this\.bulkRescanUseCase\|this\.exportUseCase" src/ui/presentation/Vulnerabilities/VulnerabilityList/VulnerabilitiesPresenter.ts
 ```
+
 Expected: no output.
 
 - [ ] **Step 6: Run the full verification pipeline**
@@ -1024,10 +1075,12 @@ git commit -m "refactor: extract VulnerabilityExportActions from Vulnerabilities
 ## Task 5: Extract `VulnerabilityFilters` component
 
 **Files:**
+
 - Create: `src/ui/presentation/Vulnerabilities/VulnerabilityList/components/VulnerabilityFilters.tsx`
 - Modify: `src/ui/presentation/Vulnerabilities/VulnerabilityList/components/VulnerabilitiesPage.tsx`
 
 **Interfaces:**
+
 - Consumes: `VulnerabilitiesPresenter.ViewModel` from `../abstractions/VulnerabilitiesPresenter.js` (unchanged, Task 1–4 did not touch it)
 - Produces: `VulnerabilityFiltersProps` interface, `VulnerabilityFilters` component
 
@@ -1036,157 +1089,164 @@ git commit -m "refactor: extract VulnerabilityExportActions from Vulnerabilities
 ```tsx
 // src/ui/presentation/Vulnerabilities/VulnerabilityList/components/VulnerabilityFilters.tsx
 import type React from "react";
-import { Group, Select, TextInput, MultiSelect, Switch, Badge, UnstyledButton } from "@mantine/core";
+import {
+  Group,
+  Select,
+  TextInput,
+  MultiSelect,
+  Switch,
+  Badge,
+  UnstyledButton
+} from "@mantine/core";
 import type { VulnerabilitiesPresenter } from "../abstractions/VulnerabilitiesPresenter.js";
 
 interface VulnerabilityFiltersProps {
-    viewModel: VulnerabilitiesPresenter.ViewModel;
-    onSeverityChange: (value: string | null) => void;
-    onPackageNameChange: (value: string) => void;
-    onSourceChange: (value: string | null) => void;
-    onProjectIdsChange: (ids: string[]) => void;
-    onIncludeDismissedChange: (value: boolean) => void;
-    onGroupByProjectChange: (value: boolean) => void;
-    onDependencyTypeChange: (value: "all" | "direct" | "transitive") => void;
-    onClearScannedDate: () => void;
+  viewModel: VulnerabilitiesPresenter.ViewModel;
+  onSeverityChange: (value: string | null) => void;
+  onPackageNameChange: (value: string) => void;
+  onSourceChange: (value: string | null) => void;
+  onProjectIdsChange: (ids: string[]) => void;
+  onIncludeDismissedChange: (value: boolean) => void;
+  onGroupByProjectChange: (value: boolean) => void;
+  onDependencyTypeChange: (value: "all" | "direct" | "transitive") => void;
+  onClearScannedDate: () => void;
 }
 
 export function VulnerabilityFilters({
-    viewModel,
-    onSeverityChange,
-    onPackageNameChange,
-    onSourceChange,
-    onProjectIdsChange,
-    onIncludeDismissedChange,
-    onGroupByProjectChange,
-    onDependencyTypeChange,
-    onClearScannedDate
+  viewModel,
+  onSeverityChange,
+  onPackageNameChange,
+  onSourceChange,
+  onProjectIdsChange,
+  onIncludeDismissedChange,
+  onGroupByProjectChange,
+  onDependencyTypeChange,
+  onClearScannedDate
 }: VulnerabilityFiltersProps): React.ReactNode {
-    return (
-        <Group>
-            <Select
-                placeholder="Severity"
-                clearable
-                value={viewModel.severity}
-                onChange={onSeverityChange}
-                data={[
-                    { value: "critical", label: "Critical" },
-                    { value: "high", label: "High" },
-                    { value: "moderate", label: "Moderate" },
-                    { value: "low", label: "Low" },
-                    { value: "info", label: "Info" }
-                ]}
-            />
-            <TextInput
-                placeholder="Package name"
-                value={viewModel.packageName}
-                onChange={event => onPackageNameChange(event.currentTarget.value)}
-            />
-            <Select
-                placeholder="Source"
-                clearable
-                value={viewModel.source}
-                onChange={onSourceChange}
-                data={[
-                    { value: "audit", label: "Audit" },
-                    { value: "osv", label: "OSV" },
-                    { value: "both", label: "Both" }
-                ]}
-            />
-            <MultiSelect
-                placeholder="Projects"
-                data={viewModel.availableProjects}
-                value={viewModel.projectIds}
-                onChange={onProjectIdsChange}
-                clearable
-                searchable
-            />
-            <Switch
-                label="Show dismissed"
-                checked={viewModel.includeDismissed}
-                onChange={event => onIncludeDismissedChange(event.currentTarget.checked)}
-            />
-            <Switch
-                label="Group by project"
-                checked={viewModel.groupByProject}
-                onChange={event => onGroupByProjectChange(event.currentTarget.checked)}
-            />
-            <Select
-                placeholder="Dependency"
-                clearable
-                value={viewModel.dependencyType === "all" ? null : viewModel.dependencyType}
-                onChange={value =>
-                    onDependencyTypeChange((value as "direct" | "transitive") ?? "all")
-                }
-                data={[
-                    { value: "direct", label: "Direct" },
-                    { value: "transitive", label: "Transitive" }
-                ]}
-            />
-            {viewModel.scannedDate && (
-                <Badge
-                    variant="filled"
-                    color="blue"
-                    rightSection={
-                        <UnstyledButton onClick={onClearScannedDate}>✕</UnstyledButton>
-                    }
-                >
-                    Date: {viewModel.scannedDate}
-                </Badge>
-            )}
-        </Group>
-    );
+  return (
+    <Group>
+      <Select
+        placeholder="Severity"
+        clearable
+        value={viewModel.severity}
+        onChange={onSeverityChange}
+        data={[
+          { value: "critical", label: "Critical" },
+          { value: "high", label: "High" },
+          { value: "moderate", label: "Moderate" },
+          { value: "low", label: "Low" },
+          { value: "info", label: "Info" }
+        ]}
+      />
+      <TextInput
+        placeholder="Package name"
+        value={viewModel.packageName}
+        onChange={event => onPackageNameChange(event.currentTarget.value)}
+      />
+      <Select
+        placeholder="Source"
+        clearable
+        value={viewModel.source}
+        onChange={onSourceChange}
+        data={[
+          { value: "audit", label: "Audit" },
+          { value: "osv", label: "OSV" },
+          { value: "both", label: "Both" }
+        ]}
+      />
+      <MultiSelect
+        placeholder="Projects"
+        data={viewModel.availableProjects}
+        value={viewModel.projectIds}
+        onChange={onProjectIdsChange}
+        clearable
+        searchable
+      />
+      <Switch
+        label="Show dismissed"
+        checked={viewModel.includeDismissed}
+        onChange={event => onIncludeDismissedChange(event.currentTarget.checked)}
+      />
+      <Switch
+        label="Group by project"
+        checked={viewModel.groupByProject}
+        onChange={event => onGroupByProjectChange(event.currentTarget.checked)}
+      />
+      <Select
+        placeholder="Dependency"
+        clearable
+        value={viewModel.dependencyType === "all" ? null : viewModel.dependencyType}
+        onChange={value => onDependencyTypeChange((value as "direct" | "transitive") ?? "all")}
+        data={[
+          { value: "direct", label: "Direct" },
+          { value: "transitive", label: "Transitive" }
+        ]}
+      />
+      {viewModel.scannedDate && (
+        <Badge
+          variant="filled"
+          color="blue"
+          rightSection={<UnstyledButton onClick={onClearScannedDate}>✕</UnstyledButton>}
+        >
+          Date: {viewModel.scannedDate}
+        </Badge>
+      )}
+    </Group>
+  );
 }
 ```
 
 - [ ] **Step 2: Update `VulnerabilitiesPage.tsx` — imports**
 
 The `@mantine/core` import currently reads:
+
 ```ts
 import {
-    Stack,
-    Title,
-    Group,
-    Table,
-    Badge,
-    Text,
-    Select,
-    MultiSelect,
-    Switch,
-    Menu,
-    Checkbox,
-    Button,
-    TextInput,
-    Pagination,
-    Skeleton,
-    Anchor,
-    UnstyledButton,
-    Accordion
+  Stack,
+  Title,
+  Group,
+  Table,
+  Badge,
+  Text,
+  Select,
+  MultiSelect,
+  Switch,
+  Menu,
+  Checkbox,
+  Button,
+  TextInput,
+  Pagination,
+  Skeleton,
+  Anchor,
+  UnstyledButton,
+  Accordion
 } from "@mantine/core";
 ```
 
 `Select`, `MultiSelect`, `Switch`, `TextInput`, and `UnstyledButton` are used **only** inside the filters block being deleted in Step 3 — after this task nothing else in `VulnerabilitiesPage.tsx` references them, so remove all five names now (leaving them in place would fail `yarn lint` with `--deny-warnings` on unused imports). Change the import to:
+
 ```ts
 import {
-    Stack,
-    Title,
-    Group,
-    Table,
-    Badge,
-    Text,
-    Menu,
-    Checkbox,
-    Button,
-    Pagination,
-    Skeleton,
-    Anchor,
-    Accordion
+  Stack,
+  Title,
+  Group,
+  Table,
+  Badge,
+  Text,
+  Menu,
+  Checkbox,
+  Button,
+  Pagination,
+  Skeleton,
+  Anchor,
+  Accordion
 } from "@mantine/core";
 ```
 
 `Table`, `Badge`, `Checkbox`, `Anchor`, and `Accordion` stay for now — they are still used by `renderVulnerabilityRow` and the flat-table/accordion blocks inside this file until Task 7 extracts them.
 
 Add:
+
 ```ts
 import { VulnerabilityFilters } from "./VulnerabilityFilters.js";
 ```
@@ -1194,18 +1254,19 @@ import { VulnerabilityFilters } from "./VulnerabilityFilters.js";
 - [ ] **Step 3: Update `VulnerabilitiesPage.tsx` — replace the filters `<Group>` block**
 
 Replace the entire `<Group>...</Group>` block (originally lines 182–255, immediately after the header `<Group justify="space-between">`) with:
+
 ```tsx
-            <VulnerabilityFilters
-                viewModel={vm}
-                onSeverityChange={presenter.setSeverity}
-                onPackageNameChange={presenter.setPackageName}
-                onSourceChange={presenter.setSource}
-                onProjectIdsChange={presenter.setProjectIds}
-                onIncludeDismissedChange={presenter.setIncludeDismissed}
-                onGroupByProjectChange={presenter.setGroupByProject}
-                onDependencyTypeChange={presenter.setDependencyType}
-                onClearScannedDate={presenter.clearScannedDate}
-            />
+<VulnerabilityFilters
+  viewModel={vm}
+  onSeverityChange={presenter.setSeverity}
+  onPackageNameChange={presenter.setPackageName}
+  onSourceChange={presenter.setSource}
+  onProjectIdsChange={presenter.setProjectIds}
+  onIncludeDismissedChange={presenter.setIncludeDismissed}
+  onGroupByProjectChange={presenter.setGroupByProject}
+  onDependencyTypeChange={presenter.setDependencyType}
+  onClearScannedDate={presenter.clearScannedDate}
+/>
 ```
 
 Passing `presenter.setSeverity` etc. directly (instead of wrapping in an inline arrow) is safe here because every presenter method is already an arrow-function class field (bound to `this` at construction), matching how the original page already passed `presenter.setPage` directly to `<Pagination onChange={...}>`.
@@ -1228,10 +1289,12 @@ git commit -m "refactor: extract VulnerabilityFilters component from Vulnerabili
 ## Task 6: Extract `VulnerabilityBulkBar` component
 
 **Files:**
+
 - Create: `src/ui/presentation/Vulnerabilities/VulnerabilityList/components/VulnerabilityBulkBar.tsx`
 - Modify: `src/ui/presentation/Vulnerabilities/VulnerabilityList/components/VulnerabilitiesPage.tsx`
 
 **Interfaces:**
+
 - Consumes: `VulnerabilitiesPresenter.ViewModel`
 - Produces: `VulnerabilityBulkBarProps` interface, `VulnerabilityBulkBar` component (returns `null` when `viewModel.selectedCount === 0`, so the parent can render it unconditionally)
 
@@ -1244,93 +1307,94 @@ import { Group, Text, Button, Menu } from "@mantine/core";
 import type { VulnerabilitiesPresenter } from "../abstractions/VulnerabilitiesPresenter.js";
 
 interface VulnerabilityBulkBarProps {
-    viewModel: VulnerabilitiesPresenter.ViewModel;
-    onDismissClick: () => void;
-    onSnoozeSelect: (days: 7 | 30 | 90) => void;
-    onUndismissClick: () => void;
-    onRescanClick: () => void;
-    onExportSelected: (format: "csv" | "json") => void;
-    onClearSelection: () => void;
+  viewModel: VulnerabilitiesPresenter.ViewModel;
+  onDismissClick: () => void;
+  onSnoozeSelect: (days: 7 | 30 | 90) => void;
+  onUndismissClick: () => void;
+  onRescanClick: () => void;
+  onExportSelected: (format: "csv" | "json") => void;
+  onClearSelection: () => void;
 }
 
 export function VulnerabilityBulkBar({
-    viewModel,
-    onDismissClick,
-    onSnoozeSelect,
-    onUndismissClick,
-    onRescanClick,
-    onExportSelected,
-    onClearSelection
+  viewModel,
+  onDismissClick,
+  onSnoozeSelect,
+  onUndismissClick,
+  onRescanClick,
+  onExportSelected,
+  onClearSelection
 }: VulnerabilityBulkBarProps): React.ReactNode {
-    if (viewModel.selectedCount === 0) {
-        return null;
-    }
+  if (viewModel.selectedCount === 0) {
+    return null;
+  }
 
-    return (
-        <Group bg="blue.0" p="xs" style={{ borderRadius: 4 }}>
-            <Text size="sm" fw={500}>
-                {viewModel.selectedCount} selected
-            </Text>
-            <Button
-                size="xs"
-                variant="outline"
-                loading={viewModel.bulkActionRunning}
-                onClick={onDismissClick}
-            >
-                Dismiss
-            </Button>
-            <Menu>
-                <Menu.Target>
-                    <Button size="xs" variant="outline" loading={viewModel.bulkActionRunning}>
-                        Snooze
-                    </Button>
-                </Menu.Target>
-                <Menu.Dropdown>
-                    <Menu.Item onClick={() => onSnoozeSelect(7)}>7 days</Menu.Item>
-                    <Menu.Item onClick={() => onSnoozeSelect(30)}>30 days</Menu.Item>
-                    <Menu.Item onClick={() => onSnoozeSelect(90)}>90 days</Menu.Item>
-                </Menu.Dropdown>
-            </Menu>
-            {viewModel.includeDismissed && (
-                <Button
-                    size="xs"
-                    variant="outline"
-                    loading={viewModel.bulkActionRunning}
-                    onClick={onUndismissClick}
-                >
-                    Undismiss
-                </Button>
-            )}
-            <Button
-                size="xs"
-                variant="outline"
-                loading={viewModel.bulkActionRunning}
-                onClick={onRescanClick}
-            >
-                Rescan
-            </Button>
-            <Menu>
-                <Menu.Target>
-                    <Button size="xs" variant="outline">
-                        Export Selected
-                    </Button>
-                </Menu.Target>
-                <Menu.Dropdown>
-                    <Menu.Item onClick={() => onExportSelected("csv")}>CSV</Menu.Item>
-                    <Menu.Item onClick={() => onExportSelected("json")}>JSON</Menu.Item>
-                </Menu.Dropdown>
-            </Menu>
-            <Button size="xs" variant="subtle" onClick={onClearSelection}>
-                Clear
-            </Button>
-        </Group>
-    );
+  return (
+    <Group bg="blue.0" p="xs" style={{ borderRadius: 4 }}>
+      <Text size="sm" fw={500}>
+        {viewModel.selectedCount} selected
+      </Text>
+      <Button
+        size="xs"
+        variant="outline"
+        loading={viewModel.bulkActionRunning}
+        onClick={onDismissClick}
+      >
+        Dismiss
+      </Button>
+      <Menu>
+        <Menu.Target>
+          <Button size="xs" variant="outline" loading={viewModel.bulkActionRunning}>
+            Snooze
+          </Button>
+        </Menu.Target>
+        <Menu.Dropdown>
+          <Menu.Item onClick={() => onSnoozeSelect(7)}>7 days</Menu.Item>
+          <Menu.Item onClick={() => onSnoozeSelect(30)}>30 days</Menu.Item>
+          <Menu.Item onClick={() => onSnoozeSelect(90)}>90 days</Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
+      {viewModel.includeDismissed && (
+        <Button
+          size="xs"
+          variant="outline"
+          loading={viewModel.bulkActionRunning}
+          onClick={onUndismissClick}
+        >
+          Undismiss
+        </Button>
+      )}
+      <Button
+        size="xs"
+        variant="outline"
+        loading={viewModel.bulkActionRunning}
+        onClick={onRescanClick}
+      >
+        Rescan
+      </Button>
+      <Menu>
+        <Menu.Target>
+          <Button size="xs" variant="outline">
+            Export Selected
+          </Button>
+        </Menu.Target>
+        <Menu.Dropdown>
+          <Menu.Item onClick={() => onExportSelected("csv")}>CSV</Menu.Item>
+          <Menu.Item onClick={() => onExportSelected("json")}>JSON</Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
+      <Button size="xs" variant="subtle" onClick={onClearSelection}>
+        Clear
+      </Button>
+    </Group>
+  );
 }
 ```
 
 - [ ] **Step 2: Update `VulnerabilitiesPage.tsx` — imports**
 
 Add:
+
 ```ts
 import { VulnerabilityBulkBar } from "./VulnerabilityBulkBar.js";
 ```
@@ -1338,16 +1402,17 @@ import { VulnerabilityBulkBar } from "./VulnerabilityBulkBar.js";
 - [ ] **Step 3: Update `VulnerabilitiesPage.tsx` — replace the bulk-actions block**
 
 Replace the `{vm.selectedCount > 0 && (<Group bg="blue.0" ...>...</Group>)}` block (originally lines 257–319) with:
+
 ```tsx
-            <VulnerabilityBulkBar
-                viewModel={vm}
-                onDismissClick={() => setShowDismissConfirm(true)}
-                onSnoozeSelect={setSnoozeConfirm}
-                onUndismissClick={() => setShowUndismissConfirm(true)}
-                onRescanClick={() => setShowRescanConfirm(true)}
-                onExportSelected={presenter.exportSelected}
-                onClearSelection={presenter.clearSelection}
-            />
+<VulnerabilityBulkBar
+  viewModel={vm}
+  onDismissClick={() => setShowDismissConfirm(true)}
+  onSnoozeSelect={setSnoozeConfirm}
+  onUndismissClick={() => setShowUndismissConfirm(true)}
+  onRescanClick={() => setShowRescanConfirm(true)}
+  onExportSelected={presenter.exportSelected}
+  onClearSelection={presenter.clearSelection}
+/>
 ```
 
 `onSnoozeSelect={setSnoozeConfirm}` works directly because `setSnoozeConfirm` (the `useState` setter for `snoozeConfirmDays: 7 | 30 | 90 | null`) already accepts exactly `7 | 30 | 90` as an argument — no wrapping needed.
@@ -1371,6 +1436,7 @@ git commit -m "refactor: extract VulnerabilityBulkBar component from Vulnerabili
 This is the largest UI task: it moves `SOURCE_COLORS` and `isSafeAdvisoryUrl` to shared utilities, converts the inline `renderVulnerabilityRow` function into a real `VulnerabilityRow` component, and then builds the flat-table and grouped-accordion views on top of it.
 
 **Files:**
+
 - Create: `src/ui/infrastructure/Shared/vulnerabilities/sourceColors.ts`
 - Create: `src/ui/infrastructure/Shared/vulnerabilities/isSafeAdvisoryUrl.ts`
 - Create: `src/ui/presentation/Vulnerabilities/VulnerabilityList/components/VulnerabilityRow.tsx`
@@ -1379,6 +1445,7 @@ This is the largest UI task: it moves `SOURCE_COLORS` and `isSafeAdvisoryUrl` to
 - Modify: `src/ui/presentation/Vulnerabilities/VulnerabilityList/components/VulnerabilitiesPage.tsx`
 
 **Interfaces:**
+
 - Produces: `SOURCE_COLORS: Record<string, string>`, `isSafeAdvisoryUrl(url: string): boolean`
 - Produces: `VulnerabilityRowProps { vulnerability: VulnerabilitiesPresenter.VulnerabilityRow; selected: boolean; onToggleSelected: (id: string) => void; }`, `VulnerabilityRow` component (a `<Table.Tr>`)
 - Produces: `VulnerabilityTableProps { vulnerabilities: VulnerabilitiesPresenter.VulnerabilityRow[]; selectedIds: string[]; allOnPageSelected: boolean; selectedCount: number; sortBy: string; sortOrder: string; onToggleSelected: (id: string) => void; onSelectAllOnPage: () => void; onSort: (field: string) => void; }`, `VulnerabilityTable` component
@@ -1389,9 +1456,9 @@ This is the largest UI task: it moves `SOURCE_COLORS` and `isSafeAdvisoryUrl` to
 ```ts
 // src/ui/infrastructure/Shared/vulnerabilities/sourceColors.ts
 export const SOURCE_COLORS: Record<string, string> = {
-    audit: "blue",
-    osv: "violet",
-    both: "teal"
+  audit: "blue",
+  osv: "violet",
+  both: "teal"
 };
 ```
 
@@ -1400,7 +1467,7 @@ export const SOURCE_COLORS: Record<string, string> = {
 ```ts
 // src/ui/infrastructure/Shared/vulnerabilities/isSafeAdvisoryUrl.ts
 export function isSafeAdvisoryUrl(url: string): boolean {
-    return url.startsWith("http://") || url.startsWith("https://");
+  return url.startsWith("http://") || url.startsWith("https://");
 }
 ```
 
@@ -1419,83 +1486,81 @@ import { isSafeAdvisoryUrl } from "#ui/infrastructure/Shared/vulnerabilities/isS
 import { navigate } from "#ui/infrastructure/Router/router.js";
 
 interface VulnerabilityRowProps {
-    vulnerability: VulnerabilitiesPresenter.VulnerabilityRow;
-    selected: boolean;
-    onToggleSelected: (id: string) => void;
+  vulnerability: VulnerabilitiesPresenter.VulnerabilityRow;
+  selected: boolean;
+  onToggleSelected: (id: string) => void;
 }
 
 export function VulnerabilityRow({
-    vulnerability,
-    selected,
-    onToggleSelected
+  vulnerability,
+  selected,
+  onToggleSelected
 }: VulnerabilityRowProps): React.ReactNode {
-    return (
-        <Table.Tr opacity={vulnerability.isDismissed ? 0.5 : 1}>
-            <Table.Td>
-                <Checkbox checked={selected} onChange={() => onToggleSelected(vulnerability.id)} />
-            </Table.Td>
-            <Table.Td>
-                <Badge color={SEVERITY_COLORS[vulnerability.severity]}>
-                    {vulnerability.severity}
-                </Badge>
-            </Table.Td>
-            <Table.Td>
-                <Group gap="xs" wrap="nowrap">
-                    <Text size="sm">{vulnerability.packageName}</Text>
-                    {vulnerability.dependencyKind === "transitive" && (
-                        <Badge size="xs" variant="light" color="gray">
-                            transitive
-                        </Badge>
-                    )}
-                </Group>
-            </Table.Td>
-            <Table.Td>{vulnerability.installedVersion ?? "—"}</Table.Td>
-            <Table.Td>
-                <Anchor
-                    component="button"
-                    size="sm"
-                    onClick={() => navigate(`/Projects/${vulnerability.projectId}`)}
-                >
-                    {vulnerability.projectName}
-                </Anchor>
-            </Table.Td>
-            <Table.Td>
-                <Group gap="xs" wrap="nowrap">
-                    <Anchor
-                        component="button"
-                        size="sm"
-                        onClick={() => navigate(`/vulnerabilities/${vulnerability.id}`)}
-                        style={{ maxWidth: 300 }}
-                        truncate
-                    >
-                        {vulnerability.title}
-                    </Anchor>
-                    {vulnerability.dismissLabel && (
-                        <Badge size="xs" color="gray">
-                            {vulnerability.dismissLabel}
-                        </Badge>
-                    )}
-                </Group>
-            </Table.Td>
-            <Table.Td>
-                {vulnerability.cveId &&
-                vulnerability.advisoryUrl &&
-                isSafeAdvisoryUrl(vulnerability.advisoryUrl) ? (
-                    <Anchor href={vulnerability.advisoryUrl} target="_blank" size="sm">
-                        {vulnerability.cveId}
-                    </Anchor>
-                ) : (
-                    (vulnerability.cveId ?? "—")
-                )}
-            </Table.Td>
-            <Table.Td>{vulnerability.fixVersion ?? "—"}</Table.Td>
-            <Table.Td>
-                <Badge color={SOURCE_COLORS[vulnerability.source] ?? "gray"} variant="light">
-                    {vulnerability.source}
-                </Badge>
-            </Table.Td>
-        </Table.Tr>
-    );
+  return (
+    <Table.Tr opacity={vulnerability.isDismissed ? 0.5 : 1}>
+      <Table.Td>
+        <Checkbox checked={selected} onChange={() => onToggleSelected(vulnerability.id)} />
+      </Table.Td>
+      <Table.Td>
+        <Badge color={SEVERITY_COLORS[vulnerability.severity]}>{vulnerability.severity}</Badge>
+      </Table.Td>
+      <Table.Td>
+        <Group gap="xs" wrap="nowrap">
+          <Text size="sm">{vulnerability.packageName}</Text>
+          {vulnerability.dependencyKind === "transitive" && (
+            <Badge size="xs" variant="light" color="gray">
+              transitive
+            </Badge>
+          )}
+        </Group>
+      </Table.Td>
+      <Table.Td>{vulnerability.installedVersion ?? "—"}</Table.Td>
+      <Table.Td>
+        <Anchor
+          component="button"
+          size="sm"
+          onClick={() => navigate(`/Projects/${vulnerability.projectId}`)}
+        >
+          {vulnerability.projectName}
+        </Anchor>
+      </Table.Td>
+      <Table.Td>
+        <Group gap="xs" wrap="nowrap">
+          <Anchor
+            component="button"
+            size="sm"
+            onClick={() => navigate(`/vulnerabilities/${vulnerability.id}`)}
+            style={{ maxWidth: 300 }}
+            truncate
+          >
+            {vulnerability.title}
+          </Anchor>
+          {vulnerability.dismissLabel && (
+            <Badge size="xs" color="gray">
+              {vulnerability.dismissLabel}
+            </Badge>
+          )}
+        </Group>
+      </Table.Td>
+      <Table.Td>
+        {vulnerability.cveId &&
+        vulnerability.advisoryUrl &&
+        isSafeAdvisoryUrl(vulnerability.advisoryUrl) ? (
+          <Anchor href={vulnerability.advisoryUrl} target="_blank" size="sm">
+            {vulnerability.cveId}
+          </Anchor>
+        ) : (
+          (vulnerability.cveId ?? "—")
+        )}
+      </Table.Td>
+      <Table.Td>{vulnerability.fixVersion ?? "—"}</Table.Td>
+      <Table.Td>
+        <Badge color={SOURCE_COLORS[vulnerability.source] ?? "gray"} variant="light">
+          {vulnerability.source}
+        </Badge>
+      </Table.Td>
+    </Table.Tr>
+  );
 }
 ```
 
@@ -1512,85 +1577,85 @@ import { SortableHeader } from "#ui/infrastructure/Shared/components/SortableHea
 import { VulnerabilityRow } from "./VulnerabilityRow.js";
 
 interface VulnerabilityTableProps {
-    vulnerabilities: VulnerabilitiesPresenter.VulnerabilityRow[];
-    selectedIds: string[];
-    allOnPageSelected: boolean;
-    selectedCount: number;
-    sortBy: string;
-    sortOrder: string;
-    onToggleSelected: (id: string) => void;
-    onSelectAllOnPage: () => void;
-    onSort: (field: string) => void;
+  vulnerabilities: VulnerabilitiesPresenter.VulnerabilityRow[];
+  selectedIds: string[];
+  allOnPageSelected: boolean;
+  selectedCount: number;
+  sortBy: string;
+  sortOrder: string;
+  onToggleSelected: (id: string) => void;
+  onSelectAllOnPage: () => void;
+  onSort: (field: string) => void;
 }
 
 export function VulnerabilityTable({
-    vulnerabilities,
-    selectedIds,
-    allOnPageSelected,
-    selectedCount,
-    sortBy,
-    sortOrder,
-    onToggleSelected,
-    onSelectAllOnPage,
-    onSort
+  vulnerabilities,
+  selectedIds,
+  allOnPageSelected,
+  selectedCount,
+  sortBy,
+  sortOrder,
+  onToggleSelected,
+  onSelectAllOnPage,
+  onSort
 }: VulnerabilityTableProps): React.ReactNode {
-    return (
-        <Table striped highlightOnHover>
-            <Table.Thead>
-                <Table.Tr>
-                    <Table.Th>
-                        <Checkbox
-                            checked={allOnPageSelected}
-                            indeterminate={selectedCount > 0 && !allOnPageSelected}
-                            onChange={onSelectAllOnPage}
-                        />
-                    </Table.Th>
-                    <Table.Th>
-                        <SortableHeader
-                            label="Severity"
-                            sortKey="severity"
-                            currentSortBy={sortBy}
-                            currentSortOrder={sortOrder}
-                            onSort={onSort}
-                        />
-                    </Table.Th>
-                    <Table.Th>
-                        <SortableHeader
-                            label="Package"
-                            sortKey="packageName"
-                            currentSortBy={sortBy}
-                            currentSortOrder={sortOrder}
-                            onSort={onSort}
-                        />
-                    </Table.Th>
-                    <Table.Th>Version</Table.Th>
-                    <Table.Th>
-                        <SortableHeader
-                            label="Project"
-                            sortKey="projectName"
-                            currentSortBy={sortBy}
-                            currentSortOrder={sortOrder}
-                            onSort={onSort}
-                        />
-                    </Table.Th>
-                    <Table.Th>Title</Table.Th>
-                    <Table.Th>CVE</Table.Th>
-                    <Table.Th>Fix</Table.Th>
-                    <Table.Th>Source</Table.Th>
-                </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-                {vulnerabilities.map(vulnerability => (
-                    <VulnerabilityRow
-                        key={vulnerability.id}
-                        vulnerability={vulnerability}
-                        selected={selectedIds.includes(vulnerability.id)}
-                        onToggleSelected={onToggleSelected}
-                    />
-                ))}
-            </Table.Tbody>
-        </Table>
-    );
+  return (
+    <Table striped highlightOnHover>
+      <Table.Thead>
+        <Table.Tr>
+          <Table.Th>
+            <Checkbox
+              checked={allOnPageSelected}
+              indeterminate={selectedCount > 0 && !allOnPageSelected}
+              onChange={onSelectAllOnPage}
+            />
+          </Table.Th>
+          <Table.Th>
+            <SortableHeader
+              label="Severity"
+              sortKey="severity"
+              currentSortBy={sortBy}
+              currentSortOrder={sortOrder}
+              onSort={onSort}
+            />
+          </Table.Th>
+          <Table.Th>
+            <SortableHeader
+              label="Package"
+              sortKey="packageName"
+              currentSortBy={sortBy}
+              currentSortOrder={sortOrder}
+              onSort={onSort}
+            />
+          </Table.Th>
+          <Table.Th>Version</Table.Th>
+          <Table.Th>
+            <SortableHeader
+              label="Project"
+              sortKey="projectName"
+              currentSortBy={sortBy}
+              currentSortOrder={sortOrder}
+              onSort={onSort}
+            />
+          </Table.Th>
+          <Table.Th>Title</Table.Th>
+          <Table.Th>CVE</Table.Th>
+          <Table.Th>Fix</Table.Th>
+          <Table.Th>Source</Table.Th>
+        </Table.Tr>
+      </Table.Thead>
+      <Table.Tbody>
+        {vulnerabilities.map(vulnerability => (
+          <VulnerabilityRow
+            key={vulnerability.id}
+            vulnerability={vulnerability}
+            selected={selectedIds.includes(vulnerability.id)}
+            onToggleSelected={onToggleSelected}
+          />
+        ))}
+      </Table.Tbody>
+    </Table>
+  );
 }
 ```
 
@@ -1604,100 +1669,100 @@ import type { VulnerabilitiesPresenter } from "../abstractions/VulnerabilitiesPr
 import { VulnerabilityRow } from "./VulnerabilityRow.js";
 
 interface VulnerabilityGroupedViewProps {
-    groups: VulnerabilitiesPresenter.ProjectGroup[];
-    selectedIds: string[];
-    allOnPageSelected: boolean;
-    selectedCount: number;
-    expandedGroups: string[];
-    onExpandedGroupsChange: (values: string[]) => void;
-    onToggleSelected: (id: string) => void;
-    onSelectAllOnPage: () => void;
+  groups: VulnerabilitiesPresenter.ProjectGroup[];
+  selectedIds: string[];
+  allOnPageSelected: boolean;
+  selectedCount: number;
+  expandedGroups: string[];
+  onExpandedGroupsChange: (values: string[]) => void;
+  onToggleSelected: (id: string) => void;
+  onSelectAllOnPage: () => void;
 }
 
 export function VulnerabilityGroupedView({
-    groups,
-    selectedIds,
-    allOnPageSelected,
-    selectedCount,
-    expandedGroups,
-    onExpandedGroupsChange,
-    onToggleSelected,
-    onSelectAllOnPage
+  groups,
+  selectedIds,
+  allOnPageSelected,
+  selectedCount,
+  expandedGroups,
+  onExpandedGroupsChange,
+  onToggleSelected,
+  onSelectAllOnPage
 }: VulnerabilityGroupedViewProps): React.ReactNode {
-    return (
-        <Accordion multiple value={expandedGroups} onChange={onExpandedGroupsChange}>
-            {groups.map(group => (
-                <Accordion.Item key={group.projectId} value={group.projectId}>
-                    <Accordion.Control>
-                        <Group gap="sm">
-                            <Text fw={600}>{group.projectName}</Text>
-                            <Text size="sm" c="dimmed">
-                                ({group.vulnerabilities.length})
-                            </Text>
-                            {group.counts.critical > 0 && (
-                                <Badge color="red" size="sm">
-                                    {group.counts.critical} critical
-                                </Badge>
-                            )}
-                            {group.counts.high > 0 && (
-                                <Badge color="orange" size="sm">
-                                    {group.counts.high} high
-                                </Badge>
-                            )}
-                            {group.counts.moderate > 0 && (
-                                <Badge color="yellow" size="sm">
-                                    {group.counts.moderate} moderate
-                                </Badge>
-                            )}
-                            {group.counts.low > 0 && (
-                                <Badge color="blue" size="sm">
-                                    {group.counts.low} low
-                                </Badge>
-                            )}
-                            {group.counts.info > 0 && (
-                                <Badge color="gray" size="sm">
-                                    {group.counts.info} info
-                                </Badge>
-                            )}
-                        </Group>
-                    </Accordion.Control>
-                    <Accordion.Panel>
-                        <Table striped highlightOnHover>
-                            <Table.Thead>
-                                <Table.Tr>
-                                    <Table.Th>
-                                        <Checkbox
-                                            checked={allOnPageSelected}
-                                            indeterminate={selectedCount > 0 && !allOnPageSelected}
-                                            onChange={onSelectAllOnPage}
-                                        />
-                                    </Table.Th>
-                                    <Table.Th>Severity</Table.Th>
-                                    <Table.Th>Package</Table.Th>
-                                    <Table.Th>Version</Table.Th>
-                                    <Table.Th>Project</Table.Th>
-                                    <Table.Th>Title</Table.Th>
-                                    <Table.Th>CVE</Table.Th>
-                                    <Table.Th>Fix</Table.Th>
-                                    <Table.Th>Source</Table.Th>
-                                </Table.Tr>
-                            </Table.Thead>
-                            <Table.Tbody>
-                                {group.vulnerabilities.map(vulnerability => (
-                                    <VulnerabilityRow
-                                        key={vulnerability.id}
-                                        vulnerability={vulnerability}
-                                        selected={selectedIds.includes(vulnerability.id)}
-                                        onToggleSelected={onToggleSelected}
-                                    />
-                                ))}
-                            </Table.Tbody>
-                        </Table>
-                    </Accordion.Panel>
-                </Accordion.Item>
-            ))}
-        </Accordion>
-    );
+  return (
+    <Accordion multiple value={expandedGroups} onChange={onExpandedGroupsChange}>
+      {groups.map(group => (
+        <Accordion.Item key={group.projectId} value={group.projectId}>
+          <Accordion.Control>
+            <Group gap="sm">
+              <Text fw={600}>{group.projectName}</Text>
+              <Text size="sm" c="dimmed">
+                ({group.vulnerabilities.length})
+              </Text>
+              {group.counts.critical > 0 && (
+                <Badge color="red" size="sm">
+                  {group.counts.critical} critical
+                </Badge>
+              )}
+              {group.counts.high > 0 && (
+                <Badge color="orange" size="sm">
+                  {group.counts.high} high
+                </Badge>
+              )}
+              {group.counts.moderate > 0 && (
+                <Badge color="yellow" size="sm">
+                  {group.counts.moderate} moderate
+                </Badge>
+              )}
+              {group.counts.low > 0 && (
+                <Badge color="blue" size="sm">
+                  {group.counts.low} low
+                </Badge>
+              )}
+              {group.counts.info > 0 && (
+                <Badge color="gray" size="sm">
+                  {group.counts.info} info
+                </Badge>
+              )}
+            </Group>
+          </Accordion.Control>
+          <Accordion.Panel>
+            <Table striped highlightOnHover>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>
+                    <Checkbox
+                      checked={allOnPageSelected}
+                      indeterminate={selectedCount > 0 && !allOnPageSelected}
+                      onChange={onSelectAllOnPage}
+                    />
+                  </Table.Th>
+                  <Table.Th>Severity</Table.Th>
+                  <Table.Th>Package</Table.Th>
+                  <Table.Th>Version</Table.Th>
+                  <Table.Th>Project</Table.Th>
+                  <Table.Th>Title</Table.Th>
+                  <Table.Th>CVE</Table.Th>
+                  <Table.Th>Fix</Table.Th>
+                  <Table.Th>Source</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {group.vulnerabilities.map(vulnerability => (
+                  <VulnerabilityRow
+                    key={vulnerability.id}
+                    vulnerability={vulnerability}
+                    selected={selectedIds.includes(vulnerability.id)}
+                    onToggleSelected={onToggleSelected}
+                  />
+                ))}
+              </Table.Tbody>
+            </Table>
+          </Accordion.Panel>
+        </Accordion.Item>
+      ))}
+    </Accordion>
+  );
 }
 ```
 
@@ -1706,30 +1771,33 @@ Note: `allOnPageSelected`/`selectedCount` are the same page-level values passed 
 - [ ] **Step 6: Update `VulnerabilitiesPage.tsx` — imports**
 
 After Task 5, the `@mantine/core` import in this file reads:
+
 ```ts
 import {
-    Stack,
-    Title,
-    Group,
-    Table,
-    Badge,
-    Text,
-    Menu,
-    Checkbox,
-    Button,
-    Pagination,
-    Skeleton,
-    Anchor,
-    Accordion
+  Stack,
+  Title,
+  Group,
+  Table,
+  Badge,
+  Text,
+  Menu,
+  Checkbox,
+  Button,
+  Pagination,
+  Skeleton,
+  Anchor,
+  Accordion
 } from "@mantine/core";
 ```
 
 `Table`, `Badge`, `Checkbox`, `Anchor`, and `Accordion` were only used by `renderVulnerabilityRow` and the flat-table/accordion blocks — all of that is moving into `VulnerabilityRow`/`VulnerabilityTable`/`VulnerabilityGroupedView` in this task, so none of the five remain referenced anywhere else in the page. Remove all five, leaving:
+
 ```ts
 import { Stack, Title, Group, Text, Menu, Button, Pagination, Skeleton } from "@mantine/core";
 ```
 
 Also remove these three imports, which move into `VulnerabilityRow.tsx` (Step 3) and `VulnerabilityTable.tsx` (Step 4):
+
 ```ts
 import { SEVERITY_COLORS } from "#ui/infrastructure/Shared/vulnerabilities/severityColors.js";
 import { navigate } from "#ui/infrastructure/Router/router.js";
@@ -1737,6 +1805,7 @@ import { SortableHeader } from "#ui/infrastructure/Shared/components/SortableHea
 ```
 
 Add:
+
 ```ts
 import { VulnerabilityTable } from "./VulnerabilityTable.js";
 import { VulnerabilityGroupedView } from "./VulnerabilityGroupedView.js";
@@ -1751,31 +1820,34 @@ Delete the entire `function renderVulnerabilityRow(...) {...}` function (origina
 - [ ] **Step 8: Update `VulnerabilitiesPage.tsx` — replace the conditional table/accordion block**
 
 Replace the whole `{vm.groupByProject ? (<Accordion ...>...</Accordion>) : (<Table ...>...</Table>)}` block (originally lines 321–437) with:
+
 ```tsx
-            {vm.groupByProject ? (
-                <VulnerabilityGroupedView
-                    groups={vm.groupedVulnerabilities}
-                    selectedIds={vm.selectedIds}
-                    allOnPageSelected={vm.allOnPageSelected}
-                    selectedCount={vm.selectedCount}
-                    expandedGroups={expandedGroups}
-                    onExpandedGroupsChange={setExpandedGroups}
-                    onToggleSelected={presenter.toggleSelected}
-                    onSelectAllOnPage={presenter.selectAllOnPage}
-                />
-            ) : (
-                <VulnerabilityTable
-                    vulnerabilities={vm.vulnerabilities}
-                    selectedIds={vm.selectedIds}
-                    allOnPageSelected={vm.allOnPageSelected}
-                    selectedCount={vm.selectedCount}
-                    sortBy={vm.sortBy}
-                    sortOrder={vm.sortOrder}
-                    onToggleSelected={presenter.toggleSelected}
-                    onSelectAllOnPage={presenter.selectAllOnPage}
-                    onSort={presenter.setSortBy}
-                />
-            )}
+{
+  vm.groupByProject ? (
+    <VulnerabilityGroupedView
+      groups={vm.groupedVulnerabilities}
+      selectedIds={vm.selectedIds}
+      allOnPageSelected={vm.allOnPageSelected}
+      selectedCount={vm.selectedCount}
+      expandedGroups={expandedGroups}
+      onExpandedGroupsChange={setExpandedGroups}
+      onToggleSelected={presenter.toggleSelected}
+      onSelectAllOnPage={presenter.selectAllOnPage}
+    />
+  ) : (
+    <VulnerabilityTable
+      vulnerabilities={vm.vulnerabilities}
+      selectedIds={vm.selectedIds}
+      allOnPageSelected={vm.allOnPageSelected}
+      selectedCount={vm.selectedCount}
+      sortBy={vm.sortBy}
+      sortOrder={vm.sortOrder}
+      onToggleSelected={presenter.toggleSelected}
+      onSelectAllOnPage={presenter.selectAllOnPage}
+      onSort={presenter.setSortBy}
+    />
+  );
+}
 ```
 
 - [ ] **Step 9: Run the full verification pipeline**
@@ -1800,10 +1872,12 @@ git commit -m "refactor: extract VulnerabilityRow/Table/GroupedView, move SOURCE
 ## Task 8: Extract `VulnerabilityConfirmDialogs` + final cleanup
 
 **Files:**
+
 - Create: `src/ui/presentation/Vulnerabilities/VulnerabilityList/components/VulnerabilityConfirmDialogs.tsx`
 - Modify: `src/ui/presentation/Vulnerabilities/VulnerabilityList/components/VulnerabilitiesPage.tsx`
 
 **Interfaces:**
+
 - Produces: `VulnerabilityConfirmDialogsProps` interface, `VulnerabilityConfirmDialogs` component (renders the 4 `ConfirmDialog`s)
 
 By the end of this task `VulnerabilitiesPage.tsx` should be roughly 80–120 lines and contain only: the two `useState`/`useEffect` blocks for dialog state and data loading, the loading/error early returns, the header with the Export menu, and the five extracted components wired together.
@@ -1816,72 +1890,72 @@ import type React from "react";
 import { ConfirmDialog } from "#ui/infrastructure/Shared/components/ConfirmDialog.js";
 
 interface VulnerabilityConfirmDialogsProps {
-    selectedCount: number;
-    showDismissConfirm: boolean;
-    onConfirmDismiss: () => void;
-    onCancelDismiss: () => void;
-    snoozeConfirmDays: 7 | 30 | 90 | null;
-    onConfirmSnooze: () => void;
-    onCancelSnooze: () => void;
-    showRescanConfirm: boolean;
-    onConfirmRescan: () => void;
-    onCancelRescan: () => void;
-    showUndismissConfirm: boolean;
-    onConfirmUndismiss: () => void;
-    onCancelUndismiss: () => void;
+  selectedCount: number;
+  showDismissConfirm: boolean;
+  onConfirmDismiss: () => void;
+  onCancelDismiss: () => void;
+  snoozeConfirmDays: 7 | 30 | 90 | null;
+  onConfirmSnooze: () => void;
+  onCancelSnooze: () => void;
+  showRescanConfirm: boolean;
+  onConfirmRescan: () => void;
+  onCancelRescan: () => void;
+  showUndismissConfirm: boolean;
+  onConfirmUndismiss: () => void;
+  onCancelUndismiss: () => void;
 }
 
 export function VulnerabilityConfirmDialogs({
-    selectedCount,
-    showDismissConfirm,
-    onConfirmDismiss,
-    onCancelDismiss,
-    snoozeConfirmDays,
-    onConfirmSnooze,
-    onCancelSnooze,
-    showRescanConfirm,
-    onConfirmRescan,
-    onCancelRescan,
-    showUndismissConfirm,
-    onConfirmUndismiss,
-    onCancelUndismiss
+  selectedCount,
+  showDismissConfirm,
+  onConfirmDismiss,
+  onCancelDismiss,
+  snoozeConfirmDays,
+  onConfirmSnooze,
+  onCancelSnooze,
+  showRescanConfirm,
+  onConfirmRescan,
+  onCancelRescan,
+  showUndismissConfirm,
+  onConfirmUndismiss,
+  onCancelUndismiss
 }: VulnerabilityConfirmDialogsProps): React.ReactNode {
-    return (
-        <>
-            <ConfirmDialog
-                opened={showDismissConfirm}
-                title="Dismiss Vulnerabilities"
-                message={`Dismiss ${selectedCount} selected vulnerabilities? They will be hidden from the default view.`}
-                confirmLabel="Dismiss"
-                onConfirm={onConfirmDismiss}
-                onCancel={onCancelDismiss}
-            />
-            <ConfirmDialog
-                opened={snoozeConfirmDays !== null}
-                title="Snooze Vulnerabilities"
-                message={`Snooze ${selectedCount} vulnerabilities for ${snoozeConfirmDays} days?`}
-                confirmLabel="Snooze"
-                onConfirm={onConfirmSnooze}
-                onCancel={onCancelSnooze}
-            />
-            <ConfirmDialog
-                opened={showRescanConfirm}
-                title="Rescan Projects"
-                message={`Trigger vulnerability rescan for projects associated with ${selectedCount} selected vulnerabilities?`}
-                confirmLabel="Rescan"
-                onConfirm={onConfirmRescan}
-                onCancel={onCancelRescan}
-            />
-            <ConfirmDialog
-                opened={showUndismissConfirm}
-                title="Undismiss Vulnerabilities"
-                message={`Undismiss ${selectedCount} selected vulnerabilities?`}
-                confirmLabel="Undismiss"
-                onConfirm={onConfirmUndismiss}
-                onCancel={onCancelUndismiss}
-            />
-        </>
-    );
+  return (
+    <>
+      <ConfirmDialog
+        opened={showDismissConfirm}
+        title="Dismiss Vulnerabilities"
+        message={`Dismiss ${selectedCount} selected vulnerabilities? They will be hidden from the default view.`}
+        confirmLabel="Dismiss"
+        onConfirm={onConfirmDismiss}
+        onCancel={onCancelDismiss}
+      />
+      <ConfirmDialog
+        opened={snoozeConfirmDays !== null}
+        title="Snooze Vulnerabilities"
+        message={`Snooze ${selectedCount} vulnerabilities for ${snoozeConfirmDays} days?`}
+        confirmLabel="Snooze"
+        onConfirm={onConfirmSnooze}
+        onCancel={onCancelSnooze}
+      />
+      <ConfirmDialog
+        opened={showRescanConfirm}
+        title="Rescan Projects"
+        message={`Trigger vulnerability rescan for projects associated with ${selectedCount} selected vulnerabilities?`}
+        confirmLabel="Rescan"
+        onConfirm={onConfirmRescan}
+        onCancel={onCancelRescan}
+      />
+      <ConfirmDialog
+        opened={showUndismissConfirm}
+        title="Undismiss Vulnerabilities"
+        message={`Undismiss ${selectedCount} selected vulnerabilities?`}
+        confirmLabel="Undismiss"
+        onConfirm={onConfirmUndismiss}
+        onCancel={onCancelUndismiss}
+      />
+    </>
+  );
 }
 ```
 
@@ -1890,11 +1964,13 @@ The four `onConfirm*` callbacks take no arguments — the caller (`Vulnerabiliti
 - [ ] **Step 2: Update `VulnerabilitiesPage.tsx` — imports**
 
 Remove:
+
 ```ts
 import { ConfirmDialog } from "#ui/infrastructure/Shared/components/ConfirmDialog.js";
 ```
 
 Add:
+
 ```ts
 import { VulnerabilityConfirmDialogs } from "./VulnerabilityConfirmDialogs.js";
 ```
@@ -1902,37 +1978,38 @@ import { VulnerabilityConfirmDialogs } from "./VulnerabilityConfirmDialogs.js";
 - [ ] **Step 3: Update `VulnerabilitiesPage.tsx` — replace the four `<ConfirmDialog>` blocks**
 
 Replace the four `<ConfirmDialog .../>` elements (originally lines 447–493) with:
+
 ```tsx
-            <VulnerabilityConfirmDialogs
-                selectedCount={vm.selectedCount}
-                showDismissConfirm={showDismissConfirm}
-                onConfirmDismiss={() => {
-                    setShowDismissConfirm(false);
-                    void presenter.bulkDismiss();
-                }}
-                onCancelDismiss={() => setShowDismissConfirm(false)}
-                snoozeConfirmDays={snoozeConfirmDays}
-                onConfirmSnooze={() => {
-                    const days = snoozeConfirmDays;
-                    setSnoozeConfirm(null);
-                    if (days !== null) {
-                        void presenter.bulkSnooze(days);
-                    }
-                }}
-                onCancelSnooze={() => setSnoozeConfirm(null)}
-                showRescanConfirm={showRescanConfirm}
-                onConfirmRescan={() => {
-                    setShowRescanConfirm(false);
-                    void presenter.bulkRescan();
-                }}
-                onCancelRescan={() => setShowRescanConfirm(false)}
-                showUndismissConfirm={showUndismissConfirm}
-                onConfirmUndismiss={() => {
-                    setShowUndismissConfirm(false);
-                    void presenter.bulkUndismiss();
-                }}
-                onCancelUndismiss={() => setShowUndismissConfirm(false)}
-            />
+<VulnerabilityConfirmDialogs
+  selectedCount={vm.selectedCount}
+  showDismissConfirm={showDismissConfirm}
+  onConfirmDismiss={() => {
+    setShowDismissConfirm(false);
+    void presenter.bulkDismiss();
+  }}
+  onCancelDismiss={() => setShowDismissConfirm(false)}
+  snoozeConfirmDays={snoozeConfirmDays}
+  onConfirmSnooze={() => {
+    const days = snoozeConfirmDays;
+    setSnoozeConfirm(null);
+    if (days !== null) {
+      void presenter.bulkSnooze(days);
+    }
+  }}
+  onCancelSnooze={() => setSnoozeConfirm(null)}
+  showRescanConfirm={showRescanConfirm}
+  onConfirmRescan={() => {
+    setShowRescanConfirm(false);
+    void presenter.bulkRescan();
+  }}
+  onCancelRescan={() => setShowRescanConfirm(false)}
+  showUndismissConfirm={showUndismissConfirm}
+  onConfirmUndismiss={() => {
+    setShowUndismissConfirm(false);
+    void presenter.bulkUndismiss();
+  }}
+  onCancelUndismiss={() => setShowUndismissConfirm(false)}
+/>
 ```
 
 - [ ] **Step 4: Verify the final `VulnerabilitiesPage.tsx` shape**
@@ -1940,9 +2017,11 @@ Replace the four `<ConfirmDialog .../>` elements (originally lines 447–493) wi
 Read through the file top to bottom and confirm it now contains, in order: imports; the `VulnerabilitiesPageProps` interface; the `VulnerabilitiesPage` component with its 5 `useState` hooks (`showDismissConfirm`, `snoozeConfirmDays`, `showRescanConfirm`, `showUndismissConfirm`, `expandedGroups`) and 2 `useEffect` hooks (load/dispose, auto-expand groups); the loading/error early returns; and the final render tree: header `Group` with title + Export `Menu`, `<VulnerabilityFilters>`, `<VulnerabilityBulkBar>`, the `vm.groupByProject` ternary rendering `<VulnerabilityGroupedView>`/`<VulnerabilityTable>`, the `vm.totalPages > 1` `<Pagination>`, and `<VulnerabilityConfirmDialogs>`. No inline row-rendering, filter-rendering, or dialog-rendering logic should remain — every remaining piece of JSX in this file should be either layout structure or a call to one of the five new components.
 
 Run:
+
 ```bash
 wc -l src/ui/presentation/Vulnerabilities/VulnerabilityList/components/VulnerabilitiesPage.tsx
 ```
+
 Expected: roughly 80–120 lines (per the design spec's target). If it's noticeably larger, check for leftover dead imports or duplicated JSX that should have been deleted in Task 5–7.
 
 - [ ] **Step 5: Run the full verification pipeline**
