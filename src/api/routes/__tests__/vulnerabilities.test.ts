@@ -29,6 +29,7 @@ import { AuditParserService as AuditParserServiceImpl } from "#api/services/Vuln
 import { OsvCacheService as OsvCacheServiceImpl } from "#api/services/Vulnerability/OsvCacheService.js";
 import { AuditParserService as SharedAuditParserServiceRegistration } from "#shared/vulnerabilities/AuditParserService.js";
 import { OsvQueryService as SharedOsvQueryServiceRegistration } from "#shared/vulnerabilities/OsvQueryService.js";
+import { VulnerabilityMerger as VulnerabilityMergerRegistration } from "#shared/vulnerabilities/VulnerabilityMerger.js";
 import { PackageManagerDriverRegistry as PackageManagerDriverRegistryImpl } from "#api/services/PackageManager/PackageManagerDriverRegistry.js";
 import { projects, vulnerabilities, teams, teamProjects } from "#api/db/schema.js";
 import { vulnerabilityRoutes } from "../vulnerabilities.js";
@@ -182,6 +183,7 @@ async function createTestContext(): Promise<IRouteTestContext> {
     container.register(AuditParserServiceImpl).inSingletonScope();
     container.register(PackageManagerServiceImpl).inSingletonScope();
     container.register(SharedOsvQueryServiceRegistration).inSingletonScope();
+    container.register(VulnerabilityMergerRegistration).inSingletonScope();
     container.register(OsvCacheServiceImpl).inSingletonScope();
     container.register(VulnerabilityServiceImpl).inSingletonScope();
     container.registerInstance(EmailService, { send: vi.fn() });

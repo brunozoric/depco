@@ -21,6 +21,7 @@ import { AuditParserService as AuditParserServiceRegistration } from "../../Vuln
 import { OsvCacheService as OsvCacheServiceRegistration } from "../../Vulnerability/OsvCacheService.js";
 import { AuditParserService as SharedAuditParserServiceRegistration } from "#shared/vulnerabilities/AuditParserService.js";
 import { OsvQueryService as SharedOsvQueryServiceRegistration } from "#shared/vulnerabilities/OsvQueryService.js";
+import { VulnerabilityMerger as VulnerabilityMergerRegistration } from "#shared/vulnerabilities/VulnerabilityMerger.js";
 import { VulnerabilityService as VulnerabilityServiceRegistration } from "../../Vulnerability/VulnerabilityService.js";
 import { LicenseCheckerService as LicenseCheckerServiceRegistration } from "../../License/LicenseCheckerService.js";
 import { LicensePolicyService as LicensePolicyServiceRegistration } from "../../License/LicensePolicyService.js";
@@ -152,6 +153,7 @@ describe("JobWorker", () => {
         container.register(PackageManagerServiceRegistration).inSingletonScope();
         container.register(SharedOsvQueryServiceRegistration).inSingletonScope();
         container.register(OsvCacheServiceRegistration).inSingletonScope();
+        container.register(VulnerabilityMergerRegistration).inSingletonScope();
         container.register(VulnerabilityServiceRegistration).inSingletonScope();
         container.register(LicenseCheckerServiceRegistration).inSingletonScope();
         container.register(LicensePolicyServiceRegistration).inSingletonScope();
