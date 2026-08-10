@@ -1,5 +1,6 @@
 import { readFile } from "fs/promises";
 import { join } from "path";
+import { z } from "zod";
 import semver from "semver";
 import { ScanService as Abstraction } from "./abstractions/ScanService.js";
 import { CommandRunner } from "../CommandRunner/index.js";
@@ -21,6 +22,19 @@ interface IPackageJson {
     optionalDependencies?: Record<string, string>;
     workspaces?: string[] | { packages?: string[] };
 }
+
+const dependencyRecord = z.record(z.string(), z.string()).optional();
+
+const packageJsonSchema = z.object({
+    name: z.string().optional(),
+    dependencies: dependencyRecord,
+    devDependencies: dependencyRecord,
+    peerDependencies: dependencyRecord,
+    optionalDependencies: dependencyRecord,
+    workspaces: z
+        .union([z.array(z.string()), z.object({ packages: z.array(z.string()).optional() })])
+        .optional()
+});
 
 const LOOKUP_CONCURRENCY = 10;
 
@@ -80,7 +94,7 @@ async function collectWorkspacesFromPackageJson(projectPath: string): Promise<IW
     let patterns: string[] = [];
     try {
         const content = await readFile(join(projectPath, "package.json"), "utf-8");
-        const pkg = JSON.parse(content) as IPackageJson;
+        const pkg = packageJsonSchema.parse(JSON.parse(content)) as IPackageJson;
         if (Array.isArray(pkg.workspaces)) {
             patterns = pkg.workspaces;
         } else if (pkg.workspaces?.packages) {
@@ -172,7 +186,7 @@ class ScanServiceImpl implements Abstraction.Interface {
                 const packageJsonPath = join(projectPath, workspace.location, "package.json");
                 try {
                     const content = await readFile(packageJsonPath, "utf-8");
-                    return JSON.parse(content) as IPackageJson;
+                    return packageJsonSchema.parse(JSON.parse(content)) as IPackageJson;
                 } catch {
                     return null;
                 }
@@ -225,7 +239,7 @@ class ScanServiceImpl implements Abstraction.Interface {
                     join(projectPath, workspace.location, "package.json"),
                     "utf-8"
                 );
-                const pkg = JSON.parse(content) as IPackageJson;
+                const pkg = packageJsonSchema.parse(JSON.parse(content)) as IPackageJson;
                 if (pkg.name) {
                     names.add(pkg.name);
                 }

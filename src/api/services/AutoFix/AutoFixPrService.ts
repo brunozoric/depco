@@ -121,35 +121,46 @@ export class AutoFixPrServiceImpl implements Abstraction.Interface {
             .all();
         const licenseByPackageName = new Map(licenseRows.map(row => [row.packageName, row]));
 
+        const licenseInputs = candidates
+            .map(candidate => licenseByPackageName.get(candidate.name))
+            .filter((row): row is NonNullable<typeof row> => row !== undefined)
+            .map(row => ({
+                id: row.id,
+                packageName: row.packageName,
+                spdxId: row.spdxId,
+                licenseName: row.licenseName
+            }));
+
+        const allViolations =
+            licenseInputs.length > 0
+                ? await this.licensePolicyService.evaluate(projectId, licenseInputs)
+                : [];
+
+        const violationsByPackage = new Map<string, typeof allViolations>();
+        for (const violation of allViolations) {
+            const existing = violationsByPackage.get(violation.packageName) ?? [];
+            existing.push(violation);
+            violationsByPackage.set(violation.packageName, existing);
+        }
+
         const skippedDeny: string[] = [];
         const eligiblePackages: IEligiblePackage[] = [];
 
         for (const candidate of candidates) {
+            const violations = violationsByPackage.get(candidate.name) ?? [];
             const licenseRow = licenseByPackageName.get(candidate.name);
-            let licenseWarnings: string[] = [];
 
-            if (licenseRow) {
-                const violations = await this.licensePolicyService.evaluate(projectId, [
-                    {
-                        id: licenseRow.id,
-                        packageName: licenseRow.packageName,
-                        spdxId: licenseRow.spdxId,
-                        licenseName: licenseRow.licenseName
-                    }
-                ]);
-
-                if (violations.some(violation => violation.action === "deny")) {
-                    skippedDeny.push(candidate.name);
-                    continue;
-                }
-
-                licenseWarnings = violations
-                    .filter(violation => violation.action === "warn")
-                    .map(
-                        () =>
-                            `${candidate.name}: license ${licenseRow.spdxId ?? licenseRow.licenseName} flagged for review`
-                    );
+            if (violations.some(violation => violation.action === "deny")) {
+                skippedDeny.push(candidate.name);
+                continue;
             }
+
+            const licenseWarnings = violations
+                .filter(violation => violation.action === "warn")
+                .map(
+                    () =>
+                        `${candidate.name}: license ${licenseRow?.spdxId ?? licenseRow?.licenseName} flagged for review`
+                );
 
             eligiblePackages.push({
                 packageName: candidate.name,
