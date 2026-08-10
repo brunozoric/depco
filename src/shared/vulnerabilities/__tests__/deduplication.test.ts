@@ -1,61 +1,83 @@
 import { describe, it, expect } from "vitest";
 import { computeDedupKey, hashString, mergeMapKey } from "../deduplication.js";
 
-describe("hashString", () => {
-    it("returns first 16 chars of SHA256 hex digest", () => {
-        const result = hashString("test-input");
-        expect(result).toHaveLength(16);
-        expect(result).toMatch(/^[a-f0-9]{16}$/);
-    });
-
-    it("returns deterministic output for same input", () => {
-        expect(hashString("advisory-123")).toBe(hashString("advisory-123"));
-    });
-
-    it("returns different output for different input", () => {
-        expect(hashString("a")).not.toBe(hashString("b"));
-    });
-});
-
 describe("computeDedupKey", () => {
-    it("prefers CVE ID when present", () => {
+    it("returns the CVE id when present", () => {
         const result = computeDedupKey({
             cveId: "CVE-2024-1234",
             advisoryUrl: "https://example.com/advisory",
-            packageName: "foo",
+            packageName: "pkg",
             title: "Some vulnerability"
         });
         expect(result).toBe("CVE-2024-1234");
     });
 
-    it("falls back to hashed advisory URL when no CVE", () => {
+    it("hashes the advisory URL when no CVE id", () => {
         const result = computeDedupKey({
             cveId: null,
             advisoryUrl: "https://example.com/advisory",
-            packageName: "foo",
+            packageName: "pkg",
             title: "Some vulnerability"
         });
         expect(result).toBe(hashString("https://example.com/advisory"));
+        expect(result).toHaveLength(16);
     });
 
-    it("falls back to hashed package+title when no CVE or URL", () => {
+    it("hashes package name + title as last resort", () => {
         const result = computeDedupKey({
             cveId: null,
             advisoryUrl: null,
-            packageName: "foo",
-            title: "Some vulnerability"
+            packageName: "lodash",
+            title: "Prototype pollution"
         });
-        expect(result).toBe(hashString("foo:Some vulnerability"));
+        expect(result).toBe(hashString("lodash:Prototype pollution"));
+    });
+
+    it("produces deterministic hashes", () => {
+        const first = computeDedupKey({
+            cveId: null,
+            advisoryUrl: "https://example.com/same",
+            packageName: "pkg",
+            title: "title"
+        });
+        const second = computeDedupKey({
+            cveId: null,
+            advisoryUrl: "https://example.com/same",
+            packageName: "pkg",
+            title: "title"
+        });
+        expect(first).toBe(second);
+    });
+
+    it("produces different hashes for different URLs", () => {
+        const first = computeDedupKey({
+            cveId: null,
+            advisoryUrl: "https://example.com/a",
+            packageName: "pkg",
+            title: "title"
+        });
+        const second = computeDedupKey({
+            cveId: null,
+            advisoryUrl: "https://example.com/b",
+            packageName: "pkg",
+            title: "title"
+        });
+        expect(first).not.toBe(second);
     });
 });
 
 describe("mergeMapKey", () => {
-    it("combines package name and dedup key", () => {
-        expect(
-            mergeMapKey({
-                packageName: "lodash",
-                dedupKey: "CVE-2024-1234"
-            })
-        ).toBe("lodash::CVE-2024-1234");
+    it("combines package name and dedup key with separator", () => {
+        expect(mergeMapKey({ packageName: "lodash", dedupKey: "CVE-2024-1234" })).toBe(
+            "lodash::CVE-2024-1234"
+        );
+    });
+});
+
+describe("hashString", () => {
+    it("returns a 16-character hex string", () => {
+        const result = hashString("test input");
+        expect(result).toHaveLength(16);
+        expect(result).toMatch(/^[0-9a-f]+$/);
     });
 });

@@ -1,4 +1,4 @@
-import { readFile, readdir } from "fs/promises";
+import { readFile } from "fs/promises";
 import { join } from "path";
 import semver from "semver";
 import { ScanService as Abstraction } from "./abstractions/ScanService.js";
@@ -7,6 +7,7 @@ import { RegistryCacheService } from "../RegistryCache/index.js";
 import { LockfileParserService } from "../DependencyGraph/index.js";
 import { PackageManagerDriverRegistry } from "../PackageManager/abstractions/PackageManagerDriverRegistry.js";
 import { classifyUpgrade } from "#shared/versions/types.js";
+import { globWorkspacePattern } from "../../utils/globWorkspacePattern.js";
 
 interface IWorkspaceEntry {
     location: string;
@@ -72,70 +73,6 @@ function resolveLatestVersion(
 
 // Minimal glob support for workspace patterns (e.g. "packages/*",
 // "apps/**"). Only "*" (one segment) and "**" (zero or more segments) are
-// recognized — sufficient for the glob syntax npm/pnpm workspaces commonly
-// use. Only directories containing a package.json are returned.
-async function globWorkspacePattern(root: string, pattern: string): Promise<string[]> {
-    const segments = pattern.split("/").filter(Boolean);
-
-    async function resolve(
-        baseAbs: string,
-        baseRel: string,
-        remaining: string[]
-    ): Promise<string[]> {
-        if (remaining.length === 0) {
-            try {
-                await readFile(join(baseAbs, "package.json"), "utf-8");
-                return [baseRel];
-            } catch {
-                return [];
-            }
-        }
-
-        const [segment, ...rest] = remaining;
-
-        if (segment === "**") {
-            const results = await resolve(baseAbs, baseRel, rest);
-            let entries;
-            try {
-                entries = await readdir(baseAbs, { withFileTypes: true });
-            } catch {
-                return results;
-            }
-            for (const entry of entries) {
-                if (entry.isDirectory()) {
-                    const childRel = baseRel ? `${baseRel}/${entry.name}` : entry.name;
-                    results.push(
-                        ...(await resolve(join(baseAbs, entry.name), childRel, remaining))
-                    );
-                }
-            }
-            return results;
-        }
-
-        if (segment === "*") {
-            let entries;
-            try {
-                entries = await readdir(baseAbs, { withFileTypes: true });
-            } catch {
-                return [];
-            }
-            const results: string[] = [];
-            for (const entry of entries) {
-                if (entry.isDirectory()) {
-                    const childRel = baseRel ? `${baseRel}/${entry.name}` : entry.name;
-                    results.push(...(await resolve(join(baseAbs, entry.name), childRel, rest)));
-                }
-            }
-            return results;
-        }
-
-        const childRel = baseRel ? `${baseRel}/${segment}` : segment!;
-        return resolve(join(baseAbs, segment!), childRel, rest);
-    }
-
-    return resolve(root, "", segments);
-}
-
 // npm/pnpm workspace discovery: read the `workspaces` field from the root
 // package.json and glob each pattern. Yarn has its own dedicated command
 // (`yarn workspaces list --json`) handled separately in collectWorkspaces.
