@@ -32,9 +32,11 @@ function createMockEdges(packages: IPackageEntry[]): IDependencyEdge[] {
     }));
 }
 
-function createMockLockfileParser(): LockfileParserService.Interface {
+function createMockLockfileParser(
+    packages: IPackageEntry[] = FIXTURE_PACKAGES
+): LockfileParserService.Interface {
     return {
-        parse: vi.fn().mockResolvedValue(createMockEdges(FIXTURE_PACKAGES))
+        parse: vi.fn().mockResolvedValue(createMockEdges(packages))
     };
 }
 
@@ -108,10 +110,14 @@ vi.mock("node:child_process", () => ({
     execSync: vi.fn().mockReturnValue("{}")
 }));
 
-function setupContainer(): Container {
+interface ISetupContainerArgs {
+    packages?: IPackageEntry[];
+}
+
+function setupContainer(args: ISetupContainerArgs = {}): Container {
     const container = createContainer();
     registerFeatures(container, [StepRunnerFeature, ScanCommandFeature]);
-    container.registerInstance(LockfileParserService, createMockLockfileParser());
+    container.registerInstance(LockfileParserService, createMockLockfileParser(args.packages));
     return container;
 }
 
@@ -270,7 +276,15 @@ describe("ScanPipeline integration", () => {
     });
 
     it("sets exit code 1 when vulnerability exceeds maxSeverity threshold", async () => {
-        const container = setupContainer();
+        // CheckLicensesStep has no `check` option gate — it always runs
+        // regardless of `--check`. Excluding gpl-licensed (the only package
+        // whose license fails the fixture config's allowedRiskTiers) keeps
+        // the license-violation branch of applyExitCode from firing, so the
+        // exit code observed here can only come from the vulnerability
+        // severity-threshold branch being under test.
+        const container = setupContainer({
+            packages: FIXTURE_PACKAGES.filter(packageEntry => packageEntry.name !== "gpl-licensed")
+        });
         mockExecSync([
             { name: "express", severity: "critical", title: "RCE", url: "https://ghsa.example/4" }
         ]);
