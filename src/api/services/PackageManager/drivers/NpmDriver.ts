@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { PackageManagerDriver as Abstraction } from "../abstractions/PackageManagerDriver.js";
 import { parseRegistryOutput } from "../registrySchema.js";
 import type { IInstallFlagDefinition } from "#shared/install/types.js";
@@ -11,6 +12,17 @@ interface INpmLsEntry {
 interface INpmLsOutput {
     dependencies?: Record<string, INpmLsEntry>;
 }
+
+const npmLsEntrySchema: z.ZodType<INpmLsEntry> = z.lazy(() =>
+    z.object({
+        version: z.string().optional(),
+        dependencies: z.record(z.string(), npmLsEntrySchema).optional()
+    })
+) as z.ZodType<INpmLsEntry>;
+
+const npmLsOutputSchema = z.object({
+    dependencies: z.record(z.string(), npmLsEntrySchema).optional()
+});
 
 class NpmDriverImpl implements Abstraction.Interface {
     public readonly id = "npm" as const;
@@ -33,7 +45,7 @@ class NpmDriverImpl implements Abstraction.Interface {
 
         let output: INpmLsOutput;
         try {
-            output = JSON.parse(stdout) as INpmLsOutput;
+            output = npmLsOutputSchema.parse(JSON.parse(stdout)) as INpmLsOutput;
         } catch {
             return versions;
         }

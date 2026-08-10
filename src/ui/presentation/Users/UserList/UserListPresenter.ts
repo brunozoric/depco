@@ -11,6 +11,9 @@ import { ForceLogoutUserUseCase } from "../useCases/abstractions/ForceLogoutUser
 import { UsersRepository } from "../../../features/Users/abstractions/UsersRepository.js";
 import { AuthRepository } from "../../../features/Auth/abstractions/AuthRepository.js";
 import { UrlFilterService } from "../../../features/UrlFilter/abstractions/UrlFilterService.js";
+import { CreateUserFormManager } from "./managers/CreateUserFormManager.js";
+import { EditUserFormManager } from "./managers/EditUserFormManager.js";
+import { DeleteUserManager } from "./managers/DeleteUserManager.js";
 
 const FILTER_SCHEMA = listUsersRoute.querystring as NonNullable<typeof listUsersRoute.querystring> &
     z.ZodObject<z.ZodRawShape>;
@@ -24,22 +27,41 @@ class UserListPresenterImpl implements Abstraction.Interface {
     private loading = true;
     private error: string | null = null;
     private mutationError: string | null = null;
-    private savingUser = false;
-    private createModal: Abstraction.CreateFormState | null = null;
-    private editModal: Abstraction.EditFormState | null = null;
-    private deletingUserId: string | null = null;
     private readonly disposeUrlListener: () => void;
+
+    private readonly createManager: CreateUserFormManager;
+    private readonly editManager: EditUserFormManager;
+    private readonly deleteManager: DeleteUserManager;
 
     public constructor(
         private readonly loadUsersUseCase: LoadUsersUseCase.Interface,
-        private readonly createUserUseCase: CreateUserUseCase.Interface,
-        private readonly updateUserUseCase: UpdateUserUseCase.Interface,
-        private readonly deleteUserUseCase: DeleteUserUseCase.Interface,
+        createUserUseCase: CreateUserUseCase.Interface,
+        updateUserUseCase: UpdateUserUseCase.Interface,
+        deleteUserUseCase: DeleteUserUseCase.Interface,
         private readonly forceLogoutUserUseCase: ForceLogoutUserUseCase.Interface,
         private readonly repository: UsersRepository.Interface,
         private readonly authRepository: AuthRepository.Interface,
         private readonly urlFilterService: UrlFilterService.Interface
     ) {
+        const onReload = () => this.load();
+
+        this.createManager = new CreateUserFormManager({
+            createUserUseCase,
+            onSaved: onReload
+        });
+
+        this.editManager = new EditUserFormManager({
+            updateUserUseCase,
+            repository,
+            authRepository,
+            onSaved: onReload
+        });
+
+        this.deleteManager = new DeleteUserManager({
+            deleteUserUseCase,
+            onDeleted: onReload
+        });
+
         makeAutoObservable(this, { vm: computed });
 
         this.disposeUrlListener = this.urlFilterService.onChange(() => {
@@ -57,8 +79,12 @@ class UserListPresenterImpl implements Abstraction.Interface {
         return {
             loading: this.loading,
             error: this.error,
-            mutationError: this.mutationError,
-            savingUser: this.savingUser,
+            mutationError:
+                this.mutationError ??
+                this.createManager.error ??
+                this.editManager.error ??
+                this.deleteManager.error,
+            savingUser: this.createManager.saving || this.editManager.saving,
             users: this.repository.getUsers().map(user => ({
                 id: user.id,
                 email: user.email,
@@ -75,9 +101,9 @@ class UserListPresenterImpl implements Abstraction.Interface {
             sortBy: urlFilters.sortBy ?? DEFAULT_SORT_BY,
             sortOrder: urlFilters.sortOrder ?? DEFAULT_SORT_ORDER,
             canManage: this.authRepository.currentUser?.permission === FULL_PERMISSION,
-            createModal: this.createModal,
-            editModal: this.editModal,
-            deletingUserId: this.deletingUserId
+            createModal: this.createManager.formState,
+            editModal: this.editManager.formState,
+            deletingUserId: this.deleteManager.deletingUserId
         };
     }
 
@@ -128,147 +154,27 @@ class UserListPresenterImpl implements Abstraction.Interface {
         });
     };
 
-    public openCreateModal = (): void => {
-        this.createModal = { email: "", displayName: "", password: "", permission: "read-only" };
-    };
-
-    public openEditModal = (id: string): void => {
-        const user = this.repository.getUsers().find(item => item.id === id);
-        if (!user) {
-            return;
-        }
-        this.editModal = {
-            id: user.id,
-            displayName: user.displayName,
-            permission: user.permission
-        };
-    };
-
+    public openCreateModal = (): void => this.createManager.open();
+    public openEditModal = (id: string): void => this.editManager.open(id);
     public closeModal = (): void => {
-        this.createModal = null;
-        this.editModal = null;
+        this.createManager.close();
+        this.editManager.close();
     };
 
-    public setCreateEmail = (value: string): void => {
-        if (this.createModal) {
-            this.createModal.email = value;
-        }
-    };
+    public setCreateEmail = (value: string): void => this.createManager.setEmail(value);
+    public setCreateDisplayName = (value: string): void => this.createManager.setDisplayName(value);
+    public setCreatePassword = (value: string): void => this.createManager.setPassword(value);
+    public setCreatePermission = (value: UserPermission): void =>
+        this.createManager.setPermission(value);
+    public setEditDisplayName = (value: string): void => this.editManager.setDisplayName(value);
+    public setEditPermission = (value: UserPermission): void =>
+        this.editManager.setPermission(value);
 
-    public setCreateDisplayName = (value: string): void => {
-        if (this.createModal) {
-            this.createModal.displayName = value;
-        }
-    };
-
-    public setCreatePassword = (value: string): void => {
-        if (this.createModal) {
-            this.createModal.password = value;
-        }
-    };
-
-    public setCreatePermission = (value: UserPermission): void => {
-        if (this.createModal) {
-            this.createModal.permission = value;
-        }
-    };
-
-    public setEditDisplayName = (value: string): void => {
-        if (this.editModal) {
-            this.editModal.displayName = value;
-        }
-    };
-
-    public setEditPermission = (value: UserPermission): void => {
-        if (this.editModal) {
-            this.editModal.permission = value;
-        }
-    };
-
-    public saveCreate = async (): Promise<void> => {
-        const form = this.createModal;
-        if (!form) {
-            return;
-        }
-        this.mutationError = null;
-        this.savingUser = true;
-        try {
-            await this.createUserUseCase.execute({
-                email: form.email,
-                displayName: form.displayName,
-                password: form.password,
-                permission: form.permission
-            });
-            await this.load();
-            runInAction(() => {
-                this.createModal = null;
-            });
-        } catch (err) {
-            runInAction(() => {
-                this.mutationError = err instanceof Error ? err.message : "Failed to create user";
-            });
-        } finally {
-            runInAction(() => {
-                this.savingUser = false;
-            });
-        }
-    };
-
-    public saveEdit = async (): Promise<void> => {
-        const form = this.editModal;
-        if (!form) {
-            return;
-        }
-        this.mutationError = null;
-        this.savingUser = true;
-        try {
-            const canManage = this.authRepository.currentUser?.permission === FULL_PERMISSION;
-            await this.updateUserUseCase.execute(form.id, {
-                displayName: form.displayName,
-                ...(canManage ? { permission: form.permission } : {})
-            });
-            await this.load();
-            runInAction(() => {
-                this.editModal = null;
-            });
-        } catch (err) {
-            runInAction(() => {
-                this.mutationError = err instanceof Error ? err.message : "Failed to update user";
-            });
-        } finally {
-            runInAction(() => {
-                this.savingUser = false;
-            });
-        }
-    };
-
-    public confirmDelete = (id: string): void => {
-        this.deletingUserId = id;
-    };
-
-    public cancelDelete = (): void => {
-        this.deletingUserId = null;
-    };
-
-    public deleteUser = async (): Promise<void> => {
-        const id = this.deletingUserId;
-        if (!id) {
-            return;
-        }
-        this.mutationError = null;
-        try {
-            await this.deleteUserUseCase.execute(id);
-            await this.load();
-        } catch (err) {
-            runInAction(() => {
-                this.mutationError = err instanceof Error ? err.message : "Failed to delete user";
-            });
-        } finally {
-            runInAction(() => {
-                this.deletingUserId = null;
-            });
-        }
-    };
+    public saveCreate = async (): Promise<void> => this.createManager.save();
+    public saveEdit = async (): Promise<void> => this.editManager.save();
+    public confirmDelete = (id: string): void => this.deleteManager.confirm(id);
+    public cancelDelete = (): void => this.deleteManager.cancel();
+    public deleteUser = async (): Promise<void> => this.deleteManager.execute();
 
     public forceLogoutUser = async (id: string): Promise<void> => {
         this.mutationError = null;

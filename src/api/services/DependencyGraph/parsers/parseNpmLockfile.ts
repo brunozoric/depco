@@ -1,5 +1,7 @@
+import { z } from "zod";
 import type { IDependencyEdge } from "../abstractions/LockfileParserService.js";
 import type { IRootPackageJson } from "./types.js";
+import { rootPackageJsonSchema } from "./types.js";
 
 const NODE_MODULES_SEGMENT = "node_modules/";
 
@@ -10,6 +12,10 @@ interface INpmPackageLockEntry {
 interface INpmPackageLockFile {
     packages?: Record<string, INpmPackageLockEntry>;
 }
+
+const npmPackageLockSchema = z.object({
+    packages: z.record(z.string(), z.object({ version: z.string().optional() })).optional()
+});
 
 function extractPackageName(packagesKey: string): string {
     const lastSegmentIndex = packagesKey.lastIndexOf(NODE_MODULES_SEGMENT);
@@ -38,14 +44,16 @@ export function parseNpmLockfile(
 ): IDependencyEdge[] {
     let lockfile: INpmPackageLockFile;
     try {
-        lockfile = JSON.parse(lockfileContent) as INpmPackageLockFile;
+        lockfile = npmPackageLockSchema.parse(JSON.parse(lockfileContent)) as INpmPackageLockFile;
     } catch {
         return [];
     }
 
     let rootPackageJson: IRootPackageJson;
     try {
-        rootPackageJson = JSON.parse(rootPackageJsonContent) as IRootPackageJson;
+        rootPackageJson = rootPackageJsonSchema.parse(
+            JSON.parse(rootPackageJsonContent)
+        ) as IRootPackageJson;
     } catch {
         rootPackageJson = {};
     }

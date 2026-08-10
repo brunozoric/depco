@@ -1,5 +1,7 @@
+import { z } from "zod";
 import type { IDependencyEdge } from "../abstractions/LockfileParserService.js";
 import type { IRootPackageJson } from "./types.js";
+import { rootPackageJsonSchema } from "./types.js";
 
 interface IBunLockWorkspace {
     dependencies?: Record<string, string>;
@@ -16,6 +18,21 @@ interface IBunLockFile {
     workspaces?: Record<string, IBunLockWorkspace>;
     packages?: Record<string, BunLockPackageTuple>;
 }
+
+const bunLockWorkspaceSchema = z.object({
+    dependencies: z.record(z.string(), z.string()).optional(),
+    devDependencies: z.record(z.string(), z.string()).optional()
+});
+
+const bunLockPackageTupleSchema = z.tuple([
+    z.string(),
+    z.object({ dependencies: z.record(z.string(), z.string()).optional() }).optional()
+]);
+
+const bunLockFileSchema = z.object({
+    workspaces: z.record(z.string(), bunLockWorkspaceSchema).optional(),
+    packages: z.record(z.string(), bunLockPackageTupleSchema).optional()
+});
 
 interface IBunLockResolution {
     packageName: string;
@@ -49,14 +66,18 @@ export function parseBunLockfile(
 ): IDependencyEdge[] {
     let lockfile: IBunLockFile;
     try {
-        lockfile = JSON.parse(stripJsonComments(lockfileContent)) as IBunLockFile;
+        lockfile = bunLockFileSchema.parse(
+            JSON.parse(stripJsonComments(lockfileContent))
+        ) as IBunLockFile;
     } catch {
         return [];
     }
 
     let rootPackageJson: IRootPackageJson;
     try {
-        rootPackageJson = JSON.parse(rootPackageJsonContent) as IRootPackageJson;
+        rootPackageJson = rootPackageJsonSchema.parse(
+            JSON.parse(rootPackageJsonContent)
+        ) as IRootPackageJson;
     } catch {
         rootPackageJson = {};
     }

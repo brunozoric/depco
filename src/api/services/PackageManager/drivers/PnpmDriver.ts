@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { PackageManagerDriver as Abstraction } from "../abstractions/PackageManagerDriver.js";
 import { parseRegistryOutput } from "../registrySchema.js";
 import type { IInstallFlagDefinition } from "#shared/install/types.js";
@@ -7,6 +8,13 @@ interface IPnpmListEntry {
     dependencies?: Record<string, { version?: string }>;
     devDependencies?: Record<string, { version?: string }>;
 }
+
+const pnpmVersionRecord = z.record(z.string(), z.object({ version: z.string().optional() }));
+
+const pnpmListEntrySchema = z.object({
+    dependencies: pnpmVersionRecord.optional(),
+    devDependencies: pnpmVersionRecord.optional()
+});
 
 class PnpmDriverImpl implements Abstraction.Interface {
     public readonly id = "pnpm" as const;
@@ -30,7 +38,9 @@ class PnpmDriverImpl implements Abstraction.Interface {
         let entries: IPnpmListEntry[];
         try {
             const parsed: unknown = JSON.parse(stdout);
-            entries = Array.isArray(parsed) ? (parsed as IPnpmListEntry[]) : [];
+            entries = Array.isArray(parsed)
+                ? (z.array(pnpmListEntrySchema).parse(parsed) as IPnpmListEntry[])
+                : [];
         } catch {
             return versions;
         }

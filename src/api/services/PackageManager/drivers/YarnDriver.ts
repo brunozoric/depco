@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { PackageManagerDriver as Abstraction } from "../abstractions/PackageManagerDriver.js";
 import { parseRegistryOutput } from "../registrySchema.js";
 import type { IInstallFlagDefinition } from "#shared/install/types.js";
@@ -7,6 +8,15 @@ interface IYarnInfoEntry {
     value?: string;
     children?: { Version?: string };
 }
+
+const yarnInfoEntrySchema = z.object({
+    value: z.string().optional(),
+    children: z.object({ Version: z.string().optional() }).optional()
+});
+
+const yarnWorkspaceEntrySchema = z.object({
+    location: z.string()
+});
 
 class YarnDriverImpl implements Abstraction.Interface {
     public readonly id = "yarn" as const;
@@ -34,7 +44,7 @@ class YarnDriverImpl implements Abstraction.Interface {
 
             let entry: IYarnInfoEntry;
             try {
-                entry = JSON.parse(line) as IYarnInfoEntry;
+                entry = yarnInfoEntrySchema.parse(JSON.parse(line)) as IYarnInfoEntry;
             } catch {
                 continue;
             }
@@ -68,7 +78,7 @@ class YarnDriverImpl implements Abstraction.Interface {
             }
 
             try {
-                const entry = JSON.parse(line) as Abstraction.WorkspaceEntry;
+                const entry = yarnWorkspaceEntrySchema.parse(JSON.parse(line));
                 if (entry.location) {
                     workspaces.push(entry);
                 }

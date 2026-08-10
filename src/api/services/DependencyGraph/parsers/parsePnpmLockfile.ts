@@ -1,6 +1,7 @@
 import { parse as parseYaml } from "yaml";
 import type { IDependencyEdge } from "../abstractions/LockfileParserService.js";
 import type { IRootPackageJson } from "./types.js";
+import { rootPackageJsonSchema } from "./types.js";
 
 interface IPnpmLockImporterDependencyEntry {
     specifier: string;
@@ -52,7 +53,9 @@ export function parsePnpmLockfile(
 
     let rootPackageJson: IRootPackageJson;
     try {
-        rootPackageJson = JSON.parse(rootPackageJsonContent) as IRootPackageJson;
+        rootPackageJson = rootPackageJsonSchema.parse(
+            JSON.parse(rootPackageJsonContent)
+        ) as IRootPackageJson;
     } catch {
         rootPackageJson = {};
     }
