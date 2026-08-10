@@ -9,6 +9,7 @@ import { CliFeature } from "./feature.js";
 import { InitCommand } from "./commands/init/index.js";
 import { StartCommand } from "./commands/start/index.js";
 import { ScanCommand } from "./commands/scan/index.js";
+import { ConfigCheckCommand } from "./commands/configCheck/index.js";
 import { StepRunner } from "./runner/index.js";
 
 const container = createContainer();
@@ -51,7 +52,17 @@ cli = cli.command(
     }
 );
 
-cli.demandCommand(1, "Please specify a command: init, start, or scan")
+cli = cli.command(
+    "config-check",
+    "Validate depco.config.ts without running a scan",
+    {},
+    async () => {
+        const command = container.resolve(ConfigCheckCommand);
+        await runner.run({ steps: command.steps(), context: command.context() });
+    }
+);
+
+cli.demandCommand(1, "Please specify a command: init, start, scan, or config-check")
     .strict()
     .help()
     .parseAsync()
