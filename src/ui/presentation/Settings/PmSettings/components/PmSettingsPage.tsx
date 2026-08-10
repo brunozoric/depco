@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
     ActionIcon,
     Alert,
@@ -9,11 +9,9 @@ import {
     Loader,
     Modal,
     SegmentedControl,
-    Select,
     Stack,
     Tabs,
     Text,
-    TextInput,
     Title
 } from "@mantine/core";
 import { navigate } from "#ui/infrastructure/Router/router.js";
@@ -22,14 +20,7 @@ import type { PackageManagerId } from "#shared/security/index.js";
 import type { PmSettingsPresenter } from "../abstractions/PmSettingsPresenter.js";
 import { SecuritySettingsTab } from "./SecuritySettingsTab.js";
 import { InstallFlagsTab } from "./InstallFlagsTab.js";
-
-const UPGRADE_STRATEGY_OPTIONS = [
-    { value: "", label: "None (default)" },
-    { value: "caret", label: "Caret (^)" },
-    { value: "tilde", label: "Tilde (~)" },
-    { value: "exact", label: "Exact" },
-    { value: "latest", label: "Latest" }
-];
+import { GeneralSettingsTab } from "./GeneralSettingsTab.js";
 
 interface PmSettingsPageProps {
     presenter: PmSettingsPresenter.Interface;
@@ -39,23 +30,10 @@ export const PmSettingsPage = observer(function PmSettingsPage({
     presenter
 }: PmSettingsPageProps): React.ReactNode {
     const { vm } = presenter;
-    const [registryUrlInput, setRegistryUrlInput] = useState(vm.generalSettings.registryUrl ?? "");
-    const [upgradeStrategyInput, setUpgradeStrategyInput] = useState(
-        vm.generalSettings.upgradeStrategy ?? ""
-    );
 
     useEffect(() => {
         presenter.load();
     }, [presenter]);
-
-    useEffect(() => {
-        setRegistryUrlInput(vm.generalSettings.registryUrl ?? "");
-        setUpgradeStrategyInput(vm.generalSettings.upgradeStrategy ?? "");
-    }, [
-        vm.selectedPackageManager,
-        vm.generalSettings.registryUrl,
-        vm.generalSettings.upgradeStrategy
-    ]);
 
     if (vm.loading && vm.settings.length === 0) {
         return (
@@ -119,45 +97,7 @@ export const PmSettingsPage = observer(function PmSettingsPage({
                 </Tabs.Panel>
 
                 <Tabs.Panel value="general" pt="md">
-                    <Stack gap="md">
-                        <Group align="end">
-                            <TextInput
-                                label="Registry URL"
-                                placeholder="https://registry.npmjs.org"
-                                value={registryUrlInput}
-                                onChange={e => setRegistryUrlInput(e.currentTarget.value)}
-                                style={{ flex: 1 }}
-                            />
-                            <Button
-                                size="sm"
-                                onClick={() => presenter.saveRegistryUrl(registryUrlInput)}
-                                disabled={
-                                    registryUrlInput === (vm.generalSettings.registryUrl ?? "")
-                                }
-                            >
-                                Save
-                            </Button>
-                        </Group>
-                        <Group align="end">
-                            <Select
-                                label="Upgrade Strategy"
-                                data={UPGRADE_STRATEGY_OPTIONS}
-                                value={upgradeStrategyInput}
-                                onChange={value => setUpgradeStrategyInput(value ?? "")}
-                                style={{ flex: 1 }}
-                            />
-                            <Button
-                                size="sm"
-                                onClick={() => presenter.saveUpgradeStrategy(upgradeStrategyInput)}
-                                disabled={
-                                    upgradeStrategyInput ===
-                                    (vm.generalSettings.upgradeStrategy ?? "")
-                                }
-                            >
-                                Save
-                            </Button>
-                        </Group>
-                    </Stack>
+                    <GeneralSettingsTab presenter={presenter} />
                 </Tabs.Panel>
             </Tabs>
 
