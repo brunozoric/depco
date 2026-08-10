@@ -150,7 +150,9 @@ class JobWorkerImpl implements Abstraction.Interface {
                     .set({ logs })
                     .where(eq(upgradeJobs.id, job.id))
                     .run();
-            } catch {}
+            } catch (error) {
+                console.error("Failed to flush job logs to database:", error);
+            }
         };
         const logFlushTimer = setInterval(flushLogs, LOG_DB_FLUSH_INTERVAL_MS);
 
@@ -187,7 +189,9 @@ class JobWorkerImpl implements Abstraction.Interface {
                         .set({ progress: input.percent, progressLabel })
                         .where(eq(upgradeJobs.id, job.id))
                         .run();
-                } catch {}
+                } catch (error) {
+                    console.error("Failed to write job progress to database:", error);
+                }
             }
         };
 

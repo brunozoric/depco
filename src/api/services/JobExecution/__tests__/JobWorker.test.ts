@@ -942,6 +942,102 @@ describe("JobWorker", () => {
         });
     });
 
+    it("logs an error to console when the progress DB write fails, without failing the job", async () => {
+        const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+        let updateCallCount = 0;
+        const originalUpdate = db.update.bind(db);
+        vi.spyOn(db, "update").mockImplementation(((table: typeof upgradeJobs) => {
+            updateCallCount++;
+            if (updateCallCount === 2) {
+                return {
+                    set: () => ({
+                        where: () => ({
+                            run: () => {
+                                throw new Error("disk full");
+                            }
+                        })
+                    })
+                };
+            }
+            return originalUpdate(table);
+        }) as typeof db.update);
+
+        const jobId = await worker.enqueue({
+            referenceId: "p1",
+            referenceType: "project",
+            type: "transitive-resolve"
+        });
+
+        await worker.processNextJob();
+        await worker.drain();
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+            "Failed to write job progress to database:",
+            expect.any(Error)
+        );
+
+        const job = await worker.getJob(jobId);
+        expect(job!.status).toBe("completed");
+
+        consoleErrorSpy.mockRestore();
+    });
+
+    it("logs an error to console when the periodic log flush write fails, without failing the job", async () => {
+        vi.useFakeTimers();
+        const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+        let resolveStreaming: (() => void) | undefined;
+        commandRunner.runStreaming = vi.fn((_cmd, _args, options) => {
+            options?.onStdout?.("line 1");
+            return new Promise<CommandRunner.Result>(resolve => {
+                resolveStreaming = () => resolve({ stdout: "", stderr: "", exitCode: 0 });
+            });
+        });
+
+        let updateCallCount = 0;
+        const originalUpdate = db.update.bind(db);
+        vi.spyOn(db, "update").mockImplementation(((table: typeof upgradeJobs) => {
+            updateCallCount++;
+            if (updateCallCount === 2) {
+                return {
+                    set: () => ({
+                        where: () => ({
+                            run: () => {
+                                throw new Error("disk full");
+                            }
+                        })
+                    })
+                };
+            }
+            return originalUpdate(table);
+        }) as typeof db.update);
+
+        const jobId = await worker.enqueue({
+            referenceId: "p1",
+            referenceType: "project",
+            type: "dependency",
+            packages: [{ name: "react", from: "18.0.0", to: "19.0.0" }]
+        });
+
+        await worker.processNextJob();
+        await vi.advanceTimersByTimeAsync(2000);
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+            "Failed to flush job logs to database:",
+            expect.any(Error)
+        );
+
+        resolveStreaming!();
+        vi.useRealTimers();
+        await worker.drain();
+
+        const job = await worker.getJob(jobId);
+        expect(job!.status).toBe("completed");
+
+        consoleErrorSpy.mockRestore();
+    });
+
     describe("scan jobs", () => {
         beforeEach(() => {
             writeFileSync(
