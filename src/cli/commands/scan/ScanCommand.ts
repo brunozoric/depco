@@ -35,7 +35,11 @@ class ScanCommandImpl implements Abstraction.Interface {
         return {
             dataDirectory: process.cwd(),
             envFilePath: "./.env",
-            options: { check: argv?.["check"] ?? "license", format: argv?.["format"] ?? "table" },
+            options: {
+                check: argv?.["check"] ?? "license",
+                format: argv?.["format"] ?? "table",
+                output: argv?.["output"] as string | undefined
+            },
             results: new Map()
         };
     }

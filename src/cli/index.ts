@@ -45,6 +45,10 @@ cli = cli.command(
                 description: "Output format",
                 default: "table",
                 choices: ["table", "json", "csv", "sarif"]
+            })
+            .option("output", {
+                type: "string",
+                description: "Write output to file instead of stdout"
             }),
     async argv => {
         const command = container.resolve(ScanCommand);

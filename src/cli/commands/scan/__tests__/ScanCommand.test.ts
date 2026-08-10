@@ -56,6 +56,18 @@ describe("ScanCommand", () => {
         expect(context.options["format"]).toBe("json");
     });
 
+    it("forwards argv.output into context.options", () => {
+        const command = container.resolve(ScanCommand);
+        const context = command.context({ output: "results.json" });
+        expect(context.options["output"]).toBe("results.json");
+    });
+
+    it("leaves options.output undefined when no --output is given", () => {
+        const command = container.resolve(ScanCommand);
+        const context = command.context();
+        expect(context.options["output"]).toBeUndefined();
+    });
+
     it("has correct name and description", () => {
         const command = container.resolve(ScanCommand);
         expect(command.name).toBe("scan");
