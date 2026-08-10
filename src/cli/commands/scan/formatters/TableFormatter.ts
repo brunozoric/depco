@@ -34,7 +34,13 @@ function colorize(input: IColorizeInput): string {
     return `${color}${text}${RESET}`;
 }
 
-function pluralize(input: { count: number; singular: string; plural: string }): string {
+interface IPluralizeInput {
+    count: number;
+    singular: string;
+    plural: string;
+}
+
+function pluralize(input: IPluralizeInput): string {
     const { count, singular, plural } = input;
     return `${count} ${count === 1 ? singular : plural}`;
 }
@@ -111,12 +117,30 @@ export class TableFormatter implements IOutputFormatter {
         const fixVersionOf = (vulnerability: IMergedVulnerability): string =>
             vulnerability.fixVersion ?? "-";
 
-        const nameWidth = Math.max(7, ...sorted.map(vuln => vuln.packageName.length));
-        const versionWidth = Math.max(16, ...sorted.map(vuln => vuln.installedVersion.length));
-        const severityWidth = Math.max(8, ...sorted.map(vuln => vuln.severity.length));
-        const advisoryWidth = Math.max(11, ...sorted.map(vuln => advisoryIdOf(vuln).length));
-        const fixVersionWidth = Math.max(11, ...sorted.map(vuln => fixVersionOf(vuln).length));
-        const sourceWidth = Math.max(6, ...sorted.map(vuln => vuln.source.length));
+        const nameWidth = Math.max(
+            7,
+            ...sorted.map(vulnerability => vulnerability.packageName.length)
+        );
+        const versionWidth = Math.max(
+            16,
+            ...sorted.map(vulnerability => vulnerability.installedVersion.length)
+        );
+        const severityWidth = Math.max(
+            8,
+            ...sorted.map(vulnerability => vulnerability.severity.length)
+        );
+        const advisoryWidth = Math.max(
+            11,
+            ...sorted.map(vulnerability => advisoryIdOf(vulnerability).length)
+        );
+        const fixVersionWidth = Math.max(
+            11,
+            ...sorted.map(vulnerability => fixVersionOf(vulnerability).length)
+        );
+        const sourceWidth = Math.max(
+            6,
+            ...sorted.map(vulnerability => vulnerability.source.length)
+        );
 
         const lines: string[] = [];
         lines.push("Vulnerabilities");
