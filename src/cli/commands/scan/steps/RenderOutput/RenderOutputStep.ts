@@ -1,3 +1,4 @@
+import { writeFileSync } from "node:fs";
 import { RenderOutputStep as Abstraction } from "./abstractions/RenderOutputStep.js";
 import { OutputFormatterFactory } from "../../formatters/abstractions/OutputFormatterFactory.js";
 import { VULNERABILITY_SEVERITIES } from "#shared/vulnerabilities/types.js";
@@ -45,7 +46,15 @@ class RenderOutputStepImpl implements Abstraction.Interface {
             }
         };
 
-        console.log(formatter.format(output));
+        const formatted = formatter.format(output);
+        const outputPath = context.options["output"] as string | undefined;
+
+        if (outputPath) {
+            writeFileSync(outputPath, formatted);
+            console.log(`Wrote ${output.summary.total} findings to ${outputPath}`);
+        } else {
+            console.log(formatted);
+        }
 
         this.applyExitCode({ violations, vulnerabilities, config });
 

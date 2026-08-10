@@ -1,4 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { readFileSync, writeFileSync, rmSync, mkdtempSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { createContainer, registerFeatures } from "#shared/index.js";
 import { RenderOutputStep } from "../abstractions/RenderOutputStep.js";
 import { RenderOutputStepFeature } from "../feature.js";
@@ -172,6 +175,51 @@ describe("RenderOutputStep", () => {
 
         expect(process.exitCode).toBe(1);
         process.exitCode = originalExitCode;
+    });
+
+    describe("with --output", () => {
+        let workDir: string;
+
+        beforeEach(() => {
+            workDir = mkdtempSync(join(tmpdir(), "render-output-"));
+        });
+
+        afterEach(() => {
+            rmSync(workDir, { recursive: true, force: true });
+        });
+
+        it("writes formatted output to a file and prints a summary line", async () => {
+            const outputPath = join(workDir, "results.json");
+            const context = createTestContext({ output: outputPath });
+
+            const result = await step.execute(context);
+
+            expect(result.success).toBe(true);
+            const fileContent = JSON.parse(readFileSync(outputPath, "utf-8"));
+            expect(fileContent.findings.license).toHaveLength(1);
+            expect(fileContent.findings.vulnerability).toHaveLength(1);
+
+            expect(consoleSpy).toHaveBeenCalledTimes(1);
+            expect(consoleSpy.mock.calls[0][0]).toBe(`Wrote 2 findings to ${outputPath}`);
+        });
+
+        it("overwrites an existing file at the output path", async () => {
+            const outputPath = join(workDir, "results.json");
+            writeFileSync(outputPath, "stale content");
+            const context = createTestContext({ output: outputPath });
+
+            await step.execute(context);
+
+            const fileContent = readFileSync(outputPath, "utf-8");
+            expect(fileContent).not.toContain("stale content");
+        });
+
+        it("throws when the output path's parent directory does not exist", async () => {
+            const outputPath = join(workDir, "missing-dir", "results.json");
+            const context = createTestContext({ output: outputPath });
+
+            await expect(step.execute(context)).rejects.toThrow();
+        });
     });
 
     it("does not set exit code when there are no violations and no vulnerabilities", async () => {
