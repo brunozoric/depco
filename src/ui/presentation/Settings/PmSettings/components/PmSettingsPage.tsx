@@ -3,11 +3,9 @@ import { useEffect } from "react";
 import {
     ActionIcon,
     Alert,
-    Button,
     Center,
     Group,
     Loader,
-    Modal,
     SegmentedControl,
     Stack,
     Tabs,
@@ -21,6 +19,7 @@ import type { PmSettingsPresenter } from "../abstractions/PmSettingsPresenter.js
 import { SecuritySettingsTab } from "./SecuritySettingsTab.js";
 import { InstallFlagsTab } from "./InstallFlagsTab.js";
 import { GeneralSettingsTab } from "./GeneralSettingsTab.js";
+import { PmSettingsConfirmDialog } from "./PmSettingsConfirmDialog.js";
 
 interface PmSettingsPageProps {
     presenter: PmSettingsPresenter.Interface;
@@ -101,33 +100,7 @@ export const PmSettingsPage = observer(function PmSettingsPage({
                 </Tabs.Panel>
             </Tabs>
 
-            <Modal
-                opened={vm.confirmDialog !== null}
-                onClose={() => presenter.cancelSave()}
-                title="Confirm changes"
-                centered
-            >
-                <Stack gap="md">
-                    <Text size="sm">{vm.confirmDialog?.description}</Text>
-                    <Text size="xs" c="dimmed">
-                        This will modify{" "}
-                        <Text component="code" ff="monospace" size="xs">
-                            .dependency-upgrader.json
-                        </Text>
-                    </Text>
-                    <pre style={{ fontSize: 12, overflow: "auto", maxHeight: 200 }}>
-                        {JSON.stringify(vm.confirmDialog?.changes, null, 2)}
-                    </pre>
-                    <Group justify="flex-end">
-                        <Button variant="default" onClick={() => presenter.cancelSave()}>
-                            Cancel
-                        </Button>
-                        <Button onClick={() => presenter.confirmSave()} loading={vm.saving}>
-                            Confirm
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
+            <PmSettingsConfirmDialog presenter={presenter} />
         </Stack>
     );
 });
