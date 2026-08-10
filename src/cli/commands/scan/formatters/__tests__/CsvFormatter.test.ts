@@ -102,4 +102,103 @@ describe("CsvFormatter", () => {
         const lines = result.split("\n").filter(Boolean);
         expect(lines).toHaveLength(1); // header only
     });
+
+    it("escapes bare carriage return in values", () => {
+        const output = createTestOutput();
+        output.findings.license = [
+            {
+                packageName: "pkg\rwith\rcr",
+                version: "1.0.0",
+                license: "MIT",
+                riskTier: "permissive"
+            }
+        ];
+
+        const result = formatter.format(output);
+        expect(result).toContain('"pkg\rwith\rcr"');
+    });
+
+    it("doubles quotes inside quoted values", () => {
+        const output = createTestOutput();
+        output.findings.license = [
+            {
+                packageName: 'He said "hello"',
+                version: "1.0.0",
+                license: "MIT",
+                riskTier: "permissive"
+            }
+        ];
+
+        const result = formatter.format(output);
+        expect(result).toContain('"He said ""hello"""');
+    });
+
+    it("escapes newline in values", () => {
+        const output = createTestOutput();
+        output.findings.license = [
+            {
+                packageName: "line1\nline2",
+                version: "1.0.0",
+                license: "MIT",
+                riskTier: "permissive"
+            }
+        ];
+
+        const result = formatter.format(output);
+        expect(result).toContain('"line1\nline2"');
+    });
+
+    it("escapes values with combined special characters", () => {
+        const output = createTestOutput();
+        output.findings.license = [
+            {
+                packageName: 'has,comma "and" quote\nnewline',
+                version: "1.0.0",
+                license: "MIT",
+                riskTier: "permissive"
+            }
+        ];
+
+        const result = formatter.format(output);
+        expect(result).toContain('"has,comma ""and"" quote\nnewline"');
+    });
+
+    it("passes through empty string unchanged", () => {
+        const output = createTestOutput();
+        output.findings.vulnerability = [
+            {
+                packageName: "pkg",
+                installedVersion: "1.0.0",
+                severity: "low",
+                title: "minor issue",
+                advisoryUrl: null,
+                cveId: null,
+                dedupKey: "hash",
+                vulnerableRange: null,
+                fixVersion: null,
+                source: "audit"
+            }
+        ];
+
+        const result = formatter.format(output);
+        const lines = result.split("\n");
+        const vulnLine = lines.find(line => line.startsWith("vulnerability,"));
+        // fixVersion is null -> "" and source "audit" are both present, no wrapping quotes around empty
+        expect(vulnLine).toBe("vulnerability,pkg,1.0.0,hash,low,audit,");
+    });
+
+    it("escapes CRLF in values", () => {
+        const output = createTestOutput();
+        output.findings.license = [
+            {
+                packageName: "line1\r\nline2",
+                version: "1.0.0",
+                license: "MIT",
+                riskTier: "permissive"
+            }
+        ];
+
+        const result = formatter.format(output);
+        expect(result).toContain('"line1\r\nline2"');
+    });
 });
