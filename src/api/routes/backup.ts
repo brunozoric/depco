@@ -1,4 +1,5 @@
 import { existsSync } from "fs";
+import { z } from "zod";
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { eq } from "drizzle-orm";
@@ -51,33 +52,54 @@ interface ImportResult {
     registryCache: ImportSectionResult;
 }
 
-interface BackupPayload {
-    version: number;
-    exportedAt: number;
-    appSettings: Array<{ key: string; value: string }>;
-    securitySettings: Array<{
-        packageManager: string;
-        configFile: string;
-        fieldName: string;
-        expectedValue: string;
-    }>;
-    projects: Array<{
-        name: string;
-        path: string;
-        packageManager: string | null;
-        pmVersion: string | null;
-    }>;
-    dependencies: Array<{
-        name: string;
-        repoUrl: string | null;
-        versions: BackupVersionEntry[];
-    }>;
-    registryCache: Array<{
-        packageName: string;
-        data: string;
-        cachedAt: number;
-    }>;
-}
+const backupChangelogEntrySchema = z.object({
+    content: z.string().nullable(),
+    source: z.string().nullable()
+});
+
+const backupVersionEntrySchema = z.object({
+    version: z.string(),
+    publishedAt: z.number().nullable(),
+    changelog: backupChangelogEntrySchema.optional()
+});
+
+const backupPayloadSchema = z.object({
+    version: z.number(),
+    exportedAt: z.number(),
+    appSettings: z.array(z.object({ key: z.string(), value: z.string() })),
+    securitySettings: z.array(
+        z.object({
+            packageManager: z.string(),
+            configFile: z.string(),
+            fieldName: z.string(),
+            expectedValue: z.string()
+        })
+    ),
+    projects: z.array(
+        z.object({
+            name: z.string(),
+            path: z.string(),
+            packageManager: z.string().nullable(),
+            pmVersion: z.string().nullable()
+        })
+    ),
+    dependencies: z.array(
+        z.object({
+            name: z.string(),
+            repoUrl: z.string().nullable(),
+            versions: z.array(backupVersionEntrySchema)
+        })
+    ),
+    registryCache: z.array(
+        z.object({
+            packageName: z.string(),
+            data: z.string(),
+            cachedAt: z.number()
+        })
+    )
+});
+
+type BackupPayload = z.infer<typeof backupPayloadSchema>;
 
 export async function backupRoutes(app: FastifyInstance, options: PluginOptions): Promise<void> {
     const { container } = options;
@@ -180,7 +202,12 @@ export async function backupRoutes(app: FastifyInstance, options: PluginOptions)
             }
 
             const content = strFromU8(jsonFile);
-            const backup = JSON.parse(content) as BackupPayload;
+            const parseResult = backupPayloadSchema.safeParse(JSON.parse(content));
+            if (!parseResult.success) {
+                reply.status(400).send({ error: "Invalid backup format" });
+                return;
+            }
+            const backup = parseResult.data;
 
             const result: ImportResult = {
                 appSettings: { imported: 0, skipped: 0 },

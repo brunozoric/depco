@@ -1,13 +1,14 @@
 import { readFile } from "fs/promises";
 import { join, basename } from "path";
+import { z } from "zod";
 import { generateId } from "@webiny/stdlib";
 import type { PackageManagerService } from "../services/PackageManager/index.js";
 import type { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { projects } from "#api/db/schema.js";
 
-interface PackageJson {
-    name?: string;
-}
+const packageJsonSchema = z.object({
+    name: z.string().optional()
+});
 
 export interface RegisterProjectParams {
     projectPath: string;
@@ -30,7 +31,7 @@ export async function registerProject(params: RegisterProjectParams): Promise<Re
     let name: string;
     try {
         const pkgContent = await readFile(join(projectPath, "package.json"), "utf-8");
-        const pkgJson = JSON.parse(pkgContent) as PackageJson;
+        const pkgJson = packageJsonSchema.parse(JSON.parse(pkgContent));
         name = pkgJson.name ?? basename(projectPath);
     } catch {
         name = basename(projectPath);

@@ -1,13 +1,14 @@
+import { z } from "zod";
 import { WebSocketListener as Abstraction } from "./abstractions/WebSocketListener.js";
 import { EventBridge } from "../Events/abstractions/EventBridge.js";
 import type { EventName } from "../Events/abstractions/EventBridge.js";
 import { AuthRepository } from "../../features/Auth/abstractions/AuthRepository.js";
 import "../Events/eventMap.js";
 
-interface WSMessage {
-    type: string;
-    data: unknown;
-}
+const wsMessageSchema = z.object({
+    type: z.string(),
+    data: z.unknown()
+});
 
 const RECONNECT_BASE_DELAY_MS = 1000;
 const RECONNECT_MAX_BACKOFF_STEPS = 3;
@@ -89,14 +90,19 @@ class WebSocketListenerImpl implements Abstraction.Interface {
     }
 
     private handleMessage(raw: string): void {
-        let message: WSMessage;
+        let json: unknown;
         try {
-            message = JSON.parse(raw) as WSMessage;
+            json = JSON.parse(raw);
         } catch {
             return;
         }
 
-        this.eventBridge.emit(message.type as EventName, message.data as never);
+        const parsed = wsMessageSchema.safeParse(json);
+        if (!parsed.success) {
+            return;
+        }
+
+        this.eventBridge.emit(parsed.data.type as EventName, parsed.data.data as never);
     }
 }
 

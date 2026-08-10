@@ -1,5 +1,6 @@
 import { readdir, readFile, realpath, access } from "fs/promises";
 import { resolve, join } from "path";
+import { z } from "zod";
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendError } from "#shared/routing/index.js";
@@ -21,9 +22,11 @@ interface IWorkspacesResult {
     found: boolean;
 }
 
-interface IPackageJsonWorkspaces {
-    workspaces?: string[] | { packages?: string[] };
-}
+const packageJsonWorkspacesSchema = z.object({
+    workspaces: z
+        .union([z.array(z.string()), z.object({ packages: z.array(z.string()).optional() })])
+        .optional()
+});
 
 interface IScanRecursiveResult {
     items: IScanItem[];
@@ -35,7 +38,7 @@ const SKIP_DIRECTORIES = new Set(["node_modules", ".git"]);
 async function readWorkspaces(dirPath: string): Promise<IWorkspacesResult> {
     try {
         const content = await readFile(join(dirPath, "package.json"), "utf-8");
-        const pkg = JSON.parse(content) as IPackageJsonWorkspaces;
+        const pkg = packageJsonWorkspacesSchema.parse(JSON.parse(content));
 
         if (Array.isArray(pkg.workspaces) && pkg.workspaces.length > 0) {
             return { patterns: pkg.workspaces, found: true };
