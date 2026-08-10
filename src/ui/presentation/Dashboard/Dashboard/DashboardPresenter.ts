@@ -124,29 +124,27 @@ class DashboardPresenterImpl implements Abstraction.Interface {
         });
     };
 
-    public openScoreModal = (projectId: string): void => {
+    public openScoreModal = async (projectId: string): Promise<void> => {
         this.scoreModalProjectId = projectId;
         this.scoreDetail = null;
         this.scoreDetailLoading = true;
-        this.dashboardGateway
-            .getScoreDetail(projectId)
-            .then(detail => {
-                runInAction(() => {
-                    if (this.scoreModalProjectId !== projectId) {
-                        return;
-                    }
-                    this.scoreDetail = detail;
-                    this.scoreDetailLoading = false;
-                });
-            })
-            .catch(() => {
-                runInAction(() => {
-                    if (this.scoreModalProjectId !== projectId) {
-                        return;
-                    }
-                    this.scoreDetailLoading = false;
-                });
+        try {
+            const detail = await this.dashboardGateway.getScoreDetail(projectId);
+            runInAction(() => {
+                if (this.scoreModalProjectId !== projectId) {
+                    return;
+                }
+                this.scoreDetail = detail;
+                this.scoreDetailLoading = false;
             });
+        } catch {
+            runInAction(() => {
+                if (this.scoreModalProjectId !== projectId) {
+                    return;
+                }
+                this.scoreDetailLoading = false;
+            });
+        }
     };
 
     public closeScoreModal = (): void => {

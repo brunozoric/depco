@@ -31,18 +31,20 @@ export function InstallDialog({
     const [installing, setInstalling] = useState(false);
 
     useEffect(() => {
-        if (opened && project.packageManager) {
+        const packageManager = project.packageManager;
+        if (opened && packageManager) {
             setLoading(true);
             setSelected([]);
-            getInstallOptions(project.packageManager)
-                .then(items => {
+            void (async () => {
+                try {
+                    const items = await getInstallOptions(packageManager);
                     setFlags(items);
-                    setLoading(false);
-                })
-                .catch(() => {
+                } catch {
                     setFlags([]);
+                } finally {
                     setLoading(false);
-                });
+                }
+            })();
         }
     }, [opened, project.packageManager, getInstallOptions]);
 

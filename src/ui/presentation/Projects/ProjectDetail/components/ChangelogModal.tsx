@@ -40,23 +40,21 @@ export function ChangelogModal({
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
 
-    function handleRefresh(): void {
+    async function handleRefresh(): Promise<void> {
         if (!onRefresh) {
             return;
         }
         setRefreshing(true);
-        onRefresh(packageName, currentVersion, latestVersion)
-            .then(result => {
-                onStartTracking({
-                    packageName,
-                    entries: result.entries.reverse(),
-                    resolving: result.resolving
-                });
-                setRefreshing(false);
-            })
-            .catch(() => {
-                setRefreshing(false);
+        try {
+            const result = await onRefresh(packageName, currentVersion, latestVersion);
+            onStartTracking({
+                packageName,
+                entries: result.entries.reverse(),
+                resolving: result.resolving
             });
+        } finally {
+            setRefreshing(false);
+        }
     }
 
     useEffect(() => {
@@ -66,23 +64,22 @@ export function ChangelogModal({
 
         let cancelled = false;
         setLoading(true);
-        getChangelogs(packageName, currentVersion, latestVersion)
-            .then(result => {
-                if (cancelled) {
-                    return;
+        void (async () => {
+            try {
+                const result = await getChangelogs(packageName, currentVersion, latestVersion);
+                if (!cancelled) {
+                    onStartTracking({
+                        packageName,
+                        entries: result.entries.reverse(),
+                        resolving: result.resolving
+                    });
                 }
-                onStartTracking({
-                    packageName,
-                    entries: result.entries.reverse(),
-                    resolving: result.resolving
-                });
-                setLoading(false);
-            })
-            .catch(() => {
+            } finally {
                 if (!cancelled) {
                     setLoading(false);
                 }
-            });
+            }
+        })();
         return () => {
             cancelled = true;
         };

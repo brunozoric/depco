@@ -43,14 +43,14 @@ function SessionRestorer(): null {
         }
 
         const authGateway = container.resolve(AuthGateway);
-        authGateway
-            .getMe()
-            .then(user => {
+        void (async () => {
+            try {
+                const user = await authGateway.getMe();
                 authRepository.setAuth({ token, user });
-            })
-            .catch(() => {
+            } catch {
                 authRepository.clearAuth();
-            });
+            }
+        })();
     }, [container]);
 
     return null;
@@ -124,12 +124,16 @@ function ConfigErrorNotifier(): null {
         const pmGateway = container.resolve(PmSettingsGateway);
         const appGateway = container.resolve(AppSettingsGateway);
 
-        Promise.all([pmGateway.listPmConfig(), appGateway.list()]).then(([pmResult, appResult]) => {
+        void (async () => {
+            const [pmResult, appResult] = await Promise.all([
+                pmGateway.listPmConfig(),
+                appGateway.list()
+            ]);
             const error = pmResult.configError ?? appResult.configError;
             if (error) {
                 showConfigErrorToast(error);
             }
-        });
+        })();
     }, [container]);
 
     return null;

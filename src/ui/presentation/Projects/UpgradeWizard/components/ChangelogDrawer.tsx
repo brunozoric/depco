@@ -40,23 +40,25 @@ export function ChangelogDrawer({
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
 
-    function handleRefresh(): void {
+    async function handleRefresh(): Promise<void> {
         if (!onRefresh || !target) {
             return;
         }
         setRefreshing(true);
-        onRefresh(target.packageName, target.currentVersion, target.latestVersion)
-            .then(result => {
-                onStartTracking({
-                    packageName: target.packageName,
-                    entries: result.entries.reverse(),
-                    resolving: result.resolving
-                });
-                setRefreshing(false);
-            })
-            .catch(() => {
-                setRefreshing(false);
+        try {
+            const result = await onRefresh(
+                target.packageName,
+                target.currentVersion,
+                target.latestVersion
+            );
+            onStartTracking({
+                packageName: target.packageName,
+                entries: result.entries.reverse(),
+                resolving: result.resolving
             });
+        } finally {
+            setRefreshing(false);
+        }
     }
 
     useEffect(() => {
@@ -66,23 +68,26 @@ export function ChangelogDrawer({
 
         let cancelled = false;
         setLoading(true);
-        getChangelogs(target.packageName, target.currentVersion, target.latestVersion)
-            .then(result => {
-                if (cancelled) {
-                    return;
+        void (async () => {
+            try {
+                const result = await getChangelogs(
+                    target.packageName,
+                    target.currentVersion,
+                    target.latestVersion
+                );
+                if (!cancelled) {
+                    onStartTracking({
+                        packageName: target.packageName,
+                        entries: result.entries.reverse(),
+                        resolving: result.resolving
+                    });
                 }
-                onStartTracking({
-                    packageName: target.packageName,
-                    entries: result.entries.reverse(),
-                    resolving: result.resolving
-                });
-                setLoading(false);
-            })
-            .catch(() => {
+            } finally {
                 if (!cancelled) {
                     setLoading(false);
                 }
-            });
+            }
+        })();
         return () => {
             cancelled = true;
         };

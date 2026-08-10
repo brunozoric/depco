@@ -24,9 +24,10 @@ export function ScanScheduleDefaultSection(): React.ReactNode {
     const [value, setValue] = useState("disabled");
 
     useEffect(() => {
-        void loadUseCase.execute().then(() => {
+        void (async () => {
+            await loadUseCase.execute();
             setValue(repository.getGlobalDefault());
-        });
+        })();
     }, [loadUseCase, repository]);
 
     const handleChange = async (newValue: string | null): Promise<void> => {

@@ -36,7 +36,8 @@ export function PrSettingsSection(): React.ReactNode {
 
     useEffect(() => {
         let cancelled = false;
-        void gateway.list().then(result => {
+        void (async () => {
+            const result = await gateway.list();
             if (cancelled) {
                 return;
             }
@@ -51,7 +52,7 @@ export function PrSettingsSection(): React.ReactNode {
                 prTitleTemplate: get(SETTING_KEYS.prTitleTemplate),
                 prBodyTemplate: get(SETTING_KEYS.prBodyTemplate)
             });
-        });
+        })();
 
         return () => {
             cancelled = true;

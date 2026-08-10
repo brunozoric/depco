@@ -57,9 +57,9 @@ export const SelectPackagesStep = observer(function SelectPackagesStep({
         setDepsLoading(true);
 
         const projectsGateway = container.resolve(ProjectsGateway);
-        projectsGateway
-            .getDependencies(projectId)
-            .then(response => {
+        void (async () => {
+            try {
+                const response = await projectsGateway.getDependencies(projectId);
                 if (cancelled) {
                     return;
                 }
@@ -82,12 +82,12 @@ export const SelectPackagesStep = observer(function SelectPackagesStep({
                         upgradeable.map(dependency => [dependency.name, dependency.latestInRange])
                     )
                 );
-            })
-            .finally(() => {
+            } finally {
                 if (!cancelled) {
                     setDepsLoading(false);
                 }
-            });
+            }
+        })();
 
         return () => {
             cancelled = true;

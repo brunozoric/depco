@@ -166,21 +166,19 @@ export async function createServer(): Promise<FastifyInstance> {
     });
 
     const autoFixSettingsService = container.resolve(AutoFixSettingsService);
-    eventBus.on("scan:completed", (projectId: string) => {
-        autoFixSettingsService
-            .getSettings(projectId)
-            .then(async settings => {
-                if (settings?.enabled) {
-                    await jobWorker.enqueue({
-                        referenceId: projectId,
-                        referenceType: "project",
-                        type: "auto-fix-pr"
-                    });
-                }
-            })
-            .catch(error => {
-                console.error("Failed to enqueue auto-fix PR:", error);
-            });
+    eventBus.on("scan:completed", async (projectId: string) => {
+        try {
+            const settings = await autoFixSettingsService.getSettings(projectId);
+            if (settings?.enabled) {
+                await jobWorker.enqueue({
+                    referenceId: projectId,
+                    referenceType: "project",
+                    type: "auto-fix-pr"
+                });
+            }
+        } catch (error) {
+            console.error("Failed to enqueue auto-fix PR:", error);
+        }
     });
 
     // Periodically check for vulnerabilities whose snooze window has recently

@@ -13,25 +13,37 @@ class LoadTrendsUseCaseImpl implements Abstraction.Interface {
 
         if (ranges.staleness !== undefined) {
             tasks.push(
-                this.gateway.getStalenessTrend(ranges.staleness, ranges.teamId).then(response => {
+                (async () => {
+                    const response = await this.gateway.getStalenessTrend(
+                        ranges.staleness!,
+                        ranges.teamId
+                    );
                     this.repository.setStalenessTrend(response.points);
-                })
+                })()
             );
         }
 
         if (ranges.license !== undefined) {
             tasks.push(
-                this.gateway.getLicenseTrend(ranges.license, ranges.teamId).then(response => {
+                (async () => {
+                    const response = await this.gateway.getLicenseTrend(
+                        ranges.license!,
+                        ranges.teamId
+                    );
                     this.repository.setLicenseTrend(response.points);
-                })
+                })()
             );
         }
 
         if (ranges.autoFix !== undefined) {
             tasks.push(
-                this.gateway.getAutoFixTrend(ranges.autoFix, ranges.teamId).then(response => {
+                (async () => {
+                    const response = await this.gateway.getAutoFixTrend(
+                        ranges.autoFix!,
+                        ranges.teamId
+                    );
                     this.repository.setAutoFixTrend(response.points);
-                })
+                })()
             );
         }
 
