@@ -54,6 +54,29 @@ describe("ValidateConfigStep", () => {
         expect(consoleLogSpy).toHaveBeenCalledWith("depco.config.ts is valid");
     });
 
+    it("reports failure when depco.config.ts cannot be loaded (import throws)", async () => {
+        writeFileSync(
+            join(workDir, "depco.config.ts"),
+            "export default (() => { throw new Error('syntax kaboom'); })();"
+        );
+        const step = container.resolve(ValidateConfigStep);
+        const result = await step.execute(createTestContext(workDir));
+
+        expect(result.success).toBe(false);
+        expect(result.message).toContain("Failed to load depco.config.ts");
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining("syntax kaboom"));
+    });
+
+    it("handles non-Error thrown values during import", async () => {
+        writeFileSync(join(workDir, "depco.config.ts"), 'throw "string error";');
+        const step = container.resolve(ValidateConfigStep);
+        const result = await step.execute(createTestContext(workDir));
+
+        expect(result.success).toBe(false);
+        expect(result.message).toContain("Failed to load depco.config.ts");
+        expect(result.message).toContain("string error");
+    });
+
     it("reports invalid and fails when depco.config.ts violates the schema", async () => {
         writeFileSync(
             join(workDir, "depco.config.ts"),

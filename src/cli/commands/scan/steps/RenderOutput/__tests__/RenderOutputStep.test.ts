@@ -214,6 +214,16 @@ describe("RenderOutputStep", () => {
             expect(fileContent).not.toContain("stale content");
         });
 
+        it("strips ANSI codes from file output when format is table", async () => {
+            const outputPath = join(workDir, "results.txt");
+            const context = createTestContext({ output: outputPath, format: "table" });
+
+            await step.execute(context);
+
+            const fileContent = readFileSync(outputPath, "utf-8");
+            expect(fileContent).not.toContain("\x1b[");
+        });
+
         it("throws when the output path's parent directory does not exist", async () => {
             const outputPath = join(workDir, "missing-dir", "results.json");
             const context = createTestContext({ output: outputPath });

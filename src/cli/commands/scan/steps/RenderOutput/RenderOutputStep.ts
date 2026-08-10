@@ -50,7 +50,7 @@ class RenderOutputStepImpl implements Abstraction.Interface {
         const outputPath = context.options["output"] as string | undefined;
 
         if (outputPath) {
-            writeFileSync(outputPath, formatted);
+            writeFileSync(outputPath, this.stripAnsiCodes(formatted));
             console.log(`Wrote ${output.summary.total} findings to ${outputPath}`);
         } else {
             console.log(formatted);
@@ -86,6 +86,10 @@ class RenderOutputStepImpl implements Abstraction.Interface {
         if (this.exceedsVulnerabilityThreshold(input)) {
             process.exitCode = 1;
         }
+    }
+
+    private stripAnsiCodes(text: string): string {
+        return text.replace(/\x1b\[[0-9;]*m/g, "");
     }
 
     private exceedsVulnerabilityThreshold(input: IApplyExitCodeInput): boolean {
