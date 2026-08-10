@@ -304,31 +304,38 @@ function buildQueryKey(pkg: IOsvQueryInput): string {
 }
 
 class OsvQueryServiceImpl implements Abstraction.Interface {
+    /**
+     * Queries OSV.dev for vulnerabilities affecting the given packages.
+     *
+     * Deliberately does NOT catch network/parse errors — this is a thin,
+     * transparent API client, and callers must decide how to react to a
+     * failed query. Swallowing errors here would mean a transient OSV
+     * outage silently resolves to "no vulnerabilities found" for every
+     * caller, including the server-side `OsvCacheService`, which would then
+     * persist that empty result to its cache for the full TTL — a false
+     * "all clear" that is a security regression, not graceful degradation.
+     * Graceful degradation (if wanted) belongs in the caller, which has the
+     * context to decide whether "OSV is down" should surface as an error,
+     * a warning, or a skip.
+     */
     public async queryBatch(input: IOsvQueryBatchInput): Promise<Map<string, IOsvAdvisory[]>> {
         const result = new Map<string, IOsvAdvisory[]>();
         if (input.packages.length === 0) {
             return result;
         }
 
-        try {
-            const refsByIndex = await this.queryOsvBatch(input.packages);
-            const detailById = await this.resolveVulnerabilityDetails(refsByIndex);
+        const refsByIndex = await this.queryOsvBatch(input.packages);
+        const detailById = await this.resolveVulnerabilityDetails(refsByIndex);
 
-            input.packages.forEach((pkg, index) => {
-                const refs = refsByIndex[index] ?? [];
-                const advisories = refs
-                    .map(ref => detailById.get(ref.id))
-                    .filter((detail): detail is IOsvVulnerabilityDetail => detail !== undefined)
-                    .map(detail => toAdvisory({ detail, packageName: pkg.name }));
+        input.packages.forEach((pkg, index) => {
+            const refs = refsByIndex[index] ?? [];
+            const advisories = refs
+                .map(ref => detailById.get(ref.id))
+                .filter((detail): detail is IOsvVulnerabilityDetail => detail !== undefined)
+                .map(detail => toAdvisory({ detail, packageName: pkg.name }));
 
-                result.set(buildQueryKey(pkg), advisories);
-            });
-        } catch (error) {
-            console.warn(
-                `OSV batch query failed for ${input.packages.length} package(s): ` +
-                    `${error instanceof Error ? error.message : String(error)}`
-            );
-        }
+            result.set(buildQueryKey(pkg), advisories);
+        });
 
         return result;
     }
