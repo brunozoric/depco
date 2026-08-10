@@ -44,11 +44,14 @@ Reuse the existing config loading pattern from `LoadConfigStep` (dynamic import 
 
 - Create: `src/cli/commands/configCheck/ConfigCheckCommand.ts`
 - Create: `src/cli/commands/configCheck/abstractions/ConfigCheckCommand.ts`
+- Create: `src/cli/commands/configCheck/abstractions/index.ts` — barrel re-export
 - Create: `src/cli/commands/configCheck/steps/ValidateConfig/ValidateConfigStep.ts`
 - Create: `src/cli/commands/configCheck/steps/ValidateConfig/abstractions/ValidateConfigStep.ts`
+- Create: `src/cli/commands/configCheck/steps/ValidateConfig/abstractions/index.ts` — barrel re-export
 - Create: `src/cli/commands/configCheck/steps/ValidateConfig/feature.ts`
+- Create: `src/cli/commands/configCheck/steps/ValidateConfig/index.ts` — barrel re-export
 - Create: `src/cli/commands/configCheck/feature.ts`
-- Create: `src/cli/commands/configCheck/index.ts`
+- Create: `src/cli/commands/configCheck/index.ts` — barrel re-export
 - Modify: `src/cli/feature.ts` — add ConfigCheckCommandFeature
 - Modify: `src/cli/index.ts` — register `config-check` command
 
