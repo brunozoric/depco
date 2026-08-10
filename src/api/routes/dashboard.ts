@@ -476,7 +476,7 @@ export async function dashboardRoutes(app: FastifyInstance, options: PluginOptio
                 .get() as ICountRow | undefined
         ]);
 
-        sendList(reply, items, countResult?.count ?? 0);
+        sendList({ reply: reply, items: items, total: countResult?.count ?? 0 });
     });
 
     registerRoute(app, dashboardScoreDetailRoute, {}, async (request, reply) => {

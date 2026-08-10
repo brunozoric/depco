@@ -189,7 +189,7 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
             toTeamWithStats(team, statsByTeam.get(team.id) ?? zeroStats())
         );
 
-        sendList(reply, items, items.length);
+        sendList({ reply: reply, items: items, total: items.length });
     });
 
     registerRoute(
@@ -201,7 +201,11 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
 
             const existing = await db.select().from(teams).where(eq(teams.name, name)).get();
             if (existing) {
-                sendError(reply, 409, `A team named "${name}" already exists`);
+                sendError({
+                    reply: reply,
+                    statusCode: 409,
+                    message: `A team named "${name}" already exists`
+                });
                 return;
             }
 
@@ -214,7 +218,7 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
 
             await db.insert(teams).values(team).run();
 
-            sendOne(reply, toTeamWithStats(team, zeroStats()), 201);
+            sendOne({ reply: reply, data: toTeamWithStats(team, zeroStats()), status: 201 });
         }
     );
 
@@ -223,7 +227,7 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
 
         const team = await db.select().from(teams).where(eq(teams.id, id)).get();
         if (!team) {
-            sendError(reply, 404, "Team not found");
+            sendError({ reply: reply, statusCode: 404, message: "Team not found" });
             return;
         }
 
@@ -234,13 +238,16 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
             .where(eq(teamProjects.teamId, id))
             .all();
 
-        sendOne(reply, {
-            ...team,
-            projects: projectRows.map((row): ITeamProjectRow => ({
-                id: row.id,
-                name: row.name,
-                path: row.path
-            }))
+        sendOne({
+            reply: reply,
+            data: {
+                ...team,
+                projects: projectRows.map((row): ITeamProjectRow => ({
+                    id: row.id,
+                    name: row.name,
+                    path: row.path
+                }))
+            }
         });
     });
 
@@ -254,7 +261,7 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
 
             const existing = await db.select().from(teams).where(eq(teams.id, id)).get();
             if (!existing) {
-                sendError(reply, 404, "Team not found");
+                sendError({ reply: reply, statusCode: 404, message: "Team not found" });
                 return;
             }
 
@@ -265,7 +272,11 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
                     .where(eq(teams.name, name))
                     .get();
                 if (nameConflict) {
-                    sendError(reply, 409, `A team named "${name}" already exists`);
+                    sendError({
+                        reply: reply,
+                        statusCode: 409,
+                        message: `A team named "${name}" already exists`
+                    });
                     return;
                 }
             }
@@ -280,7 +291,10 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
             const statsByTeam = await computeStatsByTeam(db);
             const updatedTeam: ITeamRow = { ...existing, ...updates };
 
-            sendOne(reply, toTeamWithStats(updatedTeam, statsByTeam.get(id) ?? zeroStats()));
+            sendOne({
+                reply: reply,
+                data: toTeamWithStats(updatedTeam, statsByTeam.get(id) ?? zeroStats())
+            });
         }
     );
 
@@ -294,7 +308,7 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
 
             const team = await db.select().from(teams).where(eq(teams.id, id)).get();
             if (!team) {
-                sendError(reply, 404, "Team not found");
+                sendError({ reply: reply, statusCode: 404, message: "Team not found" });
                 return;
             }
 
@@ -329,7 +343,7 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
 
             const existing = await db.select().from(teams).where(eq(teams.id, id)).get();
             if (!existing) {
-                sendError(reply, 404, "Team not found");
+                sendError({ reply: reply, statusCode: 404, message: "Team not found" });
                 return;
             }
 

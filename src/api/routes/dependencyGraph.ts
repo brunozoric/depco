@@ -64,11 +64,15 @@ export async function dependencyGraphRoutes(
                 .where(eq(projects.id, projectId))
                 .get();
             if (!project) {
-                sendError(reply, 404, "Project not found");
+                sendError({ reply: reply, statusCode: 404, message: "Project not found" });
                 return;
             }
             if (!project.packageManager) {
-                sendError(reply, 400, "Project has no detected package manager");
+                sendError({
+                    reply: reply,
+                    statusCode: 400,
+                    message: "Project has no detected package manager"
+                });
                 return;
             }
 

@@ -71,7 +71,7 @@ export async function logsRoutes(app: FastifyInstance, options: PluginOptions): 
                 .get() as ICountRow | undefined
         ]);
 
-        sendList(reply, items, countResult?.count ?? 0);
+        sendList({ reply: reply, items: items, total: countResult?.count ?? 0 });
     });
 
     registerRoute(

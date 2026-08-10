@@ -42,7 +42,7 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
         }
 
         const result = await userService.list(listParams);
-        sendList(reply, result.items, result.total);
+        sendList({ reply: reply, items: result.items, total: result.total });
     });
 
     registerRoute(app, getUserRoute, {}, async (request, reply) => {
@@ -50,11 +50,11 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
 
         const user = await userService.getById(id);
         if (!user) {
-            sendError(reply, 404, "User not found");
+            sendError({ reply: reply, statusCode: 404, message: "User not found" });
             return;
         }
 
-        sendOne(reply, user);
+        sendOne({ reply: reply, data: user });
     });
 
     registerRoute(
@@ -63,7 +63,7 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
         { preHandler: requirePermission(FULL_PERMISSION) },
         async (request, reply) => {
             const user = await userService.create(request.body);
-            sendOne(reply, user, 201);
+            sendOne({ reply: reply, data: user, status: 201 });
         }
     );
 
@@ -74,13 +74,13 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
 
         const existing = await userService.getById(id);
         if (!existing) {
-            sendError(reply, 404, "User not found");
+            sendError({ reply: reply, statusCode: 404, message: "User not found" });
             return;
         }
 
         const isSelf = id === sessionUser.id;
         if (!isSelf && sessionUser.permission !== FULL_PERMISSION) {
-            sendError(reply, 403, "Insufficient permission");
+            sendError({ reply: reply, statusCode: 403, message: "Insufficient permission" });
             return;
         }
 
@@ -105,10 +105,10 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
 
         const updated = await userService.update({ id, data });
         if (!updated) {
-            sendError(reply, 404, "User not found");
+            sendError({ reply: reply, statusCode: 404, message: "User not found" });
             return;
         }
-        sendOne(reply, updated);
+        sendOne({ reply: reply, data: updated });
     });
 
     registerRoute(
@@ -120,13 +120,17 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
             const { user: sessionUser } = request as IAuthenticatedRequest;
 
             if (id === sessionUser.id) {
-                sendError(reply, 400, "Cannot delete your own account");
+                sendError({
+                    reply: reply,
+                    statusCode: 400,
+                    message: "Cannot delete your own account"
+                });
                 return;
             }
 
             const existing = await userService.getById(id);
             if (!existing) {
-                sendError(reply, 404, "User not found");
+                sendError({ reply: reply, statusCode: 404, message: "User not found" });
                 return;
             }
 
@@ -147,13 +151,17 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
             const { user: sessionUser } = request as IAuthenticatedRequest;
 
             if (id === sessionUser.id) {
-                sendError(reply, 400, "Cannot force-logout your own account");
+                sendError({
+                    reply: reply,
+                    statusCode: 400,
+                    message: "Cannot force-logout your own account"
+                });
                 return;
             }
 
             const existing = await userService.getById(id);
             if (!existing) {
-                sendError(reply, 404, "User not found");
+                sendError({ reply: reply, statusCode: 404, message: "User not found" });
                 return;
             }
 

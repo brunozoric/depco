@@ -29,14 +29,14 @@ export async function packageManagerRoutes(
 
         const project = await db.select().from(projects).where(eq(projects.id, id)).get();
         if (!project) {
-            sendError(reply, 404, "Project not found");
+            sendError({ reply: reply, statusCode: 404, message: "Project not found" });
             return;
         }
 
         const packageManager =
             project.packageManager ?? (await packageManagerService.detect(project.path));
         const version = await packageManagerService.getVersion(project.path, packageManager);
-        sendOne(reply, { version });
+        sendOne({ reply: reply, data: { version } });
     });
 
     // POST /api/projects/:id/package-manager/update — enqueue a package
@@ -51,7 +51,7 @@ export async function packageManagerRoutes(
 
             const project = await db.select().from(projects).where(eq(projects.id, id)).get();
             if (!project) {
-                sendError(reply, 404, "Project not found");
+                sendError({ reply: reply, statusCode: 404, message: "Project not found" });
                 return;
             }
 
@@ -76,9 +76,9 @@ export async function packageManagerRoutes(
                     packages: { from: currentVersion, to: body.version }
                 });
 
-                sendOne(reply, { jobId });
+                sendOne({ reply: reply, data: { jobId } });
             } catch (error) {
-                sendError(reply, 403, (error as Error).message);
+                sendError({ reply: reply, statusCode: 403, message: (error as Error).message });
             }
         }
     );

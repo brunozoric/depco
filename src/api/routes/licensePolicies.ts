@@ -90,7 +90,11 @@ export async function licensePolicyRoutes(
                 .where(eq(licensePolicyRules.id, id))
                 .get();
             if (!existing) {
-                sendError(reply, 404, "License policy rule not found");
+                sendError({
+                    reply: reply,
+                    statusCode: 404,
+                    message: "License policy rule not found"
+                });
                 return;
             }
 

@@ -81,11 +81,14 @@ export async function scanScheduleRoutes(
 
                 await scheduler.scheduleProject(projectId);
 
-                sendOne(reply, {
-                    ...existing,
-                    interval,
-                    updatedAt: now,
-                    enabled: existing.enabled === 1
+                sendOne({
+                    reply: reply,
+                    data: {
+                        ...existing,
+                        interval,
+                        updatedAt: now,
+                        enabled: existing.enabled === 1
+                    }
                 });
             } else {
                 const id = generateId();
@@ -103,7 +106,7 @@ export async function scanScheduleRoutes(
                 await db.insert(scanSchedules).values(row).run();
                 await scheduler.scheduleProject(projectId);
 
-                sendOne(reply, { ...row, enabled: true });
+                sendOne({ reply: reply, data: { ...row, enabled: true } });
             }
         }
     );
@@ -129,7 +132,7 @@ export async function scanScheduleRoutes(
             .where(eq(appSettings.key, SCAN_SCHEDULE_DEFAULT_KEY))
             .get();
 
-        sendOne(reply, { interval: row?.value ?? "disabled" });
+        sendOne({ reply: reply, data: { interval: row?.value ?? "disabled" } });
     });
 
     registerRoute(
@@ -149,7 +152,7 @@ export async function scanScheduleRoutes(
                 .run();
 
             await scheduler.onGlobalDefaultChanged();
-            sendOne(reply, { interval });
+            sendOne({ reply: reply, data: { interval } });
         }
     );
 }

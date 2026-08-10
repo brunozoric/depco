@@ -183,7 +183,7 @@ export async function packagesRoutes(app: FastifyInstance, options: PluginOption
                 .all();
 
             if (rows.length === 0) {
-                sendOne(reply, { updated: 0 });
+                sendOne({ reply: reply, data: { updated: 0 } });
                 return;
             }
 
@@ -237,7 +237,7 @@ export async function packagesRoutes(app: FastifyInstance, options: PluginOption
                 updated++;
             }
 
-            sendOne(reply, { updated });
+            sendOne({ reply: reply, data: { updated } });
         }
     );
 }

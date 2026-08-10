@@ -207,7 +207,11 @@ export async function filesystemRoutes(
         try {
             resolvedPath = await realpath(resolve(rawPath));
         } catch {
-            sendError(reply, 400, `Path does not exist: ${rawPath}`);
+            sendError({
+                reply: reply,
+                statusCode: 400,
+                message: `Path does not exist: ${rawPath}`
+            });
             return;
         }
 
@@ -215,7 +219,11 @@ export async function filesystemRoutes(
         try {
             entries = await readdir(resolvedPath, { withFileTypes: true });
         } catch {
-            sendError(reply, 400, `Cannot read directory: ${resolvedPath}`);
+            sendError({
+                reply: reply,
+                statusCode: 400,
+                message: `Cannot read directory: ${resolvedPath}`
+            });
             return;
         }
 
@@ -248,7 +256,11 @@ export async function filesystemRoutes(
         try {
             resolvedPath = await realpath(resolve(rawPath));
         } catch {
-            sendError(reply, 400, `Path does not exist: ${rawPath}`);
+            sendError({
+                reply: reply,
+                statusCode: 400,
+                message: `Path does not exist: ${rawPath}`
+            });
             return;
         }
 

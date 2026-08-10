@@ -72,7 +72,7 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
 
             const project = await db.select().from(projects).where(eq(projects.id, id)).get();
             if (!project) {
-                sendError(reply, 404, "Project not found");
+                sendError({ reply: reply, statusCode: 404, message: "Project not found" });
                 return;
             }
 
@@ -99,9 +99,9 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
                     refreshTransient: body.refreshTransient === true
                 });
 
-                sendOne(reply, { jobId });
+                sendOne({ reply: reply, data: { jobId } });
             } catch (error) {
-                sendError(reply, 403, (error as Error).message);
+                sendError({ reply: reply, statusCode: 403, message: (error as Error).message });
             }
         }
     );
@@ -117,7 +117,7 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
 
             const project = await db.select().from(projects).where(eq(projects.id, id)).get();
             if (!project) {
-                sendError(reply, 404, "Project not found");
+                sendError({ reply: reply, statusCode: 404, message: "Project not found" });
                 return;
             }
 
@@ -128,9 +128,9 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
                     type: "transient"
                 });
 
-                sendOne(reply, { jobId });
+                sendOne({ reply: reply, data: { jobId } });
             } catch (error) {
-                sendError(reply, 403, (error as Error).message);
+                sendError({ reply: reply, statusCode: 403, message: (error as Error).message });
             }
         }
     );
@@ -139,10 +139,10 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
     registerRoute(app, getJobRoute, {}, async (request, reply) => {
         const job = await jobWorker.getJob(request.params.jobId);
         if (!job || job.referenceId !== request.params.id) {
-            sendError(reply, 404, "Job not found");
+            sendError({ reply: reply, statusCode: 404, message: "Job not found" });
             return;
         }
-        sendOne(reply, job);
+        sendOne({ reply: reply, data: job });
     });
 
     // GET /api/projects/:id/jobs — job history for the project.
@@ -151,12 +151,12 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
 
         const project = await db.select().from(projects).where(eq(projects.id, id)).get();
         if (!project) {
-            sendError(reply, 404, "Project not found");
+            sendError({ reply: reply, statusCode: 404, message: "Project not found" });
             return;
         }
 
         const jobs = await jobWorker.getJobsForReference(id);
-        sendList(reply, jobs, jobs.length);
+        sendList({ reply: reply, items: jobs, total: jobs.length });
     });
 
     // GET /api/jobs — jobs across all projects with filtering, pagination, sorting.
@@ -186,7 +186,7 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
                 .get() as ICountRow | undefined
         ]);
 
-        sendList(reply, items, countResult?.count ?? 0);
+        sendList({ reply: reply, items: items, total: countResult?.count ?? 0 });
     });
 
     // POST /api/jobs/:jobId/cancel — cancel or kill a job.
@@ -198,7 +198,7 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
             const { jobId } = request.params;
             const job = await jobWorker.getJob(jobId);
             if (!job) {
-                sendError(reply, 404, "Job not found");
+                sendError({ reply: reply, statusCode: 404, message: "Job not found" });
                 return;
             }
             await jobWorker.cancelJob(jobId);

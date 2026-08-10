@@ -104,7 +104,11 @@ export async function appSettingsRoutes(
             let storedValue = value;
             if (TOKEN_KEYS.has(key)) {
                 if (!encryptionService.isAvailable()) {
-                    sendError(reply, 400, "ENCRYPTION_KEY not configured — cannot store tokens");
+                    sendError({
+                        reply: reply,
+                        statusCode: 400,
+                        message: "ENCRYPTION_KEY not configured — cannot store tokens"
+                    });
                     return;
                 }
                 storedValue = await encryptionService.encrypt(value);
@@ -119,7 +123,10 @@ export async function appSettingsRoutes(
                 })
                 .run();
 
-            sendOne(reply, { key, value: TOKEN_KEYS.has(key) ? "••••••••" : value });
+            sendOne({
+                reply: reply,
+                data: { key, value: TOKEN_KEYS.has(key) ? "••••••••" : value }
+            });
         }
     );
 }

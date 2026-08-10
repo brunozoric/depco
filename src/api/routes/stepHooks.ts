@@ -66,7 +66,7 @@ export async function stepHooksRoutes(app: FastifyInstance, options: PluginOptio
             .get();
 
         if (!project) {
-            sendError(reply, 404, "Project not found");
+            sendError({ reply: reply, statusCode: 404, message: "Project not found" });
             return;
         }
 
@@ -149,7 +149,7 @@ export async function stepHooksRoutes(app: FastifyInstance, options: PluginOptio
             };
 
             await db.insert(projectStepHooks).values(row).run();
-            sendOne(reply, toResponse(row));
+            sendOne({ reply: reply, data: toResponse(row) });
         }
     );
 
@@ -167,7 +167,7 @@ export async function stepHooksRoutes(app: FastifyInstance, options: PluginOptio
                 .get();
 
             if (!existing) {
-                sendError(reply, 404, "Step hook not found");
+                sendError({ reply: reply, statusCode: 404, message: "Step hook not found" });
                 return;
             }
 
@@ -190,7 +190,7 @@ export async function stepHooksRoutes(app: FastifyInstance, options: PluginOptio
                 .where(eq(projectStepHooks.id, hookId))
                 .run();
 
-            sendOne(reply, toResponse(merged));
+            sendOne({ reply: reply, data: toResponse(merged) });
         }
     );
 
@@ -208,7 +208,7 @@ export async function stepHooksRoutes(app: FastifyInstance, options: PluginOptio
                 .get();
 
             if (!existing) {
-                sendError(reply, 404, "Step hook not found");
+                sendError({ reply: reply, statusCode: 404, message: "Step hook not found" });
                 return;
             }
 

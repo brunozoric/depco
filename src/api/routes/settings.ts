@@ -171,23 +171,31 @@ export async function settingsRoutes(app: FastifyInstance, options: PluginOption
             const fields =
                 SECURITY_FIELD_REGISTRY[packageManager as keyof typeof SECURITY_FIELD_REGISTRY];
             if (!fields) {
-                sendError(reply, 400, `Unknown package manager: ${packageManager}`);
+                sendError({
+                    reply: reply,
+                    statusCode: 400,
+                    message: `Unknown package manager: ${packageManager}`
+                });
                 return;
             }
 
             const fieldDef = fields.find(f => f.fieldName === fieldName);
             if (!fieldDef) {
-                sendError(reply, 400, `Unknown field "${fieldName}" for ${packageManager}`);
+                sendError({
+                    reply: reply,
+                    statusCode: 400,
+                    message: `Unknown field "${fieldName}" for ${packageManager}`
+                });
                 return;
             }
 
             const validation = fieldDef.expectedValueSchema.safeParse(expectedValue);
             if (!validation.success) {
-                sendError(
-                    reply,
-                    400,
-                    validation.error.issues[0]?.message ?? "Invalid expected value"
-                );
+                sendError({
+                    reply: reply,
+                    statusCode: 400,
+                    message: validation.error.issues[0]?.message ?? "Invalid expected value"
+                });
                 return;
             }
 
@@ -203,11 +211,11 @@ export async function settingsRoutes(app: FastifyInstance, options: PluginOption
                 .get();
 
             if (existing) {
-                sendError(
-                    reply,
-                    409,
-                    `Setting "${fieldName}" already exists for ${packageManager}`
-                );
+                sendError({
+                    reply: reply,
+                    statusCode: 409,
+                    message: `Setting "${fieldName}" already exists for ${packageManager}`
+                });
                 return;
             }
 
@@ -221,7 +229,7 @@ export async function settingsRoutes(app: FastifyInstance, options: PluginOption
             };
 
             await databaseClient.db.insert(pmSecuritySettings).values(row).run();
-            sendOne(reply, toResponse(row), 201);
+            sendOne({ reply: reply, data: toResponse(row), status: 201 });
         }
     );
 
@@ -240,7 +248,7 @@ export async function settingsRoutes(app: FastifyInstance, options: PluginOption
                 .get();
 
             if (!existing) {
-                sendError(reply, 404, "Setting not found");
+                sendError({ reply: reply, statusCode: 404, message: "Setting not found" });
                 return;
             }
 
@@ -253,11 +261,11 @@ export async function settingsRoutes(app: FastifyInstance, options: PluginOption
             if (fieldDef) {
                 const validation = fieldDef.expectedValueSchema.safeParse(expectedValue);
                 if (!validation.success) {
-                    sendError(
-                        reply,
-                        400,
-                        validation.error.issues[0]?.message ?? "Invalid expected value"
-                    );
+                    sendError({
+                        reply: reply,
+                        statusCode: 400,
+                        message: validation.error.issues[0]?.message ?? "Invalid expected value"
+                    });
                     return;
                 }
             }
@@ -268,7 +276,7 @@ export async function settingsRoutes(app: FastifyInstance, options: PluginOption
                 .where(eq(pmSecuritySettings.id, id))
                 .run();
 
-            sendOne(reply, toResponse({ ...existing, expectedValue }));
+            sendOne({ reply: reply, data: toResponse({ ...existing, expectedValue }) });
         }
     );
 
@@ -286,7 +294,7 @@ export async function settingsRoutes(app: FastifyInstance, options: PluginOption
                 .get();
 
             if (!existing) {
-                sendError(reply, 404, "Setting not found");
+                sendError({ reply: reply, statusCode: 404, message: "Setting not found" });
                 return;
             }
 
@@ -297,7 +305,7 @@ export async function settingsRoutes(app: FastifyInstance, options: PluginOption
                 .where(eq(pmSecuritySettings.id, id))
                 .run();
 
-            sendOne(reply, toResponse({ ...existing, enabled: newEnabled }));
+            sendOne({ reply: reply, data: toResponse({ ...existing, enabled: newEnabled }) });
         }
     );
 
@@ -311,7 +319,11 @@ export async function settingsRoutes(app: FastifyInstance, options: PluginOption
             const fields =
                 SECURITY_FIELD_REGISTRY[packageManager as keyof typeof SECURITY_FIELD_REGISTRY];
             if (!fields) {
-                sendError(reply, 400, `Unknown package manager: ${packageManager}`);
+                sendError({
+                    reply: reply,
+                    statusCode: 400,
+                    message: `Unknown package manager: ${packageManager}`
+                });
                 return;
             }
 
@@ -333,7 +345,7 @@ export async function settingsRoutes(app: FastifyInstance, options: PluginOption
                 await databaseClient.db.insert(pmSecuritySettings).values(rows).run();
             }
 
-            sendList(reply, rows.map(toResponse), rows.length);
+            sendList({ reply: reply, items: rows.map(toResponse), total: rows.length });
         }
     );
 
@@ -437,7 +449,7 @@ export async function settingsRoutes(app: FastifyInstance, options: PluginOption
                 }
             };
 
-            sendOne(reply, item);
+            sendOne({ reply: reply, data: item });
         }
     );
 }

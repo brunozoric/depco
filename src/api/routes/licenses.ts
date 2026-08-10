@@ -350,7 +350,7 @@ export async function licenseRoutes(app: FastifyInstance, options: PluginOptions
             .limit(pageSize)
             .offset((page - 1) * pageSize)
             .all();
-        sendList(reply, items, total);
+        sendList({ reply: reply, items: items, total: total });
     });
 
     // Registered before "/:projectId" so it isn't shadowed by that param route.
@@ -371,7 +371,7 @@ export async function licenseRoutes(app: FastifyInstance, options: PluginOptions
             .from(licenses)
             .where(and(...conditions))
             .all();
-        sendList(reply, items, items.length);
+        sendList({ reply: reply, items: items, total: items.length });
     });
 
     registerRoute(
@@ -387,7 +387,7 @@ export async function licenseRoutes(app: FastifyInstance, options: PluginOptions
                 .where(eq(projects.id, projectId))
                 .get();
             if (!project) {
-                sendError(reply, 404, "Project not found");
+                sendError({ reply: reply, statusCode: 404, message: "Project not found" });
                 return;
             }
 
@@ -404,7 +404,7 @@ export async function licenseRoutes(app: FastifyInstance, options: PluginOptions
         const conditions = buildViolationConditions(request.query);
         const where = conditions.length > 0 ? and(...conditions) : undefined;
         const items = await db.select().from(licenseViolations).where(where).all();
-        sendList(reply, items, items.length);
+        sendList({ reply: reply, items: items, total: items.length });
     });
 
     // Registered before any parametrized license-violation routes so it isn't

@@ -31,12 +31,16 @@ export async function installRoutes(app: FastifyInstance, options: PluginOptions
 
             const project = await db.select().from(projects).where(eq(projects.id, id)).get();
             if (!project) {
-                sendError(reply, 404, "Project not found");
+                sendError({ reply: reply, statusCode: 404, message: "Project not found" });
                 return;
             }
 
             if (!project.packageManager) {
-                sendError(reply, 400, "No package manager detected for this project");
+                sendError({
+                    reply: reply,
+                    statusCode: 400,
+                    message: "No package manager detected for this project"
+                });
                 return;
             }
 
@@ -47,7 +51,7 @@ export async function installRoutes(app: FastifyInstance, options: PluginOptions
                 packages: JSON.stringify({ flags })
             });
 
-            sendOne(reply, { jobId });
+            sendOne({ reply: reply, data: { jobId } });
         }
     );
 
@@ -59,11 +63,11 @@ export async function installRoutes(app: FastifyInstance, options: PluginOptions
         try {
             driver = driverRegistry.getDriver(packageManager);
         } catch (error) {
-            sendError(reply, 400, (error as Error).message);
+            sendError({ reply: reply, statusCode: 400, message: (error as Error).message });
             return;
         }
 
         const items = driver.installFlags();
-        sendList(reply, items, items.length);
+        sendList({ reply: reply, items: items, total: items.length });
     });
 }

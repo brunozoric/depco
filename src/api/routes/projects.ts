@@ -77,21 +77,21 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
                     packageManagerService
                 });
             } catch (error) {
-                sendError(reply, 400, (error as Error).message);
+                sendError({ reply: reply, statusCode: 400, message: (error as Error).message });
                 return;
             }
 
             void securityService.check(registered.id, projectPath);
 
-            sendOne(
-                reply,
-                {
+            sendOne({
+                reply: reply,
+                data: {
                     ...registered,
                     lastScannedAt: null,
                     hasNodeModules: existsSync(join(registered.path, "node_modules"))
                 },
-                201
-            );
+                status: 201
+            });
         }
     );
 
@@ -132,17 +132,17 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
             })
         );
 
-        sendList(reply, withSecurity, withSecurity.length);
+        sendList({ reply: reply, items: withSecurity, total: withSecurity.length });
     });
 
     // GET /api/projects/export — project paths as JSON.
     registerRoute(app, exportProjectsRoute, {}, async (_request, reply) => {
         const allProjects = await db.select().from(projects).all();
-        sendList(
-            reply,
-            allProjects.map(project => ({ path: project.path })),
-            allProjects.length
-        );
+        sendList({
+            reply: reply,
+            items: allProjects.map(project => ({ path: project.path })),
+            total: allProjects.length
+        });
     });
 
     // POST /api/projects/import — add projects from a list of paths.
@@ -193,7 +193,7 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
                 }
             }
 
-            sendList(reply, results, results.length);
+            sendList({ reply: reply, items: results, total: results.length });
         }
     );
 
@@ -206,13 +206,21 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
             const { url, destination, folderName } = request.body;
 
             if (!url.startsWith("https://") && !url.startsWith("git@")) {
-                sendError(reply, 400, "Only https:// and git@ URLs are supported");
+                sendError({
+                    reply: reply,
+                    statusCode: 400,
+                    message: "Only https:// and git@ URLs are supported"
+                });
                 return;
             }
 
             const repoName = extractRepoName(url);
             if (!repoName) {
-                sendError(reply, 400, "Could not extract repository name from URL");
+                sendError({
+                    reply: reply,
+                    statusCode: 400,
+                    message: "Could not extract repository name from URL"
+                });
                 return;
             }
 
@@ -223,14 +231,22 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
                 targetFolder.includes("\\") ||
                 targetFolder.includes("..")
             ) {
-                sendError(reply, 400, "Folder name must not contain path separators or '..'");
+                sendError({
+                    reply: reply,
+                    statusCode: 400,
+                    message: "Folder name must not contain path separators or '..'"
+                });
                 return;
             }
 
             const finalPath = join(destination, targetFolder);
 
             if (!existsSync(destination)) {
-                sendError(reply, 400, `Destination directory does not exist: ${destination}`);
+                sendError({
+                    reply: reply,
+                    statusCode: 400,
+                    message: `Destination directory does not exist: ${destination}`
+                });
                 return;
             }
 
@@ -241,7 +257,11 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
                 .get();
 
             if (existing) {
-                sendError(reply, 409, `A project is already registered at ${finalPath}`);
+                sendError({
+                    reply: reply,
+                    statusCode: 409,
+                    message: `A project is already registered at ${finalPath}`
+                });
                 return;
             }
 
@@ -252,7 +272,7 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
                 packages: JSON.stringify({ url, destination: finalPath })
             });
 
-            sendOne(reply, { jobId });
+            sendOne({ reply: reply, data: { jobId } });
         }
     );
 
@@ -264,12 +284,15 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
             .where(eq(projects.id, request.params.id))
             .get();
         if (!project) {
-            sendError(reply, 404, "Project not found");
+            sendError({ reply: reply, statusCode: 404, message: "Project not found" });
             return;
         }
-        sendOne(reply, {
-            ...project,
-            hasNodeModules: existsSync(join(project.path, "node_modules"))
+        sendOne({
+            reply: reply,
+            data: {
+                ...project,
+                hasNodeModules: existsSync(join(project.path, "node_modules"))
+            }
         });
     });
 
@@ -288,7 +311,11 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
                 .get();
 
             if (runningJob) {
-                sendError(reply, 409, "Cannot delete project with running jobs");
+                sendError({
+                    reply: reply,
+                    statusCode: 409,
+                    message: "Cannot delete project with running jobs"
+                });
                 return;
             }
 
@@ -316,7 +343,7 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
                 .where(eq(projects.id, request.params.id))
                 .get();
             if (!project) {
-                sendError(reply, 404, "Project not found");
+                sendError({ reply: reply, statusCode: 404, message: "Project not found" });
                 return;
             }
 
@@ -328,7 +355,7 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
                 packages: JSON.stringify({ force })
             });
 
-            sendOne(reply, { jobId });
+            sendOne({ reply: reply, data: { jobId } });
         }
     );
 
@@ -340,7 +367,7 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
             .where(eq(projects.id, request.params.id))
             .get();
         if (!project) {
-            sendError(reply, 404, "Project not found");
+            sendError({ reply: reply, statusCode: 404, message: "Project not found" });
             return;
         }
 
@@ -389,7 +416,7 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
             registryResolved: row.registryResolved === 1
         }));
 
-        sendList(reply, dependencies, total);
+        sendList({ reply: reply, items: dependencies, total: total });
     });
 
     // GET /api/projects/:id/transitive-resolve-status — counts of registry-resolved
@@ -401,7 +428,7 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
             .where(eq(projects.id, request.params.id))
             .get();
         if (!project) {
-            sendError(reply, 404, "Project not found");
+            sendError({ reply: reply, statusCode: 404, message: "Project not found" });
             return;
         }
 
@@ -437,12 +464,12 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
             .where(eq(projects.id, request.params.id))
             .get();
         if (!project) {
-            sendError(reply, 404, "Project not found");
+            sendError({ reply: reply, statusCode: 404, message: "Project not found" });
             return;
         }
 
         const result = await securityService.getLatest(project.id);
-        sendOne(reply, result);
+        sendOne({ reply: reply, data: result });
     });
 
     // POST /api/projects/:id/security — run a fresh security check.
@@ -457,12 +484,12 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
                 .where(eq(projects.id, request.params.id))
                 .get();
             if (!project) {
-                sendError(reply, 404, "Project not found");
+                sendError({ reply: reply, statusCode: 404, message: "Project not found" });
                 return;
             }
 
             const result = await securityService.check(project.id, project.path);
-            sendOne(reply, result);
+            sendOne({ reply: reply, data: result });
         }
     );
 
@@ -477,7 +504,7 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
             .where(eq(teamProjects.projectId, id))
             .all();
 
-        sendList(reply, rows, rows.length);
+        sendList({ reply: reply, items: rows, total: rows.length });
     });
 
     // PUT /api/projects/:id/teams — replace a project's team assignments.
@@ -491,7 +518,7 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
 
             const project = await db.select().from(projects).where(eq(projects.id, id)).get();
             if (!project) {
-                sendError(reply, 404, "Project not found");
+                sendError({ reply: reply, statusCode: 404, message: "Project not found" });
                 return;
             }
 

@@ -189,7 +189,7 @@ export async function vulnerabilityRoutes(
                 // "no filter" (falls through to all vulnerabilities), so a
                 // teamId that resolves to zero matching projects must
                 // short-circuit here rather than call getAll.
-                sendList(reply, [], 0);
+                sendList({ reply: reply, items: [], total: 0 });
                 return;
             }
         }
@@ -204,7 +204,7 @@ export async function vulnerabilityRoutes(
                 pageSize: request.query.pageSize ?? 25
             })
         });
-        sendList(reply, result.items, result.total);
+        sendList({ reply: reply, items: result.items, total: result.total });
     });
 
     // Registered before "/:projectId" so it isn't shadowed by that param route.
@@ -412,7 +412,7 @@ export async function vulnerabilityRoutes(
                 pageSize: request.query.pageSize ?? 25
             })
         });
-        sendList(reply, result.items, result.total);
+        sendList({ reply: reply, items: result.items, total: result.total });
     });
 
     registerRoute(
@@ -428,7 +428,7 @@ export async function vulnerabilityRoutes(
                 .where(eq(projects.id, projectId))
                 .get();
             if (!project) {
-                sendError(reply, 404, "Project not found");
+                sendError({ reply: reply, statusCode: 404, message: "Project not found" });
                 return;
             }
 

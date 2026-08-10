@@ -89,7 +89,7 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
         const where = conditions.length > 0 ? and(...conditions) : undefined;
         const rows = await db.select().from(autoFixPullRequests).where(where).all();
         const items = rows.map(rowToPullRequestListItem);
-        sendList(reply, items, items.length);
+        sendList({ reply: reply, items: items, total: items.length });
     });
 
     // Also registered before "/:projectId/pull-requests" — the fixed
@@ -119,7 +119,7 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
             .where(and(...conditions))
             .all();
         const items = rows.map(rowToPullRequestListItem);
-        sendList(reply, items, items.length);
+        sendList({ reply: reply, items: items, total: items.length });
     });
 
     registerRoute(
@@ -135,7 +135,7 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
                 .where(eq(projects.id, projectId))
                 .get();
             if (!project) {
-                sendError(reply, 404, "Project not found");
+                sendError({ reply: reply, statusCode: 404, message: "Project not found" });
                 return;
             }
 

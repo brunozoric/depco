@@ -1,11 +1,13 @@
 import type { FastifyReply } from "fastify";
 
-export function sendBlob(
-    reply: FastifyReply,
-    content: Record<string, unknown>,
-    filename: string,
-    mediaType: string
-): void {
+interface ISendBlobInput {
+    reply: FastifyReply;
+    content: Record<string, unknown>;
+    filename: string;
+    mediaType: string;
+}
+
+export function sendBlob({ reply, content, filename, mediaType }: ISendBlobInput): void {
     const json = JSON.stringify(content, null, 2);
     const buffer = Buffer.from(json, "utf-8");
     reply

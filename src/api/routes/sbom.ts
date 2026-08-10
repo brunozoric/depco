@@ -22,7 +22,12 @@ export async function sbomRoutes(
         const formatter = formatterRegistry.get(format);
         const data = await sbomService.collectForAllProjects();
         const result = formatter.format(data);
-        sendBlob(reply, result.content, result.filename, result.mediaType);
+        sendBlob({
+            reply: reply,
+            content: result.content,
+            filename: result.filename,
+            mediaType: result.mediaType
+        });
     });
 
     registerRoute(app, exportProjectSbomRoute, {}, async (request, reply) => {
@@ -36,7 +41,7 @@ export async function sbomRoutes(
             .get();
 
         if (!project) {
-            sendError(reply, 404, "Project not found");
+            sendError({ reply: reply, statusCode: 404, message: "Project not found" });
             return;
         }
 
@@ -44,6 +49,11 @@ export async function sbomRoutes(
         const formatter = formatterRegistry.get(format);
         const data = await sbomService.collectForProject(projectId);
         const result = formatter.format(data);
-        sendBlob(reply, result.content, result.filename, result.mediaType);
+        sendBlob({
+            reply: reply,
+            content: result.content,
+            filename: result.filename,
+            mediaType: result.mediaType
+        });
     });
 }

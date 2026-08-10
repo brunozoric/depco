@@ -16,7 +16,7 @@ describe("response helpers", () => {
             response: z.object({ item: z.object({ name: z.string() }) })
         });
         registerRoute(app, route, {}, async (_req, reply) => {
-            sendOne(reply, { name: "hello" });
+            sendOne({ reply, data: { name: "hello" } });
         });
 
         const res = await app.inject({ method: "GET", url: "/test/1" });
@@ -33,7 +33,7 @@ describe("response helpers", () => {
             response: z.object({ items: z.array(z.string()), total: z.number() })
         });
         registerRoute(app, route, {}, async (_req, reply) => {
-            sendList(reply, ["a", "b"], 2);
+            sendList({ reply, items: ["a", "b"], total: 2 });
         });
 
         const res = await app.inject({ method: "GET", url: "/test" });
@@ -65,7 +65,7 @@ describe("response helpers", () => {
             params: z.object({ id: z.string() })
         });
         registerRoute(app, route, {}, async (_req, reply) => {
-            sendError(reply, 404, "Not found");
+            sendError({ reply, statusCode: 404, message: "Not found" });
         });
 
         const res = await app.inject({ method: "GET", url: "/test/1" });
@@ -83,7 +83,12 @@ describe("response helpers", () => {
             response: z.any()
         });
         registerRoute(app, route, {}, async (_req, reply) => {
-            sendBlob(reply, { key: "value" }, "test-file.json", "application/json");
+            sendBlob({
+                reply,
+                content: { key: "value" },
+                filename: "test-file.json",
+                mediaType: "application/json"
+            });
         });
 
         const res = await app.inject({ method: "GET", url: "/test-blob" });

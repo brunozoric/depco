@@ -45,7 +45,7 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
                 sendNone(reply);
             } catch (error) {
                 const [statusCode, message] = toStatusAndMessage(error, "Login failed");
-                sendError(reply, statusCode, message);
+                sendError({ reply: reply, statusCode: statusCode, message: message });
             }
         }
     );
@@ -59,10 +59,10 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
         async (request, reply) => {
             try {
                 const result = await authService.verifyCode(request.body);
-                sendOne(reply, result, 200);
+                sendOne({ reply: reply, data: result, status: 200 });
             } catch (error) {
                 const [statusCode, message] = toStatusAndMessage(error, "Verification failed");
-                sendError(reply, statusCode, message);
+                sendError({ reply: reply, statusCode: statusCode, message: message });
             }
         }
     );
@@ -95,10 +95,10 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
         async (request, reply) => {
             try {
                 const result = await authService.verifyMagicLink(request.body);
-                sendOne(reply, result, 200);
+                sendOne({ reply: reply, data: result, status: 200 });
             } catch (error) {
                 const [statusCode, message] = toStatusAndMessage(error, "Verification failed");
-                sendError(reply, statusCode, message);
+                sendError({ reply: reply, statusCode: statusCode, message: message });
             }
         }
     );
@@ -107,10 +107,10 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
         const { user } = request as IAuthenticatedRequest;
         const fullUser = await userService.getById(user.id);
         if (!fullUser) {
-            sendError(reply, 401, "Session expired");
+            sendError({ reply: reply, statusCode: 401, message: "Session expired" });
             return;
         }
-        sendOne(reply, fullUser, 200);
+        sendOne({ reply: reply, data: fullUser, status: 200 });
     });
 
     registerRoute(app, logoutRoute, {}, async (request, reply) => {

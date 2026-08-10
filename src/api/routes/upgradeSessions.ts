@@ -50,10 +50,10 @@ export async function upgradeSessionRoutes(
 
             try {
                 const session = await upgradeSessionService.createSession(id);
-                sendOne(reply, session);
+                sendOne({ reply: reply, data: session });
             } catch (error) {
                 const message = (error as Error).message;
-                sendError(reply, mapErrorStatus(message), message);
+                sendError({ reply: reply, statusCode: mapErrorStatus(message), message: message });
             }
         }
     );
@@ -64,13 +64,13 @@ export async function upgradeSessionRoutes(
         try {
             const session = await upgradeSessionService.getSession(sessionId, id);
             if (!session) {
-                sendError(reply, 404, "Session not found");
+                sendError({ reply: reply, statusCode: 404, message: "Session not found" });
                 return;
             }
-            sendOne(reply, session);
+            sendOne({ reply: reply, data: session });
         } catch (error) {
             const message = (error as Error).message;
-            sendError(reply, mapErrorStatus(message), message);
+            sendError({ reply: reply, statusCode: mapErrorStatus(message), message: message });
         }
     });
 
@@ -88,10 +88,10 @@ export async function upgradeSessionRoutes(
                     stepType,
                     request.body
                 );
-                sendOne(reply, session);
+                sendOne({ reply: reply, data: session });
             } catch (error) {
                 const message = (error as Error).message;
-                sendError(reply, mapErrorStatus(message), message);
+                sendError({ reply: reply, statusCode: mapErrorStatus(message), message: message });
             }
         }
     );
@@ -105,10 +105,10 @@ export async function upgradeSessionRoutes(
 
             try {
                 const session = await upgradeSessionService.skipStep(sessionId, id, stepType);
-                sendOne(reply, session);
+                sendOne({ reply: reply, data: session });
             } catch (error) {
                 const message = (error as Error).message;
-                sendError(reply, mapErrorStatus(message), message);
+                sendError({ reply: reply, statusCode: mapErrorStatus(message), message: message });
             }
         }
     );
@@ -122,10 +122,10 @@ export async function upgradeSessionRoutes(
 
             try {
                 const session = await upgradeSessionService.abortSession(sessionId, id);
-                sendOne(reply, session);
+                sendOne({ reply: reply, data: session });
             } catch (error) {
                 const message = (error as Error).message;
-                sendError(reply, mapErrorStatus(message), message);
+                sendError({ reply: reply, statusCode: mapErrorStatus(message), message: message });
             }
         }
     );

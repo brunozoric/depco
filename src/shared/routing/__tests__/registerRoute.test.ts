@@ -17,7 +17,7 @@ describe("registerRoute", () => {
         });
 
         registerRoute(app, route, {}, async (request, reply) => {
-            sendOne(reply, { id: request.params.id });
+            sendOne({ reply, data: { id: request.params.id } });
         });
 
         const response = await app.inject({ method: "GET", url: "/api/projects/p1" });
@@ -37,7 +37,7 @@ describe("registerRoute", () => {
         });
 
         registerRoute(app, route, {}, async (request, reply) => {
-            sendOne(reply, { path: request.body.path });
+            sendOne({ reply, data: { path: request.body.path } });
         });
 
         const response = await app.inject({
@@ -61,7 +61,7 @@ describe("registerRoute", () => {
         });
 
         registerRoute(app, route, {}, async (_request, reply) => {
-            sendOne(reply, { id: "new" });
+            sendOne({ reply, data: { id: "new" } });
         });
 
         const response = await app.inject({
@@ -83,7 +83,7 @@ describe("registerRoute", () => {
         });
 
         registerRoute(app, route, {}, async (request, reply) => {
-            sendOne(reply, { id: request.params.id });
+            sendOne({ reply, data: { id: request.params.id } });
         });
 
         const response = await app.inject({ method: "GET", url: "/api/projects/not-a-number" });
@@ -102,7 +102,7 @@ describe("registerRoute", () => {
         });
 
         registerRoute(app, route, {}, async (_request, reply) => {
-            sendOne(reply, { id: "p1" });
+            sendOne({ reply, data: { id: "p1" } });
         });
 
         const response = await app.inject({
@@ -124,7 +124,7 @@ describe("registerRoute", () => {
         });
 
         registerRoute(app, route, {}, async (request, reply) => {
-            sendOne(reply, { status: request.query.status });
+            sendOne({ reply, data: { status: request.query.status } });
         });
 
         const response = await app.inject({
