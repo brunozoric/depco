@@ -58,7 +58,7 @@ describe("ProjectsGateway", () => {
 
         const result = await gateway.list();
 
-        expect(calls).toEqual([{ route: listProjectsRoute, args: { params: {} } }]);
+        expect(calls).toEqual([{ route: listProjectsRoute, args: { params: {}, query: {} } }]);
         expect(result).toEqual([{ ...project, teams: [] }]);
     });
 

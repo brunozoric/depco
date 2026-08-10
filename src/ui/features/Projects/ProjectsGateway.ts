@@ -85,7 +85,10 @@ class ProjectsGatewayImpl implements Abstraction.Interface {
     public constructor(private readonly httpClient: HTTPClient.Interface) {}
 
     public async list(): Promise<Abstraction.Project[]> {
-        const response = await this.httpClient.request(listProjectsRoute, { params: {} });
+        const response = await this.httpClient.request(listProjectsRoute, {
+            params: {},
+            query: {}
+        });
         return response.items.map(toProject);
     }
 

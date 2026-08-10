@@ -96,19 +96,34 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
     );
 
     // GET /api/projects — list all projects along with their latest security status.
-    registerRoute(app, listProjectsRoute, {}, async (_request, reply) => {
-        const allProjects = await db.select().from(projects).all();
+    registerRoute(app, listProjectsRoute, {}, async (request, reply) => {
+        const page = request.query.page ?? 1;
+        const pageSize = request.query.pageSize ?? 50;
+        const offset = (page - 1) * pageSize;
 
-        const teamRows = await db
-            .select({
-                projectId: teamProjects.projectId,
-                teamId: teams.id,
-                teamName: teams.name,
-                teamColor: teams.color
-            })
-            .from(teamProjects)
-            .innerJoin(teams, eq(teamProjects.teamId, teams.id))
-            .all();
+        const countResult = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(projects)
+            .get();
+        const total = countResult?.count ?? 0;
+
+        const pagedProjects = await db.select().from(projects).limit(pageSize).offset(offset).all();
+
+        const projectIds = pagedProjects.map(p => p.id);
+        const teamRows =
+            projectIds.length > 0
+                ? await db
+                      .select({
+                          projectId: teamProjects.projectId,
+                          teamId: teams.id,
+                          teamName: teams.name,
+                          teamColor: teams.color
+                      })
+                      .from(teamProjects)
+                      .innerJoin(teams, eq(teamProjects.teamId, teams.id))
+                      .where(inArray(teamProjects.projectId, projectIds))
+                      .all()
+                : [];
 
         const teamsByProject = new Map<
             string,
@@ -121,7 +136,7 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
         }
 
         const withSecurity = await Promise.all(
-            allProjects.map(async project => {
+            pagedProjects.map(async project => {
                 const security = await securityService.getLatest(project.id);
                 return {
                     ...project,
@@ -132,7 +147,7 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
             })
         );
 
-        sendList({ reply: reply, items: withSecurity, total: withSecurity.length });
+        sendList({ reply, items: withSecurity, total });
     });
 
     // GET /api/projects/export — project paths as JSON.

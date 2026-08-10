@@ -96,7 +96,7 @@ describe("project use cases", () => {
 
             await context.loadProjectsUseCase.execute();
 
-            expect(calls).toEqual([{ route: listProjectsRoute, args: { params: {} } }]);
+            expect(calls).toEqual([{ route: listProjectsRoute, args: { params: {}, query: {} } }]);
             expect(context.projectsRepository.getProjects()).toEqual([{ ...project, teams: [] }]);
         });
     });

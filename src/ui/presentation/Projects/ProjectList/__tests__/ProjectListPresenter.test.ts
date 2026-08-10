@@ -218,7 +218,7 @@ describe("ProjectListPresenter", () => {
 
         await presenter.load();
 
-        expect(calls).toEqual([{ route: listProjectsRoute, args: { params: {} } }]);
+        expect(calls).toEqual([{ route: listProjectsRoute, args: { params: {}, query: {} } }]);
         expect(presenter.vm.projects).toEqual([
             {
                 id: "p1",
@@ -341,7 +341,7 @@ describe("ProjectListPresenter", () => {
         await presenter.removeProject("p2");
 
         expect(calls).toEqual([
-            { route: listProjectsRoute, args: { params: {} } },
+            { route: listProjectsRoute, args: { params: {}, query: {} } },
             { route: deleteProjectRoute, args: { params: { id: "p2" } } }
         ]);
         expect(presenter.vm.projects.map(project => project.id)).toEqual(["p1"]);
@@ -581,7 +581,7 @@ describe("ProjectListPresenter", () => {
                         }
                     }
                 },
-                { route: listProjectsRoute, args: { params: {} } }
+                { route: listProjectsRoute, args: { params: {}, query: {} } }
             ]);
             expect(presenter.vm.cloneUrl).toBe("");
             expect(presenter.vm.cloneFolderName).toBe("");

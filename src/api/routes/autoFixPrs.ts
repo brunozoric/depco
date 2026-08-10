@@ -85,11 +85,30 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
     // Registered before the parametrized "/:projectId/..." routes below so it
     // isn't shadowed by them.
     registerRoute(app, listAutoFixPullRequestsRoute, {}, async (request, reply) => {
+        const page = request.query.page ?? 1;
+        const pageSize = request.query.pageSize ?? 50;
+        const offset = (page - 1) * pageSize;
+
         const conditions = buildAutoFixPullRequestConditions(request.query);
         const where = conditions.length > 0 ? and(...conditions) : undefined;
-        const rows = await db.select().from(autoFixPullRequests).where(where).all();
+
+        const countResult = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(autoFixPullRequests)
+            .where(where)
+            .get();
+        const total = countResult?.count ?? 0;
+
+        const rows = await db
+            .select()
+            .from(autoFixPullRequests)
+            .where(where)
+            .limit(pageSize)
+            .offset(offset)
+            .all();
+
         const items = rows.map(rowToPullRequestListItem);
-        sendList({ reply: reply, items: items, total: items.length });
+        sendList({ reply, items, total });
     });
 
     // Also registered before "/:projectId/pull-requests" — the fixed

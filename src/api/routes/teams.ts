@@ -181,15 +181,26 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
     const databaseClient = container.resolve(DatabaseClient);
     const { db } = databaseClient;
 
-    registerRoute(app, listTeamsRoute, {}, async (_request, reply) => {
-        const allTeams = await db.select().from(teams).all();
+    registerRoute(app, listTeamsRoute, {}, async (request, reply) => {
+        const page = request.query.page ?? 1;
+        const pageSize = request.query.pageSize ?? 50;
+        const offset = (page - 1) * pageSize;
+
+        const countResult = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(teams)
+            .get();
+        const total = countResult?.count ?? 0;
+
+        const pagedTeams = await db.select().from(teams).limit(pageSize).offset(offset).all();
+
         const statsByTeam = await computeStatsByTeam(db);
 
-        const items = allTeams.map(team =>
+        const items = pagedTeams.map(team =>
             toTeamWithStats(team, statsByTeam.get(team.id) ?? zeroStats())
         );
 
-        sendList({ reply: reply, items: items, total: items.length });
+        sendList({ reply, items, total });
     });
 
     registerRoute(

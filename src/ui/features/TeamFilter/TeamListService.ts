@@ -11,7 +11,7 @@ class TeamListServiceImpl implements Abstraction.Interface {
     }
 
     public async loadTeams(): Promise<void> {
-        const response = await this.httpClient.request(listTeamsRoute, { params: {} });
+        const response = await this.httpClient.request(listTeamsRoute, { params: {}, query: {} });
         this.teams = response.items.map(team => ({
             id: team.id,
             name: team.name,

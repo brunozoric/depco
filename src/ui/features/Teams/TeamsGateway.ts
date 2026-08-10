@@ -15,7 +15,7 @@ class TeamsGatewayImpl implements Abstraction.Interface {
     public constructor(private readonly httpClient: HTTPClient.Interface) {}
 
     public async list(): Promise<Abstraction.ListResponse> {
-        return this.httpClient.request(listTeamsRoute, { params: {} });
+        return this.httpClient.request(listTeamsRoute, { params: {}, query: {} });
     }
 
     public async getDetail(id: string): Promise<Abstraction.Detail> {

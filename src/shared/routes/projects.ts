@@ -50,6 +50,10 @@ export const listProjectsRoute = defineRoute({
     path: "/api/projects",
     description: "List all projects",
     params: z.object({}),
+    querystring: z.object({
+        page: z.coerce.number().int().positive().optional(),
+        pageSize: z.coerce.number().int().positive().max(200).optional()
+    }),
     response: z.object({ items: z.array(projectSchema), total: z.number() })
 });
 

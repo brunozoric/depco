@@ -17,6 +17,10 @@ export const listTeamsRoute = defineRoute({
     path: "/api/teams",
     description: "List all teams with aggregate stats",
     params: z.object({}),
+    querystring: z.object({
+        page: z.coerce.number().int().positive().optional(),
+        pageSize: z.coerce.number().int().positive().max(200).optional()
+    }),
     response: z.object({ items: z.array(teamWithStatsSchema), total: z.number() })
 });
 

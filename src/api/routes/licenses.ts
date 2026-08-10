@@ -401,10 +401,28 @@ export async function licenseRoutes(app: FastifyInstance, options: PluginOptions
     );
 
     registerRoute(app, listLicenseViolationsRoute, {}, async (request, reply) => {
+        const page = request.query.page ?? 1;
+        const pageSize = request.query.pageSize ?? 50;
+        const offset = (page - 1) * pageSize;
+
         const conditions = buildViolationConditions(request.query);
         const where = conditions.length > 0 ? and(...conditions) : undefined;
-        const items = await db.select().from(licenseViolations).where(where).all();
-        sendList({ reply: reply, items: items, total: items.length });
+
+        const countResult = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(licenseViolations)
+            .where(where)
+            .get();
+        const total = countResult?.count ?? 0;
+
+        const items = await db
+            .select()
+            .from(licenseViolations)
+            .where(where)
+            .limit(pageSize)
+            .offset(offset)
+            .all();
+        sendList({ reply, items, total });
     });
 
     // Registered before any parametrized license-violation routes so it isn't

@@ -58,7 +58,9 @@ export const listAutoFixPullRequestsRoute = defineRoute({
     querystring: z.object({
         projectId: z.string().optional(),
         status: z.string().optional(),
-        teamId: z.string().optional()
+        teamId: z.string().optional(),
+        page: z.coerce.number().int().positive().optional(),
+        pageSize: z.coerce.number().int().positive().max(200).optional()
     }),
     response: z.object({ items: z.array(autoFixPullRequestSchema), total: z.number() })
 });

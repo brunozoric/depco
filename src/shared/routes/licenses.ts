@@ -172,7 +172,9 @@ export const listLicenseViolationsRoute = defineRoute({
         projectId: z.string().optional(),
         action: z.string().optional(),
         packageName: z.string().optional(),
-        teamId: z.string().optional()
+        teamId: z.string().optional(),
+        page: z.coerce.number().int().positive().optional(),
+        pageSize: z.coerce.number().int().positive().max(200).optional()
     }),
     response: z.object({ items: z.array(violationSchema), total: z.number() })
 });
