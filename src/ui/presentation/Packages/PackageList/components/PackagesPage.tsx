@@ -9,13 +9,9 @@ import {
     Loader,
     Modal,
     Pagination,
-    SegmentedControl,
-    Select,
     Stack,
-    Switch,
     Table,
     Text,
-    TextInput,
     Title
 } from "@mantine/core";
 import { observer } from "mobx-react-lite";
@@ -29,6 +25,7 @@ import { LastRelease } from "./columns/LastRelease.js";
 import { ChangelogButton } from "./columns/ChangelogButton.js";
 import { RescanButton } from "./columns/RescanButton.js";
 import { ExpandedDependencies } from "./ExpandedDependencies.js";
+import { PackageFilterToolbar } from "./PackageFilterToolbar.js";
 
 interface PackagesPageProps {
     presenter: PackagesPresenter.Interface;
@@ -46,23 +43,6 @@ interface IUpgradeTarget {
     packageName: string;
     latestVersion: string;
 }
-
-const UPGRADE_TYPE_OPTIONS = [
-    { label: "All", value: "all" },
-    { label: "None", value: "none" },
-    { label: "Patch", value: "patch" },
-    { label: "Minor", value: "minor" },
-    { label: "Major", value: "major" }
-];
-
-const DEPENDENCY_KIND_OPTIONS = [
-    { label: "All", value: "all" },
-    { label: "Direct", value: "dependency" },
-    { label: "Dev", value: "devDependency" },
-    { label: "Peer", value: "peerDependency" },
-    { label: "Optional", value: "optionalDependency" },
-    { label: "Transitive", value: "transitive" }
-];
 
 function UpgradeDialog({
     target,
@@ -126,39 +106,19 @@ export const PackagesPage = observer(function PackagesPage({
                 )}
             </Group>
 
-            <Group gap="md">
-                <TextInput
-                    placeholder="Search packages..."
-                    value={vm.search}
-                    onChange={event => presenter.setSearch(event.currentTarget.value)}
-                    style={{ flex: 1 }}
-                />
-                <SegmentedControl
-                    value={vm.upgradeType ?? "all"}
-                    onChange={value => presenter.setUpgradeType(value === "all" ? null : value)}
-                    data={UPGRADE_TYPE_OPTIONS}
-                />
-                <Select
-                    placeholder="Dependency kind"
-                    data={DEPENDENCY_KIND_OPTIONS}
-                    value={vm.dependencyKind ?? "all"}
-                    onChange={value => presenter.setDependencyKind(value === "all" ? null : value)}
-                    style={{ minWidth: 160 }}
-                />
-                <Select
-                    placeholder="All projects"
-                    data={vm.projectOptions}
-                    value={vm.projectId}
-                    onChange={value => presenter.setProjectId(value)}
-                    clearable
-                    style={{ minWidth: 200 }}
-                />
-                <Switch
-                    label="Has changelog"
-                    checked={vm.hasChangelog}
-                    onChange={event => presenter.setHasChangelog(event.currentTarget.checked)}
-                />
-            </Group>
+            <PackageFilterToolbar
+                search={vm.search}
+                upgradeType={vm.upgradeType}
+                dependencyKind={vm.dependencyKind}
+                projectId={vm.projectId}
+                hasChangelog={vm.hasChangelog}
+                projectOptions={vm.projectOptions}
+                onSearchChange={presenter.setSearch}
+                onUpgradeTypeChange={presenter.setUpgradeType}
+                onDependencyKindChange={presenter.setDependencyKind}
+                onProjectIdChange={presenter.setProjectId}
+                onHasChangelogChange={presenter.setHasChangelog}
+            />
 
             {vm.error && (
                 <Alert color="red" title="Error">
