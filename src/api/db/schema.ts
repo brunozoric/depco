@@ -4,7 +4,8 @@ import {
     integer,
     uniqueIndex,
     primaryKey,
-    unique
+    unique,
+    index
 } from "drizzle-orm/sqlite-core";
 
 export const projects = sqliteTable("projects", {
@@ -17,21 +18,29 @@ export const projects = sqliteTable("projects", {
     lastScannedAt: integer("last_scanned_at")
 });
 
-export const upgradeJobs = sqliteTable("upgrade_jobs", {
-    id: text("id").primaryKey().notNull(),
-    referenceId: text("reference_id").notNull(),
-    referenceType: text("reference_type").notNull().default("project"),
-    type: text("type").notNull(),
-    status: text("status").notNull(),
-    packages: text("packages"),
-    logs: text("logs"),
-    startedAt: integer("started_at"),
-    completedAt: integer("completed_at"),
-    warning: text("warning"),
-    progress: integer("progress"),
-    progressLabel: text("progress_label"),
-    parentJobId: text("parent_job_id")
-});
+export const upgradeJobs = sqliteTable(
+    "upgrade_jobs",
+    {
+        id: text("id").primaryKey().notNull(),
+        referenceId: text("reference_id").notNull(),
+        referenceType: text("reference_type").notNull().default("project"),
+        type: text("type").notNull(),
+        status: text("status").notNull(),
+        packages: text("packages"),
+        logs: text("logs"),
+        startedAt: integer("started_at"),
+        completedAt: integer("completed_at"),
+        warning: text("warning"),
+        progress: integer("progress"),
+        progressLabel: text("progress_label"),
+        parentJobId: text("parent_job_id")
+    },
+    table => ({
+        referenceIdx: index("upgrade_jobs_reference_id_idx").on(table.referenceId),
+        statusIdx: index("upgrade_jobs_status_idx").on(table.status),
+        parentJobIdx: index("upgrade_jobs_parent_job_id_idx").on(table.parentJobId)
+    })
+);
 
 export const registryCache = sqliteTable("registry_cache", {
     packageName: text("package_name").primaryKey().notNull(),
@@ -39,31 +48,43 @@ export const registryCache = sqliteTable("registry_cache", {
     cachedAt: integer("cached_at").notNull()
 });
 
-export const securityChecks = sqliteTable("security_checks", {
-    id: text("id").primaryKey().notNull(),
-    projectId: text("project_id")
-        .notNull()
-        .references(() => projects.id),
-    checkedAt: integer("checked_at").notNull(),
-    results: text("results").notNull(),
-    passes: integer("passes").notNull().default(0)
-});
+export const securityChecks = sqliteTable(
+    "security_checks",
+    {
+        id: text("id").primaryKey().notNull(),
+        projectId: text("project_id")
+            .notNull()
+            .references(() => projects.id),
+        checkedAt: integer("checked_at").notNull(),
+        results: text("results").notNull(),
+        passes: integer("passes").notNull().default(0)
+    },
+    table => ({
+        projectIdIdx: index("security_checks_project_id_idx").on(table.projectId)
+    })
+);
 
-export const scanResults = sqliteTable("scan_results", {
-    id: text("id").primaryKey().notNull(),
-    projectId: text("project_id")
-        .notNull()
-        .references(() => projects.id),
-    name: text("name").notNull(),
-    currentVersion: text("current_version").notNull(),
-    latestVersion: text("latest_version"),
-    latestInRange: text("latest_in_range"),
-    type: text("type").notNull(),
-    upgradeType: text("upgrade_type"),
-    dependencyKind: text("dependency_kind").notNull().default("dependency"),
-    registryResolved: integer("registry_resolved").notNull().default(1),
-    scannedAt: integer("scanned_at").notNull()
-});
+export const scanResults = sqliteTable(
+    "scan_results",
+    {
+        id: text("id").primaryKey().notNull(),
+        projectId: text("project_id")
+            .notNull()
+            .references(() => projects.id),
+        name: text("name").notNull(),
+        currentVersion: text("current_version").notNull(),
+        latestVersion: text("latest_version"),
+        latestInRange: text("latest_in_range"),
+        type: text("type").notNull(),
+        upgradeType: text("upgrade_type"),
+        dependencyKind: text("dependency_kind").notNull().default("dependency"),
+        registryResolved: integer("registry_resolved").notNull().default(1),
+        scannedAt: integer("scanned_at").notNull()
+    },
+    table => ({
+        projectIdIdx: index("scan_results_project_id_idx").on(table.projectId)
+    })
+);
 
 export const pmSecuritySettings = sqliteTable(
     "pm_security_settings",
@@ -127,45 +148,63 @@ export const appSettings = sqliteTable("app_settings", {
     value: text("value").notNull()
 });
 
-export const appLogs = sqliteTable("app_logs", {
-    id: text("id").primaryKey().notNull(),
-    level: text("level").notNull(),
-    source: text("source").notNull(),
-    projectId: text("project_id"),
-    message: text("message").notNull(),
-    details: text("details"),
-    createdAt: integer("created_at").notNull()
-});
+export const appLogs = sqliteTable(
+    "app_logs",
+    {
+        id: text("id").primaryKey().notNull(),
+        level: text("level").notNull(),
+        source: text("source").notNull(),
+        projectId: text("project_id"),
+        message: text("message").notNull(),
+        details: text("details"),
+        createdAt: integer("created_at").notNull()
+    },
+    table => ({
+        projectIdIdx: index("app_logs_project_id_idx").on(table.projectId)
+    })
+);
 
-export const upgradeSessions = sqliteTable("upgrade_sessions", {
-    id: text("id").primaryKey().notNull(),
-    projectId: text("project_id")
-        .notNull()
-        .references(() => projects.id),
-    status: text("status").notNull(),
-    currentStep: text("current_step").notNull(),
-    steps: text("steps").notNull(),
-    stepOrder: text("step_order"),
-    createdAt: integer("created_at").notNull(),
-    updatedAt: integer("updated_at").notNull()
-});
+export const upgradeSessions = sqliteTable(
+    "upgrade_sessions",
+    {
+        id: text("id").primaryKey().notNull(),
+        projectId: text("project_id")
+            .notNull()
+            .references(() => projects.id),
+        status: text("status").notNull(),
+        currentStep: text("current_step").notNull(),
+        steps: text("steps").notNull(),
+        stepOrder: text("step_order"),
+        createdAt: integer("created_at").notNull(),
+        updatedAt: integer("updated_at").notNull()
+    },
+    table => ({
+        projectIdIdx: index("upgrade_sessions_project_id_idx").on(table.projectId)
+    })
+);
 
-export const projectStepHooks = sqliteTable("project_step_hooks", {
-    id: text("id").primaryKey().notNull(),
-    projectId: text("project_id")
-        .notNull()
-        .references(() => projects.id),
-    position: text("position").notNull(),
-    name: text("name").notNull(),
-    command: text("command").notNull(),
-    type: text("type").notNull(),
-    required: integer("required").notNull().default(0),
-    enabled: integer("enabled").notNull().default(1),
-    sortOrder: integer("sort_order").notNull().default(0),
-    source: text("source").notNull().default("db"),
-    createdAt: integer("created_at").notNull(),
-    updatedAt: integer("updated_at").notNull()
-});
+export const projectStepHooks = sqliteTable(
+    "project_step_hooks",
+    {
+        id: text("id").primaryKey().notNull(),
+        projectId: text("project_id")
+            .notNull()
+            .references(() => projects.id),
+        position: text("position").notNull(),
+        name: text("name").notNull(),
+        command: text("command").notNull(),
+        type: text("type").notNull(),
+        required: integer("required").notNull().default(0),
+        enabled: integer("enabled").notNull().default(1),
+        sortOrder: integer("sort_order").notNull().default(0),
+        source: text("source").notNull().default("db"),
+        createdAt: integer("created_at").notNull(),
+        updatedAt: integer("updated_at").notNull()
+    },
+    table => ({
+        projectIdIdx: index("project_step_hooks_project_id_idx").on(table.projectId)
+    })
+);
 
 export const healthSnapshots = sqliteTable(
     "health_snapshots",
@@ -274,17 +313,23 @@ export const licenses = sqliteTable(
     })
 );
 
-export const licensePolicyRules = sqliteTable("license_policy_rules", {
-    id: text("id").primaryKey(),
-    action: text("action").notNull(),
-    licensePattern: text("license_pattern"),
-    packagePattern: text("package_pattern"),
-    projectId: text("project_id").references(() => projects.id, { onDelete: "cascade" }),
-    priority: integer("priority").notNull(),
-    reason: text("reason"),
-    createdAt: integer("created_at").notNull(),
-    updatedAt: integer("updated_at").notNull()
-});
+export const licensePolicyRules = sqliteTable(
+    "license_policy_rules",
+    {
+        id: text("id").primaryKey(),
+        action: text("action").notNull(),
+        licensePattern: text("license_pattern"),
+        packagePattern: text("package_pattern"),
+        projectId: text("project_id").references(() => projects.id, { onDelete: "cascade" }),
+        priority: integer("priority").notNull(),
+        reason: text("reason"),
+        createdAt: integer("created_at").notNull(),
+        updatedAt: integer("updated_at").notNull()
+    },
+    table => ({
+        projectIdIdx: index("license_policy_rules_project_id_idx").on(table.projectId)
+    })
+);
 
 export const licenseViolations = sqliteTable(
     "license_violations",
@@ -304,7 +349,8 @@ export const licenseViolations = sqliteTable(
         scannedAt: integer("scanned_at").notNull()
     },
     table => ({
-        uniqueLicenseRule: unique().on(table.licenseId, table.ruleId)
+        uniqueLicenseRule: unique().on(table.licenseId, table.ruleId),
+        projectIdIdx: index("license_violations_project_id_idx").on(table.projectId)
     })
 );
 
@@ -351,19 +397,25 @@ export const autoFixPullRequests = sqliteTable(
     })
 );
 
-export const dependencyEdges = sqliteTable("dependency_edges", {
-    id: text("id").primaryKey(),
-    projectId: text("project_id")
-        .notNull()
-        .references(() => projects.id, { onDelete: "cascade" }),
-    parentPackage: text("parent_package"),
-    parentVersion: text("parent_version"),
-    childPackage: text("child_package").notNull(),
-    childVersion: text("child_version").notNull(),
-    dependencyType: text("dependency_type").notNull(),
-    depth: integer("depth").notNull(),
-    scannedAt: integer("scanned_at").notNull()
-});
+export const dependencyEdges = sqliteTable(
+    "dependency_edges",
+    {
+        id: text("id").primaryKey(),
+        projectId: text("project_id")
+            .notNull()
+            .references(() => projects.id, { onDelete: "cascade" }),
+        parentPackage: text("parent_package"),
+        parentVersion: text("parent_version"),
+        childPackage: text("child_package").notNull(),
+        childVersion: text("child_version").notNull(),
+        dependencyType: text("dependency_type").notNull(),
+        depth: integer("depth").notNull(),
+        scannedAt: integer("scanned_at").notNull()
+    },
+    table => ({
+        projectIdIdx: index("dependency_edges_project_id_idx").on(table.projectId)
+    })
+);
 
 export const licenseSnapshots = sqliteTable(
     "license_snapshots",
@@ -387,17 +439,23 @@ export const licenseSnapshots = sqliteTable(
     })
 );
 
-export const dependencyChanges = sqliteTable("dependency_changes", {
-    id: text("id").primaryKey(),
-    projectId: text("project_id")
-        .notNull()
-        .references(() => projects.id, { onDelete: "cascade" }),
-    packageName: text("package_name").notNull(),
-    changeType: text("change_type").notNull(),
-    previousVersion: text("previous_version"),
-    newVersion: text("new_version"),
-    detectedAt: integer("detected_at").notNull()
-});
+export const dependencyChanges = sqliteTable(
+    "dependency_changes",
+    {
+        id: text("id").primaryKey(),
+        projectId: text("project_id")
+            .notNull()
+            .references(() => projects.id, { onDelete: "cascade" }),
+        packageName: text("package_name").notNull(),
+        changeType: text("change_type").notNull(),
+        previousVersion: text("previous_version"),
+        newVersion: text("new_version"),
+        detectedAt: integer("detected_at").notNull()
+    },
+    table => ({
+        projectIdIdx: index("dependency_changes_project_id_idx").on(table.projectId)
+    })
+);
 
 export const teams = sqliteTable("teams", {
     id: text("id").primaryKey(),
@@ -418,7 +476,8 @@ export const teamProjects = sqliteTable(
             .references(() => projects.id, { onDelete: "cascade" })
     },
     table => ({
-        uniqueTeamProject: unique().on(table.teamId, table.projectId)
+        uniqueTeamProject: unique().on(table.teamId, table.projectId),
+        projectIdIdx: index("team_projects_project_id_idx").on(table.projectId)
     })
 );
 
