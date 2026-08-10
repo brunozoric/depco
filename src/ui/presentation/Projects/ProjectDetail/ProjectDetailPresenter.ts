@@ -24,9 +24,11 @@ import { SbomGateway } from "../../../features/Sbom/abstractions/SbomGateway.js"
 import { TeamsGateway } from "../../../features/Teams/abstractions/TeamsGateway.js";
 import { TeamListService } from "../../../features/TeamFilter/abstractions/TeamListService.js";
 import { UrlFilterService } from "../../../features/UrlFilter/abstractions/UrlFilterService.js";
-import { downloadBlob } from "#ui/infrastructure/Shared/download/downloadBlob.js";
 import { getProjectDependenciesRoute } from "#shared/routes/projects.js";
 import type { z } from "zod";
+import { AutoFixManager } from "./AutoFixManager.js";
+import { SbomExportManager } from "./SbomExportManager.js";
+import { DependencySelectionManager } from "./DependencySelectionManager.js";
 
 const DEFAULT_PAGE_SIZE = 25;
 
@@ -50,7 +52,6 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
     private loading = false;
     private readonly scanStates = new Map<string, ScanState>();
     private currentProjectId: string | null = null;
-    private readonly selectedNames = new Set<string>();
     private packageManagerUpdateVersionValue = "";
     private scanWarning: string | null = null;
     private upgradeFilterValue: UpgradeFilter = "all";
@@ -59,12 +60,11 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         { count: number; maxSeverity: VulnerabilitySeverity }
     >();
     private licenseByPackage = new Map<string, LicenseData>();
-    private currentAutoFixSettings: AutoFixGateway.Settings | null = null;
-    private autoFixPullRequestItems: AutoFixGateway.PullRequest[] = [];
-    private autoFixRunning = false;
-    private exportingSbom = false;
-    private sbomExportError: string | null = null;
     private projectTeamIdValues: string[] = [];
+
+    private readonly autoFixManager: AutoFixManager;
+    private readonly sbomExportManager: SbomExportManager;
+    private readonly selectionManager: DependencySelectionManager;
 
     private readonly changelogTracker: ChangelogTracker;
     private readonly disposeUrlListener: () => void;
@@ -95,6 +95,21 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         private readonly teamListService: TeamListService.Interface,
         private readonly urlFilterService: UrlFilterService.Interface
     ) {
+        const getProjectId = (): string | null => this.currentProjectId;
+
+        this.autoFixManager = new AutoFixManager({
+            autoFixGateway: this.autoFixGateway,
+            getProjectId
+        });
+        this.sbomExportManager = new SbomExportManager({
+            sbomGateway: this.sbomGateway,
+            getProjectId
+        });
+        this.selectionManager = new DependencySelectionManager({
+            projectsRepository: this.projectsRepository,
+            getProjectId
+        });
+
         makeAutoObservable(this, { vm: computed });
         this.changelogTracker = new ChangelogTracker(this.eventBridge);
 
@@ -190,7 +205,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
                     latestVersion: dependency.latestVersion,
                     type: dependency.type,
                     upgradeType: dependency.upgradeType,
-                    selected: this.selectedNames.has(dependency.name),
+                    selected: this.selectionManager.selectedNames.has(dependency.name),
                     vulnerabilityCount: vulnerabilityData?.count ?? 0,
                     vulnerabilityMaxSeverity: vulnerabilityData?.maxSeverity ?? null,
                     license: licenseData?.licenseName ?? null,
@@ -229,8 +244,8 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
             page: urlFilters.page ?? 1,
             pageSize,
             totalPages: Math.ceil(totalCount / pageSize),
-            canUpgrade: this.selectedNames.size > 0,
-            selectedCount: this.selectedNames.size,
+            canUpgrade: this.selectionManager.selectedNames.size > 0,
+            selectedCount: this.selectionManager.selectedNames.size,
             packageManagerUpdateVersion: this.packageManagerUpdateVersionValue,
             schedule: schedule
                 ? {
@@ -239,15 +254,15 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
                       globalDefault: this.scanSchedulesRepository.getGlobalDefault()
                   }
                 : null,
-            autoFixSettings: this.currentAutoFixSettings
+            autoFixSettings: this.autoFixManager.settings
                 ? {
-                      enabled: this.currentAutoFixSettings.enabled,
-                      upgradeTypes: this.currentAutoFixSettings.upgradeTypes,
-                      groupingStrategy: this.currentAutoFixSettings.groupingStrategy,
-                      branchPrefix: this.currentAutoFixSettings.branchPrefix
+                      enabled: this.autoFixManager.settings.enabled,
+                      upgradeTypes: this.autoFixManager.settings.upgradeTypes,
+                      groupingStrategy: this.autoFixManager.settings.groupingStrategy,
+                      branchPrefix: this.autoFixManager.settings.branchPrefix
                   }
                 : null,
-            autoFixPullRequests: this.autoFixPullRequestItems.map(
+            autoFixPullRequests: this.autoFixManager.pullRequests.map(
                 (pullRequest): Abstraction.AutoFixPullRequestViewModel => ({
                     id: pullRequest.id,
                     packageNames: pullRequest.packageNames,
@@ -261,9 +276,9 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
                     licenseWarnings: pullRequest.licenseWarnings
                 })
             ),
-            autoFixRunning: this.autoFixRunning,
-            exportingSbom: this.exportingSbom,
-            sbomExportError: this.sbomExportError,
+            autoFixRunning: this.autoFixManager.running,
+            exportingSbom: this.sbomExportManager.exporting,
+            sbomExportError: this.sbomExportManager.error,
             projectTeamIds: this.projectTeamIdValues,
             availableTeams: this.teamListService.getTeams(),
             changelogState: this.changelogTracker.state
@@ -281,8 +296,8 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
                 this.loadScanSchedulesUseCase.execute(),
                 this.loadVulnerabilities(projectId),
                 this.loadLicenses(projectId),
-                this.loadAutoFixSettings(projectId),
-                this.loadAutoFixPullRequests(projectId),
+                this.autoFixManager.loadSettings(projectId),
+                this.autoFixManager.loadPullRequests(projectId),
                 this.loadProjectTeams(projectId),
                 this.loadAvailableTeams()
             ]);
@@ -382,28 +397,6 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         }
     };
 
-    private loadAutoFixSettings = async (projectId: string): Promise<void> => {
-        try {
-            const settings = await this.autoFixGateway.getSettings(projectId);
-            runInAction(() => {
-                this.currentAutoFixSettings = settings;
-            });
-        } catch {
-            // Auto-fix settings fetch failure should not break the page
-        }
-    };
-
-    private loadAutoFixPullRequests = async (projectId: string): Promise<void> => {
-        try {
-            const response = await this.autoFixGateway.getProjectPullRequests(projectId);
-            runInAction(() => {
-                this.autoFixPullRequestItems = response.items;
-            });
-        } catch {
-            // Auto-fix PR fetch failure should not break the page
-        }
-    };
-
     private loadProjectTeams = async (projectId: string): Promise<void> => {
         try {
             const response = await this.teamsGateway.getProjectTeams(projectId);
@@ -422,28 +415,15 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
     };
 
     public togglePackage = (name: string): void => {
-        if (this.selectedNames.has(name)) {
-            this.selectedNames.delete(name);
-        } else {
-            this.selectedNames.add(name);
-        }
+        this.selectionManager.toggle(name);
     };
 
     public selectAll = (): void => {
-        const dependenciesResponse = this.currentProjectId
-            ? this.projectsRepository.getDependencies(this.currentProjectId)
-            : undefined;
-
-        this.selectedNames.clear();
-        for (const dependency of dependenciesResponse?.dependencies ?? []) {
-            if (dependency.upgradeType !== "none") {
-                this.selectedNames.add(dependency.name);
-            }
-        }
+        this.selectionManager.selectAll();
     };
 
     public deselectAll = (): void => {
-        this.selectedNames.clear();
+        this.selectionManager.deselectAll();
     };
 
     public setUpgradeFilter = (filter: UpgradeFilter): void => {
@@ -532,29 +512,11 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
     public updateAutoFixSettings = async (
         input: Abstraction.UpdateAutoFixSettingsInput
     ): Promise<void> => {
-        if (!this.currentProjectId) {
-            return;
-        }
-        const settings = await this.autoFixGateway.updateSettings(this.currentProjectId, input);
-        runInAction(() => {
-            this.currentAutoFixSettings = settings;
-        });
+        await this.autoFixManager.updateSettings(input);
     };
 
     public generateAutoFixPrs = async (): Promise<void> => {
-        if (!this.currentProjectId) {
-            return;
-        }
-        const projectId = this.currentProjectId;
-        this.autoFixRunning = true;
-        try {
-            await this.autoFixGateway.generate(projectId);
-            await this.loadAutoFixPullRequests(projectId);
-        } finally {
-            runInAction(() => {
-                this.autoFixRunning = false;
-            });
-        }
+        await this.autoFixManager.generate();
     };
 
     public setProjectTeams = async (teamIds: string[]): Promise<void> => {
@@ -585,25 +547,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
     };
 
     public exportSbom = async (format: string): Promise<void> => {
-        if (!this.currentProjectId) {
-            return;
-        }
-        const projectId = this.currentProjectId;
-        this.exportingSbom = true;
-        this.sbomExportError = null;
-        try {
-            const response = await this.sbomGateway.exportProject(projectId, format);
-            downloadBlob(response.blob, response.filename);
-        } catch (error) {
-            runInAction(() => {
-                this.sbomExportError =
-                    error instanceof Error ? error.message : "SBOM export failed";
-            });
-        } finally {
-            runInAction(() => {
-                this.exportingSbom = false;
-            });
-        }
+        await this.sbomExportManager.export(format);
     };
 }
 
