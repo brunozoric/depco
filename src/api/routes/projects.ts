@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { existsSync } from "fs";
 import { join } from "path";
-import { eq, and, sql, like, type SQL } from "drizzle-orm";
+import { eq, and, sql, like, inArray, type SQL } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import { registerRoute, sendOne, sendList, sendNone, sendError } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
@@ -157,14 +157,16 @@ export async function projectRoutes(app: FastifyInstance, options: PluginOptions
                 error?: string;
             }[] = [];
 
-            for (const { path: projectPath } of request.body.items) {
-                const existing = await db
-                    .select()
-                    .from(projects)
-                    .where(eq(projects.path, projectPath))
-                    .get();
+            const requestedPaths = request.body.items.map(item => item.path);
+            const existingRows = await db
+                .select({ path: projects.path })
+                .from(projects)
+                .where(inArray(projects.path, requestedPaths))
+                .all();
+            const existingPaths = new Set(existingRows.map(r => r.path));
 
-                if (existing) {
+            for (const { path: projectPath } of request.body.items) {
+                if (existingPaths.has(projectPath)) {
                     results.push({ path: projectPath, status: "skipped" });
                     continue;
                 }

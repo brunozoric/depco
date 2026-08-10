@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { registerRoute, sendList, sendError } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
@@ -271,13 +271,16 @@ export async function vulnerabilityRoutes(
             const { ids } = request.body;
             const projectIds = await vulnerabilityService.getProjectIdsForVulnerabilityIds(ids);
 
+            const projectRows = await db
+                .select()
+                .from(projects)
+                .where(inArray(projects.id, projectIds))
+                .all();
+            const projectMap = new Map(projectRows.map(p => [p.id, p]));
+
             let projectsQueued = 0;
             for (const projectId of projectIds) {
-                const project = await db
-                    .select()
-                    .from(projects)
-                    .where(eq(projects.id, projectId))
-                    .get();
+                const project = projectMap.get(projectId);
                 if (project?.packageManager) {
                     await vulnerabilityService.scan({
                         projectId,
