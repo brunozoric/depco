@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Zod, DI container, SARIF 2.1.0 JSON schema
 
-**Depends on:** Plan `2026-08-10-shared-vulnerability-modules.md` — needs `IMergedVulnerability`, `CheckVulnerabilitiesStep`, shared types
+**Depends on:** Plan `2026-08-10-shared-vulnerability-modules.md` — specifically Task 1 (adds `IMergedVulnerability` and `TVulnerabilitySource` to `src/shared/vulnerabilities/types.ts`). Plan 2 Task 1 imports these types. Execute Plan 1 Task 1 before starting Plan 2.
 
 ## Global Constraints
 
@@ -442,13 +442,12 @@ Create `src/cli/commands/scan/formatters/feature.ts`:
 
 ```typescript
 import { createFeature } from "#shared/index.js";
-import { OutputFormatterFactory as Abstraction } from "./abstractions/OutputFormatterFactory.js";
 import { OutputFormatterFactory } from "./OutputFormatterFactory.js";
 
 export const OutputFormatterFeature = createFeature({
     name: "Cli/OutputFormatterFactory",
     register(container) {
-        container.register(Abstraction, OutputFormatterFactory).inSingletonScope();
+        container.register(OutputFormatterFactory).inSingletonScope();
     }
 });
 ```
@@ -1263,14 +1262,13 @@ Create `src/cli/commands/scan/steps/RenderOutput/feature.ts`:
 ```typescript
 import { createFeature } from "#shared/index.js";
 import { OutputFormatterFeature } from "../../../formatters/feature.js";
-import { RenderOutputStep as Abstraction } from "./abstractions/RenderOutputStep.js";
 import { RenderOutputStep } from "./RenderOutputStep.js";
 
 export const RenderOutputStepFeature = createFeature({
     name: "Cli/RenderOutputStep",
     dependencies: [OutputFormatterFeature],
     register(container) {
-        container.register(Abstraction, RenderOutputStep).inSingletonScope();
+        container.register(RenderOutputStep).inSingletonScope();
     }
 });
 ```
