@@ -1,3 +1,4 @@
+import { join } from "path";
 import { eq, inArray } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
@@ -121,7 +122,11 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
             }
 
             const finalFolderName = folderName || repoName;
-            if (finalFolderName.includes("/") || finalFolderName.includes("..")) {
+            if (
+                finalFolderName.includes("/") ||
+                finalFolderName.includes("\\") ||
+                finalFolderName.includes("..")
+            ) {
                 sendError({
                     reply,
                     statusCode: 400,
@@ -139,7 +144,7 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
                 return;
             }
 
-            const finalPath = `${destination}/${finalFolderName}`;
+            const finalPath = join(destination, finalFolderName);
             const existing = await db
                 .select()
                 .from(projects)
