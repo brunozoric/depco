@@ -10,17 +10,16 @@ import {
     Group,
     Loader,
     Pagination,
-    Select,
     Stack,
     Table,
     Text,
-    TextInput,
     Title
 } from "@mantine/core";
 import { observer } from "mobx-react-lite";
 import { navigate } from "#ui/infrastructure/Router/router.js";
 import { ConfirmDialog } from "#ui/infrastructure/Shared/components/ConfirmDialog.js";
 import type { LogBrowserPresenter } from "../abstractions/LogBrowserPresenter.js";
+import { LogFilterBar } from "./LogFilterBar.js";
 
 interface LogBrowserPageProps {
     presenter: LogBrowserPresenter.Interface;
@@ -32,51 +31,8 @@ const LEVEL_COLORS: Record<string, string> = {
     info: "blue"
 };
 
-const LEVEL_OPTIONS = [
-    { label: "Error", value: "error" },
-    { label: "Warning", value: "warn" },
-    { label: "Info", value: "info" }
-];
-
-const SOURCE_OPTIONS = [
-    { label: "Scan", value: "scan" },
-    { label: "Upgrade", value: "upgrade" },
-    { label: "Install", value: "install" },
-    { label: "Step Resolver", value: "step-resolver" },
-    { label: "Git", value: "git" },
-    { label: "Clone", value: "clone" }
-];
-
 function formatTimestamp(ts: number): string {
     return new Date(ts).toLocaleString();
-}
-
-// Converts an epoch-ms string (as stored by the presenter) into the local
-// "YYYY-MM-DDTHH:mm" format expected by <input type="datetime-local">.
-function epochMsToDatetimeLocal(value: string | null): string {
-    if (!value) {
-        return "";
-    }
-    const ms = Number(value);
-    if (Number.isNaN(ms)) {
-        return "";
-    }
-    const date = new Date(ms);
-    const offsetMs = date.getTimezoneOffset() * 60000;
-    return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
-}
-
-// Converts a datetime-local input value back into an epoch-ms string, or
-// null when the input was cleared / invalid.
-function datetimeLocalToEpochMs(value: string): string | null {
-    if (!value) {
-        return null;
-    }
-    const ms = new Date(value).getTime();
-    if (Number.isNaN(ms)) {
-        return null;
-    }
-    return String(ms);
 }
 
 export const LogBrowserPage = observer(function LogBrowserPage({
@@ -111,62 +67,16 @@ export const LogBrowserPage = observer(function LogBrowserPage({
                 <Title order={2}>Logs</Title>
             </Group>
 
-            <Group gap="sm">
-                <Select
-                    size="xs"
-                    placeholder="Level"
-                    data={LEVEL_OPTIONS}
-                    value={vm.levelFilter}
-                    onChange={value => presenter.setFilter("level", value)}
-                    clearable
-                    style={{ width: 130 }}
-                />
-                <Select
-                    size="xs"
-                    placeholder="Source"
-                    data={SOURCE_OPTIONS}
-                    value={vm.sourceFilter}
-                    onChange={value => presenter.setFilter("source", value)}
-                    clearable
-                    style={{ width: 150 }}
-                />
-                <Select
-                    size="xs"
-                    placeholder="Project"
-                    data={vm.projects}
-                    value={vm.projectFilter}
-                    onChange={value => presenter.setFilter("project", value)}
-                    clearable
-                    searchable
-                    style={{ width: 180 }}
-                />
-                <TextInput
-                    type="datetime-local"
-                    size="xs"
-                    placeholder="From"
-                    value={epochMsToDatetimeLocal(vm.dateFrom)}
-                    onChange={e =>
-                        presenter.setFilter(
-                            "dateFrom",
-                            datetimeLocalToEpochMs(e.currentTarget.value)
-                        )
-                    }
-                    style={{ width: 200 }}
-                />
-                <TextInput
-                    type="datetime-local"
-                    size="xs"
-                    placeholder="To"
-                    value={epochMsToDatetimeLocal(vm.dateTo)}
-                    onChange={e =>
-                        presenter.setFilter("dateTo", datetimeLocalToEpochMs(e.currentTarget.value))
-                    }
-                    style={{ width: 200 }}
-                />
-                <Button size="xs" variant="subtle" onClick={() => presenter.clearFilters()}>
-                    Clear
-                </Button>
-            </Group>
+            <LogFilterBar
+                levelFilter={vm.levelFilter}
+                sourceFilter={vm.sourceFilter}
+                projectFilter={vm.projectFilter}
+                projects={vm.projects}
+                dateFrom={vm.dateFrom}
+                dateTo={vm.dateTo}
+                onFilterChange={(field, value) => presenter.setFilter(field, value)}
+                onClearFilters={() => presenter.clearFilters()}
+            />
 
             {vm.error && (
                 <Alert color="red" title="Error">
