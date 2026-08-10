@@ -1,21 +1,18 @@
 import type React from "react";
 import { useEffect, useState } from "react";
 import {
-    ActionIcon,
     Alert,
     Button,
     Center,
     Group,
     Loader,
-    Menu,
     MultiSelect,
     Pagination,
     Progress,
     SegmentedControl,
     Stack,
     Text,
-    TextInput,
-    Title
+    TextInput
 } from "@mantine/core";
 import type { UpgradeFilter } from "../abstractions/ProjectDetailPresenter.js";
 import { navigate } from "#ui/infrastructure/Router/router.js";
@@ -30,6 +27,8 @@ import { InstallDialog } from "./InstallDialog.js";
 import { ChangelogModal } from "./ChangelogModal.js";
 import { ScanScheduleSection } from "./ScanScheduleSection.js";
 import { AutoFixSection } from "./AutoFixSection.js";
+import { ProjectDetailHeader } from "./ProjectDetailHeader.js";
+import { ProjectActionButtons } from "./ProjectActionButtons.js";
 
 interface ProjectDetailPageProps {
     presenter: ProjectDetailPresenter.Interface;
@@ -80,30 +79,16 @@ export const ProjectDetailPage = observer(function ProjectDetailPage({
 
     return (
         <Stack gap="md">
-            <Group gap="sm">
-                <ActionIcon variant="subtle" size="lg" onClick={() => navigate("/")}>
-                    &larr;
-                </ActionIcon>
-                <Title order={2}>{project.name}</Title>
-                <ActionIcon
-                    variant="subtle"
-                    size="lg"
-                    onClick={() => presenter.load(projectId)}
-                    loading={vm.loading || vm.scanning}
-                >
-                    &#x21bb;
-                </ActionIcon>
-            </Group>
-            <Stack gap={4}>
-                <Text c="dimmed" size="sm">
-                    {project.path}
-                </Text>
-                <Text size="sm">
-                    {project.packageManager
-                        ? `${project.packageManager.charAt(0).toUpperCase()}${project.packageManager.slice(1)} ${project.pmVersion ?? ""}`.trim()
-                        : `Package Manager: ${project.pmVersion ?? "Unknown"}`}
-                </Text>
-            </Stack>
+            <ProjectDetailHeader
+                projectName={project.name}
+                projectPath={project.path}
+                packageManager={project.packageManager}
+                packageManagerVersion={project.pmVersion}
+                loading={vm.loading}
+                scanning={vm.scanning}
+                onBack={() => navigate("/")}
+                onRefresh={() => presenter.load(projectId)}
+            />
 
             <MultiSelect
                 label="Teams"
@@ -210,54 +195,24 @@ export const ProjectDetailPage = observer(function ProjectDetailPage({
                 </>
             )}
 
-            <Group>
-                <Button onClick={() => presenter.scan()} loading={vm.scanning}>
-                    Scan
-                </Button>
-                <Button
-                    onClick={() => {
-                        const selected = vm.dependencies.filter(d => d.selected).map(d => d.name);
-                        navigate(`/Projects/${projectId}/upgrade?selected=${selected.join(",")}`);
-                    }}
-                    disabled={!vm.canUpgrade || securityBlocked}
-                >
-                    Upgrade Selected ({vm.selectedCount})
-                </Button>
-                <Button variant="light" onClick={() => presenter.refreshTransient()}>
-                    Refresh Transient
-                </Button>
-                <Button
-                    variant="light"
-                    onClick={() => setInstallDialogOpened(true)}
-                    disabled={!vm.project?.packageManager}
-                >
-                    Install
-                </Button>
-                <Button
-                    variant="light"
-                    onClick={() => navigate(`/Projects/${projectId}/step-hooks`)}
-                >
-                    Step Hooks
-                </Button>
-                <Button variant="light" onClick={() => navigate(`/Projects/${projectId}/graph`)}>
-                    Dependency Graph
-                </Button>
-                <Menu>
-                    <Menu.Target>
-                        <Button variant="light" loading={vm.exportingSbom}>
-                            Export SBOM
-                        </Button>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                        <Menu.Item onClick={() => void presenter.exportSbom("cyclonedx")}>
-                            CycloneDX
-                        </Menu.Item>
-                        <Menu.Item onClick={() => void presenter.exportSbom("spdx")}>
-                            SPDX
-                        </Menu.Item>
-                    </Menu.Dropdown>
-                </Menu>
-            </Group>
+            <ProjectActionButtons
+                scanning={vm.scanning}
+                selectedCount={vm.selectedCount}
+                canUpgrade={vm.canUpgrade}
+                securityBlocked={securityBlocked}
+                hasPackageManager={!!vm.project?.packageManager}
+                exportingSbom={vm.exportingSbom}
+                onScan={() => presenter.scan()}
+                onUpgradeSelected={() => {
+                    const selected = vm.dependencies.filter(d => d.selected).map(d => d.name);
+                    navigate(`/Projects/${projectId}/upgrade?selected=${selected.join(",")}`);
+                }}
+                onRefreshTransient={() => presenter.refreshTransient()}
+                onInstall={() => setInstallDialogOpened(true)}
+                onStepHooks={() => navigate(`/Projects/${projectId}/step-hooks`)}
+                onDependencyGraph={() => navigate(`/Projects/${projectId}/graph`)}
+                onExportSbom={format => void presenter.exportSbom(format)}
+            />
 
             <ScanScheduleSection presenter={presenter} />
 
