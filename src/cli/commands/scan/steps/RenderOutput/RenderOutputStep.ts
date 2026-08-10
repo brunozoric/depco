@@ -8,6 +8,7 @@ import type { IStepContext, IStepResult } from "../../../../runner/abstractions/
 import type { ILicenseViolation, IScanOutput } from "../../formatters/types.js";
 
 interface IApplyExitCodeInput {
+    violations: ILicenseViolation[];
     vulnerabilities: IMergedVulnerability[];
     config: IDepcoConfig | undefined;
 }
@@ -46,7 +47,7 @@ class RenderOutputStepImpl implements Abstraction.Interface {
 
         console.log(formatter.format(output));
 
-        this.applyExitCode({ vulnerabilities, config });
+        this.applyExitCode({ violations, vulnerabilities, config });
 
         return { success: true, message: `${output.summary.total} issues found` };
     }
@@ -68,20 +69,27 @@ class RenderOutputStepImpl implements Abstraction.Interface {
     }
 
     private applyExitCode(input: IApplyExitCodeInput): void {
-        const maxSeverity = input.config?.scan?.vulnerability?.maxSeverity;
-        if (!maxSeverity) {
+        if (input.violations.length > 0) {
+            process.exitCode = 1;
             return;
         }
 
+        if (this.exceedsVulnerabilityThreshold(input)) {
+            process.exitCode = 1;
+        }
+    }
+
+    private exceedsVulnerabilityThreshold(input: IApplyExitCodeInput): boolean {
+        const maxSeverity = input.config?.scan?.vulnerability?.maxSeverity;
+        if (!maxSeverity) {
+            return false;
+        }
+
         const thresholdIndex = VULNERABILITY_SEVERITIES.indexOf(maxSeverity);
-        const exceedsThreshold = input.vulnerabilities.some(
+        return input.vulnerabilities.some(
             vulnerability =>
                 VULNERABILITY_SEVERITIES.indexOf(vulnerability.severity) <= thresholdIndex
         );
-
-        if (exceedsThreshold) {
-            process.exitCode = 1;
-        }
     }
 }
 

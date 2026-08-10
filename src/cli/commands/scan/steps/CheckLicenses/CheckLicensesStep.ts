@@ -109,7 +109,7 @@ class CheckLicensesStepImpl implements Abstraction.Interface {
             };
         }
 
-        return { success: false, message: `${violations.length} non-permissive license(s) found` };
+        return { success: true, message: `Found ${violations.length} violation(s)` };
     }
 }
 

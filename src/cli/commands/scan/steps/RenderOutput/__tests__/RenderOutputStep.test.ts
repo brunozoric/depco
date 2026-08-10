@@ -113,6 +113,8 @@ describe("RenderOutputStep", () => {
 
     it("does not set exit code when no vulnerability exceeds threshold", async () => {
         const context = createTestContext();
+        // Isolate vulnerability-threshold behavior from the license-violation exit path.
+        context.results.delete("violations");
         context.results.set("config", {
             scan: { vulnerability: { maxSeverity: "critical" } }
         });
@@ -145,6 +147,37 @@ describe("RenderOutputStep", () => {
 
     it("does not set exit code when no maxSeverity configured", async () => {
         const context = createTestContext();
+        // Isolate vulnerability-threshold behavior from the license-violation exit path.
+        context.results.delete("violations");
+        context.results.set("config", {});
+
+        const originalExitCode = process.exitCode;
+        process.exitCode = undefined;
+
+        await step.execute(context);
+
+        expect(process.exitCode).toBeUndefined();
+        process.exitCode = originalExitCode;
+    });
+
+    it("sets exit code 1 when license violations exist, even with no maxSeverity configured", async () => {
+        const context = createTestContext();
+        context.results.delete("vulnerabilities");
+        context.results.set("config", {});
+
+        const originalExitCode = process.exitCode;
+        process.exitCode = undefined;
+
+        await step.execute(context);
+
+        expect(process.exitCode).toBe(1);
+        process.exitCode = originalExitCode;
+    });
+
+    it("does not set exit code when there are no violations and no vulnerabilities", async () => {
+        const context = createTestContext();
+        context.results.delete("violations");
+        context.results.delete("vulnerabilities");
         context.results.set("config", {});
 
         const originalExitCode = process.exitCode;

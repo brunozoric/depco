@@ -59,7 +59,7 @@ describe("CheckLicensesStep", () => {
         expect(consoleLogSpy).not.toHaveBeenCalled();
     });
 
-    it("fails when non-permissive license found", async () => {
+    it("reports violations without failing the step when non-permissive license found", async () => {
         globalThis.fetch = vi.fn().mockImplementation((url: string) => {
             if (url.includes("gpl-package")) {
                 return Promise.resolve({
@@ -81,12 +81,12 @@ describe("CheckLicensesStep", () => {
         context.results.set("config", {});
         const result = await step.execute(context);
 
-        expect(result.success).toBe(false);
+        expect(result.success).toBe(true);
         const violations = context.results.get("violations") as Array<unknown>;
         expect(violations).toHaveLength(1);
     });
 
-    it("classifies unknown license as violation", async () => {
+    it("classifies unknown license as violation without failing the step", async () => {
         globalThis.fetch = vi.fn().mockResolvedValue({
             ok: true,
             json: () => Promise.resolve({})
@@ -97,7 +97,9 @@ describe("CheckLicensesStep", () => {
         context.results.set("config", {});
         const result = await step.execute(context);
 
-        expect(result.success).toBe(false);
+        expect(result.success).toBe(true);
+        const violations = context.results.get("violations") as Array<unknown>;
+        expect(violations).toHaveLength(1);
     });
 
     it("handles legacy object license format", async () => {
@@ -114,7 +116,7 @@ describe("CheckLicensesStep", () => {
         expect(result.success).toBe(true);
     });
 
-    it("handles fetch errors gracefully", async () => {
+    it("handles fetch errors gracefully by recording a violation without failing the step", async () => {
         globalThis.fetch = vi.fn().mockResolvedValue({
             ok: false,
             status: 404,
@@ -126,7 +128,9 @@ describe("CheckLicensesStep", () => {
         context.results.set("config", {});
         const result = await step.execute(context);
 
-        expect(result.success).toBe(false);
+        expect(result.success).toBe(true);
+        const violations = context.results.get("violations") as Array<unknown>;
+        expect(violations).toHaveLength(1);
     });
 
     it("respects allowedRiskTiers from config", async () => {
