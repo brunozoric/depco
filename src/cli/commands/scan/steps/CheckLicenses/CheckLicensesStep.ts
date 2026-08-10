@@ -3,11 +3,7 @@ import { classifyLicenseRiskTier } from "#shared/licenses/types.js";
 import type { LicenseRiskTier } from "#shared/licenses/types.js";
 import type { IDepcoConfig } from "#shared/config/types.js";
 import type { IStepContext, IStepResult } from "../../../../runner/abstractions/Step.js";
-
-interface IPackageEntry {
-    name: string;
-    version: string;
-}
+import type { IPackageEntry } from "#shared/types/IPackageEntry.js";
 
 interface ILicenseResult {
     packageName: string;

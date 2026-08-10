@@ -1,11 +1,7 @@
 import { ParseLockfileStep as Abstraction } from "./abstractions/ParseLockfileStep.js";
 import { LockfileParserService } from "#api/services/DependencyGraph/abstractions/LockfileParserService.js";
 import type { IStepContext, IStepResult } from "../../../../runner/abstractions/Step.js";
-
-interface IPackageEntry {
-    name: string;
-    version: string;
-}
+import type { IPackageEntry } from "#shared/types/IPackageEntry.js";
 
 class ParseLockfileStepImpl implements Abstraction.Interface {
     public name = "parse-lockfile";
