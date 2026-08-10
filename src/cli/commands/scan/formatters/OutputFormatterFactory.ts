@@ -3,12 +3,18 @@ import type { IOutputFormatterFactoryInput } from "./abstractions/OutputFormatte
 import type { IOutputFormatter } from "./types.js";
 import { TableFormatter } from "./TableFormatter.js";
 import { JsonFormatter } from "./JsonFormatter.js";
+import { CsvFormatter } from "./CsvFormatter.js";
+import { SarifFormatter } from "./SarifFormatter.js";
 
 class OutputFormatterFactoryImpl implements Abstraction.Interface {
     public create(input: IOutputFormatterFactoryInput): IOutputFormatter {
         switch (input.format) {
             case "json":
                 return new JsonFormatter();
+            case "csv":
+                return new CsvFormatter();
+            case "sarif":
+                return new SarifFormatter();
             case "table":
             default:
                 return new TableFormatter();
