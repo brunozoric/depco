@@ -1,10 +1,14 @@
-import { readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
-import type { Dirent } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
 import { Logger } from "@webiny/stdlib";
 import { CheckEnginesStep as Abstraction } from "./abstractions/CheckEnginesStep.js";
-import { parseEnginesNode, classifyNodeVersion, NODE_RELEASES } from "#shared/engines/index.js";
+import {
+    parseEnginesNode,
+    classifyNodeVersion,
+    NODE_RELEASES,
+    walkNodeModules as walkNodeModulesShared
+} from "#shared/engines/index.js";
 import type { IEnginesFinding } from "#shared/engines/types.js";
 import type { IDepcoConfig } from "#shared/config/types.js";
 import type { IStepContext, IStepResult } from "../../../../runner/abstractions/Step.js";
@@ -73,123 +77,6 @@ function buildFinding(input: IBuildFindingInput): IEnginesFinding {
     };
 }
 
-interface IOnMalformedPackageInput {
-    packageName: string;
-    error: unknown;
-}
-
-interface IWalkContext {
-    findings: IEnginesFinding[];
-    visitedRealPaths: Set<string>;
-    onMalformedPackage: (input: IOnMalformedPackageInput) => void;
-}
-
-function isTraversableDirectory(entry: Dirent, parentPath: string): boolean {
-    if (entry.isDirectory()) {
-        return true;
-    }
-    if (!entry.isSymbolicLink()) {
-        return false;
-    }
-    try {
-        return statSync(join(parentPath, entry.name)).isDirectory();
-    } catch {
-        return false;
-    }
-}
-
-interface ICollectPackageInput {
-    packageDirectory: string;
-    packageName: string;
-    context: IWalkContext;
-}
-
-function collectPackage(input: ICollectPackageInput): void {
-    const { packageDirectory, packageName, context } = input;
-
-    try {
-        const info = readPackageJsonInfo(join(packageDirectory, "package.json"));
-        context.findings.push(
-            buildFinding({
-                packageName: info.name ?? packageName,
-                version: info.version ?? "",
-                enginesNode: info.enginesNode,
-                isRoot: false
-            })
-        );
-    } catch (error) {
-        context.onMalformedPackage({ packageName, error });
-    }
-
-    walkNodeModules({
-        nodeModulesPath: join(packageDirectory, "node_modules"),
-        context
-    });
-}
-
-interface IWalkNodeModulesInput {
-    nodeModulesPath: string;
-    context: IWalkContext;
-}
-
-function walkNodeModules(input: IWalkNodeModulesInput): void {
-    const { nodeModulesPath, context } = input;
-
-    let resolvedPath: string;
-    try {
-        resolvedPath = realpathSync(nodeModulesPath);
-    } catch {
-        return;
-    }
-    if (context.visitedRealPaths.has(resolvedPath)) {
-        return;
-    }
-    context.visitedRealPaths.add(resolvedPath);
-
-    let directoryEntries: Dirent[];
-    try {
-        directoryEntries = readdirSync(nodeModulesPath, { withFileTypes: true });
-    } catch {
-        return;
-    }
-
-    for (const directoryEntry of directoryEntries) {
-        if (directoryEntry.name === ".bin") {
-            continue;
-        }
-        if (!isTraversableDirectory(directoryEntry, nodeModulesPath)) {
-            continue;
-        }
-
-        if (directoryEntry.name.startsWith("@")) {
-            const scopeDirectory = join(nodeModulesPath, directoryEntry.name);
-            let scopedEntries: Dirent[];
-            try {
-                scopedEntries = readdirSync(scopeDirectory, { withFileTypes: true });
-            } catch {
-                continue;
-            }
-            for (const scopedEntry of scopedEntries) {
-                if (!isTraversableDirectory(scopedEntry, scopeDirectory)) {
-                    continue;
-                }
-                collectPackage({
-                    packageDirectory: join(scopeDirectory, scopedEntry.name),
-                    packageName: `${directoryEntry.name}/${scopedEntry.name}`,
-                    context
-                });
-            }
-            continue;
-        }
-
-        collectPackage({
-            packageDirectory: join(nodeModulesPath, directoryEntry.name),
-            packageName: directoryEntry.name,
-            context
-        });
-    }
-}
-
 interface IFilterIgnoredFindingsInput {
     findings: IEnginesFinding[];
     config: IDepcoConfig;
@@ -217,24 +104,27 @@ class CheckEnginesStepImpl implements Abstraction.Interface {
 
         const config = (context.results.get("config") as IDepcoConfig | undefined) ?? {};
 
-        const findings: IEnginesFinding[] = [this.readRootFinding(context.dataDirectory)];
-
-        walkNodeModules({
+        const walkedPackages = walkNodeModulesShared({
             nodeModulesPath: join(context.dataDirectory, "node_modules"),
-            context: {
-                findings,
-                visitedRealPaths: new Set<string>(),
-                onMalformedPackage: ({ packageName, error }) => {
-                    this.logger.warn(
-                        "Failed to read engines.node for package during engines check",
-                        {
-                            packageName,
-                            error: String(error)
-                        }
-                    );
-                }
+            onMalformedPackage: ({ packageName, error }) => {
+                this.logger.warn("Failed to read engines.node for package during engines check", {
+                    packageName,
+                    error: String(error)
+                });
             }
         });
+
+        const findings: IEnginesFinding[] = [this.readRootFinding(context.dataDirectory)];
+        for (const [packageName, entry] of walkedPackages) {
+            findings.push(
+                buildFinding({
+                    packageName,
+                    version: "",
+                    enginesNode: entry.enginesNode,
+                    isRoot: false
+                })
+            );
+        }
 
         const filtered = filterIgnoredFindings({ findings, config });
 

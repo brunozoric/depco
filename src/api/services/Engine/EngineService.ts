@@ -1,5 +1,4 @@
-import { readFileSync, readdirSync, realpathSync, statSync } from "fs";
-import type { Dirent } from "fs";
+import { readFileSync } from "fs";
 import { join } from "path";
 import { z } from "zod";
 import { and, eq, inArray, lt } from "drizzle-orm";
@@ -8,7 +7,12 @@ import { EngineService as Abstraction } from "./abstractions/EngineService.js";
 import { NodeReleaseDataService } from "./abstractions/NodeReleaseDataService.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { engineChecks, projects } from "#api/db/schema.js";
-import { parseEnginesNode, classifyNodeVersion } from "#shared/engines/index.js";
+import {
+    parseEnginesNode,
+    classifyNodeVersion,
+    walkNodeModules as walkNodeModulesShared
+} from "#shared/engines/index.js";
+import type { INodeModulesPackageEntry } from "#shared/engines/index.js";
 import type { EngineStatus, IEngineStatusCounts, INodeRelease } from "#shared/engines/types.js";
 
 /** The project's own package.json is stored alongside its dependencies using an empty packageName. */
@@ -22,136 +26,8 @@ const packageJsonEnginesSchema = z.object({
         .optional()
 });
 
-interface IPackageEngineEntry {
-    packageName: string;
-    enginesNode: string | null;
-}
-
-interface IReadPackageEnginesNodeInput {
-    packageJsonPath: string;
-}
-
-function readPackageEnginesNode(input: IReadPackageEnginesNodeInput): string | null {
-    const raw = readFileSync(input.packageJsonPath, "utf-8");
-    const parsed = packageJsonEnginesSchema.parse(JSON.parse(raw));
-    return parsed.engines?.node ?? null;
-}
-
-interface IOnMalformedPackageInput {
-    packageName: string;
-    error: unknown;
-}
-
-interface IWalkContext {
-    entriesByPackageName: Map<string, IPackageEngineEntry>;
-    visitedRealPaths: Set<string>;
-    onMalformedPackage: (input: IOnMalformedPackageInput) => void;
-}
-
-function isTraversableDirectory(entry: Dirent, parentPath: string): boolean {
-    if (entry.isDirectory()) {
-        return true;
-    }
-    if (!entry.isSymbolicLink()) {
-        return false;
-    }
-    try {
-        return statSync(join(parentPath, entry.name)).isDirectory();
-    } catch {
-        return false;
-    }
-}
-
-interface ICollectPackageInput {
-    packageDirectory: string;
-    packageName: string;
-    context: IWalkContext;
-}
-
-function collectPackage(input: ICollectPackageInput): void {
-    const { packageDirectory, packageName, context } = input;
-
-    try {
-        const enginesNode = readPackageEnginesNode({
-            packageJsonPath: join(packageDirectory, "package.json")
-        });
-        context.entriesByPackageName.set(packageName, { packageName, enginesNode });
-    } catch (error) {
-        context.onMalformedPackage({ packageName, error });
-        context.entriesByPackageName.set(packageName, { packageName, enginesNode: null });
-    }
-
-    walkNodeModules({
-        nodeModulesPath: join(packageDirectory, "node_modules"),
-        context
-    });
-}
-
-interface IWalkNodeModulesInput {
-    nodeModulesPath: string;
-    context: IWalkContext;
-}
-
-function walkNodeModules(input: IWalkNodeModulesInput): void {
-    const { nodeModulesPath, context } = input;
-
-    let resolvedPath: string;
-    try {
-        resolvedPath = realpathSync(nodeModulesPath);
-    } catch {
-        return;
-    }
-    if (context.visitedRealPaths.has(resolvedPath)) {
-        return;
-    }
-    context.visitedRealPaths.add(resolvedPath);
-
-    let directoryEntries: Dirent[];
-    try {
-        directoryEntries = readdirSync(nodeModulesPath, { withFileTypes: true });
-    } catch {
-        return;
-    }
-
-    for (const directoryEntry of directoryEntries) {
-        if (directoryEntry.name === ".bin") {
-            continue;
-        }
-        if (!isTraversableDirectory(directoryEntry, nodeModulesPath)) {
-            continue;
-        }
-
-        if (directoryEntry.name.startsWith("@")) {
-            const scopeDirectory = join(nodeModulesPath, directoryEntry.name);
-            let scopedEntries: Dirent[];
-            try {
-                scopedEntries = readdirSync(scopeDirectory, { withFileTypes: true });
-            } catch {
-                continue;
-            }
-            for (const scopedEntry of scopedEntries) {
-                if (!isTraversableDirectory(scopedEntry, scopeDirectory)) {
-                    continue;
-                }
-                collectPackage({
-                    packageDirectory: join(scopeDirectory, scopedEntry.name),
-                    packageName: `${directoryEntry.name}/${scopedEntry.name}`,
-                    context
-                });
-            }
-            continue;
-        }
-
-        collectPackage({
-            packageDirectory: join(nodeModulesPath, directoryEntry.name),
-            packageName: directoryEntry.name,
-            context
-        });
-    }
-}
-
 interface IClassifyEntryInput {
-    entry: IPackageEngineEntry;
+    entry: INodeModulesPackageEntry;
     schedule: INodeRelease[];
 }
 
@@ -227,24 +103,18 @@ class EngineServiceImpl implements Abstraction.Interface {
         const { projectId, projectPath } = input;
         const schedule = await this.nodeReleaseDataService.getSchedule();
 
-        const entriesByPackageName = new Map<string, IPackageEngineEntry>();
+        const entriesByPackageName = walkNodeModulesShared({
+            nodeModulesPath: join(projectPath, "node_modules"),
+            onMalformedPackage: ({ packageName, error }) => {
+                this.logger.warn("Failed to read engines.node for package during engine scan", {
+                    packageName,
+                    error: String(error)
+                });
+            }
+        });
         entriesByPackageName.set(ROOT_PACKAGE_NAME, {
             packageName: ROOT_PACKAGE_NAME,
             enginesNode: this.readRootEnginesNode(projectPath)
-        });
-
-        walkNodeModules({
-            nodeModulesPath: join(projectPath, "node_modules"),
-            context: {
-                entriesByPackageName,
-                visitedRealPaths: new Set<string>(),
-                onMalformedPackage: ({ packageName, error }) => {
-                    this.logger.warn("Failed to read engines.node for package during engine scan", {
-                        packageName,
-                        error: String(error)
-                    });
-                }
-            }
         });
 
         const priorScannedAtRows = await this.databaseClient.db
@@ -382,9 +252,9 @@ class EngineServiceImpl implements Abstraction.Interface {
 
     private readRootEnginesNode(projectPath: string): string | null {
         try {
-            return readPackageEnginesNode({
-                packageJsonPath: join(projectPath, "package.json")
-            });
+            const raw = readFileSync(join(projectPath, "package.json"), "utf-8");
+            const parsed = packageJsonEnginesSchema.parse(JSON.parse(raw));
+            return parsed.engines?.node ?? null;
         } catch (error) {
             this.logger.warn("Failed to read root package.json during engine scan", {
                 projectPath,

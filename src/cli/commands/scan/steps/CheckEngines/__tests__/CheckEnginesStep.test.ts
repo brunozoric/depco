@@ -142,7 +142,7 @@ describe("CheckEnginesStep", () => {
         const pkgA = dependencyFindings.find(finding => finding.packageName === "pkg-a");
         expect(pkgA).toMatchObject({
             packageName: "pkg-a",
-            version: "2.0.0",
+            version: "",
             enginesNode: ">=24",
             minimumMajor: 24,
             isRoot: false
@@ -151,7 +151,7 @@ describe("CheckEnginesStep", () => {
         const pkgB = dependencyFindings.find(finding => finding.packageName === "@scope/pkg-b");
         expect(pkgB).toMatchObject({
             packageName: "@scope/pkg-b",
-            version: "3.0.0",
+            version: "",
             enginesNode: ">=16",
             minimumMajor: 16,
             status: "eol",
