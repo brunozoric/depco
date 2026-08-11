@@ -8,8 +8,8 @@ class DashboardRouteImpl implements Abstraction.Interface {
     public name = "dashboard";
     public path = "/";
 
-    public matchPath(_path: string): Record<string, string> | null {
-        return {};
+    public matchPath(path: string): Record<string, string> | null {
+        return path === "/" ? {} : null;
     }
 
     public render(_match: IRouteMatch): React.ReactNode {
