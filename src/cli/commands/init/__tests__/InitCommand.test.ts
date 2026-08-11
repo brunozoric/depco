@@ -2,12 +2,14 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { createContainer, registerFeatures } from "#shared/index.js";
 import { InitCommandFeature } from "../feature.js";
 import { InitCommand } from "../abstractions/InitCommand.js";
+import { registerCliLogger } from "#testing/helpers/registerCliLogger.js";
 
 describe("InitCommand", () => {
     let container: ReturnType<typeof createContainer>;
 
     beforeEach(() => {
         container = createContainer();
+        registerCliLogger(container);
         registerFeatures(container, [InitCommandFeature]);
     });
 

@@ -10,6 +10,7 @@ import { users } from "#api/db/schema.js";
 import { CreateAdminUserStepFeature } from "../feature.js";
 import { CreateAdminUserStep } from "../abstractions/CreateAdminUserStep.js";
 import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
+import { registerCliLogger } from "#testing/helpers/registerCliLogger.js";
 
 vi.mock("@inquirer/prompts", () => ({
     input: vi.fn().mockResolvedValueOnce("admin@test.com").mockResolvedValueOnce("Admin User"),
@@ -24,6 +25,7 @@ describe("CreateAdminUserStep", () => {
         workDir = mkdtempSync(join(tmpdir(), "create-admin-"));
         mkdirSync(join(workDir, "data"), { recursive: true });
         container = createContainer();
+        registerCliLogger(container);
         CreateAdminUserStepFeature.register(container);
     });
 

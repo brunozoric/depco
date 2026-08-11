@@ -1,4 +1,5 @@
 import { writeFileSync } from "node:fs";
+import { Logger } from "@webiny/stdlib";
 import { RenderOutputStep as Abstraction } from "./abstractions/RenderOutputStep.js";
 import { OutputFormatterFactory } from "../../formatters/abstractions/OutputFormatterFactory.js";
 import { VULNERABILITY_SEVERITIES } from "#shared/vulnerabilities/types.js";
@@ -18,7 +19,10 @@ class RenderOutputStepImpl implements Abstraction.Interface {
     public name = "render-output";
     public description = "Format and output scan results";
 
-    public constructor(private readonly formatterFactory: OutputFormatterFactory.Interface) {}
+    public constructor(
+        private readonly formatterFactory: OutputFormatterFactory.Interface,
+        private readonly logger: Logger.Interface
+    ) {}
 
     public async execute(context: IStepContext): Promise<IStepResult> {
         const violations = (context.results.get("violations") as ILicenseViolation[]) ?? [];
@@ -51,9 +55,9 @@ class RenderOutputStepImpl implements Abstraction.Interface {
 
         if (outputPath) {
             writeFileSync(outputPath, this.stripAnsiCodes(formatted));
-            console.log(`Wrote ${output.summary.total} findings to ${outputPath}`);
+            this.logger.info(`Wrote ${output.summary.total} findings to ${outputPath}`);
         } else {
-            console.log(formatted);
+            this.logger.info(formatted);
         }
 
         this.applyExitCode({ violations, vulnerabilities, config });
@@ -108,5 +112,5 @@ class RenderOutputStepImpl implements Abstraction.Interface {
 
 export const RenderOutputStep = Abstraction.createImplementation({
     implementation: RenderOutputStepImpl,
-    dependencies: [OutputFormatterFactory]
+    dependencies: [OutputFormatterFactory, Logger]
 });

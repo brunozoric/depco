@@ -7,6 +7,7 @@ import { RenderOutputStep } from "../abstractions/RenderOutputStep.js";
 import { RenderOutputStepFeature } from "../feature.js";
 import { OutputFormatterFeature } from "../../../formatters/feature.js";
 import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
+import { registerCliLogger } from "#testing/helpers/registerCliLogger.js";
 
 function createTestContext(overrides?: Record<string, unknown>): IStepContext {
     const results = new Map<string, unknown>();
@@ -46,9 +47,10 @@ describe("RenderOutputStep", () => {
 
     beforeEach(() => {
         const container = createContainer();
+        registerCliLogger(container);
         registerFeatures(container, [OutputFormatterFeature, RenderOutputStepFeature]);
         step = container.resolve(RenderOutputStep);
-        consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+        consoleSpy = vi.spyOn(console, "info").mockImplementation(() => {});
     });
 
     afterEach(() => {

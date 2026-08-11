@@ -10,6 +10,7 @@ import { LockfileParserService } from "#api/services/DependencyGraph/abstraction
 import type { IDependencyEdge } from "#api/services/DependencyGraph/abstractions/LockfileParserService.js";
 import type { IPackageEntry } from "#shared/types/IPackageEntry.js";
 import type { Container } from "@webiny/di";
+import { registerCliLogger } from "#testing/helpers/registerCliLogger.js";
 
 const FIXTURES_DIR = join(import.meta.dirname, "fixtures");
 
@@ -116,6 +117,7 @@ interface ISetupContainerArgs {
 
 function setupContainer(args: ISetupContainerArgs = {}): Container {
     const container = createContainer();
+    registerCliLogger(container);
     registerFeatures(container, [StepRunnerFeature, ScanCommandFeature]);
     container.registerInstance(LockfileParserService, createMockLockfileParser(args.packages));
     return container;
@@ -152,7 +154,7 @@ function findJsonConsoleCall(consoleSpy: ReturnType<typeof vi.spyOn>, marker: st
         .map((callArgs: unknown[]) => String(callArgs[0]))
         .find((text: string) => text.trim().startsWith("{") && text.includes(marker));
     if (!call) {
-        throw new Error(`No console.log call found containing marker: ${marker}`);
+        throw new Error(`No console.info call found containing marker: ${marker}`);
     }
     return call;
 }
@@ -162,7 +164,7 @@ describe("ScanPipeline integration", () => {
     let originalExitCode: typeof process.exitCode;
 
     beforeEach(() => {
-        consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+        consoleSpy = vi.spyOn(console, "info").mockImplementation(() => {});
         vi.spyOn(console, "warn").mockImplementation(() => {});
         originalExitCode = process.exitCode;
         process.exitCode = undefined;

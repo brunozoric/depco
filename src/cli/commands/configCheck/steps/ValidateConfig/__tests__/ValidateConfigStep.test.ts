@@ -6,6 +6,7 @@ import { createContainer } from "#shared/index.js";
 import { ValidateConfigStepFeature } from "../feature.js";
 import { ValidateConfigStep } from "../abstractions/ValidateConfigStep.js";
 import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
+import { registerCliLogger } from "#testing/helpers/registerCliLogger.js";
 
 function createTestContext(dataDirectory: string): IStepContext {
     return {
@@ -19,18 +20,22 @@ function createTestContext(dataDirectory: string): IStepContext {
 describe("ValidateConfigStep", () => {
     let workDir: string;
     let container: ReturnType<typeof createContainer>;
-    let consoleLogSpy: ReturnType<typeof vi.spyOn>;
+    let consoleInfoSpy: ReturnType<typeof vi.spyOn>;
+    let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
         workDir = mkdtempSync(join(tmpdir(), "validate-config-"));
         container = createContainer();
+        registerCliLogger(container);
         ValidateConfigStepFeature.register(container);
-        consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+        consoleInfoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+        consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     });
 
     afterEach(() => {
         rmSync(workDir, { recursive: true, force: true });
-        consoleLogSpy.mockRestore();
+        consoleInfoSpy.mockRestore();
+        consoleErrorSpy.mockRestore();
     });
 
     it("reports no config found and succeeds when depco.config.ts is missing", async () => {
@@ -39,7 +44,9 @@ describe("ValidateConfigStep", () => {
 
         expect(result.success).toBe(true);
         expect(result.skipped).toBe(true);
-        expect(consoleLogSpy).toHaveBeenCalledWith("No depco.config.ts found in current directory");
+        expect(consoleInfoSpy).toHaveBeenCalledWith(
+            "No depco.config.ts found in current directory"
+        );
     });
 
     it("reports valid when depco.config.ts matches the schema", async () => {
@@ -51,7 +58,7 @@ describe("ValidateConfigStep", () => {
         const result = await step.execute(createTestContext(workDir));
 
         expect(result.success).toBe(true);
-        expect(consoleLogSpy).toHaveBeenCalledWith("depco.config.ts is valid");
+        expect(consoleInfoSpy).toHaveBeenCalledWith("depco.config.ts is valid");
     });
 
     it("reports failure when depco.config.ts cannot be loaded (import throws)", async () => {
@@ -64,7 +71,7 @@ describe("ValidateConfigStep", () => {
 
         expect(result.success).toBe(false);
         expect(result.message).toContain("Failed to load depco.config.ts");
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining("syntax kaboom"));
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("syntax kaboom"));
     });
 
     it("handles non-Error thrown values during import", async () => {
@@ -86,8 +93,8 @@ describe("ValidateConfigStep", () => {
         const result = await step.execute(createTestContext(workDir));
 
         expect(result.success).toBe(false);
-        expect(consoleLogSpy).toHaveBeenCalledWith("depco.config.ts is invalid:");
-        const loggedLines = consoleLogSpy.mock.calls.map((call: unknown[]) => call[0] as string);
+        expect(consoleErrorSpy).toHaveBeenCalledWith("depco.config.ts is invalid:");
+        const loggedLines = consoleErrorSpy.mock.calls.map((call: unknown[]) => call[0] as string);
         expect(
             loggedLines.some((line: string) => line.includes("scan.license.allowedRiskTiers.0"))
         ).toBe(true);

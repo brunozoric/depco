@@ -3,21 +3,23 @@ import { createContainer } from "#shared/index.js";
 import { PrintNextStepsStepFeature } from "../feature.js";
 import { PrintNextStepsStep } from "../abstractions/PrintNextStepsStep.js";
 import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
+import { registerCliLogger } from "#testing/helpers/registerCliLogger.js";
 
 describe("PrintNextStepsStep", () => {
     let container: ReturnType<typeof createContainer>;
     let output: string[];
-    const originalLog = console.log;
+    const originalInfo = console.info;
 
     beforeEach(() => {
         output = [];
-        console.log = (...args: unknown[]) => output.push(args.join(" "));
+        console.info = (...args: unknown[]) => output.push(args.join(" "));
         container = createContainer();
+        registerCliLogger(container);
         PrintNextStepsStepFeature.register(container);
     });
 
     afterEach(() => {
-        console.log = originalLog;
+        console.info = originalInfo;
     });
 
     it("prints depco start instruction", async () => {

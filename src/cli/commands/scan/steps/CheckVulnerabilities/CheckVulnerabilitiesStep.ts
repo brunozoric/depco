@@ -1,4 +1,5 @@
 import { execSync } from "node:child_process";
+import { Logger } from "@webiny/stdlib";
 import { CheckVulnerabilitiesStep as Abstraction } from "./abstractions/CheckVulnerabilitiesStep.js";
 import { AuditParserService } from "#shared/vulnerabilities/abstractions/AuditParserService.js";
 import { OsvQueryService } from "#shared/vulnerabilities/abstractions/OsvQueryService.js";
@@ -47,7 +48,8 @@ class CheckVulnerabilitiesStepImpl implements Abstraction.Interface {
     public constructor(
         private readonly auditParser: AuditParserService.Interface,
         private readonly osvQuery: OsvQueryService.Interface,
-        private readonly merger: VulnerabilityMerger.Interface
+        private readonly merger: VulnerabilityMerger.Interface,
+        private readonly logger: Logger.Interface
     ) {}
 
     public async execute(context: IStepContext): Promise<IStepResult> {
@@ -60,7 +62,7 @@ class CheckVulnerabilitiesStepImpl implements Abstraction.Interface {
         const config = (context.results.get("config") as IDepcoConfig | undefined) ?? {};
         const packageManager = context.results.get("packageManager") as string;
 
-        console.log(`\nChecking ${packages.length} packages for vulnerabilities...\n`);
+        this.logger.info(`\nChecking ${packages.length} packages for vulnerabilities...\n`);
 
         const { auditRecords, auditFailed } = this.runAudit({
             packageManager,
@@ -96,7 +98,7 @@ class CheckVulnerabilitiesStepImpl implements Abstraction.Interface {
             });
             return { auditRecords, auditFailed: false };
         } catch {
-            console.warn("Audit command failed, continuing with OSV only");
+            this.logger.warn("Audit command failed, continuing with OSV only");
             return { auditRecords: [], auditFailed: true };
         }
     }
@@ -106,7 +108,7 @@ class CheckVulnerabilitiesStepImpl implements Abstraction.Interface {
             const osvAdvisories = await this.osvQuery.queryBatch({ packages });
             return { osvAdvisories, osvFailed: false };
         } catch {
-            console.warn("OSV query failed, continuing with audit only");
+            this.logger.warn("OSV query failed, continuing with audit only");
             return { osvAdvisories: new Map(), osvFailed: true };
         }
     }
@@ -124,5 +126,5 @@ class CheckVulnerabilitiesStepImpl implements Abstraction.Interface {
 
 export const CheckVulnerabilitiesStep = Abstraction.createImplementation({
     implementation: CheckVulnerabilitiesStepImpl,
-    dependencies: [AuditParserService, OsvQueryService, VulnerabilityMerger]
+    dependencies: [AuditParserService, OsvQueryService, VulnerabilityMerger, Logger]
 });
