@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync, rmSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import { eq } from "drizzle-orm";
-import { ConsoleLoggerConfig, ConsoleLoggerFeature } from "@webiny/stdlib";
+import { ConsoleLoggerConfig, ConsoleLoggerFeature, Logger } from "@webiny/stdlib";
 import { DirectoryToolFeature, FileToolFeature, JsonFileToolFeature } from "@webiny/stdlib/node";
 import { createContainer } from "#shared/index.js";
 import { createTestDb } from "#testing/helpers/createTestDb.js";
@@ -135,6 +135,7 @@ describe("JobWorker", () => {
     let worker: JobWorker.Interface;
     let commandRunner: CommandRunner.Interface;
     let broadcaster: WebSocketBroadcaster.Interface;
+    let logger: Logger.Interface;
     let db: Awaited<ReturnType<typeof createTestDb>>;
 
     beforeEach(async () => {
@@ -228,6 +229,7 @@ describe("JobWorker", () => {
 
         worker = container.resolve(JobWorker);
         broadcaster = container.resolve(WebSocketBroadcaster);
+        logger = container.resolve(Logger);
     });
 
     afterEach(() => {
@@ -942,8 +944,8 @@ describe("JobWorker", () => {
         });
     });
 
-    it("logs an error to console when the progress DB write fails, without failing the job", async () => {
-        const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    it("logs an error when the progress DB write fails, without failing the job", async () => {
+        const loggerErrorSpy = vi.spyOn(logger, "error");
 
         let updateCallCount = 0;
         const originalUpdate = db.update.bind(db);
@@ -972,20 +974,18 @@ describe("JobWorker", () => {
         await worker.processNextJob();
         await worker.drain();
 
-        expect(consoleErrorSpy).toHaveBeenCalledWith(
-            "Failed to write job progress to database:",
-            expect.any(Error)
+        expect(loggerErrorSpy).toHaveBeenCalledWith(
+            "Failed to write job progress to database",
+            expect.objectContaining({ error: expect.any(String) })
         );
 
         const job = await worker.getJob(jobId);
         expect(job!.status).toBe("completed");
-
-        consoleErrorSpy.mockRestore();
     });
 
-    it("logs an error to console when the periodic log flush write fails, without failing the job", async () => {
+    it("logs an error when the periodic log flush write fails, without failing the job", async () => {
         vi.useFakeTimers();
-        const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        const loggerErrorSpy = vi.spyOn(logger, "error");
 
         let resolveStreaming: (() => void) | undefined;
         commandRunner.runStreaming = vi.fn((_cmd, _args, options) => {
@@ -1023,9 +1023,9 @@ describe("JobWorker", () => {
         await worker.processNextJob();
         await vi.advanceTimersByTimeAsync(2000);
 
-        expect(consoleErrorSpy).toHaveBeenCalledWith(
-            "Failed to flush job logs to database:",
-            expect.any(Error)
+        expect(loggerErrorSpy).toHaveBeenCalledWith(
+            "Failed to flush job logs to database",
+            expect.objectContaining({ error: expect.any(String) })
         );
 
         resolveStreaming!();
@@ -1034,8 +1034,6 @@ describe("JobWorker", () => {
 
         const job = await worker.getJob(jobId);
         expect(job!.status).toBe("completed");
-
-        consoleErrorSpy.mockRestore();
     });
 
     describe("scan jobs", () => {

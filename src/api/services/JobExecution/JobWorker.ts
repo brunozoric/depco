@@ -1,5 +1,5 @@
 import { and, eq, inArray } from "drizzle-orm";
-import { generateId } from "@webiny/stdlib";
+import { generateId, Logger } from "@webiny/stdlib";
 import { JobWorker as Abstraction } from "./abstractions/JobWorker.js";
 import { PackageManagerService } from "../PackageManager/index.js";
 import { SecurityService } from "../Security/index.js";
@@ -37,7 +37,8 @@ class JobWorkerImpl implements Abstraction.Interface {
         private readonly securityService: SecurityService.Interface,
         private readonly webSocketBroadcaster: WebSocketBroadcaster.Interface,
         private readonly jobExecutorRegistry: JobExecutorRegistry.Interface,
-        private readonly errorReporter: ErrorReporter.Interface
+        private readonly errorReporter: ErrorReporter.Interface,
+        private readonly logger: Logger.Interface
     ) {}
 
     public async enqueue(input: Abstraction.CreateJobInput): Promise<string> {
@@ -152,7 +153,7 @@ class JobWorkerImpl implements Abstraction.Interface {
                     .where(eq(upgradeJobs.id, job.id))
                     .run();
             } catch (error) {
-                console.error("Failed to flush job logs to database:", error);
+                this.logger.error("Failed to flush job logs to database", { error: String(error) });
             }
         };
         const logFlushTimer = setInterval(flushLogs, LOG_DB_FLUSH_INTERVAL_MS);
@@ -191,7 +192,9 @@ class JobWorkerImpl implements Abstraction.Interface {
                         .where(eq(upgradeJobs.id, job.id))
                         .run();
                 } catch (error) {
-                    console.error("Failed to write job progress to database:", error);
+                    this.logger.error("Failed to write job progress to database", {
+                        error: String(error)
+                    });
                 }
             }
         };
@@ -457,6 +460,7 @@ export const JobWorker = Abstraction.createImplementation({
         SecurityService,
         WebSocketBroadcaster,
         JobExecutorRegistry,
-        ErrorReporter
+        ErrorReporter,
+        Logger
     ]
 });
