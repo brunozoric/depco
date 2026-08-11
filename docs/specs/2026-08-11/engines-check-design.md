@@ -271,8 +271,8 @@ Global `scan.ignoredPackages` also applies to engines checks.
 
 ### WebSocket Events
 
-- `engine-scan:progress` — `{ projectId, current, total }`
 - `engine-scan:complete` — `{ projectId, counts: IEngineStatusCounts }`
+- Progress tracked via standard `job:progress` event (built into JobExecutionContext)
 
 ## Testing
 
