@@ -1,39 +1,19 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
-import { createContainer } from "#shared/index.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { CommandRunner } from "../../services/CommandRunner/index.js";
-import { EmailService } from "../../services/Email/index.js";
-import { UserService as UserServiceRegistration } from "../../services/Auth/UserService.js";
-import { AuthService as AuthServiceRegistration } from "../../services/Auth/AuthService.js";
 import { createAuthHook } from "../../middleware/authHook.js";
-import { FileConfigService } from "../../services/FileConfig/index.js";
-import { RegistryCacheService as RegistryCacheServiceReg } from "../../services/RegistryCache/RegistryCacheService.js";
-import { ChangelogService as ChangelogServiceReg } from "../../services/Changelog/ChangelogService.js";
-import { GitHubReleasesResolver } from "../../services/Changelog/resolvers/GitHubReleasesResolver.js";
-import { ChangelogFileResolver } from "../../services/Changelog/resolvers/ChangelogFileResolver.js";
-import { NpmReadmeResolver } from "../../services/Changelog/resolvers/NpmReadmeResolver.js";
-import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../services/PackageManager/PackageManagerDriverRegistry.js";
 import { generateId } from "@webiny/stdlib";
 import { changelogs, dependencies, dependencyVersions, upgradeJobs } from "#api/db/schema.js";
 import { changelogRoutes } from "../changelogs.js";
 import { eq } from "drizzle-orm";
 import { JobWorker } from "../../services/JobExecution/index.js";
 
-function createStubFileConfigService(): FileConfigService.Interface {
-    return {
-        readConfig: async () => null,
-        readGlobalSettings: async () => ({ settings: null }),
-        readGlobalConfig: async () => ({ config: null }),
-        writeGlobalPmSettings: async () => {}
-    };
-}
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
 async function insertChangelogFixture(
-    db: Awaited<ReturnType<typeof createTestDb>>,
+    db: TestDb,
     row: {
         packageName: string;
         version: string;
@@ -98,31 +78,16 @@ async function insertChangelogFixture(
 
 describe("changelog routes", () => {
     let app: FastifyInstance;
-    let db: Awaited<ReturnType<typeof createTestDb>>;
+    let db: TestDb;
     let enqueuedJobs: JobWorker.CreateJobInput[];
     let token: string;
 
     beforeEach(async () => {
-        db = await createTestDb();
+        const result = createTestApiContainer();
+        db = result.db;
+        const container = result.container;
         enqueuedJobs = [];
 
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
-        container.registerInstance(CommandRunner, {
-            run: async () => ({
-                stdout: "",
-                stderr: "",
-                exitCode: 0
-            }),
-            runStreaming: async () => ({ stdout: "", stderr: "", exitCode: 0 })
-        });
-        container.register(PackageManagerDriverRegistryReg).inSingletonScope();
-        container.registerInstance(FileConfigService, createStubFileConfigService());
-        container.register(RegistryCacheServiceReg).inSingletonScope();
-        container.register(GitHubReleasesResolver);
-        container.register(ChangelogFileResolver);
-        container.register(NpmReadmeResolver);
-        container.register(ChangelogServiceReg).inSingletonScope();
         container.registerInstance(JobWorker, {
             enqueue: async input => {
                 enqueuedJobs.push(input);
@@ -141,9 +106,6 @@ describe("changelog routes", () => {
             waitForJobs: async () => [],
             getRunningJobsForReference: async () => []
         });
-        container.registerInstance(EmailService, { send: vi.fn() });
-        container.register(UserServiceRegistration).inSingletonScope();
-        container.register(AuthServiceRegistration).inSingletonScope();
 
         app = Fastify();
         app.addHook("onRequest", createAuthHook(container));

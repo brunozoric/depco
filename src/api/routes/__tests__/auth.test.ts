@@ -1,21 +1,16 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { eq } from "drizzle-orm";
-import { createContainer } from "#shared/index.js";
-import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { loginCodes, sessions } from "#api/db/schema.js";
-import { EmailService } from "#api/services/Email/index.js";
 import { UserService } from "#api/services/Auth/index.js";
-import { UserService as UserServiceRegistration } from "#api/services/Auth/UserService.js";
-import { AuthService as AuthServiceRegistration } from "#api/services/Auth/AuthService.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
 import { authRoutes } from "../auth.js";
 
-type TestDb = DatabaseClient.Interface["db"];
-type TestContainer = ReturnType<typeof createContainer>;
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
+type TestContainer = ReturnType<typeof createTestApiContainer>["container"];
 
 describe("auth routes", () => {
     let app: FastifyInstance;
@@ -23,14 +18,9 @@ describe("auth routes", () => {
     let container: TestContainer;
 
     beforeEach(async () => {
-        const databaseClient = createTestDatabaseClient();
-        db = databaseClient.db;
-
-        container = createContainer();
-        container.registerInstance(DatabaseClient, databaseClient);
-        container.registerInstance(EmailService, { send: vi.fn() });
-        container.register(UserServiceRegistration).inSingletonScope();
-        container.register(AuthServiceRegistration).inSingletonScope();
+        const result = createTestApiContainer();
+        db = result.db;
+        container = result.container;
 
         app = Fastify();
         app.addHook("onRequest", createAuthHook(container));

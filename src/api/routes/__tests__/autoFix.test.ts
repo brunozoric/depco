@@ -1,36 +1,26 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { generateId } from "@webiny/stdlib";
-import { createContainer } from "#shared/index.js";
-import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { JobWorker } from "../../services/JobExecution/index.js";
-import { AutoFixSettingsService } from "../../services/AutoFix/AutoFixSettingsService.js";
-import { EmailService } from "../../services/Email/index.js";
-import { UserService as UserServiceRegistration } from "../../services/Auth/UserService.js";
-import { AuthService as AuthServiceRegistration } from "../../services/Auth/AuthService.js";
 import { createAuthHook } from "../../middleware/authHook.js";
 import { projects, autoFixPullRequests } from "#api/db/schema.js";
 import { autoFixSettingsRoutes } from "../autoFixSettings.js";
 import { autoFixPrRoutes } from "../autoFixPrs.js";
 
-type TestDatabaseClient = Awaited<ReturnType<typeof createTestDatabaseClient>>;
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
 interface IRouteTestContext {
     app: FastifyInstance;
-    databaseClient: TestDatabaseClient;
+    db: TestDb;
     enqueuedJobs: JobWorker.CreateJobInput[];
     token: string;
 }
 
-async function insertTestProject(
-    databaseClient: TestDatabaseClient,
-    id: string,
-    name = id
-): Promise<void> {
-    await databaseClient.db
+async function insertTestProject(db: TestDb, id: string, name = id): Promise<void> {
+    await db
         .insert(projects)
         .values({
             id,
@@ -49,12 +39,11 @@ async function insertTestProject(
  * exercising the full job pipeline.
  */
 async function createTestContext(): Promise<IRouteTestContext> {
-    const databaseClient = await createTestDatabaseClient();
+    const result = createTestApiContainer();
+    const db = result.db;
+    const container = result.container;
     const enqueuedJobs: JobWorker.CreateJobInput[] = [];
 
-    const container = createContainer();
-    container.registerInstance(DatabaseClient, databaseClient);
-    container.register(AutoFixSettingsService).inSingletonScope();
     container.registerInstance(JobWorker, {
         enqueue: async input => {
             enqueuedJobs.push(input);
@@ -74,31 +63,27 @@ async function createTestContext(): Promise<IRouteTestContext> {
         getRunningJobsForReference: async () => []
     });
 
-    container.registerInstance(EmailService, { send: vi.fn() });
-    container.register(UserServiceRegistration).inSingletonScope();
-    container.register(AuthServiceRegistration).inSingletonScope();
-
     const app = Fastify();
     app.addHook("onRequest", createAuthHook(container));
     await app.register(autoFixSettingsRoutes, { container });
     await app.register(autoFixPrRoutes, { container });
     await app.ready();
 
-    const { token } = await createTestSession({ db: databaseClient.db });
+    const { token } = await createTestSession({ db });
 
-    return { app, databaseClient, enqueuedJobs, token };
+    return { app, db, enqueuedJobs, token };
 }
 
 describe("auto-fix routes", () => {
     let app: FastifyInstance;
-    let databaseClient: TestDatabaseClient;
+    let db: TestDb;
     let enqueuedJobs: JobWorker.CreateJobInput[];
     let token: string;
 
     beforeEach(async () => {
         const context = await createTestContext();
         app = context.app;
-        databaseClient = context.databaseClient;
+        db = context.db;
         enqueuedJobs = context.enqueuedJobs;
         token = context.token;
     });
@@ -109,7 +94,7 @@ describe("auto-fix routes", () => {
 
     describe("GET /api/auto-fix/:projectId/settings", () => {
         it("returns defaults when no settings exist", async () => {
-            await insertTestProject(databaseClient, "proj-1");
+            await insertTestProject(db, "proj-1");
 
             const response = await app.inject({
                 headers: { authorization: `Bearer ${token}` },
@@ -131,7 +116,7 @@ describe("auto-fix routes", () => {
 
     describe("PUT /api/auto-fix/:projectId/settings", () => {
         it("creates settings on first update", async () => {
-            await insertTestProject(databaseClient, "proj-1");
+            await insertTestProject(db, "proj-1");
 
             const response = await app.inject({
                 headers: { authorization: `Bearer ${token}` },
@@ -157,7 +142,7 @@ describe("auto-fix routes", () => {
         });
 
         it("updates existing settings, preserving unspecified fields", async () => {
-            await insertTestProject(databaseClient, "proj-1");
+            await insertTestProject(db, "proj-1");
             await app.inject({
                 headers: { authorization: `Bearer ${token}` },
                 method: "PUT",
@@ -193,11 +178,11 @@ describe("auto-fix routes", () => {
         });
 
         it("lists records and supports filtering by projectId and status", async () => {
-            await insertTestProject(databaseClient, "proj-1");
-            await insertTestProject(databaseClient, "proj-2");
+            await insertTestProject(db, "proj-1");
+            await insertTestProject(db, "proj-2");
             const now = Date.now();
 
-            await databaseClient.db
+            await db
                 .insert(autoFixPullRequests)
                 .values([
                     {
@@ -266,11 +251,11 @@ describe("auto-fix routes", () => {
 
     describe("GET /api/auto-fix/:projectId/pull-requests", () => {
         it("returns only records for the given project", async () => {
-            await insertTestProject(databaseClient, "proj-1");
-            await insertTestProject(databaseClient, "proj-2");
+            await insertTestProject(db, "proj-1");
+            await insertTestProject(db, "proj-2");
             const now = Date.now();
 
-            await databaseClient.db
+            await db
                 .insert(autoFixPullRequests)
                 .values([
                     {
@@ -317,7 +302,7 @@ describe("auto-fix routes", () => {
 
     describe("POST /api/auto-fix/:projectId/generate", () => {
         it("enqueues an auto-fix-pr job and returns its jobId", async () => {
-            await insertTestProject(databaseClient, "proj-1");
+            await insertTestProject(db, "proj-1");
 
             const response = await app.inject({
                 headers: { authorization: `Bearer ${token}` },
@@ -350,10 +335,10 @@ describe("auto-fix routes", () => {
 
     describe("DELETE /api/auto-fix/pull-requests/:id", () => {
         it("removes the record", async () => {
-            await insertTestProject(databaseClient, "proj-1");
+            await insertTestProject(db, "proj-1");
             const id = generateId();
             const now = Date.now();
-            await databaseClient.db
+            await db
                 .insert(autoFixPullRequests)
                 .values({
                     id,

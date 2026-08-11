@@ -1,15 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { eq } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
-import { createContainer } from "#shared/index.js";
-import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { EmailService } from "#api/services/Email/index.js";
-import { UserService as UserServiceRegistration } from "#api/services/Auth/UserService.js";
-import { AuthService as AuthServiceRegistration } from "#api/services/Auth/AuthService.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
 import {
     projects,
@@ -20,7 +15,7 @@ import {
 } from "#api/db/schema.js";
 import { teamsRoutes } from "../teams.js";
 
-type TestDb = DatabaseClient.Interface["db"];
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
 async function insertTestProject(db: TestDb, id: string, name = id): Promise<void> {
     await db
@@ -41,14 +36,9 @@ describe("teams routes", () => {
     let token: string;
 
     beforeEach(async () => {
-        const databaseClient = await createTestDatabaseClient();
-        db = databaseClient.db;
-
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, databaseClient);
-        container.registerInstance(EmailService, { send: vi.fn() });
-        container.register(UserServiceRegistration).inSingletonScope();
-        container.register(AuthServiceRegistration).inSingletonScope();
+        const result = createTestApiContainer();
+        db = result.db;
+        const container = result.container;
 
         app = Fastify();
         app.addHook("onRequest", createAuthHook(container));

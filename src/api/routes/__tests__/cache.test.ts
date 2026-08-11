@@ -1,41 +1,26 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { eq } from "drizzle-orm";
-import { createContainer } from "#shared/index.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { registryCache } from "#api/db/schema.js";
 import { CommandRunner } from "../../services/CommandRunner/index.js";
-import { FileConfigService } from "../../services/FileConfig/index.js";
-import { RegistryCacheService as RegistryCacheServiceReg } from "../../services/RegistryCache/RegistryCacheService.js";
-import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../services/PackageManager/PackageManagerDriverRegistry.js";
-import { EmailService } from "../../services/Email/index.js";
-import { UserService as UserServiceRegistration } from "../../services/Auth/UserService.js";
-import { AuthService as AuthServiceRegistration } from "../../services/Auth/AuthService.js";
 import { createAuthHook } from "../../middleware/authHook.js";
 import { cacheRoutes } from "../cache.js";
 
-function createStubFileConfigService(): FileConfigService.Interface {
-    return {
-        readConfig: async () => null,
-        readGlobalSettings: async () => ({ settings: null }),
-        readGlobalConfig: async () => ({ config: null }),
-        writeGlobalPmSettings: async () => {}
-    };
-}
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
 describe("cache routes", () => {
     let app: FastifyInstance;
-    let db: Awaited<ReturnType<typeof createTestDb>>;
+    let db: TestDb;
     let token: string;
 
     beforeEach(async () => {
-        db = await createTestDb();
+        const result = createTestApiContainer();
+        db = result.db;
+        const container = result.container;
 
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
         container.registerInstance(CommandRunner, {
             run: async () => ({
                 stdout: JSON.stringify({
@@ -47,12 +32,6 @@ describe("cache routes", () => {
             }),
             runStreaming: async () => ({ stdout: "", stderr: "", exitCode: 0 })
         });
-        container.register(PackageManagerDriverRegistryReg).inSingletonScope();
-        container.registerInstance(FileConfigService, createStubFileConfigService());
-        container.register(RegistryCacheServiceReg).inSingletonScope();
-        container.registerInstance(EmailService, { send: vi.fn() });
-        container.register(UserServiceRegistration).inSingletonScope();
-        container.register(AuthServiceRegistration).inSingletonScope();
 
         app = Fastify();
         app.addHook("onRequest", createAuthHook(container));

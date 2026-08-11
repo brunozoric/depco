@@ -1,31 +1,17 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
-import { createContainer } from "#shared/index.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { EmailService } from "#api/services/Email/index.js";
-import { UserService as UserServiceRegistration } from "#api/services/Auth/UserService.js";
-import { AuthService as AuthServiceRegistration } from "#api/services/Auth/AuthService.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
-import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { projects } from "#api/db/schema.js";
-import { UpgradeSessionService as UpgradeSessionServiceRegistration } from "#api/services/UpgradeSession/UpgradeSessionService.js";
 import { ErrorReporter } from "#api/services/ErrorReporter/index.js";
-import { UpgradeSessionStepResolverRegistry } from "#api/services/UpgradeSession/stepResolvers/StepResolverRegistry.js";
-import { SelectPackagesResolver } from "#api/services/UpgradeSession/stepResolvers/SelectPackagesResolver.js";
-import { BranchResolver } from "#api/services/UpgradeSession/stepResolvers/BranchResolver.js";
-import { UpgradeResolver } from "#api/services/UpgradeSession/stepResolvers/UpgradeResolver.js";
-import { RefreshTransientResolver } from "#api/services/UpgradeSession/stepResolvers/RefreshTransientResolver.js";
-import { CommitResolver } from "#api/services/UpgradeSession/stepResolvers/CommitResolver.js";
 import { GitService } from "#api/services/Git/index.js";
 import { UpgradeService } from "#api/services/Upgrade/index.js";
 import { StepHookService } from "#api/services/StepHook/index.js";
-import { CommandRunner } from "#api/services/CommandRunner/index.js";
 import { upgradeSessionRoutes } from "../upgradeSessions.js";
 
-type TestDb = Awaited<ReturnType<typeof createTestDb>>;
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
 function createMockGitService(): GitService.Interface {
     return {
@@ -53,7 +39,10 @@ describe("upgrade session routes", () => {
     const projectId = "p1";
 
     beforeEach(async () => {
-        db = await createTestDb();
+        const result = createTestApiContainer();
+        db = result.db;
+        const container = result.container;
+
         await db
             .insert(projects)
             .values({
@@ -65,22 +54,8 @@ describe("upgrade session routes", () => {
             })
             .run();
 
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
-        container.registerInstance(WebSocketBroadcaster, {
-            broadcast: vi.fn(),
-            addClient: vi.fn(),
-            removeClient: vi.fn(),
-            closeConnectionsForUser: vi.fn()
-        });
         container.registerInstance(GitService, createMockGitService());
         container.registerInstance(UpgradeService, createMockUpgradeService());
-        container.register(SelectPackagesResolver);
-        container.register(BranchResolver);
-        container.register(UpgradeResolver);
-        container.register(RefreshTransientResolver);
-        container.register(CommitResolver);
-        container.register(UpgradeSessionStepResolverRegistry);
         container.registerInstance(ErrorReporter, {
             reportJobFailure: vi.fn(),
             reportJobWarning: vi.fn(),
@@ -89,14 +64,6 @@ describe("upgrade session routes", () => {
         container.registerInstance(StepHookService, {
             getStepConfig: async () => []
         });
-        container.registerInstance(CommandRunner, {
-            run: async () => ({ stdout: "", stderr: "", exitCode: 0 }),
-            runStreaming: async () => ({ stdout: "", stderr: "", exitCode: 0 })
-        });
-        container.register(UpgradeSessionServiceRegistration).inSingletonScope();
-        container.registerInstance(EmailService, { send: vi.fn() });
-        container.register(UserServiceRegistration).inSingletonScope();
-        container.register(AuthServiceRegistration).inSingletonScope();
 
         app = Fastify();
         app.addHook("onRequest", createAuthHook(container));

@@ -1,16 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { eq } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
-import { createContainer } from "#shared/index.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { JobWorker } from "../../services/JobExecution/index.js";
-import { EmailService } from "../../services/Email/index.js";
-import { UserService as UserServiceRegistration } from "../../services/Auth/UserService.js";
-import { AuthService as AuthServiceRegistration } from "../../services/Auth/AuthService.js";
 import { createAuthHook } from "../../middleware/authHook.js";
 import {
     projects,
@@ -23,7 +18,7 @@ import {
 import { licenseRoutes } from "../licenses.js";
 import { licensePolicyRoutes } from "../licensePolicies.js";
 
-type TestDb = Awaited<ReturnType<typeof createTestDb>>;
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
 interface IRouteTestContext {
     app: FastifyInstance;
@@ -52,11 +47,9 @@ async function insertTestProject(db: TestDb, id: string, name = id): Promise<voi
  * without exercising the full job pipeline.
  */
 async function createTestContext(): Promise<IRouteTestContext> {
-    const db = await createTestDb();
+    const { container, db } = createTestApiContainer();
     const enqueuedJobs: JobWorker.CreateJobInput[] = [];
 
-    const container = createContainer();
-    container.registerInstance(DatabaseClient, { db });
     container.registerInstance(JobWorker, {
         enqueue: async input => {
             enqueuedJobs.push(input);
@@ -75,10 +68,6 @@ async function createTestContext(): Promise<IRouteTestContext> {
         waitForJobs: async () => [],
         getRunningJobsForReference: async () => []
     });
-
-    container.registerInstance(EmailService, { send: vi.fn() });
-    container.register(UserServiceRegistration).inSingletonScope();
-    container.register(AuthServiceRegistration).inSingletonScope();
 
     const app = Fastify();
     app.addHook("onRequest", createAuthHook(container));

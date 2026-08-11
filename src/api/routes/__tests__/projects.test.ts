@@ -4,67 +4,17 @@ import { join, basename } from "path";
 import { tmpdir } from "os";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { eq } from "drizzle-orm";
-import { generateId, ConsoleLoggerConfig, ConsoleLoggerFeature } from "@webiny/stdlib";
-import { DirectoryToolFeature, FileToolFeature, JsonFileToolFeature } from "@webiny/stdlib/node";
-import { createContainer } from "#shared/index.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { generateId } from "@webiny/stdlib";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { seedYarnSecuritySettings } from "#testing/helpers/seedYarnSecuritySettings.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { EmailService } from "../../services/Email/index.js";
-import { UserService as UserServiceRegistration } from "../../services/Auth/UserService.js";
-import { AuthService as AuthServiceRegistration } from "../../services/Auth/AuthService.js";
 import { createAuthHook } from "../../middleware/authHook.js";
 import { CommandRunner } from "../../services/CommandRunner/index.js";
-import { SecurityService as SecurityServiceReg } from "../../services/Security/SecurityService.js";
-import { ScanService as ScanServiceReg } from "../../services/Scan/ScanService.js";
-import { PackageManagerService as PackageManagerServiceReg } from "../../services/PackageManager/PackageManagerService.js";
-import { AuditParserService as AuditParserServiceReg } from "../../services/Vulnerability/AuditParserService.js";
-import { OsvCacheService as OsvCacheServiceReg } from "../../services/Vulnerability/OsvCacheService.js";
-import { AuditParserService as SharedAuditParserServiceRegistration } from "#shared/vulnerabilities/AuditParserService.js";
-import { OsvQueryService as SharedOsvQueryServiceRegistration } from "#shared/vulnerabilities/OsvQueryService.js";
-import { VulnerabilityMerger as VulnerabilityMergerRegistration } from "#shared/vulnerabilities/VulnerabilityMerger.js";
-import { VulnerabilityService as VulnerabilityServiceReg } from "../../services/Vulnerability/VulnerabilityService.js";
-import { LicenseCheckerService as LicenseCheckerServiceReg } from "../../services/License/LicenseCheckerService.js";
-import { LicensePolicyService as LicensePolicyServiceReg } from "../../services/License/LicensePolicyService.js";
-import { PackageManagerDriverRegistry as PackageManagerDriverRegistryReg } from "../../services/PackageManager/PackageManagerDriverRegistry.js";
-import { RegistryCacheService as RegistryCacheServiceReg } from "../../services/RegistryCache/RegistryCacheService.js";
-import { UpgradeService as UpgradeServiceReg } from "../../services/Upgrade/UpgradeService.js";
-import { JobWorker as JobWorkerReg } from "../../services/JobExecution/JobWorker.js";
-import { JobWorker } from "../../services/JobExecution/index.js";
-import { JobWorkerProvider } from "../../services/JobExecution/index.js";
-import { JobExecutorRegistry as JobExecutorRegistryReg } from "../../services/JobExecution/executors/JobExecutorRegistry.js";
-import { LockfileParserService as LockfileParserServiceReg } from "../../services/DependencyGraph/LockfileParserService.js";
-import { DependencyGraphService as DependencyGraphServiceReg } from "../../services/DependencyGraph/DependencyGraphService.js";
-import { DependencyChangeService as DependencyChangeServiceReg } from "../../services/DependencyChange/DependencyChangeService.js";
-import { WebSocketBroadcaster as WebSocketBroadcasterReg } from "#api/websocket/WebSocketBroadcaster.js";
-import { FileConfigService as FileConfigServiceReg } from "../../services/FileConfig/FileConfigService.js";
-import { GitService as GitServiceReg } from "../../services/Git/GitService.js";
-import { registerEncryption } from "#testing/helpers/registerEncryption.js";
-import { ForgeService as ForgeServiceReg } from "../../services/Git/ForgeService.js";
-import { AutoFixSettingsService as AutoFixSettingsServiceReg } from "../../services/AutoFix/AutoFixSettingsService.js";
-import { AutoFixPrService as AutoFixPrServiceReg } from "../../services/AutoFix/AutoFixPrService.js";
-import { GitHubReleasesResolver } from "../../services/Changelog/resolvers/GitHubReleasesResolver.js";
-import { ChangelogFileResolver } from "../../services/Changelog/resolvers/ChangelogFileResolver.js";
-import { NpmReadmeResolver } from "../../services/Changelog/resolvers/NpmReadmeResolver.js";
-import { ChangelogJobExecutor as ChangelogJobExecutorReg } from "../../services/JobExecution/executors/ChangelogJobExecutor.js";
-import { DependencyJobExecutor as DependencyJobExecutorReg } from "../../services/JobExecution/executors/DependencyJobExecutor.js";
-import { TransientJobExecutor as TransientJobExecutorReg } from "../../services/JobExecution/executors/TransientJobExecutor.js";
-import { PackageManagerJobExecutor as PackageManagerJobExecutorReg } from "../../services/JobExecution/executors/PackageManagerJobExecutor.js";
-import { InstallJobExecutor as InstallJobExecutorReg } from "../../services/JobExecution/executors/InstallJobExecutor.js";
-import { CloneJobExecutor as CloneJobExecutorReg } from "../../services/JobExecution/executors/CloneJobExecutor.js";
-import { AutoFixPrJobExecutor as AutoFixPrJobExecutorReg } from "../../services/JobExecution/executors/AutoFixPrJobExecutor.js";
-import { ScanJobExecutor as ScanJobExecutorReg } from "../../services/JobExecution/executors/ScanJobExecutor.js";
-import { TransitiveResolveJobExecutor as TransitiveResolveJobExecutorReg } from "../../services/JobExecution/executors/TransitiveResolveJobExecutor.js";
-import { PackageScanJobExecutor as PackageScanJobExecutorReg } from "../../services/JobExecution/executors/PackageScanJobExecutor.js";
-import { VulnerabilityScanJobExecutor as VulnerabilityScanJobExecutorReg } from "../../services/JobExecution/executors/VulnerabilityScanJobExecutor.js";
-import { LicenseScanJobExecutor as LicenseScanJobExecutorReg } from "../../services/JobExecution/executors/LicenseScanJobExecutor.js";
-import { GraphRefreshJobExecutor as GraphRefreshJobExecutorReg } from "../../services/JobExecution/executors/GraphRefreshJobExecutor.js";
 import { ErrorReporter } from "../../services/ErrorReporter/index.js";
 import { ScanSchedulerService } from "../../services/ScanScheduler/index.js";
-import { EventBus } from "../../services/EventBus/EventBus.js";
+import { EmailService } from "../../services/Email/index.js";
+import { JobWorker } from "../../services/JobExecution/index.js";
 import { projectRoutes } from "../projects.js";
 import {
     projects,
@@ -122,7 +72,7 @@ interface ScanSchedulerServiceMock {
 describe("project routes", () => {
     let app: FastifyInstance;
     let testDir: string;
-    let db: BetterSQLite3Database;
+    let db: ReturnType<typeof createTestApiContainer>["db"];
     let jobWorker: JobWorker.Interface;
     let scanSchedulerMock: ScanSchedulerServiceMock;
     let token: string;
@@ -134,9 +84,10 @@ describe("project routes", () => {
         writeFileSync(join(testDir, ".yarnrc.yml"), VALID_YARNRC);
         writeFileSync(join(testDir, "yarn.lock"), "");
 
-        db = await createTestDb();
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
+        const result = createTestApiContainer();
+        db = result.db;
+        const container = result.container;
+
         container.registerInstance(CommandRunner, {
             run: async (_command: string, args: string[]) => {
                 if (args[0] === "--version") {
@@ -153,58 +104,6 @@ describe("project routes", () => {
                 exitCode: 0
             })
         });
-        container.register(SecurityServiceReg);
-        container.register(ScanServiceReg);
-        container.register(PackageManagerDriverRegistryReg).inSingletonScope();
-        container.register(SharedAuditParserServiceRegistration).inSingletonScope();
-        container.register(AuditParserServiceReg);
-        container.register(PackageManagerServiceReg);
-        container.register(SharedOsvQueryServiceRegistration).inSingletonScope();
-        container.register(VulnerabilityMergerRegistration).inSingletonScope();
-        container.register(OsvCacheServiceReg).inSingletonScope();
-        container.register(VulnerabilityServiceReg).inSingletonScope();
-        container.register(LicenseCheckerServiceReg).inSingletonScope();
-        container.register(LicensePolicyServiceReg).inSingletonScope();
-        container.register(RegistryCacheServiceReg);
-        container.register(UpgradeServiceReg);
-        container.register(WebSocketBroadcasterReg).inSingletonScope();
-        container.registerInstance(ConsoleLoggerConfig, {
-            getConfig: () => ({ logLevel: "error" })
-        });
-        ConsoleLoggerFeature.register(container);
-        DirectoryToolFeature.register(container);
-        FileToolFeature.register(container);
-        JsonFileToolFeature.register(container);
-        container.register(FileConfigServiceReg).inSingletonScope();
-        container.register(GitServiceReg).inSingletonScope();
-        registerEncryption(container);
-        container.register(ForgeServiceReg).inSingletonScope();
-        container.register(AutoFixSettingsServiceReg).inSingletonScope();
-        container.register(AutoFixPrServiceReg).inSingletonScope();
-        container.register(LockfileParserServiceReg).inSingletonScope();
-        container.register(DependencyGraphServiceReg).inSingletonScope();
-        container.register(DependencyChangeServiceReg).inSingletonScope();
-        container.register(GitHubReleasesResolver);
-        container.register(ChangelogFileResolver);
-        container.register(NpmReadmeResolver);
-        container.register(DependencyJobExecutorReg);
-        container.register(TransientJobExecutorReg);
-        container.register(PackageManagerJobExecutorReg);
-        container.register(InstallJobExecutorReg);
-        container.register(CloneJobExecutorReg);
-        container.register(AutoFixPrJobExecutorReg);
-        container.register(ScanJobExecutorReg);
-        container.register(ChangelogJobExecutorReg);
-        container.register(TransitiveResolveJobExecutorReg);
-        container.register(PackageScanJobExecutorReg);
-        container.register(VulnerabilityScanJobExecutorReg);
-        container.register(LicenseScanJobExecutorReg);
-        container.register(GraphRefreshJobExecutorReg);
-        container.register(JobExecutorRegistryReg).inSingletonScope();
-        container.register(JobWorkerReg).inSingletonScope();
-        container.registerFactory(JobWorkerProvider, () => ({
-            get: () => container.resolve(JobWorker)
-        }));
         container.registerInstance(ErrorReporter, {
             reportJobFailure: vi.fn(),
             reportJobWarning: vi.fn(),
@@ -218,11 +117,8 @@ describe("project routes", () => {
             onGlobalDefaultChanged: vi.fn(),
             onScanComplete: vi.fn()
         };
-        container.register(EventBus).inSingletonScope();
         container.registerInstance(ScanSchedulerService, scanSchedulerMock);
         container.registerInstance(EmailService, { send: vi.fn() });
-        container.register(UserServiceRegistration).inSingletonScope();
-        container.register(AuthServiceRegistration).inSingletonScope();
 
         jobWorker = container.resolve(JobWorker);
 

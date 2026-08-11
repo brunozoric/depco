@@ -1,15 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { zipSync, unzipSync, strToU8, strFromU8 } from "fflate";
-import { createContainer } from "#shared/index.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { PackageManagerService } from "#api/services/PackageManager/index.js";
-import { EmailService } from "#api/services/Email/index.js";
-import { UserService as UserServiceRegistration } from "#api/services/Auth/UserService.js";
-import { AuthService as AuthServiceRegistration } from "#api/services/Auth/AuthService.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
 import {
     appSettings,
@@ -68,22 +62,14 @@ function unzipBackup(buffer: Buffer): BackupExport {
 
 describe("backup routes", () => {
     let app: FastifyInstance;
-    let db: Awaited<ReturnType<typeof createTestDb>>;
+    let db: ReturnType<typeof createTestApiContainer>["db"];
     let token: string;
 
     beforeEach(async () => {
-        db = await createTestDb();
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
-        container.registerInstance(PackageManagerService, {
-            detect: async () => "pnpm",
-            getVersion: async () => "11.0.0",
-            updateVersion: async () => {},
-            audit: async () => []
-        });
-        container.registerInstance(EmailService, { send: vi.fn() });
-        container.register(UserServiceRegistration).inSingletonScope();
-        container.register(AuthServiceRegistration).inSingletonScope();
+        const result = createTestApiContainer();
+        db = result.db;
+        const container = result.container;
+
         app = Fastify();
         app.addHook("onRequest", createAuthHook(container));
         await app.register(backupRoutes, { container });

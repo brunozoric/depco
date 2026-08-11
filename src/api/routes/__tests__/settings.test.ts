@@ -1,26 +1,17 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { join } from "node:path";
 import { writeFile, readFile, rm } from "node:fs/promises";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
-import { ConsoleLoggerConfig, ConsoleLoggerFeature } from "@webiny/stdlib";
-import { DirectoryToolFeature, FileToolFeature, JsonFileToolFeature } from "@webiny/stdlib/node";
 import { generateId } from "@webiny/stdlib";
-import { createContainer } from "#shared/index.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { seedYarnSecuritySettings } from "#testing/helpers/seedYarnSecuritySettings.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { FileConfigService } from "#api/services/FileConfig/FileConfigService.js";
-import { EmailService } from "#api/services/Email/index.js";
-import { UserService as UserServiceRegistration } from "#api/services/Auth/UserService.js";
-import { AuthService as AuthServiceRegistration } from "#api/services/Auth/AuthService.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
 import { pmSecuritySettings } from "#api/db/schema.js";
 import { settingsRoutes } from "../settings.js";
 
-function seedPnpmSecuritySettings(db: BetterSQLite3Database): void {
+function seedPnpmSecuritySettings(db: ReturnType<typeof createTestApiContainer>["db"]): void {
     db.insert(pmSecuritySettings)
         .values([
             {
@@ -45,24 +36,13 @@ function seedPnpmSecuritySettings(db: BetterSQLite3Database): void {
 
 describe("settings routes", () => {
     let app: FastifyInstance;
-    let db: BetterSQLite3Database;
+    let db: ReturnType<typeof createTestApiContainer>["db"];
     let token: string;
 
     beforeEach(async () => {
-        db = createTestDb();
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
-        container.registerInstance(ConsoleLoggerConfig, {
-            getConfig: () => ({ logLevel: "error" })
-        });
-        ConsoleLoggerFeature.register(container);
-        DirectoryToolFeature.register(container);
-        FileToolFeature.register(container);
-        JsonFileToolFeature.register(container);
-        container.register(FileConfigService).inSingletonScope();
-        container.registerInstance(EmailService, { send: vi.fn() });
-        container.register(UserServiceRegistration).inSingletonScope();
-        container.register(AuthServiceRegistration).inSingletonScope();
+        const result = createTestApiContainer();
+        db = result.db;
+        const container = result.container;
 
         app = Fastify();
         app.addHook("onRequest", createAuthHook(container));

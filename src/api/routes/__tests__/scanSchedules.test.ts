@@ -2,19 +2,14 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { generateId } from "@webiny/stdlib";
-import { createContainer } from "#shared/index.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { ScanSchedulerService } from "#api/services/ScanScheduler/index.js";
-import { EmailService } from "#api/services/Email/index.js";
-import { UserService as UserServiceRegistration } from "#api/services/Auth/UserService.js";
-import { AuthService as AuthServiceRegistration } from "#api/services/Auth/AuthService.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
 import { projects, scanSchedules } from "#api/db/schema.js";
 import { scanScheduleRoutes } from "../scanSchedules.js";
 
-type TestDb = Awaited<ReturnType<typeof createTestDb>>;
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
 function createMockScheduler(): ScanSchedulerService.Interface {
     return {
@@ -34,14 +29,11 @@ describe("scan schedule routes", () => {
     let token: string;
 
     beforeEach(async () => {
-        db = await createTestDb();
         scheduler = createMockScheduler();
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
+        const result = createTestApiContainer();
+        db = result.db;
+        const container = result.container;
         container.registerInstance(ScanSchedulerService, scheduler);
-        container.registerInstance(EmailService, { send: vi.fn() });
-        container.register(UserServiceRegistration).inSingletonScope();
-        container.register(AuthServiceRegistration).inSingletonScope();
 
         app = Fastify();
         app.addHook("onRequest", createAuthHook(container));

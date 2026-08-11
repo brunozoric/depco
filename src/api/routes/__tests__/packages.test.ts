@@ -1,13 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
-import { createContainer } from "#shared/index.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { EmailService } from "../../services/Email/index.js";
-import { UserService as UserServiceRegistration } from "../../services/Auth/UserService.js";
-import { AuthService as AuthServiceRegistration } from "../../services/Auth/AuthService.js";
 import { createAuthHook } from "../../middleware/authHook.js";
 import { generateId } from "@webiny/stdlib";
 import {
@@ -20,9 +15,8 @@ import {
     teamProjects
 } from "#api/db/schema.js";
 import { packagesRoutes } from "../packages.js";
-import { RegistryCacheService } from "../../services/RegistryCache/index.js";
 
-type TestDb = Awaited<ReturnType<typeof createTestDb>>;
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
 async function insertProject(db: TestDb, name: string): Promise<string> {
     const id = generateId();
@@ -112,28 +106,9 @@ describe("packages routes", () => {
     let token: string;
 
     beforeEach(async () => {
-        db = await createTestDb();
-
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
-        container.registerInstance(RegistryCacheService, {
-            getPackageInfo: async () => ({
-                name: "",
-                latestVersion: "",
-                distTags: {},
-                versions: [],
-                time: {},
-                repoUrl: null,
-                repoDirectory: null,
-                readme: null,
-                license: null
-            }),
-            clearAll: async () => {},
-            clearPackage: async () => {}
-        });
-        container.registerInstance(EmailService, { send: vi.fn() });
-        container.register(UserServiceRegistration).inSingletonScope();
-        container.register(AuthServiceRegistration).inSingletonScope();
+        const result = createTestApiContainer();
+        db = result.db;
+        const container = result.container;
 
         app = Fastify();
         app.addHook("onRequest", createAuthHook(container));

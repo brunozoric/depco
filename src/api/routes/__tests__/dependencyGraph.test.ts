@@ -1,34 +1,28 @@
-import { describe, it, expect, afterEach, vi } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { generateId } from "@webiny/stdlib";
-import { createContainer } from "#shared/index.js";
-import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { LockfileParserService } from "#api/services/DependencyGraph/index.js";
-import { DependencyGraphService } from "#api/services/DependencyGraph/DependencyGraphService.js";
-import { EmailService } from "#api/services/Email/index.js";
-import { UserService as UserServiceRegistration } from "#api/services/Auth/UserService.js";
-import { AuthService as AuthServiceRegistration } from "#api/services/Auth/AuthService.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
 import { projects, dependencyEdges } from "#api/db/schema.js";
 import { dependencyGraphRoutes } from "../dependencyGraph.js";
 
-type TestDatabaseClient = Awaited<ReturnType<typeof createTestDatabaseClient>>;
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
 interface IRouteTestContext {
     app: FastifyInstance;
-    databaseClient: TestDatabaseClient;
+    db: TestDb;
     token: string;
 }
 
 async function insertTestProject(
-    databaseClient: TestDatabaseClient,
+    db: TestDb,
     id: string,
     packageManager: string | null = "npm"
 ): Promise<void> {
-    await databaseClient.db
+    await db
         .insert(projects)
         .values({
             id,
@@ -49,7 +43,7 @@ function createStubLockfileParserService(
 }
 
 async function seedEdge(
-    databaseClient: TestDatabaseClient,
+    db: TestDb,
     input: {
         projectId: string;
         parentPackage: string | null;
@@ -59,7 +53,7 @@ async function seedEdge(
         depth: number;
     }
 ): Promise<void> {
-    await databaseClient.db
+    await db
         .insert(dependencyEdges)
         .values({
             id: generateId(),
@@ -78,29 +72,25 @@ async function seedEdge(
 async function createTestContext(
     parsedEdges: LockfileParserService.DependencyEdge[] = []
 ): Promise<IRouteTestContext> {
-    const databaseClient = await createTestDatabaseClient();
+    const result = createTestApiContainer();
+    const db = result.db;
+    const container = result.container;
 
-    const container = createContainer();
-    container.registerInstance(DatabaseClient, databaseClient);
     container.registerInstance(LockfileParserService, createStubLockfileParserService(parsedEdges));
-    container.register(DependencyGraphService).inSingletonScope();
-    container.registerInstance(EmailService, { send: vi.fn() });
-    container.register(UserServiceRegistration).inSingletonScope();
-    container.register(AuthServiceRegistration).inSingletonScope();
 
     const app = Fastify();
     app.addHook("onRequest", createAuthHook(container));
     await app.register(dependencyGraphRoutes, { container });
     await app.ready();
 
-    const { token } = await createTestSession({ db: databaseClient.db });
+    const { token } = await createTestSession({ db });
 
-    return { app, databaseClient, token };
+    return { app, db, token };
 }
 
 describe("dependency graph routes", () => {
     let app: FastifyInstance;
-    let databaseClient: TestDatabaseClient;
+    let db: TestDb;
     let token: string;
 
     afterEach(async () => {
@@ -111,9 +101,9 @@ describe("dependency graph routes", () => {
         it("returns an empty graph when none has been built", async () => {
             const context = await createTestContext();
             app = context.app;
-            databaseClient = context.databaseClient;
+            db = context.db;
             token = context.token;
-            await insertTestProject(databaseClient, "proj-1");
+            await insertTestProject(db, "proj-1");
 
             const response = await app.inject({
                 headers: { authorization: `Bearer ${token}` },
@@ -134,11 +124,11 @@ describe("dependency graph routes", () => {
         it("returns paths to a specific package when ?package= is provided", async () => {
             const context = await createTestContext();
             app = context.app;
-            databaseClient = context.databaseClient;
+            db = context.db;
             token = context.token;
-            await insertTestProject(databaseClient, "proj-1");
+            await insertTestProject(db, "proj-1");
 
-            await seedEdge(databaseClient, {
+            await seedEdge(db, {
                 projectId: "proj-1",
                 parentPackage: null,
                 parentVersion: null,
@@ -146,7 +136,7 @@ describe("dependency graph routes", () => {
                 childVersion: "18.0.0",
                 depth: 0
             });
-            await seedEdge(databaseClient, {
+            await seedEdge(db, {
                 projectId: "proj-1",
                 parentPackage: "react",
                 parentVersion: "18.0.0",
@@ -180,11 +170,11 @@ describe("dependency graph routes", () => {
         it("returns matching package names", async () => {
             const context = await createTestContext();
             app = context.app;
-            databaseClient = context.databaseClient;
+            db = context.db;
             token = context.token;
-            await insertTestProject(databaseClient, "proj-1");
+            await insertTestProject(db, "proj-1");
 
-            await seedEdge(databaseClient, {
+            await seedEdge(db, {
                 projectId: "proj-1",
                 parentPackage: null,
                 parentVersion: null,
@@ -192,7 +182,7 @@ describe("dependency graph routes", () => {
                 childVersion: "4.17.0",
                 depth: 0
             });
-            await seedEdge(databaseClient, {
+            await seedEdge(db, {
                 projectId: "proj-1",
                 parentPackage: null,
                 parentVersion: null,
@@ -200,7 +190,7 @@ describe("dependency graph routes", () => {
                 childVersion: "4.4.2",
                 depth: 0
             });
-            await seedEdge(databaseClient, {
+            await seedEdge(db, {
                 projectId: "proj-1",
                 parentPackage: null,
                 parentVersion: null,
@@ -222,11 +212,11 @@ describe("dependency graph routes", () => {
         it("returns an empty array for an empty query", async () => {
             const context = await createTestContext();
             app = context.app;
-            databaseClient = context.databaseClient;
+            db = context.db;
             token = context.token;
-            await insertTestProject(databaseClient, "proj-1");
+            await insertTestProject(db, "proj-1");
 
-            await seedEdge(databaseClient, {
+            await seedEdge(db, {
                 projectId: "proj-1",
                 parentPackage: null,
                 parentVersion: null,
@@ -267,9 +257,9 @@ describe("dependency graph routes", () => {
                 }
             ]);
             app = context.app;
-            databaseClient = context.databaseClient;
+            db = context.db;
             token = context.token;
-            await insertTestProject(databaseClient, "proj-1", "npm");
+            await insertTestProject(db, "proj-1", "npm");
 
             const response = await app.inject({
                 headers: { authorization: `Bearer ${token}` },
@@ -291,7 +281,7 @@ describe("dependency graph routes", () => {
         it("returns 404 when the project does not exist", async () => {
             const context = await createTestContext();
             app = context.app;
-            databaseClient = context.databaseClient;
+            db = context.db;
             token = context.token;
 
             const response = await app.inject({
@@ -306,9 +296,9 @@ describe("dependency graph routes", () => {
         it("returns 400 when the project has no detected package manager", async () => {
             const context = await createTestContext();
             app = context.app;
-            databaseClient = context.databaseClient;
+            db = context.db;
             token = context.token;
-            await insertTestProject(databaseClient, "proj-1", null);
+            await insertTestProject(db, "proj-1", null);
 
             const response = await app.inject({
                 headers: { authorization: `Bearer ${token}` },
@@ -324,11 +314,11 @@ describe("dependency graph routes", () => {
         it("returns aggregated stats derived from the graph", async () => {
             const context = await createTestContext();
             app = context.app;
-            databaseClient = context.databaseClient;
+            db = context.db;
             token = context.token;
-            await insertTestProject(databaseClient, "proj-1");
+            await insertTestProject(db, "proj-1");
 
-            await seedEdge(databaseClient, {
+            await seedEdge(db, {
                 projectId: "proj-1",
                 parentPackage: null,
                 parentVersion: null,
@@ -336,7 +326,7 @@ describe("dependency graph routes", () => {
                 childVersion: "18.0.0",
                 depth: 0
             });
-            await seedEdge(databaseClient, {
+            await seedEdge(db, {
                 projectId: "proj-1",
                 parentPackage: null,
                 parentVersion: null,
@@ -344,7 +334,7 @@ describe("dependency graph routes", () => {
                 childVersion: "4.17.0",
                 depth: 0
             });
-            await seedEdge(databaseClient, {
+            await seedEdge(db, {
                 projectId: "proj-1",
                 parentPackage: "react",
                 parentVersion: "18.0.0",

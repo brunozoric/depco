@@ -1,25 +1,16 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdtemp, writeFile, rm } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
-import { ConsoleLoggerConfig, ConsoleLoggerFeature } from "@webiny/stdlib";
-import { DirectoryToolFeature, FileToolFeature, JsonFileToolFeature } from "@webiny/stdlib/node";
-import { createContainer } from "#shared/index.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { EmailService } from "#api/services/Email/index.js";
-import { UserService as UserServiceRegistration } from "#api/services/Auth/UserService.js";
-import { AuthService as AuthServiceRegistration } from "#api/services/Auth/AuthService.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
 import { projects, projectStepHooks } from "#api/db/schema.js";
-import { FileConfigService } from "../../services/FileConfig/FileConfigService.js";
-import { PackageJsonService } from "../../services/PackageJson/PackageJsonService.js";
 import { stepHooksRoutes } from "../stepHooks.js";
 
-type TestDb = Awaited<ReturnType<typeof createTestDb>>;
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
 describe("step hooks routes", () => {
     let app: FastifyInstance;
@@ -28,7 +19,10 @@ describe("step hooks routes", () => {
     const projectId = "p1";
 
     beforeEach(async () => {
-        db = await createTestDb();
+        const result = createTestApiContainer();
+        db = result.db;
+        const container = result.container;
+
         await db
             .insert(projects)
             .values({
@@ -39,21 +33,6 @@ describe("step hooks routes", () => {
                 addedAt: Date.now()
             })
             .run();
-
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
-        container.registerInstance(ConsoleLoggerConfig, {
-            getConfig: () => ({ logLevel: "error" })
-        });
-        ConsoleLoggerFeature.register(container);
-        DirectoryToolFeature.register(container);
-        FileToolFeature.register(container);
-        JsonFileToolFeature.register(container);
-        container.register(FileConfigService).inSingletonScope();
-        container.register(PackageJsonService).inSingletonScope();
-        container.registerInstance(EmailService, { send: vi.fn() });
-        container.register(UserServiceRegistration).inSingletonScope();
-        container.register(AuthServiceRegistration).inSingletonScope();
 
         app = Fastify();
         app.addHook("onRequest", createAuthHook(container));

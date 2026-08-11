@@ -1,9 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
-import { createContainer } from "#shared/index.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { generateId } from "@webiny/stdlib";
 import {
     projects,
@@ -18,18 +16,15 @@ import {
 } from "#api/db/schema.js";
 import { dashboardRoutes } from "../dashboard.js";
 
-type TestDb = Awaited<ReturnType<typeof createTestDb>>;
-
 describe("Dashboard Routes", () => {
-    let db: TestDb;
+    let db: ReturnType<typeof createTestApiContainer>["db"];
     let app: FastifyInstance;
 
     beforeEach(async () => {
-        db = await createTestDb();
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
+        const result = createTestApiContainer();
+        db = result.db;
         app = Fastify();
-        await app.register(dashboardRoutes, { container });
+        await app.register(dashboardRoutes, { container: result.container });
         await app.ready();
     });
 

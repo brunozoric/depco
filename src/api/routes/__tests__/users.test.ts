@@ -2,30 +2,24 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { eq } from "drizzle-orm";
-import { createContainer } from "#shared/index.js";
-import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { users, sessions } from "#api/db/schema.js";
-import { EmailService } from "#api/services/Email/index.js";
-import { UserService as UserServiceRegistration } from "#api/services/Auth/UserService.js";
-import { AuthService as AuthServiceRegistration } from "#api/services/Auth/AuthService.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
 import { userRoutes } from "../users.js";
 
-type TestDb = DatabaseClient.Interface["db"];
-type TestContainer = ReturnType<typeof createContainer>;
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
 describe("user routes", () => {
     let app: FastifyInstance;
     let db: TestDb;
-    let container: TestContainer;
     let broadcaster: WebSocketBroadcaster.Interface;
 
     beforeEach(async () => {
-        const databaseClient = createTestDatabaseClient();
-        db = databaseClient.db;
+        const result = createTestApiContainer();
+        db = result.db;
+        const container = result.container;
 
         broadcaster = {
             broadcast: vi.fn(),
@@ -34,12 +28,7 @@ describe("user routes", () => {
             closeConnectionsForUser: vi.fn()
         };
 
-        container = createContainer();
-        container.registerInstance(DatabaseClient, databaseClient);
-        container.registerInstance(EmailService, { send: vi.fn() });
         container.registerInstance(WebSocketBroadcaster, broadcaster);
-        container.register(UserServiceRegistration).inSingletonScope();
-        container.register(AuthServiceRegistration).inSingletonScope();
 
         app = Fastify();
         app.addHook("onRequest", createAuthHook(container));

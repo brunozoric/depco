@@ -1,24 +1,15 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { join } from "node:path";
 import { writeFile, rm } from "node:fs/promises";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
-import { ConsoleLoggerConfig, ConsoleLoggerFeature } from "@webiny/stdlib";
-import { DirectoryToolFeature, FileToolFeature, JsonFileToolFeature } from "@webiny/stdlib/node";
-import { createContainer } from "#shared/index.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
-import { registerEncryption } from "#testing/helpers/registerEncryption.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { FileConfigService } from "#api/services/FileConfig/FileConfigService.js";
-import { EmailService } from "#api/services/Email/index.js";
-import { UserService as UserServiceRegistration } from "#api/services/Auth/UserService.js";
-import { AuthService as AuthServiceRegistration } from "#api/services/Auth/AuthService.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
 import { appSettingsRoutes } from "../appSettings.js";
 import { appSettings } from "#api/db/schema.js";
 
-type TestDb = Awaited<ReturnType<typeof createTestDb>>;
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
 describe("app settings routes", () => {
     let app: FastifyInstance;
@@ -26,21 +17,10 @@ describe("app settings routes", () => {
     let token: string;
 
     beforeEach(async () => {
-        db = await createTestDb();
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
-        container.registerInstance(ConsoleLoggerConfig, {
-            getConfig: () => ({ logLevel: "error" })
-        });
-        ConsoleLoggerFeature.register(container);
-        DirectoryToolFeature.register(container);
-        FileToolFeature.register(container);
-        JsonFileToolFeature.register(container);
-        registerEncryption(container);
-        container.register(FileConfigService).inSingletonScope();
-        container.registerInstance(EmailService, { send: vi.fn() });
-        container.register(UserServiceRegistration).inSingletonScope();
-        container.register(AuthServiceRegistration).inSingletonScope();
+        const result = createTestApiContainer();
+        db = result.db;
+        const container = result.container;
+
         app = Fastify();
         app.addHook("onRequest", createAuthHook(container));
         await app.register(appSettingsRoutes, { container });

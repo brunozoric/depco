@@ -5,9 +5,7 @@ import { tmpdir } from "os";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { filesystemRoutes } from "../filesystem.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
-import { createContainer } from "#shared/index.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { projects } from "#api/db/schema.js";
 
 function createProjectDir(basePath: string, name: string): string {
@@ -343,7 +341,7 @@ describe("filesystem routes", () => {
 describe("scan endpoint", () => {
     let app: FastifyInstance;
     let testDir: string;
-    let db: Awaited<ReturnType<typeof createTestDb>>;
+    let db: ReturnType<typeof createTestApiContainer>["db"];
 
     beforeEach(async () => {
         testDir = join(tmpdir(), `fs-scan-${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -362,9 +360,9 @@ describe("scan endpoint", () => {
 
         mkdirSync(join(testDir, ".git"));
 
-        db = await createTestDb();
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
+        const result = createTestApiContainer();
+        db = result.db;
+        const container = result.container;
 
         app = Fastify();
         await app.register(filesystemRoutes, { container });

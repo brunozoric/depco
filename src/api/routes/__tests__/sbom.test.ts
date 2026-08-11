@@ -2,29 +2,18 @@ import { describe, it, expect, beforeEach } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { generateId } from "@webiny/stdlib";
-import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
-import type { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { DatabaseClient as DatabaseClientAbstraction } from "#api/db/abstractions/DatabaseClient.js";
-import { SbomService as SbomServiceRegistration } from "../../services/Sbom/SbomService.js";
-import { SbomFormatterRegistry as SbomFormatterRegistryRegistration } from "../../services/Sbom/SbomFormatterRegistry.js";
-import { CycloneDxFormatter as CycloneDxFormatterRegistration } from "../../services/Sbom/formatters/CycloneDxFormatter.js";
-import { SpdxFormatter as SpdxFormatterRegistration } from "../../services/Sbom/formatters/SpdxFormatter.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { projects, scanResults } from "#api/db/schema.js";
 import { sbomRoutes } from "../sbom.js";
-import { createContainer } from "#shared/index.js";
 
 describe("sbom routes", () => {
     let app: FastifyInstance;
-    let databaseClient: DatabaseClient.Interface;
+    let db: ReturnType<typeof createTestApiContainer>["db"];
 
     beforeEach(async () => {
-        databaseClient = await createTestDatabaseClient();
-        const container = createContainer();
-        container.registerInstance(DatabaseClientAbstraction, databaseClient);
-        container.register(SbomServiceRegistration);
-        container.register(CycloneDxFormatterRegistration);
-        container.register(SpdxFormatterRegistration);
-        container.register(SbomFormatterRegistryRegistration);
+        const result = createTestApiContainer();
+        db = result.db;
+        const container = result.container;
 
         app = Fastify();
         await app.register(sbomRoutes, { container });
@@ -32,7 +21,7 @@ describe("sbom routes", () => {
     });
 
     async function seedProject(id: string, name: string): Promise<void> {
-        await databaseClient.db
+        await db
             .insert(projects)
             .values({
                 id,
@@ -45,7 +34,7 @@ describe("sbom routes", () => {
     }
 
     async function seedScanResult(projectId: string, packageName: string): Promise<void> {
-        await databaseClient.db
+        await db
             .insert(scanResults)
             .values({
                 id: generateId(),

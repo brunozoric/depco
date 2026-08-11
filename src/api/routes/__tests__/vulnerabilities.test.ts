@@ -3,15 +3,9 @@ import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { eq } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
-import { createContainer } from "#shared/index.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { createTestSession } from "#testing/helpers/createTestSession.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { EmailService } from "#api/services/Email/index.js";
-import { UserService as UserServiceRegistration } from "#api/services/Auth/UserService.js";
-import { AuthService as AuthServiceRegistration } from "#api/services/Auth/AuthService.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
-import { CommandRunner } from "#api/services/CommandRunner/index.js";
 import { VulnerabilityService } from "#api/services/Vulnerability/index.js";
 import type {
     IVulnerability,
@@ -23,18 +17,10 @@ import type {
 } from "#api/services/Vulnerability/index.js";
 import { OsvCacheService } from "#api/services/Vulnerability/index.js";
 import type { IOsvEnrichedDetail } from "#api/services/Vulnerability/index.js";
-import { VulnerabilityService as VulnerabilityServiceImpl } from "#api/services/Vulnerability/VulnerabilityService.js";
-import { PackageManagerService as PackageManagerServiceImpl } from "#api/services/PackageManager/PackageManagerService.js";
-import { AuditParserService as AuditParserServiceImpl } from "#api/services/Vulnerability/AuditParserService.js";
-import { OsvCacheService as OsvCacheServiceImpl } from "#api/services/Vulnerability/OsvCacheService.js";
-import { AuditParserService as SharedAuditParserServiceRegistration } from "#shared/vulnerabilities/AuditParserService.js";
-import { OsvQueryService as SharedOsvQueryServiceRegistration } from "#shared/vulnerabilities/OsvQueryService.js";
-import { VulnerabilityMerger as VulnerabilityMergerRegistration } from "#shared/vulnerabilities/VulnerabilityMerger.js";
-import { PackageManagerDriverRegistry as PackageManagerDriverRegistryImpl } from "#api/services/PackageManager/PackageManagerDriverRegistry.js";
 import { projects, vulnerabilities, teams, teamProjects } from "#api/db/schema.js";
 import { vulnerabilityRoutes } from "../vulnerabilities.js";
 
-type TestDb = Awaited<ReturnType<typeof createTestDb>>;
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
 interface IRouteTestContext {
     app: FastifyInstance;
@@ -171,24 +157,7 @@ function makeOsvEnrichedDetail(overrides: Partial<IOsvEnrichedDetail> = {}): IOs
  * which exercise real filtering/dismiss logic rather than a mocked service.
  */
 async function createTestContext(): Promise<IRouteTestContext> {
-    const db = await createTestDb();
-    const container = createContainer();
-    container.registerInstance(DatabaseClient, { db });
-    container.registerInstance(CommandRunner, {
-        run: vi.fn(async () => ({ stdout: "", stderr: "", exitCode: 0 })),
-        runStreaming: vi.fn(async () => ({ stdout: "", stderr: "", exitCode: 0 }))
-    });
-    container.register(PackageManagerDriverRegistryImpl).inSingletonScope();
-    container.register(SharedAuditParserServiceRegistration).inSingletonScope();
-    container.register(AuditParserServiceImpl).inSingletonScope();
-    container.register(PackageManagerServiceImpl).inSingletonScope();
-    container.register(SharedOsvQueryServiceRegistration).inSingletonScope();
-    container.register(VulnerabilityMergerRegistration).inSingletonScope();
-    container.register(OsvCacheServiceImpl).inSingletonScope();
-    container.register(VulnerabilityServiceImpl).inSingletonScope();
-    container.registerInstance(EmailService, { send: vi.fn() });
-    container.register(UserServiceRegistration).inSingletonScope();
-    container.register(AuthServiceRegistration).inSingletonScope();
+    const { container, db } = createTestApiContainer();
 
     const app = Fastify();
     app.addHook("onRequest", createAuthHook(container));
@@ -294,16 +263,13 @@ describe("vulnerability routes", () => {
     let token: string;
 
     beforeEach(async () => {
-        db = await createTestDb();
+        const result = createTestApiContainer();
+        db = result.db;
+        const container = result.container;
         vulnerabilityService = createMockVulnerabilityService();
         osvCacheService = createMockOsvCacheService();
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
         container.registerInstance(VulnerabilityService, vulnerabilityService);
         container.registerInstance(OsvCacheService, osvCacheService);
-        container.registerInstance(EmailService, { send: vi.fn() });
-        container.register(UserServiceRegistration).inSingletonScope();
-        container.register(AuthServiceRegistration).inSingletonScope();
 
         app = Fastify();
         app.addHook("onRequest", createAuthHook(container));
