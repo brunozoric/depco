@@ -1,6 +1,9 @@
 import { createFeature } from "#shared/index.js";
 import { ProjectListPresenter as ProjectListPresenterAbstraction } from "./abstractions/ProjectListPresenter.js";
 import { ProjectListPresenter } from "./ProjectListPresenter.js";
+import { CloneManagerFactory } from "./CloneManagerFactory.js";
+import { DirectoryScanManagerFactory } from "./DirectoryScanManagerFactory.js";
+import { ScanStatusManagerFactory } from "./ScanStatusManagerFactory.js";
 import { ProjectsUseCasesFeature } from "../useCases/feature.js";
 import { WebSocketFeature } from "../../../infrastructure/WebSocket/feature.js";
 import { FilesystemFeature } from "../../../features/Filesystem/feature.js";
@@ -24,6 +27,9 @@ export const ProjectListFeature = createFeature<void, IProjectListFeatureExports
         TeamFilterFeature
     ],
     register(container) {
+        container.register(CloneManagerFactory).inSingletonScope();
+        container.register(DirectoryScanManagerFactory).inSingletonScope();
+        container.register(ScanStatusManagerFactory).inSingletonScope();
         container.register(ProjectListPresenter);
         container.register(ProjectListRoute).inSingletonScope();
         const registry = container.resolve(RouteRegistry);

@@ -1,26 +1,29 @@
+import { z } from "zod";
 import { parse as parseYaml } from "yaml";
 import type { IDependencyEdge } from "../abstractions/LockfileParserService.js";
 import type { IRootPackageJson } from "./types.js";
 import { rootPackageJsonSchema } from "./types.js";
 
-interface IPnpmLockImporterDependencyEntry {
-    specifier: string;
-    version: string;
-}
+const pnpmLockImporterDependencyEntrySchema = z.object({
+    specifier: z.string(),
+    version: z.string()
+});
 
-interface IPnpmLockImporter {
-    dependencies?: Record<string, IPnpmLockImporterDependencyEntry>;
-    devDependencies?: Record<string, IPnpmLockImporterDependencyEntry>;
-}
+const pnpmLockImporterSchema = z.object({
+    dependencies: z.record(z.string(), pnpmLockImporterDependencyEntrySchema).optional(),
+    devDependencies: z.record(z.string(), pnpmLockImporterDependencyEntrySchema).optional()
+});
 
-interface IPnpmLockPackageEntry {
-    dependencies?: Record<string, string>;
-}
+const pnpmLockPackageEntrySchema = z.object({
+    dependencies: z.record(z.string(), z.string()).optional()
+});
 
-interface IPnpmLockFile {
-    importers?: Record<string, IPnpmLockImporter>;
-    packages?: Record<string, IPnpmLockPackageEntry>;
-}
+const pnpmLockFileSchema = z.object({
+    importers: z.record(z.string(), pnpmLockImporterSchema).optional(),
+    packages: z.record(z.string(), pnpmLockPackageEntrySchema).optional()
+});
+
+type IPnpmLockFile = z.infer<typeof pnpmLockFileSchema>;
 
 interface IPnpmLockQueueItem {
     packageKey: string;
@@ -41,13 +44,14 @@ export function parsePnpmLockfile(
     lockfileContent: string,
     rootPackageJsonContent: string
 ): IDependencyEdge[] {
-    let lockfile: IPnpmLockFile | null;
+    let lockfile: IPnpmLockFile;
     try {
-        lockfile = parseYaml(lockfileContent) as IPnpmLockFile | null;
+        const parsed = parseYaml(lockfileContent);
+        if (!parsed) {
+            return [];
+        }
+        lockfile = pnpmLockFileSchema.parse(parsed);
     } catch {
-        return [];
-    }
-    if (!lockfile) {
         return [];
     }
 
@@ -69,7 +73,7 @@ export function parsePnpmLockfile(
     const queue: IPnpmLockQueueItem[] = [];
 
     for (const importer of Object.values(importers)) {
-        const directDependencies: Record<string, IPnpmLockImporterDependencyEntry> = {
+        const directDependencies: Record<string, { specifier: string; version: string }> = {
             ...importer.dependencies,
             ...importer.devDependencies
         };

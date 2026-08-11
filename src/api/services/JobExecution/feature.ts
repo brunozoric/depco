@@ -2,6 +2,7 @@ import { createFeature } from "#shared/index.js";
 import { JobWorker } from "./JobWorker.js";
 import { JobWorker as JobWorkerAbstraction } from "./abstractions/JobWorker.js";
 import { JobWorkerProvider } from "./abstractions/JobWorkerProvider.js";
+import { JobExecutionContextFactory } from "./JobExecutionContextFactory.js";
 import { JobExecutorRegistry } from "./executors/JobExecutorRegistry.js";
 import { ChangelogJobExecutor } from "./executors/ChangelogJobExecutor.js";
 import { DependencyJobExecutor } from "./executors/DependencyJobExecutor.js";
@@ -34,6 +35,7 @@ export const JobExecutionFeature = createFeature({
         container.register(LicenseScanJobExecutor);
         container.register(GraphRefreshJobExecutor);
         container.register(JobExecutorRegistry).inSingletonScope();
+        container.register(JobExecutionContextFactory).inSingletonScope();
         container.register(JobWorker).inSingletonScope();
         container.registerFactory(JobWorkerProvider, () => ({
             get: () => container.resolve(JobWorkerAbstraction)

@@ -1,0 +1,97 @@
+import { eq } from "drizzle-orm";
+import type { Logger } from "@webiny/stdlib";
+import type { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import type { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
+import type { ISetProgressInput } from "./executors/abstractions/JobExecutor.js";
+import { upgradeJobs } from "#api/db/schema.js";
+
+const PROGRESS_DB_WRITE_THROTTLE_MS = 1000;
+const LOG_DB_FLUSH_INTERVAL_MS = 2000;
+
+export class JobExecutionContext {
+    private logs = "";
+    private logsDirty = false;
+    private progressUsed = false;
+    private lastProgressDbWriteAt = 0;
+    private readonly logFlushTimer: ReturnType<typeof setInterval>;
+
+    public constructor(
+        private readonly jobId: string,
+        private readonly referenceId: string,
+        private readonly databaseClient: DatabaseClient.Interface,
+        private readonly webSocketBroadcaster: WebSocketBroadcaster.Interface,
+        private readonly logger: Logger.Interface
+    ) {
+        this.logFlushTimer = setInterval(() => this.flushLogs(), LOG_DB_FLUSH_INTERVAL_MS);
+    }
+
+    public appendLog = (line: string): void => {
+        this.logs += `${line}\n`;
+        this.logsDirty = true;
+        this.webSocketBroadcaster.broadcast("job:log", {
+            jobId: this.jobId,
+            referenceId: this.referenceId,
+            line
+        });
+    };
+
+    public setProgress = (input: ISetProgressInput): void => {
+        this.progressUsed = true;
+        const progressLabel = input.label ?? null;
+
+        this.webSocketBroadcaster.broadcast("job:progress", {
+            jobId: this.jobId,
+            referenceId: this.referenceId,
+            progress: input.percent,
+            progressLabel
+        });
+
+        const now = Date.now();
+        if (
+            input.percent >= 100 ||
+            now - this.lastProgressDbWriteAt >= PROGRESS_DB_WRITE_THROTTLE_MS
+        ) {
+            this.lastProgressDbWriteAt = now;
+            try {
+                this.databaseClient.db
+                    .update(upgradeJobs)
+                    .set({ progress: input.percent, progressLabel })
+                    .where(eq(upgradeJobs.id, this.jobId))
+                    .run();
+            } catch (error) {
+                this.logger.error("Failed to write job progress to database", {
+                    error: String(error)
+                });
+            }
+        }
+    };
+
+    public getLogs(): string {
+        return this.logs;
+    }
+
+    public wasProgressUsed(): boolean {
+        return this.progressUsed;
+    }
+
+    public dispose(): void {
+        this.flushLogs();
+        clearInterval(this.logFlushTimer);
+    }
+
+    private flushLogs(): void {
+        if (!this.logsDirty) {
+            return;
+        }
+        this.logsDirty = false;
+        try {
+            this.databaseClient.db
+                .update(upgradeJobs)
+                .set({ logs: this.logs })
+                .where(eq(upgradeJobs.id, this.jobId))
+                .run();
+        } catch (error) {
+            this.logger.error("Failed to flush job logs to database", { error: String(error) });
+        }
+    }
+}

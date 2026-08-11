@@ -29,6 +29,9 @@ import { CheckSecurityUseCase as CheckSecurityUseCaseRegistration } from "../../
 import { CloneProjectUseCase as CloneProjectUseCaseRegistration } from "../../useCases/CloneProjectUseCase.js";
 import { ProjectListPresenter } from "../abstractions/ProjectListPresenter.js";
 import { ProjectListPresenter as ProjectListPresenterRegistration } from "../ProjectListPresenter.js";
+import { CloneManagerFactory as CloneManagerFactoryRegistration } from "../CloneManagerFactory.js";
+import { DirectoryScanManagerFactory as DirectoryScanManagerFactoryRegistration } from "../DirectoryScanManagerFactory.js";
+import { ScanStatusManagerFactory as ScanStatusManagerFactoryRegistration } from "../ScanStatusManagerFactory.js";
 
 interface RecordedCall {
     route: unknown;
@@ -137,6 +140,9 @@ describe("ProjectListPresenter", () => {
         container.register(ScanProjectUseCaseRegistration);
         container.register(CheckSecurityUseCaseRegistration);
         container.register(CloneProjectUseCaseRegistration);
+        container.register(CloneManagerFactoryRegistration).inSingletonScope();
+        container.register(DirectoryScanManagerFactoryRegistration).inSingletonScope();
+        container.register(ScanStatusManagerFactoryRegistration).inSingletonScope();
         container.register(ProjectListPresenterRegistration);
 
         return container.resolve(ProjectListPresenter);

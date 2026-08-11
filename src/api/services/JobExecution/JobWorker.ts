@@ -1,18 +1,16 @@
 import { and, eq, inArray } from "drizzle-orm";
-import { generateId, Logger } from "@webiny/stdlib";
+import { generateId } from "@webiny/stdlib";
 import { JobWorker as Abstraction } from "./abstractions/JobWorker.js";
+import { JobExecutionContextFactory } from "./abstractions/JobExecutionContextFactory.js";
 import { PackageManagerService } from "../PackageManager/index.js";
 import { SecurityService } from "../Security/index.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { JobExecutorRegistry } from "./executors/abstractions/JobExecutorRegistry.js";
-import type { ISetProgressInput } from "./executors/abstractions/JobExecutor.js";
 import { ErrorReporter } from "../ErrorReporter/index.js";
 import { projects, upgradeJobs } from "#api/db/schema.js";
 import { chainRefreshTransientIfNeeded, chainScanAfterJobIfNeeded } from "./JobChaining.js";
 
-const PROGRESS_DB_WRITE_THROTTLE_MS = 1000;
-const LOG_DB_FLUSH_INTERVAL_MS = 2000;
 const JOB_WAIT_POLL_INTERVAL_MS = 200;
 const TERMINAL_JOB_STATUSES = new Set<string>(["completed", "failed", "cancelled", "interrupted"]);
 
@@ -38,7 +36,7 @@ class JobWorkerImpl implements Abstraction.Interface {
         private readonly webSocketBroadcaster: WebSocketBroadcaster.Interface,
         private readonly jobExecutorRegistry: JobExecutorRegistry.Interface,
         private readonly errorReporter: ErrorReporter.Interface,
-        private readonly logger: Logger.Interface
+        private readonly executionContextFactory: JobExecutionContextFactory.Interface
     ) {}
 
     public async enqueue(input: Abstraction.CreateJobInput): Promise<string> {
@@ -136,68 +134,12 @@ class JobWorkerImpl implements Abstraction.Interface {
         const controller = new AbortController();
         this.#controllers.set(job.id, controller);
 
-        let logs = "";
+        const context = this.executionContextFactory.create({
+            jobId: job.id,
+            referenceId: job.referenceId
+        });
+
         let projectContext = "";
-        let progressUsed = false;
-        let lastProgressDbWriteAt = 0;
-        let logsDirty = false;
-        const flushLogs = (): void => {
-            if (!logsDirty) {
-                return;
-            }
-            logsDirty = false;
-            try {
-                this.databaseClient.db
-                    .update(upgradeJobs)
-                    .set({ logs })
-                    .where(eq(upgradeJobs.id, job.id))
-                    .run();
-            } catch (error) {
-                this.logger.error("Failed to flush job logs to database", { error: String(error) });
-            }
-        };
-        const logFlushTimer = setInterval(flushLogs, LOG_DB_FLUSH_INTERVAL_MS);
-
-        const appendLog = (line: string): void => {
-            logs += `${line}\n`;
-            logsDirty = true;
-            this.webSocketBroadcaster.broadcast("job:log", {
-                jobId: job.id,
-                referenceId: job.referenceId,
-                line
-            });
-        };
-
-        const setProgress = (input: ISetProgressInput): void => {
-            progressUsed = true;
-            const progressLabel = input.label ?? null;
-
-            this.webSocketBroadcaster.broadcast("job:progress", {
-                jobId: job.id,
-                referenceId: job.referenceId,
-                progress: input.percent,
-                progressLabel
-            });
-
-            const now = Date.now();
-            if (
-                input.percent >= 100 ||
-                now - lastProgressDbWriteAt >= PROGRESS_DB_WRITE_THROTTLE_MS
-            ) {
-                lastProgressDbWriteAt = now;
-                try {
-                    this.databaseClient.db
-                        .update(upgradeJobs)
-                        .set({ progress: input.percent, progressLabel })
-                        .where(eq(upgradeJobs.id, job.id))
-                        .run();
-                } catch (error) {
-                    this.logger.error("Failed to write job progress to database", {
-                        error: String(error)
-                    });
-                }
-            }
-        };
 
         try {
             const executor = this.jobExecutorRegistry.getExecutor(job.type);
@@ -211,8 +153,8 @@ class JobWorkerImpl implements Abstraction.Interface {
                     packageManager: "",
                     packagesJson: job.packages,
                     project: null,
-                    appendLog,
-                    setProgress,
+                    appendLog: context.appendLog,
+                    setProgress: context.setProgress,
                     signal: controller.signal
                 });
             } else {
@@ -252,19 +194,19 @@ class JobWorkerImpl implements Abstraction.Interface {
                         path: project.path,
                         packageManager: project.packageManager
                     },
-                    appendLog,
-                    setProgress,
+                    appendLog: context.appendLog,
+                    setProgress: context.setProgress,
                     signal: controller.signal
                 });
             }
 
             const enqueue = this.enqueue.bind(this);
-            await chainRefreshTransientIfNeeded(job, appendLog, {
+            await chainRefreshTransientIfNeeded(job, context.appendLog, {
                 enqueue,
                 isRefreshTransientFlagged: id => this.#refreshTransientJobIds.has(id),
                 clearRefreshTransientFlag: id => this.#refreshTransientJobIds.delete(id)
             });
-            await chainScanAfterJobIfNeeded(job, appendLog, enqueue);
+            await chainScanAfterJobIfNeeded(job, context.appendLog, enqueue);
 
             await this.finishJob({
                 jobId: job.id,
@@ -272,8 +214,8 @@ class JobWorkerImpl implements Abstraction.Interface {
                 referenceType: job.referenceType,
                 type: job.type,
                 status: controller.signal.aborted ? "cancelled" : "completed",
-                logs,
-                progressUsed
+                logs: context.getLogs(),
+                progressUsed: context.wasProgressUsed()
             });
         } catch (error) {
             this.#refreshTransientJobIds.delete(job.id);
@@ -293,7 +235,7 @@ class JobWorkerImpl implements Abstraction.Interface {
                 job.referenceId,
                 projectContext,
                 error,
-                logs
+                context.getLogs()
             );
 
             await this.finishJob({
@@ -302,11 +244,11 @@ class JobWorkerImpl implements Abstraction.Interface {
                 referenceType: job.referenceType,
                 type: job.type,
                 status,
-                logs: `${logs}\nERROR: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`,
-                progressUsed
+                logs: `${context.getLogs()}\nERROR: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`,
+                progressUsed: context.wasProgressUsed()
             });
         } finally {
-            clearInterval(logFlushTimer);
+            context.dispose();
             this.#controllers.delete(job.id);
         }
     }
@@ -461,6 +403,6 @@ export const JobWorker = Abstraction.createImplementation({
         WebSocketBroadcaster,
         JobExecutorRegistry,
         ErrorReporter,
-        Logger
+        JobExecutionContextFactory
     ]
 });

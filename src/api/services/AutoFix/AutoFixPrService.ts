@@ -5,88 +5,14 @@ import { AutoFixSettingsService } from "./abstractions/AutoFixSettingsService.js
 import { LicensePolicyService } from "../License/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { scanResults, autoFixPullRequests, licenses } from "#api/db/schema.js";
+import {
+    isResolvedScanResult,
+    groupPackages,
+    buildUpgradeTable,
+    type IEligiblePackage
+} from "./autoFixHelpers.js";
 
 const OPEN_PULL_REQUEST_STATUSES = ["pending", "created"];
-
-type ScanResultRow = typeof scanResults.$inferSelect;
-
-interface IResolvedScanResultRow extends Omit<ScanResultRow, "latestVersion" | "upgradeType"> {
-    latestVersion: string;
-    upgradeType: string;
-}
-
-function isResolvedScanResult(row: ScanResultRow): row is IResolvedScanResultRow {
-    return row.latestVersion !== null && row.upgradeType !== null;
-}
-
-interface IEligiblePackage {
-    packageName: string;
-    fromVersion: string;
-    toVersion: string;
-    upgradeType: string;
-    licenseWarnings: string[];
-}
-
-interface IPackageGroup {
-    packages: IEligiblePackage[];
-    upgradeType: string;
-    branchSlug: string;
-}
-
-function toBranchSlug(packageName: string): string {
-    return packageName.replace(/^@/, "").replace(/\//g, "-");
-}
-
-function combinedUpgradeType(packages: IEligiblePackage[]): string {
-    const upgradeTypes = new Set(packages.map(pkg => pkg.upgradeType));
-    if (upgradeTypes.size === 1) {
-        return [...upgradeTypes][0]!;
-    }
-    return "mixed";
-}
-
-function groupPackages(packages: IEligiblePackage[], groupingStrategy: string): IPackageGroup[] {
-    if (groupingStrategy === "per-project") {
-        return [
-            {
-                packages,
-                upgradeType: combinedUpgradeType(packages),
-                branchSlug: "all-upgrades"
-            }
-        ];
-    }
-
-    if (groupingStrategy === "per-upgrade-type") {
-        const packagesByUpgradeType = new Map<string, IEligiblePackage[]>();
-        for (const pkg of packages) {
-            const group = packagesByUpgradeType.get(pkg.upgradeType) ?? [];
-            group.push(pkg);
-            packagesByUpgradeType.set(pkg.upgradeType, group);
-        }
-        return Array.from(packagesByUpgradeType.entries()).map(([upgradeType, groupPackages]) => ({
-            packages: groupPackages,
-            upgradeType,
-            branchSlug: `${upgradeType}-upgrades`
-        }));
-    }
-
-    // Default strategy: "per-package".
-    return packages.map(pkg => ({
-        packages: [pkg],
-        upgradeType: pkg.upgradeType,
-        branchSlug: `${toBranchSlug(pkg.packageName)}-${pkg.toVersion}`
-    }));
-}
-
-function buildUpgradeTable(packages: Abstraction.PackageUpgrade[]): string[] {
-    const lines = ["| Package | From | To | Type |", "| --- | --- | --- | --- |"];
-    for (const pkg of packages) {
-        lines.push(
-            `| ${pkg.packageName} | ${pkg.fromVersion} | ${pkg.toVersion} | ${pkg.upgradeType} |`
-        );
-    }
-    return lines;
-}
 
 export class AutoFixPrServiceImpl implements Abstraction.Interface {
     public constructor(
@@ -114,6 +40,35 @@ export class AutoFixPrServiceImpl implements Abstraction.Interface {
             return { pending: [], skippedDeny: [], skippedDuplicate: [] };
         }
 
+        const { eligiblePackages, skippedDeny } = await this.evaluateLicenses(
+            projectId,
+            candidates
+        );
+
+        const { finalPackages, skippedDuplicate } = await this.filterDuplicates(
+            projectId,
+            eligiblePackages
+        );
+
+        if (finalPackages.length === 0) {
+            return { pending: [], skippedDeny, skippedDuplicate };
+        }
+
+        const groups = groupPackages(finalPackages, settings.groupingStrategy);
+        const pending = await this.insertPendingRecords(projectId, groups, settings.branchPrefix);
+
+        return { pending, skippedDeny, skippedDuplicate };
+    }
+
+    private async evaluateLicenses(
+        projectId: string,
+        candidates: {
+            name: string;
+            currentVersion: string;
+            latestVersion: string;
+            upgradeType: string;
+        }[]
+    ): Promise<{ eligiblePackages: IEligiblePackage[]; skippedDeny: string[] }> {
         const licenseRows = await this.databaseClient.db
             .select()
             .from(licenses)
@@ -171,6 +126,13 @@ export class AutoFixPrServiceImpl implements Abstraction.Interface {
             });
         }
 
+        return { eligiblePackages, skippedDeny };
+    }
+
+    private async filterDuplicates(
+        projectId: string,
+        eligiblePackages: IEligiblePackage[]
+    ): Promise<{ finalPackages: IEligiblePackage[]; skippedDuplicate: string[] }> {
         const existingPullRequestRows = await this.databaseClient.db
             .select()
             .from(autoFixPullRequests)
@@ -204,11 +166,14 @@ export class AutoFixPrServiceImpl implements Abstraction.Interface {
             finalPackages.push(pkg);
         }
 
-        if (finalPackages.length === 0) {
-            return { pending: [], skippedDeny, skippedDuplicate };
-        }
+        return { finalPackages, skippedDuplicate };
+    }
 
-        const groups = groupPackages(finalPackages, settings.groupingStrategy);
+    private async insertPendingRecords(
+        projectId: string,
+        groups: { packages: IEligiblePackage[]; upgradeType: string; branchSlug: string }[],
+        branchPrefix: string
+    ): Promise<Abstraction.PullRequestRecord[]> {
         const now = Date.now();
         const pending: Abstraction.PullRequestRecord[] = [];
 
@@ -224,16 +189,8 @@ export class AutoFixPrServiceImpl implements Abstraction.Interface {
                 licenseWarnings.push(...pkg.licenseWarnings);
             }
 
-            const branchName = settings.branchPrefix + group.branchSlug;
+            const branchName = branchPrefix + group.branchSlug;
 
-            // Static grouping strategies ("per-project", "per-upgrade-type")
-            // reuse the same branch name across calls, and the table has a
-            // unique (projectId, branchName) constraint. The duplicate check
-            // above only catches packages already covered by a pending/
-            // created PR, so a group can still collide here when the
-            // branch's prior record moved on to a terminal state (or when
-            // new packages join a group whose branch name is unaffected by
-            // package composition). Resolve that before inserting.
             const existingBranchRow = await this.databaseClient.db
                 .select()
                 .from(autoFixPullRequests)
@@ -247,10 +204,8 @@ export class AutoFixPrServiceImpl implements Abstraction.Interface {
 
             if (existingBranchRow) {
                 if (OPEN_PULL_REQUEST_STATUSES.includes(existingBranchRow.status)) {
-                    // Already covered by an open PR on this branch — skip.
                     continue;
                 }
-                // Stale record ("failed", "merged", "closed") — replace it.
                 await this.databaseClient.db
                     .delete(autoFixPullRequests)
                     .where(eq(autoFixPullRequests.id, existingBranchRow.id))
@@ -290,7 +245,7 @@ export class AutoFixPrServiceImpl implements Abstraction.Interface {
             });
         }
 
-        return { pending, skippedDeny, skippedDuplicate };
+        return pending;
     }
 
     public buildPrBody(

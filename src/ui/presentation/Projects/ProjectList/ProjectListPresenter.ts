@@ -1,23 +1,18 @@
 import { computed, makeAutoObservable, runInAction } from "mobx";
 import { ProjectListPresenter as Abstraction } from "./abstractions/ProjectListPresenter.js";
+import { CloneManagerFactory } from "./abstractions/CloneManagerFactory.js";
+import { DirectoryScanManagerFactory } from "./abstractions/DirectoryScanManagerFactory.js";
+import { ScanStatusManagerFactory } from "./abstractions/ScanStatusManagerFactory.js";
 import { LoadProjectsUseCase } from "../useCases/abstractions/LoadProjectsUseCase.js";
 import { AddProjectUseCase } from "../useCases/abstractions/AddProjectUseCase.js";
 import { RemoveProjectUseCase } from "../useCases/abstractions/RemoveProjectUseCase.js";
-import { ScanProjectUseCase } from "../useCases/abstractions/ScanProjectUseCase.js";
-import { CheckSecurityUseCase } from "../useCases/abstractions/CheckSecurityUseCase.js";
-import { CloneProjectUseCase } from "../useCases/abstractions/CloneProjectUseCase.js";
 import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
 import { ProjectsGateway } from "../../../features/Projects/abstractions/ProjectsGateway.js";
-import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBridge.js";
-import "../../../infrastructure/Events/eventMap.js";
 import { FilesystemGateway } from "../../../features/Filesystem/abstractions/FilesystemGateway.js";
 import { TeamFilterService } from "../../../features/TeamFilter/abstractions/TeamFilterService.js";
-import { CloneManager } from "./CloneManager.js";
-import { DirectoryScanManager } from "./DirectoryScanManager.js";
 
 class ProjectListPresenterImpl implements Abstraction.Interface {
     private loading = false;
-    private bulkRunning = false;
     private addProjectPathValue = "";
     private addProjectLoading = false;
     private addProjectError: string | null = null;
@@ -26,89 +21,32 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
     private browseLoading = false;
     private searchQuery = "";
 
-    public readonly cloneManager: CloneManager;
-    public readonly directoryScanManager: DirectoryScanManager;
-    private readonly scanStatuses = new Map<string, Abstraction.ScanStatus>();
-
-    private readonly handleScanProgress: EventBridge.Callback<"scan:progress">;
-    private readonly handleScanComplete: EventBridge.Callback<"scan:complete">;
-    private readonly handleScanFailed: EventBridge.Callback<"scan:failed">;
-    private readonly handleInstallComplete: EventBridge.Callback<"install:complete">;
-    private readonly handleJobStatus: EventBridge.Callback<"job:status">;
+    public readonly cloneManager: CloneManagerFactory.Manager;
+    public readonly directoryScanManager: DirectoryScanManagerFactory.Manager;
+    public readonly scanStatusManager: ScanStatusManagerFactory.Manager;
 
     public constructor(
         private readonly loadProjectsUseCase: LoadProjectsUseCase.Interface,
         private readonly addProjectUseCase: AddProjectUseCase.Interface,
         private readonly removeProjectUseCase: RemoveProjectUseCase.Interface,
-        private readonly scanProjectUseCase: ScanProjectUseCase.Interface,
-        private readonly checkSecurityUseCase: CheckSecurityUseCase.Interface,
-        private readonly cloneProjectUseCase: CloneProjectUseCase.Interface,
         private readonly projectsRepository: ProjectsRepository.Interface,
         private readonly projectsGateway: ProjectsGateway.Interface,
-        private readonly eventBridge: EventBridge.Interface,
         private readonly filesystemGateway: FilesystemGateway.Interface,
-        private readonly teamFilterService: TeamFilterService.Interface
+        private readonly teamFilterService: TeamFilterService.Interface,
+        cloneManagerFactory: CloneManagerFactory.Interface,
+        directoryScanManagerFactory: DirectoryScanManagerFactory.Interface,
+        scanStatusManagerFactory: ScanStatusManagerFactory.Interface
     ) {
-        this.cloneManager = new CloneManager({
-            cloneProjectUseCase: this.cloneProjectUseCase,
+        this.cloneManager = cloneManagerFactory.create({
             getBrowsePath: () => this.browsePath,
             onCloned: () => this.load()
         });
-        this.directoryScanManager = new DirectoryScanManager({
-            filesystemGateway: this.filesystemGateway,
+        this.directoryScanManager = directoryScanManagerFactory.create({
             getBrowsePath: () => this.browsePath
         });
+        this.scanStatusManager = scanStatusManagerFactory.create();
 
         makeAutoObservable(this, { vm: computed });
-
-        this.handleScanProgress = data => {
-            runInAction(() => {
-                this.scanStatuses.set(data.projectId, "scanning");
-            });
-        };
-
-        this.handleScanComplete = data => {
-            runInAction(() => {
-                this.scanStatuses.set(data.projectId, "done");
-            });
-            void this.loadProjectsUseCase.execute();
-        };
-
-        this.handleScanFailed = data => {
-            runInAction(() => {
-                this.scanStatuses.set(data.projectId, "failed");
-            });
-        };
-
-        this.handleInstallComplete = () => {
-            void this.loadProjectsUseCase.execute();
-        };
-
-        this.handleJobStatus = data => {
-            if (data.type !== "scan") {
-                return;
-            }
-            runInAction(() => {
-                if (data.status === "running") {
-                    this.scanStatuses.set(data.referenceId, "scanning");
-                } else if (data.status === "completed") {
-                    this.scanStatuses.set(data.referenceId, "done");
-                    void this.loadProjectsUseCase.execute();
-                } else if (
-                    data.status === "failed" ||
-                    data.status === "cancelled" ||
-                    data.status === "interrupted"
-                ) {
-                    this.scanStatuses.set(data.referenceId, "failed");
-                }
-            });
-        };
-
-        this.eventBridge.on("scan:progress", this.handleScanProgress);
-        this.eventBridge.on("scan:complete", this.handleScanComplete);
-        this.eventBridge.on("scan:failed", this.handleScanFailed);
-        this.eventBridge.on("install:complete", this.handleInstallComplete);
-        this.eventBridge.on("job:status", this.handleJobStatus);
     }
 
     public get vm(): Abstraction.ViewModel {
@@ -132,9 +70,7 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
 
         return {
             loading: this.loading,
-            bulkActionRunning:
-                this.bulkRunning ||
-                Array.from(this.scanStatuses.values()).some(status => status === "scanning"),
+            bulkActionRunning: this.scanStatusManager.isBulkRunning,
             projects: filteredProjects.map((project): Abstraction.ProjectListItem => ({
                 id: project.id,
                 name: project.name,
@@ -144,7 +80,7 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
                 securityPasses: project.security?.passes ?? null,
                 securityChecks: project.security?.checks ?? null,
                 lastScannedAt: project.lastScannedAt,
-                scanStatus: this.scanStatuses.get(project.id) ?? "idle",
+                scanStatus: this.scanStatusManager.getStatus(project.id),
                 hasNodeModules: project.hasNodeModules ?? false,
                 teams: (project.teams ?? []).map(team => ({
                     id: team.id,
@@ -230,35 +166,11 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
     };
 
     public scanAll = async (): Promise<void> => {
-        this.bulkRunning = true;
-        try {
-            const projects = this.projectsRepository.getProjects();
-            runInAction(() => {
-                for (const project of projects) {
-                    this.scanStatuses.set(project.id, "scanning");
-                }
-            });
-            await Promise.all(projects.map(project => this.scanProjectUseCase.execute(project.id)));
-        } finally {
-            runInAction(() => {
-                this.bulkRunning = false;
-            });
-        }
+        await this.scanStatusManager.scanAll();
     };
 
     public refreshAllSecurity = async (): Promise<void> => {
-        this.bulkRunning = true;
-        try {
-            const projects = this.projectsRepository.getProjects();
-            await Promise.all(
-                projects.map(project => this.checkSecurityUseCase.execute(project.id))
-            );
-            await this.loadProjectsUseCase.execute();
-        } finally {
-            runInAction(() => {
-                this.bulkRunning = false;
-            });
-        }
+        await this.scanStatusManager.refreshAllSecurity();
     };
 
     public setCloneUrl = (url: string): void => {
@@ -317,18 +229,11 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
     };
 
     public scanProject = async (id: string): Promise<void> => {
-        runInAction(() => {
-            this.scanStatuses.set(id, "scanning");
-        });
-        await this.scanProjectUseCase.execute(id);
+        await this.scanStatusManager.scanProject(id);
     };
 
     public dispose = (): void => {
-        this.eventBridge.off("scan:progress", this.handleScanProgress);
-        this.eventBridge.off("scan:complete", this.handleScanComplete);
-        this.eventBridge.off("scan:failed", this.handleScanFailed);
-        this.eventBridge.off("install:complete", this.handleInstallComplete);
-        this.eventBridge.off("job:status", this.handleJobStatus);
+        this.scanStatusManager.dispose();
     };
 
     public cloneProject = async (): Promise<void> => {
@@ -342,13 +247,12 @@ export const ProjectListPresenter = Abstraction.createImplementation({
         LoadProjectsUseCase,
         AddProjectUseCase,
         RemoveProjectUseCase,
-        ScanProjectUseCase,
-        CheckSecurityUseCase,
-        CloneProjectUseCase,
         ProjectsRepository,
         ProjectsGateway,
-        EventBridge,
         FilesystemGateway,
-        TeamFilterService
+        TeamFilterService,
+        CloneManagerFactory,
+        DirectoryScanManagerFactory,
+        ScanStatusManagerFactory
     ]
 });
