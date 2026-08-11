@@ -8,6 +8,7 @@ export interface IAuthenticatedRequest extends FastifyRequest {
 }
 
 const AUTH_WHITELIST = new Set([
+    "GET /api/health",
     "POST /api/auth/login",
     "POST /api/auth/verify-code",
     "POST /api/auth/magic-link",

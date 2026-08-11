@@ -112,6 +112,10 @@ export async function createServer(): Promise<FastifyInstance> {
     // query param — see WebSocketPlugin.ts.
     app.addHook("onRequest", createAuthHook(container));
 
+    app.get("/api/health", async (_request, reply) => {
+        reply.send({ status: "ok" });
+    });
+
     // Route plugins are registered here, each receiving the DI container via
     // its Fastify plugin options (`{ container }`).
     await app.register(projectRoutes, { container });
