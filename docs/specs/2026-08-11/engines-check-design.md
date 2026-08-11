@@ -18,16 +18,16 @@ Node.js release schedule from [endoflife.date API](https://endoflife.date/api/no
 
 ### `node_release_data` Table
 
-| Column | Type | Description |
-|---|---|---|
-| id | text PK | Generated ID |
-| version | integer UNIQUE | Major version (e.g. 22) |
-| codename | text | Release codename (e.g. "Jod") |
-| releaseDate | integer | Timestamp |
-| ltsStart | integer nullable | Timestamp, null for non-LTS |
-| maintenanceStart | integer nullable | Timestamp |
-| eolDate | integer | Timestamp |
-| fetchedAt | integer | When this row was last refreshed |
+| Column           | Type             | Description                      |
+| ---------------- | ---------------- | -------------------------------- |
+| id               | text PK          | Generated ID                     |
+| version          | integer UNIQUE   | Major version (e.g. 22)          |
+| codename         | text             | Release codename (e.g. "Jod")    |
+| releaseDate      | integer          | Timestamp                        |
+| ltsStart         | integer nullable | Timestamp, null for non-LTS      |
+| maintenanceStart | integer nullable | Timestamp                        |
+| eolDate          | integer          | Timestamp                        |
+| fetchedAt        | integer          | When this row was last refreshed |
 
 ## Engine Classification
 
@@ -47,18 +47,18 @@ type EngineStatus = "current" | "active-lts" | "maintenance" | "eol" | "unknown"
 
 ```typescript
 interface INodeRelease {
-    version: number;        // major version (e.g. 22)
-    codename: string | null; // e.g. "Jod", null for non-LTS
-    releaseDate: number;    // timestamp
-    ltsStart: number | null; // timestamp, null for non-LTS
-    maintenanceStart: number | null;
-    eolDate: number;        // timestamp
+  version: number; // major version (e.g. 22)
+  codename: string | null; // e.g. "Jod", null for non-LTS
+  releaseDate: number; // timestamp
+  ltsStart: number | null; // timestamp, null for non-LTS
+  maintenanceStart: number | null;
+  eolDate: number; // timestamp
 }
 
 interface IEngineClassification {
-    status: EngineStatus;
-    eolDate: number | null;
-    codename: string | null;
+  status: EngineStatus;
+  eolDate: number | null;
+  codename: string | null;
 }
 ```
 
@@ -82,16 +82,16 @@ Orchestrates engine checks for a project.
 
 #### `engine_checks` Table
 
-| Column | Type | Description |
-|---|---|---|
-| id | text PK | Generated ID |
-| projectId | text FK | References projects.id |
-| packageName | text | Empty string `""` for root project, package name for deps |
-| enginesNode | text nullable | Raw engines.node string, null if missing |
-| minimumMajor | integer nullable | Parsed minimum major version |
-| status | text | EngineStatus value |
-| eolDate | integer nullable | EOL date for the minimum supported version |
-| scannedAt | integer | Timestamp |
+| Column       | Type             | Description                                               |
+| ------------ | ---------------- | --------------------------------------------------------- |
+| id           | text PK          | Generated ID                                              |
+| projectId    | text FK          | References projects.id                                    |
+| packageName  | text             | Empty string `""` for root project, package name for deps |
+| enginesNode  | text nullable    | Raw engines.node string, null if missing                  |
+| minimumMajor | integer nullable | Parsed minimum major version                              |
+| status       | text             | EngineStatus value                                        |
+| eolDate      | integer nullable | EOL date for the minimum supported version                |
+| scannedAt    | integer          | Timestamp                                                 |
 
 UNIQUE constraint via Drizzle `.unique().on(engineChecks.projectId, engineChecks.packageName)` — same pattern as `licenses` table. Root project uses `packageName = ""` (not null) so the unique constraint works correctly in SQLite.
 
@@ -109,43 +109,43 @@ Schema defined in `src/api/db/schema.ts`, migration via `drizzle-kit generate`.
 
 ```typescript
 interface IEngineScanResult {
-    rootStatus: EngineStatus;
-    rootEnginesNode: string | null;
-    findings: IEngineCheck[];
-    summary: IEngineSummary;
+  rootStatus: EngineStatus;
+  rootEnginesNode: string | null;
+  findings: IEngineCheck[];
+  summary: IEngineSummary;
 }
 
 interface IEngineCheck {
-    id: string;
-    projectId: string;
-    packageName: string;       // "" for root
-    enginesNode: string | null;
-    minimumMajor: number | null;
-    status: EngineStatus;
-    eolDate: number | null;
-    scannedAt: number;
+  id: string;
+  projectId: string;
+  packageName: string; // "" for root
+  enginesNode: string | null;
+  minimumMajor: number | null;
+  status: EngineStatus;
+  eolDate: number | null;
+  scannedAt: number;
 }
 
 interface IEngineStatusCounts {
-    eol: number;
-    maintenance: number;
-    activeLts: number;
-    current: number;
-    unknown: number;
+  eol: number;
+  maintenance: number;
+  activeLts: number;
+  current: number;
+  unknown: number;
 }
 
 interface IEngineSummary {
-    totalProjects: number;
-    counts: IEngineStatusCounts;
-    projectSummaries: IProjectEngineSummary[];
+  totalProjects: number;
+  counts: IEngineStatusCounts;
+  projectSummaries: IProjectEngineSummary[];
 }
 
 interface IProjectEngineSummary {
-    projectId: string;
-    projectName: string;
-    rootStatus: EngineStatus;
-    rootEnginesNode: string | null;
-    dependencyCounts: IEngineStatusCounts;
+  projectId: string;
+  projectName: string;
+  rootStatus: EngineStatus;
+  rootEnginesNode: string | null;
+  dependencyCounts: IEngineStatusCounts;
 }
 ```
 
@@ -160,12 +160,12 @@ interface IProjectEngineSummary {
 
 `src/api/routes/engines.ts`, definitions in `src/shared/routes/engines.ts`.
 
-| Method | Path | Description |
-|---|---|---|
-| GET | /api/engines/summary | Aggregate engine status across projects |
-| GET | /api/engines/releases | Cached Node release schedule |
-| GET | /api/engines/:projectId | Engine checks for a project (root + deps) |
-| POST | /api/engines/:projectId/scan | Trigger engine scan |
+| Method | Path                         | Description                               |
+| ------ | ---------------------------- | ----------------------------------------- |
+| GET    | /api/engines/summary         | Aggregate engine status across projects   |
+| GET    | /api/engines/releases        | Cached Node release schedule              |
+| GET    | /api/engines/:projectId      | Engine checks for a project (root + deps) |
+| POST   | /api/engines/:projectId/scan | Trigger engine scan                       |
 
 Summary registered before `:projectId` to avoid path shadowing.
 
@@ -191,19 +191,19 @@ Summary registered before `:projectId` to avoid path shadowing.
 
 ```typescript
 interface IScanFindings {
-    license: ILicenseViolation[];
-    vulnerability: IMergedVulnerability[];
-    engines: IEnginesFinding[];  // NEW
+  license: ILicenseViolation[];
+  vulnerability: IMergedVulnerability[];
+  engines: IEnginesFinding[]; // NEW
 }
 
 interface IEnginesFinding {
-    packageName: string;
-    version: string;
-    enginesNode: string | null;
-    minimumMajor: number | null;
-    status: EngineStatus;
-    eolDate: number | null;
-    isRoot: boolean;  // true when packageName is ""
+  packageName: string;
+  version: string;
+  enginesNode: string | null;
+  minimumMajor: number | null;
+  status: EngineStatus;
+  eolDate: number | null;
+  isRoot: boolean; // true when packageName is ""
 }
 ```
 
@@ -217,6 +217,7 @@ interface IEnginesFinding {
 ### Formatter Updates
 
 All 4 formatters updated to render engines findings:
+
 - **Table**: "Node Engines" section with package/engines/status/eol-date columns, root highlighted
 - **JSON**: engines array in findings object
 - **CSV**: `type=engines` rows
@@ -228,16 +229,16 @@ Extend `IDepcoConfig` and `depcoConfigSchema`:
 
 ```typescript
 interface IEnginesScanConfig {
-    ignore?: string[];          // packages to skip
-    warnMaintenance?: boolean;  // default true — include maintenance findings
+  ignore?: string[]; // packages to skip
+  warnMaintenance?: boolean; // default true — include maintenance findings
 }
 
 interface IScanConfig {
-    license?: ILicenseScanConfig;
-    vulnerability?: IVulnerabilityScanConfig;
-    engines?: IEnginesScanConfig;  // NEW
-    ignoredPackages?: string[];
-    registryUrl?: string;
+  license?: ILicenseScanConfig;
+  vulnerability?: IVulnerabilityScanConfig;
+  engines?: IEnginesScanConfig; // NEW
+  ignoredPackages?: string[];
+  registryUrl?: string;
 }
 ```
 
@@ -255,17 +256,20 @@ Global `scan.ignoredPackages` also applies to engines checks.
 ### Presentation
 
 **Project list** — `EngineStatusBadge` next to each project name:
+
 - Green dot: current or active-lts
 - Yellow dot: maintenance
 - Red dot: eol
 - Gray dot: no engines field
 
 **Project detail** — `EngineStatusSection` (Accordion):
+
 - Root engine status prominently displayed
 - Table of dependencies with EOL/maintenance engine constraints
 - Collapsible, sorted by severity (eol first)
 
 **Dashboard** — `EngineOverviewWidget`:
+
 - Count of projects by root engine status (X EOL, Y maintenance, Z current/lts)
 - Links to project list filtered by status
 
