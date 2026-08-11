@@ -37,6 +37,8 @@ export interface IEngineScanResult {
 export interface IEngineScanInput {
     projectId: string;
     projectPath: string;
+    /** When `false`, `maintenance`-status dependency findings are excluded from the scan result and persisted rows. Defaults to `true`. */
+    warnMaintenance?: boolean;
 }
 
 export interface IEngineGetSummaryOptions {

@@ -100,7 +100,7 @@ class EngineServiceImpl implements Abstraction.Interface {
     ) {}
 
     public async scan(input: Abstraction.ScanInput): Promise<Abstraction.ScanResult> {
-        const { projectId, projectPath } = input;
+        const { projectId, projectPath, warnMaintenance = true } = input;
         const schedule = await this.nodeReleaseDataService.getSchedule();
 
         const entriesByPackageName = walkNodeModulesShared({
@@ -128,8 +128,8 @@ class EngineServiceImpl implements Abstraction.Interface {
         );
         const scannedAt = Math.max(Date.now(), priorMaxScannedAt + 1);
 
-        const records: Abstraction.Check[] = Array.from(entriesByPackageName.values()).map(
-            entry => {
+        const records: Abstraction.Check[] = Array.from(entriesByPackageName.values())
+            .map(entry => {
                 const classified = classifyEntry({ entry, schedule });
                 return {
                     ...classified,
@@ -137,8 +137,17 @@ class EngineServiceImpl implements Abstraction.Interface {
                     projectId,
                     scannedAt
                 };
-            }
-        );
+            })
+            .filter(record => {
+                if (
+                    !warnMaintenance &&
+                    record.status === "maintenance" &&
+                    record.packageName !== ROOT_PACKAGE_NAME
+                ) {
+                    return false;
+                }
+                return true;
+            });
 
         this.databaseClient.db.transaction(tx => {
             for (const record of records) {

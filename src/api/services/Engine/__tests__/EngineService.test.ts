@@ -214,6 +214,64 @@ describe("EngineService", () => {
 
             rmSync(projectPath, { recursive: true, force: true });
         });
+
+        it("excludes maintenance-status findings when warnMaintenance is false", async () => {
+            const now = Date.now();
+            const schedule: INodeRelease[] = [
+                {
+                    version: 18,
+                    codename: "Hydrogen",
+                    releaseDate: now - 1_000_000_000,
+                    ltsStart: now - 900_000_000,
+                    maintenanceStart: now - 100_000_000,
+                    eolDate: now + 500_000_000
+                },
+                {
+                    version: 14,
+                    codename: null,
+                    releaseDate: now - 1_000_000_000,
+                    ltsStart: now - 900_000_000,
+                    maintenanceStart: now - 500_000_000,
+                    eolDate: now - 100_000_000
+                }
+            ];
+
+            const projectPath = createTestDir();
+            writePackageJson(projectPath, { name: "root-app", engines: { node: ">=20" } });
+            writePackageJson(join(projectPath, "node_modules", "pkg-maint"), {
+                name: "pkg-maint",
+                engines: { node: ">=18" }
+            });
+            writePackageJson(join(projectPath, "node_modules", "pkg-eol"), {
+                name: "pkg-eol",
+                engines: { node: ">=14" }
+            });
+
+            const { service, db } = createService(schedule);
+            await insertProject(db, "project-1", "Project One");
+
+            const result = await service.scan({
+                projectId: "project-1",
+                projectPath,
+                warnMaintenance: false
+            });
+
+            const dependencyStatuses = result.findings.map(finding => finding.status);
+            expect(dependencyStatuses).not.toContain("maintenance");
+            expect(dependencyStatuses).toContain("eol");
+
+            const rows = await db
+                .select()
+                .from(engineChecks)
+                .where(eq(engineChecks.projectId, "project-1"))
+                .all();
+            const persistedStatuses = rows
+                .filter(row => row.packageName !== "")
+                .map(row => row.status);
+            expect(persistedStatuses).not.toContain("maintenance");
+
+            rmSync(projectPath, { recursive: true, force: true });
+        });
     });
 
     describe("getByProject", () => {
