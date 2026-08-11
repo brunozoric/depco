@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createContainer } from "#shared/index.js";
-import { SelectPortStepFeature } from "../feature.js";
+import { createTestCliContainer } from "#testing/helpers/createTestCliContainer.js";
 import { SelectPortStep } from "../abstractions/SelectPortStep.js";
 import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
 
@@ -18,11 +17,10 @@ function createTestContext(): IStepContext {
 }
 
 describe("SelectPortStep", () => {
-    let container: ReturnType<typeof createContainer>;
+    let container: ReturnType<typeof createTestCliContainer>;
 
     beforeEach(() => {
-        container = createContainer();
-        SelectPortStepFeature.register(container);
+        container = createTestCliContainer();
     });
 
     it("stores selected port in context", async () => {

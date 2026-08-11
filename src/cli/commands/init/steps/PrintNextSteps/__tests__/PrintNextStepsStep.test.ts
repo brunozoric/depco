@@ -1,21 +1,17 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { createContainer } from "#shared/index.js";
-import { PrintNextStepsStepFeature } from "../feature.js";
+import { createTestCliContainer } from "#testing/helpers/createTestCliContainer.js";
 import { PrintNextStepsStep } from "../abstractions/PrintNextStepsStep.js";
 import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
-import { registerCliLogger } from "#testing/helpers/registerCliLogger.js";
 
 describe("PrintNextStepsStep", () => {
-    let container: ReturnType<typeof createContainer>;
+    let container: ReturnType<typeof createTestCliContainer>;
     let output: string[];
     const originalInfo = console.info;
 
     beforeEach(() => {
         output = [];
         console.info = (...args: unknown[]) => output.push(args.join(" "));
-        container = createContainer();
-        registerCliLogger(container);
-        PrintNextStepsStepFeature.register(container);
+        container = createTestCliContainer();
     });
 
     afterEach(() => {

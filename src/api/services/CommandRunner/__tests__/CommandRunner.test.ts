@@ -1,12 +1,18 @@
 import { describe, it, expect } from "vitest";
 import { createContainer } from "#shared/index.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { CommandRunner } from "../abstractions/CommandRunner.js";
 import { CommandRunner as CommandRunnerRegistration } from "../CommandRunner.js";
 
 describe("ExecaCommandRunner", () => {
     function resolveRunner(): CommandRunner.Interface {
-        const container = createContainer();
-        container.register(CommandRunnerRegistration);
+        const { container } = createTestApiContainer();
+        // The factory stubs CommandRunner via registerInstance. Build a real
+        // ExecaCommandRunner from a minimal container and re-inject it so the
+        // factory's stub is overridden (last registerInstance wins).
+        const tmp = createContainer();
+        tmp.register(CommandRunnerRegistration);
+        container.registerInstance(CommandRunner, tmp.resolve(CommandRunner));
         return container.resolve(CommandRunner);
     }
 

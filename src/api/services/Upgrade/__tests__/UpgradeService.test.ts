@@ -1,10 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createContainer } from "#shared/index.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { CommandRunner } from "../../CommandRunner/index.js";
 import { FileConfigService } from "../../FileConfig/index.js";
 import { UpgradeService } from "../abstractions/UpgradeService.js";
-import { UpgradeService as UpgradeServiceRegistration } from "../UpgradeService.js";
-import { PackageManagerDriverRegistry as RegistryRegistration } from "../../PackageManager/PackageManagerDriverRegistry.js";
 
 function createMockCommandRunner(): CommandRunner.Interface {
     return {
@@ -33,12 +31,10 @@ describe("UpgradeService", () => {
     function createService(
         fileConfigService: FileConfigService.Interface = createStubFileConfigService()
     ): UpgradeService.Interface {
-        const container = createContainer();
+        const { container } = createTestApiContainer();
         commandRunner = createMockCommandRunner();
         container.registerInstance(CommandRunner, commandRunner);
         container.registerInstance(FileConfigService, fileConfigService);
-        container.register(RegistryRegistration).inSingletonScope();
-        container.register(UpgradeServiceRegistration).inSingletonScope();
         return container.resolve(UpgradeService);
     }
 

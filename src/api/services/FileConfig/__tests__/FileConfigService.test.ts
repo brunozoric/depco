@@ -2,11 +2,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { mkdtemp, mkdir, writeFile, readFile, rm } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
-import { ConsoleLoggerConfig, ConsoleLoggerFeature } from "@webiny/stdlib";
-import { DirectoryToolFeature, FileToolFeature, JsonFileToolFeature } from "@webiny/stdlib/node";
-import { createContainer } from "#shared/index.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { FileConfigService } from "../abstractions/FileConfigService.js";
-import { FileConfigService as FileConfigServiceRegistration } from "../FileConfigService.js";
 
 describe("FileConfigService", () => {
     let tempDir: string;
@@ -14,15 +11,7 @@ describe("FileConfigService", () => {
 
     beforeEach(async () => {
         tempDir = await mkdtemp(join(tmpdir(), "dep-upgrader-test-"));
-        const container = createContainer();
-        container.registerInstance(ConsoleLoggerConfig, {
-            getConfig: () => ({ logLevel: "error" })
-        });
-        ConsoleLoggerFeature.register(container);
-        DirectoryToolFeature.register(container);
-        FileToolFeature.register(container);
-        JsonFileToolFeature.register(container);
-        container.register(FileConfigServiceRegistration).inSingletonScope();
+        const { container } = createTestApiContainer();
         service = container.resolve(FileConfigService);
     });
 

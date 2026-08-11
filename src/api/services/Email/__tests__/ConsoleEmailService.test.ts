@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { createContainer } from "#shared/index.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { EmailService } from "../abstractions/EmailService.js";
-import { ConsoleEmailService } from "../ConsoleEmailService.js";
 import { AppLogService } from "../../AppLog/index.js";
 
 function createMockAppLogService(): AppLogService.Interface {
@@ -13,9 +12,8 @@ function createMockAppLogService(): AppLogService.Interface {
 describe("ConsoleEmailService", () => {
     it("should log email content via AppLogService", async () => {
         const mockAppLog = createMockAppLogService();
-        const container = createContainer();
+        const { container } = createTestApiContainer();
         container.registerInstance(AppLogService, mockAppLog);
-        container.register(ConsoleEmailService).inSingletonScope();
 
         const emailService = container.resolve(EmailService);
 
@@ -38,9 +36,8 @@ describe("ConsoleEmailService", () => {
         mockAppLog.log = vi.fn(() => {
             throw new Error("Log failed");
         });
-        const container = createContainer();
+        const { container } = createTestApiContainer();
         container.registerInstance(AppLogService, mockAppLog);
-        container.register(ConsoleEmailService).inSingletonScope();
 
         const emailService = container.resolve(EmailService);
 

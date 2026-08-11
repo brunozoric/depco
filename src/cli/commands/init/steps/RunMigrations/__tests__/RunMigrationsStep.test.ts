@@ -2,8 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { existsSync, rmSync, mkdirSync, mkdtempSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { createContainer } from "#shared/index.js";
-import { RunMigrationsStepFeature } from "../feature.js";
+import { createTestCliContainer } from "#testing/helpers/createTestCliContainer.js";
 import { RunMigrationsStep } from "../abstractions/RunMigrationsStep.js";
 import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
 
@@ -18,13 +17,12 @@ function createTestContext(dataDirectory: string): IStepContext {
 
 describe("RunMigrationsStep", () => {
     let workDir: string;
-    let container: ReturnType<typeof createContainer>;
+    let container: ReturnType<typeof createTestCliContainer>;
 
     beforeEach(() => {
         workDir = mkdtempSync(join(tmpdir(), "run-migrations-"));
         mkdirSync(join(workDir, "data"), { recursive: true });
-        container = createContainer();
-        RunMigrationsStepFeature.register(container);
+        container = createTestCliContainer();
     });
 
     afterEach(() => {

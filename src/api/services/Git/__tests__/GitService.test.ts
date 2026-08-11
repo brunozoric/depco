@@ -1,16 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { createContainer } from "#shared/index.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { CommandRunner } from "../../CommandRunner/index.js";
 import { GitService } from "../abstractions/GitService.js";
-import { GitService as GitServiceRegistration } from "../GitService.js";
 
 function createService(runHandler: CommandRunner.Interface["run"]): GitService.Interface {
-    const container = createContainer();
+    const { container } = createTestApiContainer();
     container.registerInstance(CommandRunner, {
         run: runHandler,
         runStreaming: async () => ({ stdout: "", stderr: "", exitCode: 0 })
     });
-    container.register(GitServiceRegistration);
     return container.resolve(GitService);
 }
 

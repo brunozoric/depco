@@ -1,13 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createContainer } from "#shared/index.js";
-import { ForgeService } from "../abstractions/ForgeService.js";
-import { ForgeService as ForgeServiceRegistration } from "../ForgeService.js";
-import { CommandRunner } from "../../CommandRunner/index.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
-import { registerEncryption } from "#testing/helpers/registerEncryption.js";
 
-type TestDb = Awaited<ReturnType<typeof createTestDb>>;
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
+import { ForgeService } from "../abstractions/ForgeService.js";
+import { CommandRunner } from "../../CommandRunner/index.js";
 
 function createMockCommandRunner(): CommandRunner.Interface {
     return {
@@ -18,22 +13,19 @@ function createMockCommandRunner(): CommandRunner.Interface {
 
 function createForgeService(
     commandRunner: CommandRunner.Interface,
-    db: TestDb
+    container: ReturnType<typeof createTestApiContainer>["container"]
 ): ForgeService.Interface {
-    const container = createContainer();
     container.registerInstance(CommandRunner, commandRunner);
-    container.registerInstance(DatabaseClient, { db });
-    registerEncryption(container);
-    container.register(ForgeServiceRegistration).inSingletonScope();
     return container.resolve(ForgeService);
 }
 
 describe("ForgeService", () => {
-    let db: TestDb;
     let commandRunner: CommandRunner.Interface;
+    let container: ReturnType<typeof createTestApiContainer>["container"];
 
     beforeEach(async () => {
-        db = await createTestDb();
+        const result = createTestApiContainer();
+        container = result.container;
         commandRunner = createMockCommandRunner();
     });
 
@@ -45,7 +37,7 @@ describe("ForgeService", () => {
                 exitCode: 0
             });
 
-            const service = createForgeService(commandRunner, db);
+            const service = createForgeService(commandRunner, container);
             const forge = await service.detectForge("/test");
             expect(forge).toBe("github");
         });
@@ -57,7 +49,7 @@ describe("ForgeService", () => {
                 exitCode: 0
             });
 
-            const service = createForgeService(commandRunner, db);
+            const service = createForgeService(commandRunner, container);
             const forge = await service.detectForge("/test");
             expect(forge).toBe("github");
         });
@@ -69,7 +61,7 @@ describe("ForgeService", () => {
                 exitCode: 0
             });
 
-            const service = createForgeService(commandRunner, db);
+            const service = createForgeService(commandRunner, container);
             const forge = await service.detectForge("/test");
             expect(forge).toBe("gitlab");
         });
@@ -81,7 +73,7 @@ describe("ForgeService", () => {
                 exitCode: 0
             });
 
-            const service = createForgeService(commandRunner, db);
+            const service = createForgeService(commandRunner, container);
             const forge = await service.detectForge("/test");
             expect(forge).toBe("unknown");
         });
@@ -89,35 +81,35 @@ describe("ForgeService", () => {
 
     describe("parseRemoteUrl", () => {
         it("extracts owner/repo from HTTPS GitHub URL", () => {
-            const result = createForgeService(createMockCommandRunner(), db).parseRemoteUrl(
+            const result = createForgeService(createMockCommandRunner(), container).parseRemoteUrl(
                 "https://github.com/owner/repo.git"
             );
             expect(result).toEqual({ owner: "owner", repo: "repo" });
         });
 
         it("extracts owner/repo from SSH GitHub URL", () => {
-            const result = createForgeService(createMockCommandRunner(), db).parseRemoteUrl(
+            const result = createForgeService(createMockCommandRunner(), container).parseRemoteUrl(
                 "git@github.com:owner/repo.git"
             );
             expect(result).toEqual({ owner: "owner", repo: "repo" });
         });
 
         it("extracts owner/repo from SSH GitLab URL", () => {
-            const result = createForgeService(createMockCommandRunner(), db).parseRemoteUrl(
+            const result = createForgeService(createMockCommandRunner(), container).parseRemoteUrl(
                 "git@gitlab.com:owner/repo.git"
             );
             expect(result).toEqual({ owner: "owner", repo: "repo" });
         });
 
         it("handles URLs without .git suffix", () => {
-            const result = createForgeService(createMockCommandRunner(), db).parseRemoteUrl(
+            const result = createForgeService(createMockCommandRunner(), container).parseRemoteUrl(
                 "https://github.com/owner/repo"
             );
             expect(result).toEqual({ owner: "owner", repo: "repo" });
         });
 
         it("extracts project path from GitLab HTTPS URL", () => {
-            const result = createForgeService(createMockCommandRunner(), db).parseRemoteUrl(
+            const result = createForgeService(createMockCommandRunner(), container).parseRemoteUrl(
                 "https://gitlab.com/group/subgroup/project.git"
             );
             expect(result).toEqual({
@@ -135,7 +127,7 @@ describe("ForgeService", () => {
                 exitCode: 0
             });
 
-            const service = createForgeService(commandRunner, db);
+            const service = createForgeService(commandRunner, container);
 
             await expect(
                 service.createPr({
@@ -155,7 +147,7 @@ describe("ForgeService", () => {
                 exitCode: 0
             });
 
-            const service = createForgeService(commandRunner, db);
+            const service = createForgeService(commandRunner, container);
 
             await expect(
                 service.createPr({
@@ -175,7 +167,7 @@ describe("ForgeService", () => {
                 exitCode: 0
             });
 
-            const service = createForgeService(commandRunner, db);
+            const service = createForgeService(commandRunner, container);
 
             await expect(
                 service.createPr({

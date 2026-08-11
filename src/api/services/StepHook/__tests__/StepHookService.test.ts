@@ -2,22 +2,20 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdtemp, writeFile, rm } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
-import { ConsoleLoggerConfig, ConsoleLoggerFeature } from "@webiny/stdlib";
-import { DirectoryToolFeature, FileToolFeature, JsonFileToolFeature } from "@webiny/stdlib/node";
-import { createContainer } from "#shared/index.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { projects, projectStepHooks } from "#api/db/schema.js";
 import { StepHookService } from "../abstractions/StepHookService.js";
-import { StepHookService as StepHookServiceRegistration } from "../StepHookService.js";
-import { FileConfigService as FileConfigServiceRegistration } from "../../FileConfig/FileConfigService.js";
+
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
 describe("StepHookService", () => {
-    let db: Awaited<ReturnType<typeof createTestDb>>;
+    let db: TestDb;
     let service: StepHookService.Interface;
 
     beforeEach(async () => {
-        db = await createTestDb();
+        const { container, db: testDb } = createTestApiContainer();
+        db = testDb;
+
         await db
             .insert(projects)
             .values({
@@ -28,18 +26,6 @@ describe("StepHookService", () => {
                 addedAt: Date.now()
             })
             .run();
-
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
-        container.registerInstance(ConsoleLoggerConfig, {
-            getConfig: () => ({ logLevel: "error" })
-        });
-        ConsoleLoggerFeature.register(container);
-        DirectoryToolFeature.register(container);
-        FileToolFeature.register(container);
-        JsonFileToolFeature.register(container);
-        container.register(FileConfigServiceRegistration).inSingletonScope();
-        container.register(StepHookServiceRegistration).inSingletonScope();
 
         service = container.resolve(StepHookService);
     });

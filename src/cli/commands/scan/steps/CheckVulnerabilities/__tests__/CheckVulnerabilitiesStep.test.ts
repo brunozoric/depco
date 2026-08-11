@@ -1,14 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createContainer, registerFeatures } from "#shared/index.js";
+import { createTestCliContainer } from "#testing/helpers/createTestCliContainer.js";
 import { CheckVulnerabilitiesStep } from "../abstractions/CheckVulnerabilitiesStep.js";
-import { CheckVulnerabilitiesStepFeature } from "../feature.js";
 import { AuditParserService } from "#shared/vulnerabilities/abstractions/AuditParserService.js";
 import { OsvQueryService } from "#shared/vulnerabilities/abstractions/OsvQueryService.js";
 import type { IOsvAdvisory } from "#shared/vulnerabilities/abstractions/OsvQueryService.js";
 import { VulnerabilityMerger } from "#shared/vulnerabilities/abstractions/VulnerabilityMerger.js";
 import type { IAuditRecord, IMergedVulnerability } from "#shared/vulnerabilities/types.js";
 import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
-import { registerCliLogger } from "#testing/helpers/registerCliLogger.js";
 
 const { execSyncMock } = vi.hoisted(() => ({ execSyncMock: vi.fn() }));
 
@@ -70,14 +68,12 @@ function makeMergedVulnerability(
 }
 
 describe("CheckVulnerabilitiesStep", () => {
-    let container: ReturnType<typeof createContainer>;
+    let container: ReturnType<typeof createTestCliContainer>;
 
     beforeEach(() => {
         execSyncMock.mockReset();
         execSyncMock.mockReturnValue("{}");
-        container = createContainer();
-        registerCliLogger(container);
-        registerFeatures(container, [CheckVulnerabilitiesStepFeature]);
+        container = createTestCliContainer();
     });
 
     it("stores merged vulnerabilities in context.results", async () => {

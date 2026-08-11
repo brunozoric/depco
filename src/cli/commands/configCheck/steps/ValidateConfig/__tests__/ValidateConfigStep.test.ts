@@ -2,11 +2,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { writeFileSync, rmSync, mkdtempSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { createContainer } from "#shared/index.js";
-import { ValidateConfigStepFeature } from "../feature.js";
+import { createTestCliContainer } from "#testing/helpers/createTestCliContainer.js";
 import { ValidateConfigStep } from "../abstractions/ValidateConfigStep.js";
 import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
-import { registerCliLogger } from "#testing/helpers/registerCliLogger.js";
 
 function createTestContext(dataDirectory: string): IStepContext {
     return {
@@ -19,15 +17,13 @@ function createTestContext(dataDirectory: string): IStepContext {
 
 describe("ValidateConfigStep", () => {
     let workDir: string;
-    let container: ReturnType<typeof createContainer>;
+    let container: ReturnType<typeof createTestCliContainer>;
     let consoleInfoSpy: ReturnType<typeof vi.spyOn>;
     let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
         workDir = mkdtempSync(join(tmpdir(), "validate-config-"));
-        container = createContainer();
-        registerCliLogger(container);
-        ValidateConfigStepFeature.register(container);
+        container = createTestCliContainer();
         consoleInfoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
         consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     });

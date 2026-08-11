@@ -3,9 +3,7 @@ import { existsSync, readFileSync, rmSync, mkdtempSync, statSync } from "node:fs
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { sql } from "drizzle-orm";
-import { createContainer, registerFeatures } from "#shared/index.js";
-import { StepRunnerFeature } from "../../../runner/index.js";
-import { InitCommandFeature } from "../feature.js";
+import { createTestCliContainer } from "#testing/helpers/createTestCliContainer.js";
 import { InitCommand } from "../abstractions/InitCommand.js";
 import { StepRunner } from "../../../runner/abstractions/StepRunner.js";
 import { createDatabaseClient } from "#api/db/client.js";
@@ -22,12 +20,11 @@ vi.mock("@inquirer/prompts", () => ({
 
 describe("InitCommand integration", () => {
     let workDir: string;
-    let container: ReturnType<typeof createContainer>;
+    let container: ReturnType<typeof createTestCliContainer>;
 
     beforeEach(() => {
         workDir = mkdtempSync(join(tmpdir(), "init-integration-"));
-        container = createContainer();
-        registerFeatures(container, [StepRunnerFeature, InitCommandFeature]);
+        container = createTestCliContainer();
     });
 
     afterEach(() => {

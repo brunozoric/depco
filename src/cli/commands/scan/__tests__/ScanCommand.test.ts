@@ -1,16 +1,12 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createContainer, registerFeatures } from "#shared/index.js";
-import { ScanCommandFeature } from "../feature.js";
+import { createTestCliContainer } from "#testing/helpers/createTestCliContainer.js";
 import { ScanCommand } from "../abstractions/ScanCommand.js";
-import { registerCliLogger } from "#testing/helpers/registerCliLogger.js";
 
 describe("ScanCommand", () => {
-    let container: ReturnType<typeof createContainer>;
+    let container: ReturnType<typeof createTestCliContainer>;
 
     beforeEach(() => {
-        container = createContainer();
-        registerCliLogger(container);
-        registerFeatures(container, [ScanCommandFeature]);
+        container = createTestCliContainer();
     });
 
     it("returns 6 steps in correct order", () => {

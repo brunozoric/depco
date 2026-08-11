@@ -1,27 +1,22 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { generateId } from "@webiny/stdlib";
-import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
-import type { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { DatabaseClient as DatabaseClientAbstraction } from "#api/db/abstractions/DatabaseClient.js";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { projects, scanResults, dependencyChanges } from "#api/db/schema.js";
-import { createContainer } from "#shared/index.js";
 import { DependencyChangeService as DependencyChangeServiceAbstraction } from "../abstractions/DependencyChangeService.js";
-import { DependencyChangeService as DependencyChangeServiceRegistration } from "../DependencyChangeService.js";
 
 describe("DependencyChangeService", () => {
-    let databaseClient: DatabaseClient.Interface;
+    let db: BetterSQLite3Database;
     let service: DependencyChangeServiceAbstraction.Interface;
 
     beforeEach(async () => {
-        databaseClient = await createTestDatabaseClient();
-        const container = createContainer();
-        container.registerInstance(DatabaseClientAbstraction, databaseClient);
-        container.register(DependencyChangeServiceRegistration);
+        const { container, db: testDb } = createTestApiContainer();
+        db = testDb;
         service = container.resolve(DependencyChangeServiceAbstraction);
     });
 
     async function seedProject(id: string, name: string): Promise<void> {
-        await databaseClient.db
+        await db
             .insert(projects)
             .values({ id, name, path: `/projects/${name}`, addedAt: Date.now() })
             .run();
@@ -32,7 +27,7 @@ describe("DependencyChangeService", () => {
         name: string,
         currentVersion: string
     ): Promise<void> {
-        await databaseClient.db
+        await db
             .insert(scanResults)
             .values({
                 id: generateId(),
@@ -56,7 +51,7 @@ describe("DependencyChangeService", () => {
     }
 
     async function getChanges(): Promise<IChangeRow[]> {
-        return databaseClient.db
+        return db
             .select({
                 packageName: dependencyChanges.packageName,
                 changeType: dependencyChanges.changeType,

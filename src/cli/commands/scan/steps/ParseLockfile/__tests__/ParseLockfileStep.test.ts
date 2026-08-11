@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createContainer, registerFeatures } from "#shared/index.js";
-import { ParseLockfileStepFeature } from "../feature.js";
+import { createTestCliContainer } from "#testing/helpers/createTestCliContainer.js";
 import { ParseLockfileStep } from "../abstractions/ParseLockfileStep.js";
 import { LockfileParserService } from "#api/services/DependencyGraph/abstractions/LockfileParserService.js";
 import type { IDependencyEdge } from "#api/services/DependencyGraph/abstractions/LockfileParserService.js";
@@ -16,11 +15,10 @@ function createTestContext(): IStepContext {
 }
 
 describe("ParseLockfileStep", () => {
-    let container: ReturnType<typeof createContainer>;
+    let container: ReturnType<typeof createTestCliContainer>;
 
     beforeEach(() => {
-        container = createContainer();
-        registerFeatures(container, [ParseLockfileStepFeature]);
+        container = createTestCliContainer();
     });
 
     it("extracts unique packages from dependency edges", async () => {

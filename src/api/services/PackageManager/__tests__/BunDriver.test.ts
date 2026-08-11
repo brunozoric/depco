@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { createContainer } from "#shared/index.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { PackageManagerDriver } from "../abstractions/PackageManagerDriver.js";
 import { BunDriver as BunDriverRegistration } from "../drivers/BunDriver.js";
 
 describe("BunDriver", () => {
     function createDriver(): PackageManagerDriver.Interface {
-        const container = createContainer();
+        const { container } = createTestApiContainer();
         container.register(BunDriverRegistration);
         return container.resolve(PackageManagerDriver);
     }

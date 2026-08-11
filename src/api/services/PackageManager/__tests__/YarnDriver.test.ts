@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { createContainer } from "#shared/index.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { PackageManagerDriver } from "../abstractions/PackageManagerDriver.js";
 import { YarnDriver as YarnDriverRegistration } from "../drivers/YarnDriver.js";
 
 describe("YarnDriver", () => {
     function createDriver(): PackageManagerDriver.Interface {
-        const container = createContainer();
+        const { container } = createTestApiContainer();
         container.register(YarnDriverRegistration);
         return container.resolve(PackageManagerDriver);
     }

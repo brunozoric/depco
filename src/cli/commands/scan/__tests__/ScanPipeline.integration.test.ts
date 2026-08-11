@@ -1,16 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { execSync } from "node:child_process";
 import { join } from "node:path";
-import { createContainer, registerFeatures } from "#shared/index.js";
-import { ScanCommandFeature } from "../feature.js";
-import { StepRunnerFeature } from "../../../runner/index.js";
+import { createTestCliContainer } from "#testing/helpers/createTestCliContainer.js";
 import { ScanCommand } from "../abstractions/ScanCommand.js";
 import { StepRunner } from "../../../runner/abstractions/StepRunner.js";
 import { LockfileParserService } from "#api/services/DependencyGraph/abstractions/LockfileParserService.js";
 import type { IDependencyEdge } from "#api/services/DependencyGraph/abstractions/LockfileParserService.js";
 import type { IPackageEntry } from "#shared/types/IPackageEntry.js";
 import type { Container } from "@webiny/di";
-import { registerCliLogger } from "#testing/helpers/registerCliLogger.js";
 
 const FIXTURES_DIR = join(import.meta.dirname, "fixtures");
 
@@ -116,9 +113,7 @@ interface ISetupContainerArgs {
 }
 
 function setupContainer(args: ISetupContainerArgs = {}): Container {
-    const container = createContainer();
-    registerCliLogger(container);
-    registerFeatures(container, [StepRunnerFeature, ScanCommandFeature]);
+    const container = createTestCliContainer();
     container.registerInstance(LockfileParserService, createMockLockfileParser(args.packages));
     return container;
 }

@@ -2,13 +2,11 @@ import { describe, it, expect } from "vitest";
 import { mkdirSync, writeFileSync, rmSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
-import { createContainer } from "#shared/index.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { CommandRunner } from "../../CommandRunner/index.js";
 import { RegistryCacheService } from "../../RegistryCache/index.js";
 import { LockfileParserService } from "../../DependencyGraph/index.js";
 import { ScanService } from "../abstractions/ScanService.js";
-import { ScanService as ScanServiceRegistration } from "../ScanService.js";
-import { PackageManagerDriverRegistry as RegistryRegistration } from "../../PackageManager/PackageManagerDriverRegistry.js";
 
 const REGISTRY_DATA: Record<string, RegistryCacheService.PackageInfo> = {
     react: {
@@ -96,7 +94,7 @@ function createTestDir(): string {
 }
 
 function createService(options: CreateServiceOptions = {}): ScanService.Interface {
-    const container = createContainer();
+    const { container } = createTestApiContainer();
 
     const runHandler: CommandRunner.Interface["run"] = async (cmd, args, _opts) => {
         const argsArray = args ?? [];
@@ -136,8 +134,6 @@ function createService(options: CreateServiceOptions = {}): ScanService.Interfac
         parse: async () => options.lockfileEdges ?? []
     });
 
-    container.register(RegistryRegistration).inSingletonScope();
-    container.register(ScanServiceRegistration);
     return container.resolve(ScanService);
 }
 

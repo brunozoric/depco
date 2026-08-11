@@ -2,18 +2,10 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { writeFile, rm } from "fs/promises";
 import { join } from "path";
-import { ConsoleLoggerConfig, ConsoleLoggerFeature } from "@webiny/stdlib";
-import { DirectoryToolFeature, FileToolFeature, JsonFileToolFeature } from "@webiny/stdlib/node";
-import type { Container } from "@webiny/di";
-import { createContainer } from "#shared/index.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { registryCache } from "#api/db/schema.js";
 import { CommandRunner } from "../../CommandRunner/index.js";
 import { RegistryCacheService } from "../abstractions/RegistryCacheService.js";
-import { RegistryCacheService as RegistryCacheServiceRegistration } from "../RegistryCacheService.js";
-import { PackageManagerDriverRegistry as RegistryRegistration } from "../../PackageManager/PackageManagerDriverRegistry.js";
-import { FileConfigService as FileConfigServiceRegistration } from "../../FileConfig/FileConfigService.js";
 
 function createMockCommandRunner(): CommandRunner.Interface {
     return {
@@ -33,29 +25,17 @@ function createMockCommandRunner(): CommandRunner.Interface {
     };
 }
 
-function registerFileConfigDeps(container: Container): void {
-    container.registerInstance(ConsoleLoggerConfig, {
-        getConfig: () => ({ logLevel: "error" })
-    });
-    ConsoleLoggerFeature.register(container);
-    DirectoryToolFeature.register(container);
-    FileToolFeature.register(container);
-    JsonFileToolFeature.register(container);
-    container.register(FileConfigServiceRegistration).inSingletonScope();
-}
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
 describe("RegistryCacheService", () => {
     let service: RegistryCacheService.Interface;
-    let db: Awaited<ReturnType<typeof createTestDb>>;
+    let db: TestDb;
 
-    beforeEach(async () => {
-        db = await createTestDb();
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
+    beforeEach(() => {
+        const result = createTestApiContainer();
+        db = result.db;
+        const container = result.container;
         container.registerInstance(CommandRunner, createMockCommandRunner());
-        container.register(RegistryRegistration).inSingletonScope();
-        registerFileConfigDeps(container);
-        container.register(RegistryCacheServiceRegistration).inSingletonScope();
         service = container.resolve(RegistryCacheService);
     });
 
@@ -114,17 +94,13 @@ describe("RegistryCacheService", () => {
             stderr: "",
             exitCode: 0
         }));
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
+        const { container } = createTestApiContainer();
         container.registerInstance(CommandRunner, {
             run: runSpy,
             async runStreaming() {
                 return { stdout: "", stderr: "", exitCode: 0 };
             }
         });
-        container.register(RegistryRegistration).inSingletonScope();
-        registerFileConfigDeps(container);
-        container.register(RegistryCacheServiceRegistration).inSingletonScope();
         const dedupService = container.resolve(RegistryCacheService);
 
         const [first, second] = await Promise.all([
@@ -138,20 +114,16 @@ describe("RegistryCacheService", () => {
 
     it("returns cached data when within TTL", async () => {
         const runSpy = vi.fn();
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
+        const { container, db: ttlDb } = createTestApiContainer();
         container.registerInstance(CommandRunner, {
             run: runSpy,
             async runStreaming() {
                 return { stdout: "", stderr: "", exitCode: 0 };
             }
         });
-        container.register(RegistryRegistration).inSingletonScope();
-        registerFileConfigDeps(container);
-        container.register(RegistryCacheServiceRegistration).inSingletonScope();
         const ttlService = container.resolve(RegistryCacheService);
 
-        await db.insert(registryCache).values({
+        await ttlDb.insert(registryCache).values({
             packageName: "cached-pkg",
             data: JSON.stringify({
                 name: "cached-pkg",
@@ -200,17 +172,13 @@ describe("RegistryCacheService", () => {
                 stderr: "",
                 exitCode: 0
             }));
-            const container = createContainer();
-            container.registerInstance(DatabaseClient, { db });
+            const { container } = createTestApiContainer();
             container.registerInstance(CommandRunner, {
                 run: runSpy,
                 async runStreaming() {
                     return { stdout: "", stderr: "", exitCode: 0 };
                 }
             });
-            container.register(RegistryRegistration).inSingletonScope();
-            registerFileConfigDeps(container);
-            container.register(RegistryCacheServiceRegistration).inSingletonScope();
             const configuredService = container.resolve(RegistryCacheService);
 
             await configuredService.getPackageInfo("react", "yarn");
@@ -231,17 +199,13 @@ describe("RegistryCacheService", () => {
                 stderr: "",
                 exitCode: 0
             }));
-            const container = createContainer();
-            container.registerInstance(DatabaseClient, { db });
+            const { container } = createTestApiContainer();
             container.registerInstance(CommandRunner, {
                 run: runSpy,
                 async runStreaming() {
                     return { stdout: "", stderr: "", exitCode: 0 };
                 }
             });
-            container.register(RegistryRegistration).inSingletonScope();
-            registerFileConfigDeps(container);
-            container.register(RegistryCacheServiceRegistration).inSingletonScope();
             const unconfiguredService = container.resolve(RegistryCacheService);
 
             await unconfiguredService.getPackageInfo("react", "yarn");

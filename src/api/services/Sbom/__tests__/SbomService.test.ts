@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { generateId } from "@webiny/stdlib";
-import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
-import type { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import {
     projects,
     scanResults,
@@ -9,25 +8,22 @@ import {
     vulnerabilities,
     dependencyEdges
 } from "#api/db/schema.js";
-import { createContainer } from "#shared/index.js";
-import { DatabaseClient as DatabaseClientAbstraction } from "#api/db/abstractions/DatabaseClient.js";
 import { SbomService as SbomServiceAbstraction } from "../abstractions/SbomService.js";
-import { SbomService as SbomServiceRegistration } from "../SbomService.js";
+
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
 describe("SbomService", () => {
-    let databaseClient: DatabaseClient.Interface;
+    let db: TestDb;
     let service: SbomServiceAbstraction.Interface;
 
-    beforeEach(async () => {
-        databaseClient = await createTestDatabaseClient();
-        const container = createContainer();
-        container.registerInstance(DatabaseClientAbstraction, databaseClient);
-        container.register(SbomServiceRegistration);
+    beforeEach(() => {
+        const { container, db: testDb } = createTestApiContainer();
+        db = testDb;
         service = container.resolve(SbomServiceAbstraction);
     });
 
     async function seedProject(id: string, name: string): Promise<void> {
-        await databaseClient.db
+        await db
             .insert(projects)
             .values({
                 id,
@@ -45,7 +41,7 @@ describe("SbomService", () => {
         version: string,
         type: string
     ): Promise<void> {
-        await databaseClient.db
+        await db
             .insert(scanResults)
             .values({
                 id: generateId(),
@@ -66,7 +62,7 @@ describe("SbomService", () => {
         packageName: string,
         spdxId: string
     ): Promise<void> {
-        await databaseClient.db
+        await db
             .insert(licenses)
             .values({
                 id: generateId(),
@@ -87,7 +83,7 @@ describe("SbomService", () => {
         advisoryId: string,
         severity: string
     ): Promise<void> {
-        await databaseClient.db
+        await db
             .insert(vulnerabilities)
             .values({
                 id: generateId(),
@@ -111,7 +107,7 @@ describe("SbomService", () => {
         childVersion: string,
         depth: number
     ): Promise<void> {
-        await databaseClient.db
+        await db
             .insert(dependencyEdges)
             .values({
                 id: generateId(),

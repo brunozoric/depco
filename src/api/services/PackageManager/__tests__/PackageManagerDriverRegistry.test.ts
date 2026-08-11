@@ -1,12 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { createContainer } from "#shared/index.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { PackageManagerDriverRegistry } from "../abstractions/PackageManagerDriverRegistry.js";
-import { PackageManagerDriverRegistry as RegistryRegistration } from "../PackageManagerDriverRegistry.js";
 
 describe("PackageManagerDriverRegistry", () => {
     function createRegistry(): PackageManagerDriverRegistry.Interface {
-        const container = createContainer();
-        container.register(RegistryRegistration).inSingletonScope();
+        const { container } = createTestApiContainer();
         return container.resolve(PackageManagerDriverRegistry);
     }
 

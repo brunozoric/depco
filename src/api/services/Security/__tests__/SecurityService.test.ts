@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdirSync, writeFileSync, rmSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
-import { createContainer } from "#shared/index.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import {
     seedYarnSecuritySettings,
     VALID_YARNRC
@@ -18,24 +18,20 @@ import {
     VALID_BUNFIG_TOML,
     VALID_BUN_PACKAGE_JSON
 } from "#testing/helpers/seedBunSecuritySettings.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { projects, securityChecks } from "#api/db/schema.js";
 import { SecurityService } from "../abstractions/SecurityService.js";
-import { SecurityService as SecurityServiceRegistration } from "../SecurityService.js";
 
 describe("SecurityService", () => {
     let testDir: string;
     let service: SecurityService.Interface;
-    let db: Awaited<ReturnType<typeof createTestDb>>;
+    let db: BetterSQLite3Database;
 
     beforeEach(async () => {
         testDir = join(tmpdir(), `sec-test-${Date.now()}`);
         mkdirSync(testDir, { recursive: true });
 
-        db = await createTestDb();
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
-        container.register(SecurityServiceRegistration);
+        const { container, db: testDb } = createTestApiContainer();
+        db = testDb;
         service = container.resolve(SecurityService);
     });
 

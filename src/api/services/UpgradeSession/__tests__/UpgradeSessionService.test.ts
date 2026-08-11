@@ -1,20 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createContainer } from "#shared/index.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { projects } from "#api/db/schema.js";
 import { UpgradeSessionService } from "../abstractions/UpgradeSessionService.js";
-import { UpgradeSessionService as UpgradeSessionServiceRegistration } from "../UpgradeSessionService.js";
 import { ErrorReporter } from "../../ErrorReporter/index.js";
-import { UpgradeSessionStepResolverRegistry } from "../stepResolvers/StepResolverRegistry.js";
-import { SelectPackagesResolver } from "../stepResolvers/SelectPackagesResolver.js";
-import { BranchResolver } from "../stepResolvers/BranchResolver.js";
-import { UpgradeResolver } from "../stepResolvers/UpgradeResolver.js";
-import { RefreshTransientResolver } from "../stepResolvers/RefreshTransientResolver.js";
-import { CommitResolver } from "../stepResolvers/CommitResolver.js";
 import { StepHookService } from "../../StepHook/index.js";
-import { CommandRunner } from "../../CommandRunner/index.js";
 import { GitService } from "../../Git/index.js";
 import { UpgradeService } from "../../Upgrade/index.js";
 
@@ -38,12 +28,12 @@ function createMockUpgradeService(): UpgradeService.Interface {
 }
 
 describe("UpgradeSessionService", () => {
-    let db: Awaited<ReturnType<typeof createTestDb>>;
     let service: UpgradeSessionService.Interface;
     let broadcaster: WebSocketBroadcaster.Interface;
 
     beforeEach(async () => {
-        db = await createTestDb();
+        const { container, db } = createTestApiContainer();
+
         await db
             .insert(projects)
             .values({
@@ -62,18 +52,9 @@ describe("UpgradeSessionService", () => {
             closeConnectionsForUser: vi.fn()
         };
 
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
         container.registerInstance(WebSocketBroadcaster, broadcaster);
         container.registerInstance(GitService, createMockGitService());
         container.registerInstance(UpgradeService, createMockUpgradeService());
-        container.register(SelectPackagesResolver);
-        container.register(BranchResolver);
-        container.register(UpgradeResolver);
-        container.register(RefreshTransientResolver);
-        container.register(CommitResolver);
-        container.register(UpgradeSessionStepResolverRegistry);
-        container.register(UpgradeSessionServiceRegistration).inSingletonScope();
         container.registerInstance(ErrorReporter, {
             reportJobFailure: vi.fn(),
             reportJobWarning: vi.fn(),
@@ -81,10 +62,6 @@ describe("UpgradeSessionService", () => {
         });
         container.registerInstance(StepHookService, {
             getStepConfig: async () => []
-        });
-        container.registerInstance(CommandRunner, {
-            run: async () => ({ stdout: "", stderr: "", exitCode: 0 }),
-            runStreaming: async () => ({ stdout: "", stderr: "", exitCode: 0 })
         });
 
         service = container.resolve(UpgradeSessionService);

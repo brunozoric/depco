@@ -2,9 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdtemp, writeFile, rm } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
-import { createContainer } from "#shared/index.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { LockfileParserService } from "../abstractions/LockfileParserService.js";
-import { LockfileParserService as LockfileParserServiceRegistration } from "../LockfileParserService.js";
 
 // npm package-lock.json v3 fixture: express (depth 0) -> body-parser (depth 1)
 // -> qs (depth 2), plus vitest declared as a devDependency (depth 0).
@@ -251,8 +250,7 @@ describe("LockfileParserService", () => {
 
     beforeEach(async () => {
         tempDir = await mkdtemp(join(tmpdir(), "dep-upgrader-lockfile-"));
-        const container = createContainer();
-        container.register(LockfileParserServiceRegistration).inSingletonScope();
+        const { container } = createTestApiContainer();
         service = container.resolve(LockfileParserService);
     });
 

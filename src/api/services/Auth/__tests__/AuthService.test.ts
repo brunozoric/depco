@@ -1,36 +1,30 @@
 import { createHash } from "crypto";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { eq } from "drizzle-orm";
-import { createContainer } from "#shared/index.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { loginCodes, sessions } from "#api/db/schema.js";
 import { UserService } from "../abstractions/UserService.js";
-import { UserService as UserServiceRegistration } from "../UserService.js";
 import { EmailService } from "../../Email/index.js";
 import { AuthService } from "../abstractions/AuthService.js";
-import { AuthService as AuthServiceRegistration } from "../AuthService.js";
 
 function hashToken(raw: string): string {
     return createHash("sha256").update(raw).digest("hex");
 }
 
 describe("AuthService", () => {
-    let databaseClient: DatabaseClient.Interface;
+    let db: BetterSQLite3Database;
     let userService: UserService.Interface;
     let authService: AuthService.Interface;
     let emailService: EmailService.Interface;
     let userId: string;
 
     beforeEach(async () => {
-        databaseClient = createTestDatabaseClient();
         emailService = { send: vi.fn() };
 
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, databaseClient);
+        const { container, db: testDb } = createTestApiContainer();
+        db = testDb;
         container.registerInstance(EmailService, emailService);
-        container.register(UserServiceRegistration).inSingletonScope();
-        container.register(AuthServiceRegistration).inSingletonScope();
 
         userService = container.resolve(UserService);
         authService = container.resolve(AuthService);
@@ -48,7 +42,7 @@ describe("AuthService", () => {
         it("should create a login code in the DB and send an email", async () => {
             await authService.login({ email: "test@example.com", password: "password123" });
 
-            const codeRows = await databaseClient.db
+            const codeRows = await db
                 .select()
                 .from(loginCodes)
                 .where(eq(loginCodes.userId, userId))
@@ -86,7 +80,7 @@ describe("AuthService", () => {
         it("should create a session and return token + user for a valid code", async () => {
             await authService.login({ email: "test@example.com", password: "password123" });
 
-            const codeRow = await databaseClient.db
+            const codeRow = await db
                 .select()
                 .from(loginCodes)
                 .where(eq(loginCodes.userId, userId))
@@ -100,7 +94,7 @@ describe("AuthService", () => {
             expect(result.token).toBeDefined();
             expect(result.user.email).toBe("test@example.com");
 
-            const sessionRows = await databaseClient.db
+            const sessionRows = await db
                 .select()
                 .from(sessions)
                 .where(eq(sessions.userId, userId))
@@ -109,7 +103,7 @@ describe("AuthService", () => {
         });
 
         it("should reject an expired code", async () => {
-            await databaseClient.db
+            await db
                 .insert(loginCodes)
                 .values({
                     id: "expired-code",
@@ -127,7 +121,7 @@ describe("AuthService", () => {
         });
 
         it("should reject an already-used code", async () => {
-            await databaseClient.db
+            await db
                 .insert(loginCodes)
                 .values({
                     id: "used-code",
@@ -153,7 +147,7 @@ describe("AuthService", () => {
 
         it("should reject a valid code if the user was deactivated after it was issued", async () => {
             await authService.login({ email: "test@example.com", password: "password123" });
-            const codeRow = await databaseClient.db
+            const codeRow = await db
                 .select()
                 .from(loginCodes)
                 .where(eq(loginCodes.userId, userId))
@@ -165,7 +159,7 @@ describe("AuthService", () => {
                 authService.verifyCode({ email: "test@example.com", code: codeRow!.code })
             ).rejects.toThrow();
 
-            const sessionRows = await databaseClient.db
+            const sessionRows = await db
                 .select()
                 .from(sessions)
                 .where(eq(sessions.userId, userId))
@@ -181,7 +175,7 @@ describe("AuthService", () => {
                 baseUrl: "http://localhost:3000/login"
             });
 
-            const codeRows = await databaseClient.db
+            const codeRows = await db
                 .select()
                 .from(loginCodes)
                 .where(eq(loginCodes.userId, userId))
@@ -248,7 +242,7 @@ describe("AuthService", () => {
                 authService.verifyMagicLink({ token, email: "test@example.com" })
             ).rejects.toThrow();
 
-            const sessionRows = await databaseClient.db
+            const sessionRows = await db
                 .select()
                 .from(sessions)
                 .where(eq(sessions.userId, userId))
@@ -260,7 +254,7 @@ describe("AuthService", () => {
     describe("getSessionUser", () => {
         it("should return the user for a valid token hash", async () => {
             await authService.login({ email: "test@example.com", password: "password123" });
-            const codeRow = await databaseClient.db
+            const codeRow = await db
                 .select()
                 .from(loginCodes)
                 .where(eq(loginCodes.userId, userId))
@@ -283,7 +277,7 @@ describe("AuthService", () => {
 
         it("should return null and delete the row for an expired session", async () => {
             const tokenHash = hashToken("expired-token");
-            await databaseClient.db
+            await db
                 .insert(sessions)
                 .values({
                     id: "expired-session",
@@ -297,7 +291,7 @@ describe("AuthService", () => {
             const sessionUser = await authService.getSessionUser(tokenHash);
             expect(sessionUser).toBeNull();
 
-            const remaining = await databaseClient.db
+            const remaining = await db
                 .select()
                 .from(sessions)
                 .where(eq(sessions.id, "expired-session"))
@@ -309,7 +303,7 @@ describe("AuthService", () => {
     describe("logout", () => {
         it("should delete the session", async () => {
             await authService.login({ email: "test@example.com", password: "password123" });
-            const codeRow = await databaseClient.db
+            const codeRow = await db
                 .select()
                 .from(loginCodes)
                 .where(eq(loginCodes.userId, userId))
@@ -321,7 +315,7 @@ describe("AuthService", () => {
 
             await authService.logout(hashToken(token));
 
-            const remaining = await databaseClient.db
+            const remaining = await db
                 .select()
                 .from(sessions)
                 .where(eq(sessions.userId, userId))
@@ -332,7 +326,7 @@ describe("AuthService", () => {
 
     describe("forceLogout", () => {
         it("should delete all sessions for a user", async () => {
-            await databaseClient.db
+            await db
                 .insert(sessions)
                 .values([
                     {
@@ -354,7 +348,7 @@ describe("AuthService", () => {
 
             await authService.forceLogout(userId);
 
-            const remaining = await databaseClient.db
+            const remaining = await db
                 .select()
                 .from(sessions)
                 .where(eq(sessions.userId, userId))
@@ -365,7 +359,7 @@ describe("AuthService", () => {
 
     describe("cleanupExpired", () => {
         it("should delete expired sessions and login codes", async () => {
-            await databaseClient.db
+            await db
                 .insert(sessions)
                 .values({
                     id: "expired-session",
@@ -375,7 +369,7 @@ describe("AuthService", () => {
                     createdAt: Date.now() - 2000
                 })
                 .run();
-            await databaseClient.db
+            await db
                 .insert(loginCodes)
                 .values({
                     id: "expired-code",
@@ -389,8 +383,8 @@ describe("AuthService", () => {
 
             await authService.cleanupExpired();
 
-            const remainingSessions = await databaseClient.db.select().from(sessions).all();
-            const remainingCodes = await databaseClient.db.select().from(loginCodes).all();
+            const remainingSessions = await db.select().from(sessions).all();
+            const remainingCodes = await db.select().from(loginCodes).all();
             expect(remainingSessions).toHaveLength(0);
             expect(remainingCodes).toHaveLength(0);
         });

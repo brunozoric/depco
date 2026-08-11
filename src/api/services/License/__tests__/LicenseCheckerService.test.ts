@@ -1,11 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import type { Container } from "@webiny/di";
 import type { RegistryCacheService } from "#api/services/RegistryCache/index.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
+import { RegistryCacheService as RegistryCacheServiceAbstraction } from "#api/services/RegistryCache/index.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
+import { LicenseCheckerService } from "#api/services/License/index.js";
 import { scanResults, projects } from "#api/db/schema.js";
 import { generateId } from "@webiny/stdlib";
 
-type TestDb = Awaited<ReturnType<typeof createTestDb>>;
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
 function createMockRegistryCacheService(): RegistryCacheService.Interface {
     return {
@@ -44,28 +46,18 @@ async function seedScanResult(db: TestDb, projectId: string, packageName: string
         .run();
 }
 
-async function createService(registryCache: RegistryCacheService.Interface, db: TestDb) {
-    const { LicenseCheckerService } =
-        await import("#api/services/License/LicenseCheckerService.js");
-    const container = (await import("#shared/index.js")).createContainer();
-    container.registerInstance(
-        (await import("#api/services/RegistryCache/index.js")).RegistryCacheService,
-        registryCache
-    );
-    container.registerInstance(DatabaseClient, { db });
-    container.register(LicenseCheckerService).inSingletonScope();
-    const abstraction = (await import("#api/services/License/index.js")).LicenseCheckerService;
-    return container.resolve(abstraction);
-}
-
 describe("LicenseCheckerService", () => {
     let db: TestDb;
+    let container: Container;
     let registryCache: RegistryCacheService.Interface;
     const projectId = "proj-1";
 
     beforeEach(async () => {
-        db = await createTestDb();
+        const result = createTestApiContainer();
+        container = result.container;
+        db = result.db;
         registryCache = createMockRegistryCacheService();
+        container.registerInstance(RegistryCacheServiceAbstraction, registryCache);
         await seedProject(db, projectId);
     });
 
@@ -85,7 +77,7 @@ describe("LicenseCheckerService", () => {
             license: "MIT"
         }));
 
-        const service = await createService(registryCache, db);
+        const service = container.resolve(LicenseCheckerService);
         const results = await service.scan({ projectId, packageManager: "npm" });
 
         expect(results).toHaveLength(2);
@@ -112,7 +104,7 @@ describe("LicenseCheckerService", () => {
             license: null
         });
 
-        const service = await createService(registryCache, db);
+        const service = container.resolve(LicenseCheckerService);
         const results = await service.scan({ projectId, packageManager: "npm" });
 
         expect(results[0]!.licenseName).toBe("UNKNOWN");
@@ -124,7 +116,7 @@ describe("LicenseCheckerService", () => {
 
         vi.mocked(registryCache.getPackageInfo).mockRejectedValue(new Error("404 not found"));
 
-        const service = await createService(registryCache, db);
+        const service = container.resolve(LicenseCheckerService);
         const results = await service.scan({ projectId, packageManager: "npm" });
 
         expect(results[0]!.licenseName).toBe("UNKNOWN");
@@ -132,7 +124,7 @@ describe("LicenseCheckerService", () => {
     });
 
     it("returns empty array when no scan results exist", async () => {
-        const service = await createService(registryCache, db);
+        const service = container.resolve(LicenseCheckerService);
         const results = await service.scan({ projectId, packageManager: "npm" });
 
         expect(results).toEqual([]);

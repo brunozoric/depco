@@ -2,8 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { writeFileSync, rmSync, mkdtempSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { createContainer } from "#shared/index.js";
-import { LoadConfigStepFeature } from "../feature.js";
+import { createTestCliContainer } from "#testing/helpers/createTestCliContainer.js";
 import { LoadConfigStep } from "../abstractions/LoadConfigStep.js";
 import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
 import type { IDepcoConfig } from "#shared/config/types.js";
@@ -19,12 +18,11 @@ function createTestContext(dataDirectory: string): IStepContext {
 
 describe("LoadConfigStep", () => {
     let workDir: string;
-    let container: ReturnType<typeof createContainer>;
+    let container: ReturnType<typeof createTestCliContainer>;
 
     beforeEach(() => {
         workDir = mkdtempSync(join(tmpdir(), "load-config-"));
-        container = createContainer();
-        LoadConfigStepFeature.register(container);
+        container = createTestCliContainer();
     });
 
     afterEach(() => {

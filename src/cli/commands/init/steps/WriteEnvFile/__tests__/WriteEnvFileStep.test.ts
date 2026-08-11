@@ -2,19 +2,17 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { readFileSync, rmSync, mkdtempSync, existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { createContainer } from "#shared/index.js";
-import { WriteEnvFileStepFeature } from "../feature.js";
+import { createTestCliContainer } from "#testing/helpers/createTestCliContainer.js";
 import { WriteEnvFileStep } from "../abstractions/WriteEnvFileStep.js";
 import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
 
 describe("WriteEnvFileStep", () => {
     let workDir: string;
-    let container: ReturnType<typeof createContainer>;
+    let container: ReturnType<typeof createTestCliContainer>;
 
     beforeEach(() => {
         workDir = mkdtempSync(join(tmpdir(), "write-env-"));
-        container = createContainer();
-        WriteEnvFileStepFeature.register(container);
+        container = createTestCliContainer();
     });
 
     afterEach(() => {

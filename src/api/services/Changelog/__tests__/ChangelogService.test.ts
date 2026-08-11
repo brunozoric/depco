@@ -1,28 +1,12 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { eq } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
-import { createContainer } from "#shared/index.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { changelogs, dependencies, dependencyVersions } from "#api/db/schema.js";
 import { CommandRunner } from "../../CommandRunner/index.js";
-import { FileConfigService } from "../../FileConfig/index.js";
-import { RegistryCacheService as RegistryCacheServiceRegistration } from "../../RegistryCache/RegistryCacheService.js";
-import { PackageManagerDriverRegistry as RegistryRegistration } from "../../PackageManager/PackageManagerDriverRegistry.js";
 import { ChangelogService } from "../abstractions/ChangelogService.js";
-import { ChangelogService as ChangelogServiceRegistration } from "../ChangelogService.js";
-import { GitHubReleasesResolver } from "../resolvers/GitHubReleasesResolver.js";
-import { ChangelogFileResolver } from "../resolvers/ChangelogFileResolver.js";
-import { NpmReadmeResolver } from "../resolvers/NpmReadmeResolver.js";
 
-function createStubFileConfigService(): FileConfigService.Interface {
-    return {
-        readConfig: async () => null,
-        readGlobalSettings: async () => ({ settings: null }),
-        readGlobalConfig: async () => ({ config: null }),
-        writeGlobalPmSettings: async () => {}
-    };
-}
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
 type RunHandler = CommandRunner.Interface["run"];
 
@@ -39,30 +23,23 @@ function defaultRunHandler(): RunHandler {
     };
 }
 
-async function createService(
-    db: Awaited<ReturnType<typeof createTestDb>>,
-    options: CreateServiceOptions = {}
-): Promise<ChangelogService.Interface> {
-    const container = createContainer();
-    container.registerInstance(DatabaseClient, { db });
+function createService(options: CreateServiceOptions = {}): {
+    service: ChangelogService.Interface;
+    db: TestDb;
+} {
+    const { container, db } = createTestApiContainer();
     container.registerInstance(CommandRunner, {
         run: options.runHandler ?? defaultRunHandler(),
         runStreaming: async () => ({ stdout: "", stderr: "", exitCode: 0 })
     });
-    container.register(RegistryRegistration).inSingletonScope();
-    container.registerInstance(FileConfigService, createStubFileConfigService());
-    container.register(RegistryCacheServiceRegistration).inSingletonScope();
-    container.register(GitHubReleasesResolver);
-    container.register(ChangelogFileResolver);
-    container.register(NpmReadmeResolver);
-    container.register(ChangelogServiceRegistration).inSingletonScope();
-    return container.resolve(ChangelogService);
+    const service = container.resolve(ChangelogService);
+    return { service, db };
 }
 
 const dependencyIds = new Map<string, string>();
 
 async function getOrCreateDependency(
-    db: Awaited<ReturnType<typeof createTestDb>>,
+    db: TestDb,
     packageName: string,
     repoUrl?: string | null
 ): Promise<string> {
@@ -86,7 +63,7 @@ async function getOrCreateDependency(
 }
 
 async function insertChangelogRow(
-    db: Awaited<ReturnType<typeof createTestDb>>,
+    db: TestDb,
     row: {
         packageName: string;
         version: string;
@@ -125,7 +102,7 @@ async function insertChangelogRow(
 }
 
 async function queryChangelogRows(
-    db: Awaited<ReturnType<typeof createTestDb>>,
+    db: TestDb,
     packageName: string
 ): Promise<
     Array<{
@@ -156,21 +133,12 @@ async function queryChangelogRows(
 }
 
 describe("ChangelogService", () => {
-    let db: Awaited<ReturnType<typeof createTestDb>>;
-
-    beforeEach(async () => {
-        db = await createTestDb();
+    beforeEach(() => {
         dependencyIds.clear();
     });
 
     it("resolve() fetches unfetched rows and updates their content from the winning resolver", async () => {
-        await insertChangelogRow(db, {
-            packageName: "some-package",
-            version: "1.0.0",
-            repoUrl: "https://github.com/owner/repo"
-        });
-
-        const service = await createService(db, {
+        const { service, db } = createService({
             runHandler: async (_command, args) => {
                 if (args.includes("--version")) {
                     return { stdout: "gh version 2.0.0", stderr: "", exitCode: 0 };
@@ -188,6 +156,12 @@ describe("ChangelogService", () => {
             }
         });
 
+        await insertChangelogRow(db, {
+            packageName: "some-package",
+            version: "1.0.0",
+            repoUrl: "https://github.com/owner/repo"
+        });
+
         await service.resolve("some-package");
 
         const rows = await queryChangelogRows(db, "some-package");
@@ -199,21 +173,7 @@ describe("ChangelogService", () => {
     });
 
     it("resolve() skips rows that already have content set", async () => {
-        await insertChangelogRow(db, {
-            packageName: "some-package",
-            version: "1.0.0",
-            repoUrl: "https://github.com/owner/repo",
-            content: "already fetched",
-            source: "manual",
-            fetchedAt: 123
-        });
-        const unfetchedId = await insertChangelogRow(db, {
-            packageName: "some-package",
-            version: "2.0.0",
-            repoUrl: "https://github.com/owner/repo"
-        });
-
-        const service = await createService(db, {
+        const { service, db } = createService({
             runHandler: async (_command, args) => {
                 if (args.includes("--version")) {
                     return { stdout: "gh version 2.0.0", stderr: "", exitCode: 0 };
@@ -231,6 +191,20 @@ describe("ChangelogService", () => {
             }
         });
 
+        await insertChangelogRow(db, {
+            packageName: "some-package",
+            version: "1.0.0",
+            repoUrl: "https://github.com/owner/repo",
+            content: "already fetched",
+            source: "manual",
+            fetchedAt: 123
+        });
+        const unfetchedId = await insertChangelogRow(db, {
+            packageName: "some-package",
+            version: "2.0.0",
+            repoUrl: "https://github.com/owner/repo"
+        });
+
         await service.resolve("some-package");
 
         const rows = await queryChangelogRows(db, "some-package");
@@ -246,18 +220,7 @@ describe("ChangelogService", () => {
     });
 
     it("resolve() marks versions not covered by the winning resolver with empty content and source 'none'", async () => {
-        await insertChangelogRow(db, {
-            packageName: "some-package",
-            version: "1.0.0",
-            repoUrl: "https://github.com/owner/repo"
-        });
-        await insertChangelogRow(db, {
-            packageName: "some-package",
-            version: "2.0.0",
-            repoUrl: "https://github.com/owner/repo"
-        });
-
-        const service = await createService(db, {
+        const { service, db } = createService({
             runHandler: async (_command, args) => {
                 if (args.includes("--version")) {
                     return { stdout: "gh version 2.0.0", stderr: "", exitCode: 0 };
@@ -276,6 +239,17 @@ describe("ChangelogService", () => {
             }
         });
 
+        await insertChangelogRow(db, {
+            packageName: "some-package",
+            version: "1.0.0",
+            repoUrl: "https://github.com/owner/repo"
+        });
+        await insertChangelogRow(db, {
+            packageName: "some-package",
+            version: "2.0.0",
+            repoUrl: "https://github.com/owner/repo"
+        });
+
         await service.resolve("some-package");
 
         const rows = await queryChangelogRows(db, "some-package");
@@ -291,6 +265,8 @@ describe("ChangelogService", () => {
     });
 
     it("resolve() does nothing when there are no unfetched rows for the package", async () => {
+        const { service, db } = createService();
+
         await insertChangelogRow(db, {
             packageName: "some-package",
             version: "1.0.0",
@@ -300,8 +276,6 @@ describe("ChangelogService", () => {
             fetchedAt: 123
         });
 
-        const service = await createService(db);
-
         await expect(service.resolve("some-package")).resolves.toBeUndefined();
 
         const rows = await queryChangelogRows(db, "some-package");
@@ -309,6 +283,8 @@ describe("ChangelogService", () => {
     });
 
     it("getChangelogs() returns rows within (from, to] sorted by version", async () => {
+        const { service, db } = createService();
+
         for (const version of ["1.0.0", "1.5.0", "2.0.0", "2.5.0", "3.0.0"]) {
             await insertChangelogRow(db, {
                 packageName: "some-package",
@@ -319,8 +295,6 @@ describe("ChangelogService", () => {
             });
         }
 
-        const service = await createService(db);
-
         const result = await service.getChangelogs("some-package", "1.0.0", "2.5.0");
 
         expect(result.map(entry => entry.version)).toEqual(["1.5.0", "2.0.0", "2.5.0"]);
@@ -328,6 +302,8 @@ describe("ChangelogService", () => {
     });
 
     it("getChangelogs() returns an empty array when no rows fall in range", async () => {
+        const { service, db } = createService();
+
         await insertChangelogRow(db, {
             packageName: "some-package",
             version: "1.0.0",
@@ -335,8 +311,6 @@ describe("ChangelogService", () => {
             source: "github-releases",
             fetchedAt: Date.now()
         });
-
-        const service = await createService(db);
 
         const result = await service.getChangelogs("some-package", "1.0.0", "1.0.0");
 

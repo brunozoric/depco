@@ -1,18 +1,20 @@
 import { describe, it, expect } from "vitest";
-import { createContainer } from "#shared/index.js";
-import { ProcessEnvFeature } from "@webiny/stdlib/node";
+import { Env } from "@webiny/stdlib";
+import { createProcessEnv } from "@webiny/stdlib/node";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { EncryptionService } from "../abstractions/EncryptionService.js";
-import { EncryptionService as EncryptionServiceImpl } from "../EncryptionService.js";
 
 function createService(encryptionKey?: string): EncryptionService.Interface {
-    const container = createContainer();
-    ProcessEnvFeature.register(container, {
-        variables: {
-            ...process.env,
-            ...(encryptionKey !== undefined ? { ENCRYPTION_KEY: encryptionKey } : {})
-        }
-    });
-    container.register(EncryptionServiceImpl).inSingletonScope();
+    const { container } = createTestApiContainer();
+    // Override the Env instance so the EncryptionService sees the specific key
+    // (or no key) rather than the factory's default process.env.
+    const variables: Record<string, string> = { ...process.env } as Record<string, string>;
+    if (encryptionKey !== undefined) {
+        variables["ENCRYPTION_KEY"] = encryptionKey;
+    } else {
+        delete variables["ENCRYPTION_KEY"];
+    }
+    container.registerInstance(Env, createProcessEnv({ variables }));
     return container.resolve(EncryptionService);
 }
 

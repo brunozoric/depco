@@ -3,14 +3,12 @@ import { mkdtempSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { sql } from "drizzle-orm";
-import { createContainer } from "#shared/index.js";
+import { createTestCliContainer } from "#testing/helpers/createTestCliContainer.js";
 import { createDatabaseClient } from "#api/db/client.js";
 import { runMigrations } from "#api/db/migrate.js";
 import { users } from "#api/db/schema.js";
-import { CreateAdminUserStepFeature } from "../feature.js";
 import { CreateAdminUserStep } from "../abstractions/CreateAdminUserStep.js";
 import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
-import { registerCliLogger } from "#testing/helpers/registerCliLogger.js";
 
 vi.mock("@inquirer/prompts", () => ({
     input: vi.fn().mockResolvedValueOnce("admin@test.com").mockResolvedValueOnce("Admin User"),
@@ -19,14 +17,12 @@ vi.mock("@inquirer/prompts", () => ({
 
 describe("CreateAdminUserStep", () => {
     let workDir: string;
-    let container: ReturnType<typeof createContainer>;
+    let container: ReturnType<typeof createTestCliContainer>;
 
     beforeEach(() => {
         workDir = mkdtempSync(join(tmpdir(), "create-admin-"));
         mkdirSync(join(workDir, "data"), { recursive: true });
-        container = createContainer();
-        registerCliLogger(container);
-        CreateAdminUserStepFeature.register(container);
+        container = createTestCliContainer();
     });
 
     afterEach(() => {

@@ -1,18 +1,12 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createContainer } from "#shared/index.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { createTestDatabaseClient } from "#testing/helpers/createTestDb.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { UserService } from "../abstractions/UserService.js";
-import { UserService as UserServiceRegistration } from "../UserService.js";
 
 describe("UserService", () => {
     let userService: UserService.Interface;
 
     beforeEach(() => {
-        const databaseClient = createTestDatabaseClient();
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, databaseClient);
-        container.register(UserServiceRegistration).inSingletonScope();
+        const { container } = createTestApiContainer();
         userService = container.resolve(UserService);
     });
 

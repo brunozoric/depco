@@ -2,19 +2,17 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { writeFileSync, rmSync, mkdtempSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { createContainer } from "#shared/index.js";
-import { ValidateEnvironmentStepFeature } from "../feature.js";
+import { createTestCliContainer } from "#testing/helpers/createTestCliContainer.js";
 import { ValidateEnvironmentStep } from "../abstractions/ValidateEnvironmentStep.js";
 import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
 
 describe("ValidateEnvironmentStep", () => {
     let workDir: string;
-    let container: ReturnType<typeof createContainer>;
+    let container: ReturnType<typeof createTestCliContainer>;
 
     beforeEach(() => {
         workDir = mkdtempSync(join(tmpdir(), "validate-env-"));
-        container = createContainer();
-        ValidateEnvironmentStepFeature.register(container);
+        container = createTestCliContainer();
     });
 
     afterEach(() => {

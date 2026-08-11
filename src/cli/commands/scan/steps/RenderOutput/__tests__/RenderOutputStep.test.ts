@@ -2,12 +2,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { readFileSync, writeFileSync, rmSync, mkdtempSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { createContainer, registerFeatures } from "#shared/index.js";
+import { createTestCliContainer } from "#testing/helpers/createTestCliContainer.js";
 import { RenderOutputStep } from "../abstractions/RenderOutputStep.js";
-import { RenderOutputStepFeature } from "../feature.js";
-import { OutputFormatterFeature } from "../../../formatters/feature.js";
 import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
-import { registerCliLogger } from "#testing/helpers/registerCliLogger.js";
 
 function createTestContext(overrides?: Record<string, unknown>): IStepContext {
     const results = new Map<string, unknown>();
@@ -46,9 +43,7 @@ describe("RenderOutputStep", () => {
     let consoleSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
-        const container = createContainer();
-        registerCliLogger(container);
-        registerFeatures(container, [OutputFormatterFeature, RenderOutputStepFeature]);
+        const container = createTestCliContainer();
         step = container.resolve(RenderOutputStep);
         consoleSpy = vi.spyOn(console, "info").mockImplementation(() => {});
     });

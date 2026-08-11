@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createContainer } from "#shared/index.js";
-import { CheckLicensesStepFeature } from "../feature.js";
+import { createTestCliContainer } from "#testing/helpers/createTestCliContainer.js";
 import { CheckLicensesStep } from "../abstractions/CheckLicensesStep.js";
 import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
 
@@ -14,12 +13,11 @@ function createTestContext(packages: Array<{ name: string; version: string }>): 
 }
 
 describe("CheckLicensesStep", () => {
-    let container: ReturnType<typeof createContainer>;
+    let container: ReturnType<typeof createTestCliContainer>;
     const originalFetch = globalThis.fetch;
 
     beforeEach(() => {
-        container = createContainer();
-        CheckLicensesStepFeature.register(container);
+        container = createTestCliContainer();
     });
 
     afterEach(() => {

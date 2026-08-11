@@ -1,24 +1,19 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { writeFile, rm } from "fs/promises";
 import { join } from "path";
-import { ConsoleLoggerConfig, ConsoleLoggerFeature } from "@webiny/stdlib";
-import { DirectoryToolFeature, FileToolFeature, JsonFileToolFeature } from "@webiny/stdlib/node";
-import { createContainer } from "#shared/index.js";
-import { createTestDb } from "#testing/helpers/createTestDb.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
-import { FileConfigService as FileConfigServiceRegistration } from "#api/services/FileConfig/FileConfigService.js";
 import { AppLogService } from "../abstractions/AppLogService.js";
-import { AppLogService as AppLogServiceRegistration } from "../AppLogService.js";
 import { appLogs, appSettings } from "#api/db/schema.js";
 
+type TestDb = ReturnType<typeof createTestApiContainer>["db"];
+
 describe("AppLogService", () => {
-    let db: Awaited<ReturnType<typeof createTestDb>>;
+    let db: TestDb;
     let service: AppLogService.Interface;
     let broadcaster: WebSocketBroadcaster.Interface;
 
-    beforeEach(async () => {
-        db = await createTestDb();
+    beforeEach(() => {
         broadcaster = {
             broadcast: vi.fn(),
             addClient: vi.fn(),
@@ -26,18 +21,9 @@ describe("AppLogService", () => {
             closeConnectionsForUser: vi.fn()
         };
 
-        const container = createContainer();
-        container.registerInstance(DatabaseClient, { db });
+        const { container, db: testDb } = createTestApiContainer();
+        db = testDb;
         container.registerInstance(WebSocketBroadcaster, broadcaster);
-        container.registerInstance(ConsoleLoggerConfig, {
-            getConfig: () => ({ logLevel: "error" })
-        });
-        ConsoleLoggerFeature.register(container);
-        DirectoryToolFeature.register(container);
-        FileToolFeature.register(container);
-        JsonFileToolFeature.register(container);
-        container.register(FileConfigServiceRegistration).inSingletonScope();
-        container.register(AppLogServiceRegistration).inSingletonScope();
 
         service = container.resolve(AppLogService);
     });

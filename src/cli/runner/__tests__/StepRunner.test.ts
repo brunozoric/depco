@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createContainer } from "#shared/index.js";
-import { StepRunnerFeature } from "../feature.js";
+import { createTestCliContainer } from "#testing/helpers/createTestCliContainer.js";
 import { StepRunner } from "../abstractions/StepRunner.js";
 import type { IStep, IStepContext } from "../abstractions/Step.js";
 
@@ -24,12 +23,11 @@ function createTestContext(overrides: Partial<IStepContext> = {}): IStepContext 
 }
 
 describe("StepRunner", () => {
-    let container: ReturnType<typeof createContainer>;
+    let container: ReturnType<typeof createTestCliContainer>;
     let runner: StepRunner.Interface;
 
     beforeEach(() => {
-        container = createContainer();
-        StepRunnerFeature.register(container);
+        container = createTestCliContainer();
         runner = container.resolve(StepRunner);
     });
 
