@@ -1,3 +1,5 @@
+import type { IEngineStatusCounts } from "#shared/engines/types.js";
+
 export interface WSScanProgress {
     projectId: string;
     packageName: string;
@@ -111,6 +113,11 @@ export interface WSTransitiveResolveComplete {
     failed: number;
 }
 
+export interface WSEngineScanComplete {
+    projectId: string;
+    counts: IEngineStatusCounts;
+}
+
 export type WSEventMap = {
     "scan:progress": WSScanProgress;
     "scan:complete": WSScanComplete;
@@ -130,6 +137,7 @@ export type WSEventMap = {
     "auto-fix:progress": WSAutoFixProgress;
     "auto-fix:complete": WSAutoFixComplete;
     "transitive-resolve:complete": WSTransitiveResolveComplete;
+    "engine-scan:complete": WSEngineScanComplete;
 };
 
 export type WSEventType = keyof WSEventMap;

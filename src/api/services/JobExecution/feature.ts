@@ -17,6 +17,7 @@ import { PackageScanJobExecutor } from "./executors/PackageScanJobExecutor.js";
 import { VulnerabilityScanJobExecutor } from "./executors/VulnerabilityScanJobExecutor.js";
 import { LicenseScanJobExecutor } from "./executors/LicenseScanJobExecutor.js";
 import { GraphRefreshJobExecutor } from "./executors/GraphRefreshJobExecutor.js";
+import { EngineScanJobExecutor } from "./executors/EngineScanJobExecutor.js";
 
 export const JobExecutionFeature = createFeature({
     name: "Api/JobExecutionFeature",
@@ -34,6 +35,7 @@ export const JobExecutionFeature = createFeature({
         container.register(VulnerabilityScanJobExecutor);
         container.register(LicenseScanJobExecutor);
         container.register(GraphRefreshJobExecutor);
+        container.register(EngineScanJobExecutor);
         container.register(JobExecutorRegistry).inSingletonScope();
         container.register(JobExecutionContextFactory).inSingletonScope();
         container.register(JobWorker).inSingletonScope();

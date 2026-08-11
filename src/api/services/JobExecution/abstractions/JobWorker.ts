@@ -46,7 +46,8 @@ export interface ICreateJobInput {
         | "package-scan"
         | "vulnerability-scan"
         | "license-scan"
-        | "graph-refresh";
+        | "graph-refresh"
+        | "engine-scan";
     packages?:
         | IDependencyUpgradePackage[]
         | IYarnUpgradePackage

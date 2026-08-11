@@ -13,6 +13,7 @@ import { PackageScanJobExecutor } from "./abstractions/PackageScanJobExecutor.js
 import { VulnerabilityScanJobExecutor } from "./abstractions/VulnerabilityScanJobExecutor.js";
 import { LicenseScanJobExecutor } from "./abstractions/LicenseScanJobExecutor.js";
 import { GraphRefreshJobExecutor } from "./abstractions/GraphRefreshJobExecutor.js";
+import { EngineScanJobExecutor } from "./abstractions/EngineScanJobExecutor.js";
 
 class JobExecutorRegistryImpl implements Abstraction.Interface {
     private readonly executors = new Map<string, JobExecutor.Interface>();
@@ -30,7 +31,8 @@ class JobExecutorRegistryImpl implements Abstraction.Interface {
         packageScanJobExecutor: PackageScanJobExecutor.Interface,
         vulnerabilityScanJobExecutor: VulnerabilityScanJobExecutor.Interface,
         licenseScanJobExecutor: LicenseScanJobExecutor.Interface,
-        graphRefreshJobExecutor: GraphRefreshJobExecutor.Interface
+        graphRefreshJobExecutor: GraphRefreshJobExecutor.Interface,
+        engineScanJobExecutor: EngineScanJobExecutor.Interface
     ) {
         const all: JobExecutor.Interface[] = [
             dependencyJobExecutor,
@@ -45,7 +47,8 @@ class JobExecutorRegistryImpl implements Abstraction.Interface {
             packageScanJobExecutor,
             vulnerabilityScanJobExecutor,
             licenseScanJobExecutor,
-            graphRefreshJobExecutor
+            graphRefreshJobExecutor,
+            engineScanJobExecutor
         ];
 
         for (const executor of all) {
@@ -77,6 +80,7 @@ export const JobExecutorRegistry = Abstraction.createImplementation({
         PackageScanJobExecutor,
         VulnerabilityScanJobExecutor,
         LicenseScanJobExecutor,
-        GraphRefreshJobExecutor
+        GraphRefreshJobExecutor,
+        EngineScanJobExecutor
     ]
 });

@@ -16,7 +16,12 @@ declare module "../../EventBus/index.js" {
     }
 }
 
-const PARALLEL_CHILD_TYPES = ["vulnerability-scan", "license-scan", "graph-refresh"] as const;
+const PARALLEL_CHILD_TYPES = [
+    "vulnerability-scan",
+    "license-scan",
+    "graph-refresh",
+    "engine-scan"
+] as const;
 
 const DEFAULT_TRANSITIVE_RESOLVE_TTL_HOURS = 24;
 
@@ -136,10 +141,12 @@ class ScanJobExecutorImpl implements JobExecutor.Interface {
                 throw new Error(`Package scan did not complete (status: ${packageScanJob.status})`);
             }
 
-            appendLog("Package scan complete. Starting vulnerability, license and graph scans...");
+            appendLog(
+                "Package scan complete. Starting vulnerability, license, graph and engine scans..."
+            );
             setProgress({
                 percent: 40,
-                label: "Running vulnerability, license and graph scans..."
+                label: "Running vulnerability, license, graph and engine scans..."
             });
 
             const parallelJobIds: string[] = [];

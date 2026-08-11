@@ -194,7 +194,8 @@ describe("ScanJobExecutor", () => {
         (jobWorker.waitForJobs as ReturnType<typeof vi.fn>).mockResolvedValue([
             makeJob({ type: "vulnerability-scan" }),
             makeJob({ type: "license-scan" }),
-            makeJob({ type: "graph-refresh" })
+            makeJob({ type: "graph-refresh" }),
+            makeJob({ type: "engine-scan" })
         ]);
         const executor = createExecutor();
 
@@ -209,14 +210,15 @@ describe("ScanJobExecutor", () => {
         (jobWorker.waitForJobs as ReturnType<typeof vi.fn>).mockResolvedValue([
             makeJob({ type: "vulnerability-scan" }),
             makeJob({ type: "license-scan" }),
-            makeJob({ type: "graph-refresh" })
+            makeJob({ type: "graph-refresh" }),
+            makeJob({ type: "engine-scan" })
         ]);
         const executor = createExecutor();
 
         await executor.execute(makeContext({ packagesJson: '{"force":true}' }));
 
         const enqueueSpy = jobWorker.enqueue as ReturnType<typeof vi.fn>;
-        expect(enqueueSpy).toHaveBeenCalledTimes(4);
+        expect(enqueueSpy).toHaveBeenCalledTimes(5);
         expect(enqueueSpy.mock.calls[0]![0]).toEqual(
             expect.objectContaining({
                 referenceId: "project-1",
@@ -236,6 +238,7 @@ describe("ScanJobExecutor", () => {
             .slice(1)
             .map(call => (call[0] as { type: string }).type);
         expect(parallelTypes.sort()).toEqual([
+            "engine-scan",
             "graph-refresh",
             "license-scan",
             "vulnerability-scan"
@@ -271,7 +274,8 @@ describe("ScanJobExecutor", () => {
         (jobWorker.waitForJobs as ReturnType<typeof vi.fn>).mockResolvedValue([
             makeJob({ type: "vulnerability-scan", status: "completed" }),
             makeJob({ type: "license-scan", status: "failed" }),
-            makeJob({ type: "graph-refresh", status: "completed" })
+            makeJob({ type: "graph-refresh", status: "completed" }),
+            makeJob({ type: "engine-scan", status: "completed" })
         ]);
         const executor = createExecutor();
 
@@ -301,8 +305,8 @@ describe("ScanJobExecutor", () => {
         await expect(executor.execute(makeContext())).rejects.toThrow(/aborted/);
 
         const cancelSpy = jobWorker.cancelJob as ReturnType<typeof vi.fn>;
-        // package-scan + 3 parallel children
-        expect(cancelSpy).toHaveBeenCalledTimes(4);
+        // package-scan + 4 parallel children
+        expect(cancelSpy).toHaveBeenCalledTimes(5);
         expect(cancelSpy).toHaveBeenCalledWith("job-child-1");
 
         const broadcastSpy = broadcaster.broadcast as ReturnType<typeof vi.fn>;
@@ -322,7 +326,8 @@ describe("ScanJobExecutor", () => {
         (jobWorker.waitForJobs as ReturnType<typeof vi.fn>).mockResolvedValue([
             makeJob({ type: "vulnerability-scan" }),
             makeJob({ type: "license-scan" }),
-            makeJob({ type: "graph-refresh" })
+            makeJob({ type: "graph-refresh" }),
+            makeJob({ type: "engine-scan" })
         ]);
         const executor = createExecutor();
 
@@ -351,6 +356,7 @@ describe("ScanJobExecutor", () => {
             makeJob({ type: "vulnerability-scan" }),
             makeJob({ type: "license-scan" }),
             makeJob({ type: "graph-refresh" }),
+            makeJob({ type: "engine-scan" }),
             makeJob({ type: "transitive-resolve" })
         ]);
         const executor = createExecutor();
@@ -358,12 +364,12 @@ describe("ScanJobExecutor", () => {
         await executor.execute(makeContext());
 
         const enqueueSpy = jobWorker.enqueue as ReturnType<typeof vi.fn>;
-        expect(enqueueSpy).toHaveBeenCalledTimes(5);
+        expect(enqueueSpy).toHaveBeenCalledTimes(6);
         const types = enqueueSpy.mock.calls.map(call => (call[0] as { type: string }).type);
         expect(types).toContain("transitive-resolve");
 
         const waitForJobsSpy = jobWorker.waitForJobs as ReturnType<typeof vi.fn>;
-        expect((waitForJobsSpy.mock.calls[0]![0] as { jobIds: string[] }).jobIds).toHaveLength(4);
+        expect((waitForJobsSpy.mock.calls[0]![0] as { jobIds: string[] }).jobIds).toHaveLength(5);
     });
 
     it("does not enqueue transitive-resolve when all transitives are resolved", async () => {
@@ -377,14 +383,15 @@ describe("ScanJobExecutor", () => {
         (jobWorker.waitForJobs as ReturnType<typeof vi.fn>).mockResolvedValue([
             makeJob({ type: "vulnerability-scan" }),
             makeJob({ type: "license-scan" }),
-            makeJob({ type: "graph-refresh" })
+            makeJob({ type: "graph-refresh" }),
+            makeJob({ type: "engine-scan" })
         ]);
         const executor = createExecutor();
 
         await executor.execute(makeContext());
 
         const enqueueSpy = jobWorker.enqueue as ReturnType<typeof vi.fn>;
-        expect(enqueueSpy).toHaveBeenCalledTimes(4);
+        expect(enqueueSpy).toHaveBeenCalledTimes(5);
         const types = enqueueSpy.mock.calls.map(call => (call[0] as { type: string }).type);
         expect(types).not.toContain("transitive-resolve");
     });

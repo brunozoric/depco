@@ -20,6 +20,7 @@ declare module "./abstractions/EventBridge.js" {
         "auto-fix:progress": WSEventMap["auto-fix:progress"];
         "auto-fix:complete": WSEventMap["auto-fix:complete"];
         "transitive-resolve:complete": WSEventMap["transitive-resolve:complete"];
+        "engine-scan:complete": WSEventMap["engine-scan:complete"];
         "ws:reconnected": Record<string, never>;
     }
 }
