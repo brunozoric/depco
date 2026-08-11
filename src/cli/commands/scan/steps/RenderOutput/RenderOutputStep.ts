@@ -6,13 +6,20 @@ import { VULNERABILITY_SEVERITIES } from "#shared/vulnerabilities/types.js";
 import type { IMergedVulnerability, VulnerabilitySeverity } from "#shared/vulnerabilities/types.js";
 import type { IPackageEntry } from "#shared/vulnerabilities/abstractions/VulnerabilityMerger.js";
 import type { IDepcoConfig } from "#shared/config/types.js";
+import type { EngineStatus, IEngineStatusCounts, IEnginesFinding } from "#shared/engines/types.js";
 import type { IStepContext, IStepResult } from "../../../../runner/abstractions/Step.js";
 import type { ILicenseViolation, IScanOutput } from "../../formatters/types.js";
 
 interface IApplyExitCodeInput {
     violations: ILicenseViolation[];
     vulnerabilities: IMergedVulnerability[];
+    engines: IEnginesFinding[];
     config: IDepcoConfig | undefined;
+}
+
+interface IIncrementEngineStatusCountInput {
+    counts: IEngineStatusCounts;
+    status: EngineStatus;
 }
 
 class RenderOutputStepImpl implements Abstraction.Interface {
@@ -28,6 +35,7 @@ class RenderOutputStepImpl implements Abstraction.Interface {
         const violations = (context.results.get("violations") as ILicenseViolation[]) ?? [];
         const vulnerabilities =
             (context.results.get("vulnerabilities") as IMergedVulnerability[]) ?? [];
+        const engines = (context.results.get("engines") as IEnginesFinding[]) ?? [];
         const packages = (context.results.get("packages") as IPackageEntry[]) ?? [];
         const config = context.results.get("config") as IDepcoConfig | undefined;
 
@@ -35,6 +43,7 @@ class RenderOutputStepImpl implements Abstraction.Interface {
         const formatter = this.formatterFactory.create({ format });
 
         const vulnerabilityCounts = this.countBySeverity(vulnerabilities);
+        const engineCounts = this.countByEngineStatus(engines);
 
         const output: IScanOutput = {
             meta: {
@@ -42,10 +51,11 @@ class RenderOutputStepImpl implements Abstraction.Interface {
                 packageCount: packages.length,
                 configPath: config ? "depco.config.ts" : null
             },
-            findings: { license: violations, vulnerability: vulnerabilities },
+            findings: { license: violations, vulnerability: vulnerabilities, engines },
             summary: {
                 licenseViolations: violations.length,
                 vulnerabilities: vulnerabilityCounts,
+                engines: engineCounts,
                 total: violations.length + vulnerabilities.length
             }
         };
@@ -60,7 +70,7 @@ class RenderOutputStepImpl implements Abstraction.Interface {
             this.logger.info(formatted);
         }
 
-        this.applyExitCode({ violations, vulnerabilities, config });
+        this.applyExitCode({ violations, vulnerabilities, engines, config });
 
         return { success: true, message: `${output.summary.total} issues found` };
     }
@@ -81,8 +91,36 @@ class RenderOutputStepImpl implements Abstraction.Interface {
         return counts;
     }
 
+    private countByEngineStatus(engines: IEnginesFinding[]): IEngineStatusCounts {
+        const counts: IEngineStatusCounts = {
+            eol: 0,
+            maintenance: 0,
+            activeLts: 0,
+            current: 0,
+            unknown: 0
+        };
+        for (const finding of engines) {
+            this.incrementEngineStatusCount({ counts, status: finding.status });
+        }
+        return counts;
+    }
+
+    private incrementEngineStatusCount(input: IIncrementEngineStatusCountInput): void {
+        const { counts, status } = input;
+        if (status === "active-lts") {
+            counts.activeLts++;
+            return;
+        }
+        counts[status]++;
+    }
+
     private applyExitCode(input: IApplyExitCodeInput): void {
         if (input.violations.length > 0) {
+            process.exitCode = 1;
+            return;
+        }
+
+        if (input.engines.some(finding => finding.isRoot && finding.status === "eol")) {
             process.exitCode = 1;
             return;
         }

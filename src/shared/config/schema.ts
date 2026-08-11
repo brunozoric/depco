@@ -13,7 +13,8 @@ const vulnerabilityScanConfigSchema = z.object({
 });
 
 const enginesScanConfigSchema = z.object({
-    ignore: z.array(z.string()).optional()
+    ignore: z.array(z.string()).optional(),
+    warnMaintenance: z.boolean().optional()
 });
 
 const scanConfigSchema = z.object({

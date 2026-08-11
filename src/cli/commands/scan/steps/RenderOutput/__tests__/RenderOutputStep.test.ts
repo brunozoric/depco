@@ -73,6 +73,104 @@ describe("RenderOutputStep", () => {
         expect(output.summary.total).toBe(2);
     });
 
+    it("handles missing engines gracefully (empty array)", async () => {
+        const context = createTestContext();
+        await step.execute(context);
+
+        const output = JSON.parse(consoleSpy.mock.calls[0][0]);
+        expect(output.findings.engines).toEqual([]);
+        expect(output.summary.engines).toEqual({
+            eol: 0,
+            maintenance: 0,
+            activeLts: 0,
+            current: 0,
+            unknown: 0
+        });
+    });
+
+    it("includes engines findings and counts by status", async () => {
+        const context = createTestContext();
+        context.results.set("engines", [
+            {
+                packageName: "my-app",
+                version: "1.0.0",
+                enginesNode: ">=14",
+                minimumMajor: 14,
+                status: "eol",
+                eolDate: Date.parse("2023-04-30T00:00:00.000Z"),
+                isRoot: true
+            },
+            {
+                packageName: "some-dep",
+                version: "2.0.0",
+                enginesNode: ">=18",
+                minimumMajor: 18,
+                status: "maintenance",
+                eolDate: Date.parse("2025-04-30T00:00:00.000Z"),
+                isRoot: false
+            }
+        ]);
+
+        await step.execute(context);
+
+        const output = JSON.parse(consoleSpy.mock.calls[0][0]);
+        expect(output.findings.engines).toHaveLength(2);
+        expect(output.summary.engines.eol).toBe(1);
+        expect(output.summary.engines.maintenance).toBe(1);
+    });
+
+    it("sets exit code 1 when a root package has an eol engines finding", async () => {
+        const context = createTestContext();
+        context.results.delete("violations");
+        context.results.delete("vulnerabilities");
+        context.results.set("config", {});
+        context.results.set("engines", [
+            {
+                packageName: "my-app",
+                version: "1.0.0",
+                enginesNode: ">=14",
+                minimumMajor: 14,
+                status: "eol",
+                eolDate: Date.parse("2023-04-30T00:00:00.000Z"),
+                isRoot: true
+            }
+        ]);
+
+        const originalExitCode = process.exitCode;
+        process.exitCode = undefined;
+
+        await step.execute(context);
+
+        expect(process.exitCode).toBe(1);
+        process.exitCode = originalExitCode;
+    });
+
+    it("does not set exit code when a non-root dependency has an eol engines finding", async () => {
+        const context = createTestContext();
+        context.results.delete("violations");
+        context.results.delete("vulnerabilities");
+        context.results.set("config", {});
+        context.results.set("engines", [
+            {
+                packageName: "some-dep",
+                version: "1.0.0",
+                enginesNode: ">=14",
+                minimumMajor: 14,
+                status: "eol",
+                eolDate: Date.parse("2023-04-30T00:00:00.000Z"),
+                isRoot: false
+            }
+        ]);
+
+        const originalExitCode = process.exitCode;
+        process.exitCode = undefined;
+
+        await step.execute(context);
+
+        expect(process.exitCode).toBeUndefined();
+        process.exitCode = originalExitCode;
+    });
+
     it("handles missing violations gracefully (empty array)", async () => {
         const context = createTestContext();
         context.results.delete("violations");

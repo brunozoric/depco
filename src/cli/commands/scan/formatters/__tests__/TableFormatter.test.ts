@@ -5,10 +5,11 @@ import type { IScanOutput } from "../types.js";
 function createEmptyOutput(): IScanOutput {
     return {
         meta: { timestamp: "2026-08-10T00:00:00.000Z", packageCount: 10, configPath: null },
-        findings: { license: [], vulnerability: [] },
+        findings: { license: [], vulnerability: [], engines: [] },
         summary: {
             licenseViolations: 0,
             vulnerabilities: { critical: 0, high: 0, moderate: 0, low: 0, info: 0 },
+            engines: { eol: 0, maintenance: 0, activeLts: 0, current: 0, unknown: 0 },
             total: 0
         }
     };
@@ -101,5 +102,59 @@ describe("TableFormatter", () => {
         const result = formatter.format(output);
         expect(result).toContain("License");
         expect(result).toContain("Vulnerabilit");
+    });
+
+    it("renders Node Engines table with root EOL and dependency maintenance findings", () => {
+        const output = createEmptyOutput();
+        output.findings.engines = [
+            {
+                packageName: "my-app",
+                version: "1.0.0",
+                enginesNode: ">=14",
+                minimumMajor: 14,
+                status: "eol",
+                eolDate: Date.parse("2023-04-30T00:00:00.000Z"),
+                isRoot: true
+            },
+            {
+                packageName: "some-dep",
+                version: "2.0.0",
+                enginesNode: ">=18",
+                minimumMajor: 18,
+                status: "maintenance",
+                eolDate: Date.parse("2025-04-30T00:00:00.000Z"),
+                isRoot: false
+            }
+        ];
+        output.summary.engines = { eol: 1, maintenance: 1, activeLts: 0, current: 0, unknown: 0 };
+        output.summary.total = 0;
+
+        const result = formatter.format(output);
+        expect(result).toContain("Node Engines");
+        expect(result).toContain("[root] my-app");
+        expect(result).toContain("some-dep");
+        expect(result).toContain("eol");
+        expect(result).toContain("maintenance");
+        expect(result).toContain("2023-04-30");
+        expect(result).toContain("2 engine findings");
+    });
+
+    it("renders '-' for missing engines.node and EOL date", () => {
+        const output = createEmptyOutput();
+        output.findings.engines = [
+            {
+                packageName: "unknown-pkg",
+                version: "1.0.0",
+                enginesNode: null,
+                minimumMajor: null,
+                status: "unknown",
+                eolDate: null,
+                isRoot: false
+            }
+        ];
+
+        const result = formatter.format(output);
+        expect(result).toContain("unknown-pkg");
+        expect(result).toContain("unknown");
     });
 });

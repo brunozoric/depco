@@ -4,5 +4,6 @@ export type {
     IDepcoConfig,
     IScanConfig,
     ILicenseScanConfig,
-    IVulnerabilityScanConfig
+    IVulnerabilityScanConfig,
+    IEnginesScanConfig
 } from "./types.js";

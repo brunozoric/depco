@@ -26,6 +26,19 @@ describe("depcoConfigSchema", () => {
         expect(result.scan?.vulnerability?.maxSeverity).toBe("moderate");
     });
 
+    it("accepts config with scan.engines", () => {
+        const result = depcoConfigSchema.parse({
+            scan: {
+                engines: {
+                    ignore: ["legacy-pkg"],
+                    warnMaintenance: true
+                }
+            }
+        });
+        expect(result.scan?.engines?.ignore).toEqual(["legacy-pkg"]);
+        expect(result.scan?.engines?.warnMaintenance).toBe(true);
+    });
+
     it("accepts config with only scan.license", () => {
         const result = depcoConfigSchema.parse({
             scan: { license: { allowedRiskTiers: ["permissive"] } }

@@ -27,11 +27,13 @@ function createTestOutput(): IScanOutput {
                     fixVersion: "2.0.0",
                     source: "both"
                 }
-            ]
+            ],
+            engines: []
         },
         summary: {
             licenseViolations: 1,
             vulnerabilities: { critical: 1, high: 0, moderate: 0, low: 0, info: 0 },
+            engines: { eol: 0, maintenance: 0, activeLts: 0, current: 0, unknown: 0 },
             total: 2
         }
     };
@@ -202,5 +204,80 @@ describe("SarifFormatter", () => {
 
         expect(sarif.runs[0].tool.driver.rules).toEqual([]);
         expect(sarif.runs[0].results).toEqual([]);
+    });
+
+    describe("engines findings", () => {
+        function createEnginesOutput() {
+            const output = createTestOutput();
+            output.findings.license = [];
+            output.findings.vulnerability = [];
+            output.findings.engines = [
+                {
+                    packageName: "my-app",
+                    version: "1.0.0",
+                    enginesNode: ">=14",
+                    minimumMajor: 14,
+                    status: "eol",
+                    eolDate: Date.parse("2023-04-30T00:00:00.000Z"),
+                    isRoot: true
+                },
+                {
+                    packageName: "some-dep",
+                    version: "2.0.0",
+                    enginesNode: ">=18",
+                    minimumMajor: 18,
+                    status: "maintenance",
+                    eolDate: Date.parse("2025-04-30T00:00:00.000Z"),
+                    isRoot: false
+                },
+                {
+                    packageName: "current-dep",
+                    version: "3.0.0",
+                    enginesNode: ">=22",
+                    minimumMajor: 22,
+                    status: "current",
+                    eolDate: null,
+                    isRoot: false
+                }
+            ];
+            return output;
+        }
+
+        it("creates engines/eol and engines/maintenance rules, skipping current/unknown", () => {
+            const result = formatter.format(createEnginesOutput());
+            const sarif = JSON.parse(result);
+            const rules = sarif.runs[0].tool.driver.rules;
+
+            expect(rules).toHaveLength(2);
+            expect(rules.map((r: { id: string }) => r.id).sort()).toEqual([
+                "engines/eol",
+                "engines/maintenance"
+            ]);
+        });
+
+        it("maps eol to error level and maintenance to warning level", () => {
+            const result = formatter.format(createEnginesOutput());
+            const sarif = JSON.parse(result);
+            const rules = sarif.runs[0].tool.driver.rules;
+
+            const eolRule = rules.find((r: { id: string }) => r.id === "engines/eol");
+            const maintenanceRule = rules.find(
+                (r: { id: string }) => r.id === "engines/maintenance"
+            );
+            expect(eolRule.defaultConfiguration.level).toBe("error");
+            expect(maintenanceRule.defaultConfiguration.level).toBe("warning");
+        });
+
+        it("creates results only for eol/maintenance findings, with isRoot in properties", () => {
+            const result = formatter.format(createEnginesOutput());
+            const sarif = JSON.parse(result);
+            const results = sarif.runs[0].results;
+
+            expect(results).toHaveLength(2);
+            const eolResult = results.find((r: { ruleId: string }) => r.ruleId === "engines/eol");
+            expect(eolResult.properties.isRoot).toBe(true);
+            expect(eolResult.properties.enginesNode).toBe(">=14");
+            expect(eolResult.message.text).toContain("my-app");
+        });
     });
 });

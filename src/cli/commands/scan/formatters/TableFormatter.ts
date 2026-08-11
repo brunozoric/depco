@@ -1,12 +1,15 @@
 import { VULNERABILITY_SEVERITIES } from "#shared/vulnerabilities/types.js";
 import type { IMergedVulnerability, VulnerabilitySeverity } from "#shared/vulnerabilities/types.js";
 import type { LicenseRiskTier } from "#shared/licenses/types.js";
+import type { EngineStatus, IEnginesFinding } from "#shared/engines/types.js";
 import type { ILicenseViolation, IOutputFormatter, IScanOutput } from "./types.js";
 
 const RESET = "\x1b[0m";
 const RED = "\x1b[31m";
 const YELLOW = "\x1b[33m";
 const CYAN = "\x1b[36m";
+const GREEN = "\x1b[32m";
+const GRAY = "\x1b[90m";
 
 const SEVERITY_COLORS: Record<VulnerabilitySeverity, string> = {
     critical: RED,
@@ -22,6 +25,14 @@ const RISK_TIER_COLORS: Record<LicenseRiskTier, string> = {
     copyleft: RED,
     proprietary: RED,
     unknown: CYAN
+};
+
+const ENGINE_STATUS_COLORS: Record<EngineStatus, string> = {
+    eol: RED,
+    maintenance: YELLOW,
+    "active-lts": GREEN,
+    current: GREEN,
+    unknown: GRAY
 };
 
 interface IColorizeInput {
@@ -55,6 +66,10 @@ export class TableFormatter implements IOutputFormatter {
 
         if (output.findings.vulnerability.length > 0) {
             sections.push(this.renderVulnerabilityTable(output.findings.vulnerability));
+        }
+
+        if (output.findings.engines.length > 0) {
+            sections.push(this.renderEnginesTable(output.findings.engines));
         }
 
         if (sections.length === 0) {
@@ -167,6 +182,51 @@ export class TableFormatter implements IOutputFormatter {
                 count: sorted.length,
                 singular: "vulnerability",
                 plural: "vulnerabilities"
+            })
+        );
+
+        return lines.join("\n");
+    }
+
+    private renderEnginesTable(engines: IEnginesFinding[]): string {
+        const labelOf = (finding: IEnginesFinding): string =>
+            finding.isRoot ? `[root] ${finding.packageName}` : finding.packageName;
+        const eolDateOf = (finding: IEnginesFinding): string =>
+            finding.eolDate ? new Date(finding.eolDate).toISOString().split("T")[0]! : "-";
+
+        const nameWidth = Math.max(7, ...engines.map(finding => labelOf(finding).length));
+        const enginesNodeWidth = Math.max(
+            13,
+            ...engines.map(finding => (finding.enginesNode ?? "-").length)
+        );
+        const statusWidth = Math.max(6, ...engines.map(finding => finding.status.length));
+        const eolDateWidth = Math.max(8, ...engines.map(finding => eolDateOf(finding).length));
+
+        const lines: string[] = [];
+        lines.push("Node Engines");
+        lines.push(
+            `  ${"Package".padEnd(nameWidth)}  ${"engines.node".padEnd(enginesNodeWidth)}  ${"Status".padEnd(statusWidth)}  ${"EOL Date".padEnd(eolDateWidth)}`
+        );
+        lines.push(
+            `  ${"─".repeat(nameWidth)}  ${"─".repeat(enginesNodeWidth)}  ${"─".repeat(statusWidth)}  ${"─".repeat(eolDateWidth)}`
+        );
+
+        for (const finding of engines) {
+            const coloredStatus = colorize({
+                text: finding.status.padEnd(statusWidth),
+                color: ENGINE_STATUS_COLORS[finding.status]
+            });
+            lines.push(
+                `  ${labelOf(finding).padEnd(nameWidth)}  ${(finding.enginesNode ?? "-").padEnd(enginesNodeWidth)}  ${coloredStatus}  ${eolDateOf(finding).padEnd(eolDateWidth)}`
+            );
+        }
+
+        lines.push("");
+        lines.push(
+            pluralize({
+                count: engines.length,
+                singular: "engine finding",
+                plural: "engine findings"
             })
         );
 

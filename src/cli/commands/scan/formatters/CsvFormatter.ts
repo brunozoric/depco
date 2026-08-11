@@ -1,3 +1,4 @@
+import type { EngineStatus } from "#shared/engines/types.js";
 import type { IOutputFormatter, IScanOutput } from "./types.js";
 
 const CSV_HEADER = "type,package,version,detail,severity,source,fixVersion";
@@ -44,7 +45,33 @@ export class CsvFormatter implements IOutputFormatter {
             );
         }
 
+        for (const finding of output.findings.engines) {
+            rows.push(
+                this.formatRow({
+                    type: "engines",
+                    packageName: finding.packageName,
+                    version: finding.enginesNode ?? "",
+                    detail: finding.status,
+                    severity: this.severityForEngineStatus(finding.status),
+                    source: finding.isRoot ? "root" : "dependency",
+                    fixVersion: finding.eolDate
+                        ? new Date(finding.eolDate).toISOString().split("T")[0]!
+                        : ""
+                })
+            );
+        }
+
         return rows.join("\n");
+    }
+
+    private severityForEngineStatus(status: EngineStatus): string {
+        if (status === "eol") {
+            return "error";
+        }
+        if (status === "maintenance") {
+            return "warning";
+        }
+        return "info";
     }
 
     private formatRow(row: ICsvRow): string {

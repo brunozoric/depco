@@ -13,6 +13,7 @@ export interface IVulnerabilityScanConfig {
 
 export interface IEnginesScanConfig {
     ignore?: string[];
+    warnMaintenance?: boolean;
 }
 
 export interface IScanConfig {

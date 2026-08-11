@@ -1,5 +1,6 @@
 import type { LicenseRiskTier } from "#shared/licenses/types.js";
 import type { VulnerabilitySeverity } from "#shared/vulnerabilities/types.js";
+import type { EngineStatus } from "#shared/engines/types.js";
 import type { IOutputFormatter, IScanOutput } from "./types.js";
 
 const SARIF_SCHEMA_URL =
@@ -69,6 +70,10 @@ function mapSeverityToLevel(severity: VulnerabilitySeverity): SarifLevel {
         case "info":
             return "note";
     }
+}
+
+function mapEngineStatusToLevel(status: EngineStatus): SarifLevel {
+    return status === "eol" ? "error" : "warning";
 }
 
 function mapRiskTierToLevel(riskTier: LicenseRiskTier): SarifLevel {
@@ -150,6 +155,38 @@ export class SarifFormatter implements IOutputFormatter {
                     fixVersion: vulnerability.fixVersion,
                     source: vulnerability.source,
                     dedupKey: vulnerability.dedupKey
+                }
+            });
+        }
+
+        for (const finding of output.findings.engines) {
+            if (finding.status !== "eol" && finding.status !== "maintenance") {
+                continue;
+            }
+
+            const ruleId = `engines/${finding.status}`;
+            const ruleIndex = addRule({
+                rules,
+                rule: {
+                    id: ruleId,
+                    shortDescription: {
+                        text: `Node.js ${finding.status} engine requirement`
+                    },
+                    defaultConfiguration: { level: mapEngineStatusToLevel(finding.status) }
+                }
+            });
+
+            results.push({
+                ruleId,
+                ruleIndex,
+                message: {
+                    text: `Package ${finding.packageName} requires Node.js ${finding.enginesNode ?? "unknown"} (${finding.status})`
+                },
+                locations: [{ physicalLocation: { artifactLocation: { uri: "package.json" } } }],
+                properties: {
+                    status: finding.status,
+                    enginesNode: finding.enginesNode,
+                    isRoot: finding.isRoot
                 }
             });
         }

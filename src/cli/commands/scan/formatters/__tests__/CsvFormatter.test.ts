@@ -27,11 +27,32 @@ function createTestOutput(): IScanOutput {
                     fixVersion: "2.0.0",
                     source: "both"
                 }
+            ],
+            engines: [
+                {
+                    packageName: "my-app",
+                    version: "1.0.0",
+                    enginesNode: ">=14",
+                    minimumMajor: 14,
+                    status: "eol",
+                    eolDate: Date.parse("2023-04-30T00:00:00.000Z"),
+                    isRoot: true
+                },
+                {
+                    packageName: "some-dep",
+                    version: "2.0.0",
+                    enginesNode: ">=18",
+                    minimumMajor: 18,
+                    status: "maintenance",
+                    eolDate: Date.parse("2025-04-30T00:00:00.000Z"),
+                    isRoot: false
+                }
             ]
         },
         summary: {
             licenseViolations: 1,
             vulnerabilities: { critical: 1, high: 0, moderate: 0, low: 0, info: 0 },
+            engines: { eol: 1, maintenance: 1, activeLts: 0, current: 0, unknown: 0 },
             total: 2
         }
     };
@@ -97,10 +118,35 @@ describe("CsvFormatter", () => {
         const output = createTestOutput();
         output.findings.license = [];
         output.findings.vulnerability = [];
+        output.findings.engines = [];
 
         const result = formatter.format(output);
         const lines = result.split("\n").filter(Boolean);
         expect(lines).toHaveLength(1); // header only
+    });
+
+    it("outputs engines finding rows with severity mapped from status", () => {
+        const result = formatter.format(createTestOutput());
+        expect(result).toContain("engines,my-app,>=14,eol,error,root,2023-04-30");
+        expect(result).toContain("engines,some-dep,>=18,maintenance,warning,dependency,2025-04-30");
+    });
+
+    it("maps engines status other than eol/maintenance to info severity", () => {
+        const output = createTestOutput();
+        output.findings.engines = [
+            {
+                packageName: "current-pkg",
+                version: "1.0.0",
+                enginesNode: ">=22",
+                minimumMajor: 22,
+                status: "current",
+                eolDate: null,
+                isRoot: false
+            }
+        ];
+
+        const result = formatter.format(output);
+        expect(result).toContain("engines,current-pkg,>=22,current,info,dependency,");
     });
 
     it("escapes bare carriage return in values", () => {
