@@ -137,10 +137,14 @@ class DashboardPresenterImpl implements Abstraction.Interface {
     };
 
     private loadEngineSummary = async (): Promise<void> => {
-        const summary = await this.enginesGateway.getSummary();
-        runInAction(() => {
-            this.enginesRepository.setSummary(summary);
-        });
+        try {
+            const summary = await this.enginesGateway.getSummary();
+            runInAction(() => {
+                this.enginesRepository.setSummary(summary);
+            });
+        } catch {
+            // Engine summary is supplementary — failure should not break the dashboard.
+        }
     };
 
     public openScoreModal = async (projectId: string): Promise<void> => {
