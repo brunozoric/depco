@@ -22,6 +22,8 @@ import { SbomGateway } from "../../../features/Sbom/abstractions/SbomGateway.js"
 import { TeamsGateway } from "../../../features/Teams/abstractions/TeamsGateway.js";
 import { TeamListService } from "../../../features/TeamFilter/abstractions/TeamListService.js";
 import { UrlFilterService } from "../../../features/UrlFilter/abstractions/UrlFilterService.js";
+import { EnginesGateway } from "../../../features/Engines/abstractions/EnginesGateway.js";
+import { EnginesRepository } from "../../../features/Engines/abstractions/EnginesRepository.js";
 import { getProjectDependenciesRoute } from "#shared/routes/projects.js";
 import type { z } from "zod";
 import { AutoFixManager } from "./AutoFixManager.js";
@@ -31,6 +33,14 @@ import { ScanManager } from "./ScanManager.js";
 import { PackageOverlayLoader } from "./PackageOverlayLoader.js";
 
 const DEFAULT_PAGE_SIZE = 25;
+
+const ENGINE_STATUS_SORT_PRIORITY: Record<string, number> = {
+    eol: 0,
+    maintenance: 1,
+    unknown: 2,
+    "active-lts": 3,
+    current: 4
+};
 
 const DEPENDENCY_FILTER_SCHEMA = getProjectDependenciesRoute.querystring as NonNullable<
     typeof getProjectDependenciesRoute.querystring
@@ -55,6 +65,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
 
     private readonly handleInstallComplete: EventBridge.Callback<"install:complete">;
     private readonly handleTransitiveResolveComplete: EventBridge.Callback<"transitive-resolve:complete">;
+    private readonly handleEngineScanComplete: EventBridge.Callback<"engine-scan:complete">;
 
     public constructor(
         private readonly loadProjectsUseCase: LoadProjectsUseCase.Interface,
@@ -74,7 +85,9 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         sbomGateway: SbomGateway.Interface,
         private readonly teamsGateway: TeamsGateway.Interface,
         private readonly teamListService: TeamListService.Interface,
-        private readonly urlFilterService: UrlFilterService.Interface
+        private readonly urlFilterService: UrlFilterService.Interface,
+        private readonly enginesGateway: EnginesGateway.Interface,
+        private readonly enginesRepository: EnginesRepository.Interface
     ) {
         const getProjectId = (): string | null => this.currentProjectId;
 
@@ -109,8 +122,15 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
             }
         };
 
+        this.handleEngineScanComplete = data => {
+            if (data.projectId === this.currentProjectId) {
+                void this.loadEngineData(data.projectId);
+            }
+        };
+
         this.eventBridge.on("install:complete", this.handleInstallComplete);
         this.eventBridge.on("transitive-resolve:complete", this.handleTransitiveResolveComplete);
+        this.eventBridge.on("engine-scan:complete", this.handleEngineScanComplete);
 
         this.disposeUrlListener = this.urlFilterService.onChange(() => {
             if (this.currentProjectId) {
@@ -228,7 +248,41 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
             sbomExportError: this.sbomExportManager.error,
             projectTeamIds: this.projectTeamIdValues,
             availableTeams: this.teamListService.getTeams(),
-            changelogState: this.changelogTracker.state
+            changelogState: this.changelogTracker.state,
+            engineData: this.buildEngineDataViewModel()
+        };
+    }
+
+    private buildEngineDataViewModel(): Abstraction.EngineDataViewModel | null {
+        if (!this.currentProjectId) {
+            return null;
+        }
+
+        const checks = this.enginesRepository.getChecks();
+        const rootCheck = checks.find(check => check.packageName === "");
+        if (!rootCheck) {
+            return null;
+        }
+
+        const findings = checks
+            .filter(check => check.packageName !== "")
+            .map((check): Abstraction.EngineFindingViewModel => ({
+                packageName: check.packageName,
+                enginesNode: check.enginesNode,
+                status: check.status,
+                eolDate: check.eolDate
+            }))
+            .sort(
+                (a, b) =>
+                    (ENGINE_STATUS_SORT_PRIORITY[a.status] ?? 99) -
+                    (ENGINE_STATUS_SORT_PRIORITY[b.status] ?? 99)
+            );
+
+        return {
+            rootStatus: rootCheck.status,
+            rootEnginesNode: rootCheck.enginesNode,
+            rootEolDate: rootCheck.eolDate,
+            findings
         };
     }
 
@@ -246,7 +300,8 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
                 this.autoFixManager.loadSettings(projectId),
                 this.autoFixManager.loadPullRequests(projectId),
                 this.loadProjectTeams(projectId),
-                this.loadAvailableTeams()
+                this.loadAvailableTeams(),
+                this.loadEngineData(projectId)
             ]);
         } finally {
             runInAction(() => {
@@ -287,6 +342,17 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
     private loadAvailableTeams = async (): Promise<void> => {
         if (this.teamListService.getTeams().length === 0) {
             await this.teamListService.loadTeams();
+        }
+    };
+
+    private loadEngineData = async (projectId: string): Promise<void> => {
+        try {
+            const response = await this.enginesGateway.getByProject(projectId);
+            runInAction(() => {
+                this.enginesRepository.setChecks(response.items, response.total);
+            });
+        } catch {
+            // Engine data is supplementary — its failure should not break the detail page.
         }
     };
 
@@ -408,6 +474,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         this.disposeUrlListener();
         this.eventBridge.off("install:complete", this.handleInstallComplete);
         this.eventBridge.off("transitive-resolve:complete", this.handleTransitiveResolveComplete);
+        this.eventBridge.off("engine-scan:complete", this.handleEngineScanComplete);
     };
 
     public exportSbom = async (format: string): Promise<void> => {
@@ -435,6 +502,8 @@ export const ProjectDetailPresenter = Abstraction.createImplementation({
         SbomGateway,
         TeamsGateway,
         TeamListService,
-        UrlFilterService
+        UrlFilterService,
+        EnginesGateway,
+        EnginesRepository
     ]
 });

@@ -1,5 +1,6 @@
 import { createAbstraction } from "#shared/index.js";
 import type { DashboardGateway } from "../../../../features/Dashboard/abstractions/DashboardGateway.js";
+import type { EnginesGateway } from "../../../../features/Engines/abstractions/EnginesGateway.js";
 
 export interface IDashboardViewModel {
     loading: boolean;
@@ -22,6 +23,7 @@ export interface IDashboardViewModel {
     scoreModalProjectId: string | null;
     scoreDetailLoading: boolean;
     scoreDetail: DashboardGateway.ScoreDetailResponse | null;
+    engineSummary: EnginesGateway.SummaryData | null;
 }
 
 export interface IDashboardPresenter {

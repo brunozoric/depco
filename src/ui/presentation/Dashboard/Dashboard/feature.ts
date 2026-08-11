@@ -4,6 +4,7 @@ import { DashboardPresenter } from "./DashboardPresenter.js";
 import { DashboardUseCasesFeature } from "../useCases/feature.js";
 import { WebSocketFeature } from "../../../infrastructure/WebSocket/feature.js";
 import { TeamFilterFeature } from "../../../features/TeamFilter/feature.js";
+import { EnginesFeature } from "../../../features/Engines/feature.js";
 
 export interface IDashboardPresentationFeatureExports {
     presenter: DashboardPresenterAbstraction.Interface;
@@ -14,7 +15,7 @@ export const DashboardPresentationFeature = createFeature<
     IDashboardPresentationFeatureExports
 >({
     name: "Ui/DashboardPresentation",
-    dependencies: [DashboardUseCasesFeature, WebSocketFeature, TeamFilterFeature],
+    dependencies: [DashboardUseCasesFeature, WebSocketFeature, TeamFilterFeature, EnginesFeature],
     register(container) {
         container.register(DashboardPresenter);
     },

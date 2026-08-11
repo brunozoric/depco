@@ -21,7 +21,8 @@ import {
     generateAutoFixPrRoute,
     listTeamsRoute,
     getProjectTeamsRoute,
-    setProjectTeamsRoute
+    setProjectTeamsRoute,
+    getProjectEngineChecksRoute
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { HTTPClientFeature } from "../../../../infrastructure/HttpClient/feature.js";
@@ -33,6 +34,7 @@ import { LicensesFeature } from "../../../../features/Licenses/feature.js";
 import { AutoFixFeature } from "../../../../features/AutoFix/feature.js";
 import { TeamsFeature } from "../../../../features/Teams/feature.js";
 import { TeamFilterFeature } from "../../../../features/TeamFilter/feature.js";
+import { EnginesFeature } from "../../../../features/Engines/feature.js";
 import { SbomGateway as SbomGatewayAbstraction } from "../../../../features/Sbom/abstractions/SbomGateway.js";
 import { EventBridge } from "../../../../infrastructure/Events/abstractions/EventBridge.js";
 import "../../../../infrastructure/Events/eventMap.js";
@@ -113,6 +115,7 @@ describe("ProjectDetailPresenter", () => {
     let sbomExportShouldFail: Error | null;
     let teamsListResult: unknown[];
     let projectTeamsResult: Array<{ id: string; name: string; color: string }>;
+    let engineChecksResult: unknown[];
 
     function createPresenter(): ProjectDetailPresenter.Interface {
         const container: Container = createContainer();
@@ -211,6 +214,11 @@ describe("ProjectDetailPresenter", () => {
                             items: projectTeamsResult,
                             total: projectTeamsResult.length
                         } as T;
+                    case getProjectEngineChecksRoute:
+                        return {
+                            items: engineChecksResult,
+                            total: engineChecksResult.length
+                        } as T;
                     case setProjectTeamsRoute: {
                         const setTeamsArgs = args as { body: { teamIds: string[] } };
                         projectTeamsResult = setTeamsArgs.body.teamIds.map(
@@ -253,6 +261,7 @@ describe("ProjectDetailPresenter", () => {
         AutoFixFeature.register(container);
         TeamsFeature.register(container);
         TeamFilterFeature.register(container);
+        EnginesFeature.register(container);
         container.registerInstance(UrlFilterService, {
             read: () => ({}),
             update: () => {},
@@ -318,6 +327,7 @@ describe("ProjectDetailPresenter", () => {
         sbomExportShouldFail = null;
         teamsListResult = [];
         projectTeamsResult = [];
+        engineChecksResult = [];
     });
 
     it("starts with an empty, idle view model", () => {
@@ -349,7 +359,8 @@ describe("ProjectDetailPresenter", () => {
             sbomExportError: null,
             projectTeamIds: [],
             availableTeams: [],
-            changelogState: null
+            changelogState: null,
+            engineData: null
         });
     });
 

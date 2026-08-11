@@ -70,7 +70,8 @@ describe("TeamDetailPresenter", () => {
                     autoFixTrend: [],
                     scoreModalProjectId: null,
                     scoreDetailLoading: false,
-                    scoreDetail: null
+                    scoreDetail: null,
+                    engineSummary: null
                 };
             },
             load: vi.fn(),

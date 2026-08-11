@@ -2,6 +2,7 @@ import { createAbstraction } from "#shared/index.js";
 import type { IInstallFlagDefinition } from "#shared/install/types.js";
 import type { VulnerabilitySeverity } from "#shared/vulnerabilities/types.js";
 import type { IChangelogEntry } from "#shared/changelog/types.js";
+import type { EngineStatus } from "#shared/engines/types.js";
 import type {
     IChangelogTrackingState,
     IStartChangelogTrackingInput
@@ -90,6 +91,20 @@ export interface ITeamOption {
     color: string;
 }
 
+export interface IProjectDetailEngineFindingViewModel {
+    packageName: string;
+    enginesNode: string | null;
+    status: EngineStatus;
+    eolDate: number | null;
+}
+
+export interface IProjectDetailEngineDataViewModel {
+    rootStatus: EngineStatus;
+    rootEnginesNode: string | null;
+    rootEolDate: number | null;
+    findings: IProjectDetailEngineFindingViewModel[];
+}
+
 export interface IProjectDetailViewModel {
     loading: boolean;
     scanning: boolean;
@@ -117,6 +132,7 @@ export interface IProjectDetailViewModel {
     projectTeamIds: string[];
     availableTeams: ITeamOption[];
     changelogState: IChangelogTrackingState | null;
+    engineData: IProjectDetailEngineDataViewModel | null;
 }
 
 export interface IProjectDetailPresenter {
@@ -174,4 +190,6 @@ export namespace ProjectDetailPresenter {
     export type TeamOption = ITeamOption;
     export type ChangelogTrackingState = IChangelogTrackingState;
     export type StartChangelogTrackingInput = IStartChangelogTrackingInput;
+    export type EngineFindingViewModel = IProjectDetailEngineFindingViewModel;
+    export type EngineDataViewModel = IProjectDetailEngineDataViewModel;
 }

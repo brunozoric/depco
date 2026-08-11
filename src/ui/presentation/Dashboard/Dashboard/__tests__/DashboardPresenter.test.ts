@@ -13,7 +13,8 @@ import {
     dashboardStalenessTrendRoute,
     dashboardLicenseTrendRoute,
     dashboardAutoFixTrendRoute,
-    dashboardScoreDetailRoute
+    dashboardScoreDetailRoute,
+    getEngineSummaryRoute
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { HTTPClientFeature } from "../../../../infrastructure/HttpClient/feature.js";
@@ -24,6 +25,8 @@ import { DashboardUseCasesFeature } from "../../useCases/feature.js";
 import { DashboardPresenter as DashboardPresenterAbstraction } from "../abstractions/DashboardPresenter.js";
 import { DashboardPresenter as DashboardPresenterRegistration } from "../DashboardPresenter.js";
 import type { DashboardGateway } from "../../../../features/Dashboard/abstractions/DashboardGateway.js";
+import type { EnginesGateway } from "../../../../features/Engines/abstractions/EnginesGateway.js";
+import { EnginesFeature } from "../../../../features/Engines/feature.js";
 import { TeamFilterFeature } from "../../../../features/TeamFilter/feature.js";
 
 interface RecordedCall {
@@ -52,6 +55,7 @@ describe("DashboardPresenter", () => {
     let licenseTrendResult: DashboardGateway.LicenseTrendResponse;
     let autoFixTrendResult: DashboardGateway.AutoFixTrendResponse;
     let scoreDetailResult: DashboardGateway.ScoreDetailResponse;
+    let engineSummaryResult: EnginesGateway.SummaryData;
     let eventBridgeMock: MockEventBridge;
     let requestError: unknown;
 
@@ -92,6 +96,8 @@ describe("DashboardPresenter", () => {
                         return autoFixTrendResult as T;
                     case dashboardScoreDetailRoute:
                         return scoreDetailResult as T;
+                    case getEngineSummaryRoute:
+                        return engineSummaryResult as T;
                     default:
                         throw new Error(`Unexpected route ${JSON.stringify(route)}`);
                 }
@@ -111,6 +117,7 @@ describe("DashboardPresenter", () => {
         DashboardFeature.register(container);
         DashboardUseCasesFeature.register(container);
         TeamFilterFeature.register(container);
+        EnginesFeature.register(container);
         container.register(DashboardPresenterRegistration);
 
         return container.resolve(DashboardPresenterAbstraction);
@@ -152,6 +159,11 @@ describe("DashboardPresenter", () => {
         licenseTrendResult = { points: [] };
         autoFixTrendResult = { points: [] };
         scoreDetailResult = { outdatedPackages: [], vulnerabilities: [] };
+        engineSummaryResult = {
+            totalProjects: 0,
+            counts: { eol: 0, maintenance: 0, activeLts: 0, current: 0, unknown: 0 },
+            projectSummaries: []
+        };
     });
 
     it("default vm state before load", () => {
@@ -177,7 +189,8 @@ describe("DashboardPresenter", () => {
             autoFixTrend: [],
             scoreModalProjectId: null,
             scoreDetailLoading: false,
-            scoreDetail: null
+            scoreDetail: null,
+            engineSummary: null
         });
     });
 
@@ -232,7 +245,8 @@ describe("DashboardPresenter", () => {
             dashboardStalenessTrendRoute,
             dashboardLicenseTrendRoute,
             dashboardAutoFixTrendRoute,
-            dashboardVulnerabilityTrendRoute
+            dashboardVulnerabilityTrendRoute,
+            getEngineSummaryRoute
         ]);
     });
 
@@ -463,9 +477,10 @@ describe("DashboardPresenter", () => {
 
         presenter.dispose();
 
-        expect(eventBridgeMock.off).toHaveBeenCalledTimes(2);
+        expect(eventBridgeMock.off).toHaveBeenCalledTimes(3);
         const offTypes = eventBridgeMock.off.mock.calls.map((c: unknown[]) => c[0]);
         expect(offTypes).toContain("scan:complete");
         expect(offTypes).toContain("job:status");
+        expect(offTypes).toContain("engine-scan:complete");
     });
 });

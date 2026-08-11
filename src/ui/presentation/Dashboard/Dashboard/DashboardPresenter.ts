@@ -7,6 +7,8 @@ import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBr
 import "../../../infrastructure/Events/eventMap.js";
 import { TeamFilterService } from "../../../features/TeamFilter/abstractions/TeamFilterService.js";
 import { DashboardGateway } from "../../../features/Dashboard/abstractions/DashboardGateway.js";
+import { EnginesGateway } from "../../../features/Engines/abstractions/EnginesGateway.js";
+import { EnginesRepository } from "../../../features/Engines/abstractions/EnginesRepository.js";
 import { getErrorMessage } from "#shared/errors.js";
 
 type VulnerabilityTrendDays = 7 | 30 | 90 | undefined;
@@ -34,18 +36,25 @@ class DashboardPresenterImpl implements Abstraction.Interface {
         this.loadDashboard.refreshActivity().catch(() => {});
     };
 
+    private readonly handleEngineScanComplete = (): void => {
+        this.loadEngineSummary().catch(() => {});
+    };
+
     public constructor(
         private readonly repository: DashboardRepository.Interface,
         private readonly loadDashboard: LoadDashboardUseCase.Interface,
         private readonly loadVulnerabilityTrendUseCase: LoadVulnerabilityTrendUseCase.Interface,
         private readonly eventBridge: EventBridge.Interface,
         private readonly teamFilterService: TeamFilterService.Interface,
-        private readonly dashboardGateway: DashboardGateway.Interface
+        private readonly dashboardGateway: DashboardGateway.Interface,
+        private readonly enginesGateway: EnginesGateway.Interface,
+        private readonly enginesRepository: EnginesRepository.Interface
     ) {
         makeAutoObservable(this, { vm: computed });
 
         this.eventBridge.on("scan:complete", this.handleScanComplete);
         this.eventBridge.on("job:status", this.handleJobStatus);
+        this.eventBridge.on("engine-scan:complete", this.handleEngineScanComplete);
 
         this.disposeTeamReaction = reaction(
             () => this.teamFilterService.selectedTeamId,
@@ -79,7 +88,8 @@ class DashboardPresenterImpl implements Abstraction.Interface {
             autoFixTrend: this.repository.getAutoFixTrend(),
             scoreModalProjectId: this.scoreModalProjectId,
             scoreDetailLoading: this.scoreDetailLoading,
-            scoreDetail: this.scoreDetail
+            scoreDetail: this.scoreDetail,
+            engineSummary: this.enginesRepository.getSummary()
         };
     }
 
@@ -93,7 +103,8 @@ class DashboardPresenterImpl implements Abstraction.Interface {
                     trendRange: this.trendRange,
                     ...(teamId ? { teamId } : {})
                 }),
-                this.loadVulnerabilityTrend()
+                this.loadVulnerabilityTrend(),
+                this.loadEngineSummary()
             ]);
         } catch (err) {
             runInAction(() => {
@@ -122,6 +133,13 @@ class DashboardPresenterImpl implements Abstraction.Interface {
         await this.loadVulnerabilityTrendUseCase.execute({
             ...(days ? { days } : {}),
             ...(teamId ? { teamId } : {})
+        });
+    };
+
+    private loadEngineSummary = async (): Promise<void> => {
+        const summary = await this.enginesGateway.getSummary();
+        runInAction(() => {
+            this.enginesRepository.setSummary(summary);
         });
     };
 
@@ -157,6 +175,7 @@ class DashboardPresenterImpl implements Abstraction.Interface {
     public dispose = (): void => {
         this.eventBridge.off("scan:complete", this.handleScanComplete);
         this.eventBridge.off("job:status", this.handleJobStatus);
+        this.eventBridge.off("engine-scan:complete", this.handleEngineScanComplete);
         this.disposeTeamReaction();
     };
 }
@@ -169,6 +188,8 @@ export const DashboardPresenter = Abstraction.createImplementation({
         LoadVulnerabilityTrendUseCase,
         EventBridge,
         TeamFilterService,
-        DashboardGateway
+        DashboardGateway,
+        EnginesGateway,
+        EnginesRepository
     ]
 });

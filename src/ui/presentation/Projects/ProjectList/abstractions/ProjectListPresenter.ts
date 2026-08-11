@@ -1,5 +1,6 @@
 import { createAbstraction } from "#shared/index.js";
 import type { IInstallFlagDefinition } from "#shared/install/types.js";
+import type { EngineStatus } from "#shared/engines/types.js";
 
 export type ProjectScanStatus = "idle" | "scanning" | "done" | "failed";
 
@@ -21,6 +22,7 @@ export interface IProjectListItem {
     scanStatus: ProjectScanStatus;
     hasNodeModules: boolean;
     teams: IProjectTeamBadge[];
+    engineStatus: EngineStatus | null;
 }
 
 export interface IBrowseItem {

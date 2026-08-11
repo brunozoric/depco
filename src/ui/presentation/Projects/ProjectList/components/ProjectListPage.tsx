@@ -99,6 +99,7 @@ export const ProjectListPage = observer(function ProjectListPage({
                             <Table.Th>Path</Table.Th>
                             <Table.Th>Package Manager</Table.Th>
                             <Table.Th>Dependencies</Table.Th>
+                            <Table.Th>Node.js</Table.Th>
                             <Table.Th>Security</Table.Th>
                             <Table.Th>Last Scanned</Table.Th>
                             <Table.Th style={{ textAlign: "right" }}>Actions</Table.Th>

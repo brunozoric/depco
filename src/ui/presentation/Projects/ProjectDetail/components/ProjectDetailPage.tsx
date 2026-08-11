@@ -27,6 +27,7 @@ import { InstallDialog } from "./InstallDialog.js";
 import { ChangelogModal } from "./ChangelogModal.js";
 import { ScanScheduleSection } from "./ScanScheduleSection.js";
 import { AutoFixSection } from "./AutoFixSection.js";
+import { EngineStatusSection } from "./EngineStatusSection.js";
 import { ProjectDetailHeader } from "./ProjectDetailHeader.js";
 import { ProjectActionButtons } from "./ProjectActionButtons.js";
 
@@ -228,6 +229,8 @@ export const ProjectDetailPage = observer(function ProjectDetailPage({
                     Update Package Manager
                 </Button>
             </Group>
+
+            <EngineStatusSection presenter={presenter} />
 
             <AutoFixSection presenter={presenter} />
 

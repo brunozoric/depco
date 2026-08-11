@@ -17,6 +17,7 @@ import { LicenseComplianceWidget } from "./LicenseComplianceWidget.js";
 import { StalenessSummaryCard } from "./StalenessSummaryCard.js";
 import { LicenseComplianceSummaryCard } from "./LicenseComplianceSummaryCard.js";
 import { AutoFixSummaryCard } from "./AutoFixSummaryCard.js";
+import { EngineOverviewWidget } from "./EngineOverviewWidget.js";
 
 interface DashboardPageProps {
     presenter: DashboardPresenter.Interface;
@@ -82,6 +83,7 @@ export const DashboardPage = observer(function DashboardPage({
                 <SecurityOverviewWidget projects={vm.security} />
                 <VulnerabilitySummaryWidget summary={vm.vulnerabilitySummary} />
                 <LicenseComplianceWidget summary={vm.licenseCompliance} />
+                <EngineOverviewWidget summary={vm.engineSummary} />
             </SimpleGrid>
 
             {vm.scoreModalProjectId && (

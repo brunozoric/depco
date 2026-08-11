@@ -8,6 +8,7 @@ import { ProjectsUseCasesFeature } from "../useCases/feature.js";
 import { WebSocketFeature } from "../../../infrastructure/WebSocket/feature.js";
 import { FilesystemFeature } from "../../../features/Filesystem/feature.js";
 import { TeamFilterFeature } from "../../../features/TeamFilter/feature.js";
+import { EnginesFeature } from "../../../features/Engines/feature.js";
 import { ProjectListRoute } from "./ProjectListRoute.js";
 
 export interface IProjectListFeatureExports {
@@ -16,7 +17,13 @@ export interface IProjectListFeatureExports {
 
 export const ProjectListFeature = createFeature<void, IProjectListFeatureExports>({
     name: "Ui/ProjectList",
-    dependencies: [ProjectsUseCasesFeature, WebSocketFeature, FilesystemFeature, TeamFilterFeature],
+    dependencies: [
+        ProjectsUseCasesFeature,
+        WebSocketFeature,
+        FilesystemFeature,
+        TeamFilterFeature,
+        EnginesFeature
+    ],
     register(container) {
         container.register(CloneManagerFactory).inSingletonScope();
         container.register(DirectoryScanManagerFactory).inSingletonScope();

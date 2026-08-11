@@ -10,7 +10,8 @@ import {
     getProjectSecurityRoute,
     checkProjectSecurityRoute,
     cloneProjectRoute,
-    browseFilesystemRoute
+    browseFilesystemRoute,
+    getEngineSummaryRoute
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { HTTPClientFeature } from "../../../../infrastructure/HttpClient/feature.js";
@@ -21,6 +22,8 @@ import { FilesystemFeature } from "../../../../features/Filesystem/feature.js";
 import { EventBridge } from "../../../../infrastructure/Events/abstractions/EventBridge.js";
 import "../../../../infrastructure/Events/eventMap.js";
 import { TeamFilterFeature } from "../../../../features/TeamFilter/feature.js";
+import { EnginesFeature } from "../../../../features/Engines/feature.js";
+import type { EnginesGateway } from "../../../../features/Engines/abstractions/EnginesGateway.js";
 import { LoadProjectsUseCase as LoadProjectsUseCaseRegistration } from "../../useCases/LoadProjectsUseCase.js";
 import { AddProjectUseCase as AddProjectUseCaseRegistration } from "../../useCases/AddProjectUseCase.js";
 import { RemoveProjectUseCase as RemoveProjectUseCaseRegistration } from "../../useCases/RemoveProjectUseCase.js";
@@ -80,6 +83,7 @@ describe("ProjectListPresenter", () => {
     let cloneJobId: string;
     let cloneError: Error | null;
     let browseItems: { name: string; path: string }[];
+    let engineSummaryResult: EnginesGateway.SummaryData;
     let fakeEventBridge: ReturnType<typeof createFakeEventBridge>;
 
     function createPresenter(): ProjectListPresenter.Interface {
@@ -121,6 +125,8 @@ describe("ProjectListPresenter", () => {
                             currentPath: browsePath
                         } as T;
                     }
+                    case getEngineSummaryRoute:
+                        return engineSummaryResult as T;
                     default:
                         throw new Error(`Unexpected route ${JSON.stringify(route)}`);
                 }
@@ -134,6 +140,7 @@ describe("ProjectListPresenter", () => {
         UpgradesFeature.register(container);
         FilesystemFeature.register(container);
         TeamFilterFeature.register(container);
+        EnginesFeature.register(container);
         container.register(LoadProjectsUseCaseRegistration);
         container.register(AddProjectUseCaseRegistration);
         container.register(RemoveProjectUseCaseRegistration);
@@ -157,6 +164,11 @@ describe("ProjectListPresenter", () => {
         cloneJobId = "clone-job-1";
         cloneError = null;
         browseItems = [];
+        engineSummaryResult = {
+            totalProjects: 0,
+            counts: { eol: 0, maintenance: 0, activeLts: 0, current: 0, unknown: 0 },
+            projectSummaries: []
+        };
     });
 
     it("starts with an empty, idle view model", () => {
@@ -224,7 +236,10 @@ describe("ProjectListPresenter", () => {
 
         await presenter.load();
 
-        expect(calls).toEqual([{ route: listProjectsRoute, args: { params: {}, query: {} } }]);
+        expect(calls).toEqual([
+            { route: listProjectsRoute, args: { params: {}, query: {} } },
+            { route: getEngineSummaryRoute, args: { params: {} } }
+        ]);
         expect(presenter.vm.projects).toEqual([
             {
                 id: "p1",
@@ -237,7 +252,8 @@ describe("ProjectListPresenter", () => {
                 lastScannedAt: 2000,
                 scanStatus: "idle",
                 hasNodeModules: false,
-                teams: []
+                teams: [],
+                engineStatus: null
             },
             {
                 id: "p2",
@@ -250,7 +266,8 @@ describe("ProjectListPresenter", () => {
                 lastScannedAt: null,
                 scanStatus: "idle",
                 hasNodeModules: false,
-                teams: []
+                teams: [],
+                engineStatus: null
             }
         ]);
     });
@@ -301,7 +318,8 @@ describe("ProjectListPresenter", () => {
                 lastScannedAt: null,
                 scanStatus: "idle",
                 hasNodeModules: false,
-                teams: []
+                teams: [],
+                engineStatus: null
             }
         ]);
     });
@@ -348,6 +366,7 @@ describe("ProjectListPresenter", () => {
 
         expect(calls).toEqual([
             { route: listProjectsRoute, args: { params: {}, query: {} } },
+            { route: getEngineSummaryRoute, args: { params: {} } },
             { route: deleteProjectRoute, args: { params: { id: "p2" } } }
         ]);
         expect(presenter.vm.projects.map(project => project.id)).toEqual(["p1"]);
@@ -587,7 +606,8 @@ describe("ProjectListPresenter", () => {
                         }
                     }
                 },
-                { route: listProjectsRoute, args: { params: {}, query: {} } }
+                { route: listProjectsRoute, args: { params: {}, query: {} } },
+                { route: getEngineSummaryRoute, args: { params: {} } }
             ]);
             expect(presenter.vm.cloneUrl).toBe("");
             expect(presenter.vm.cloneFolderName).toBe("");

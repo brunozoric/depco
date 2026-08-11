@@ -1,0 +1,80 @@
+import type React from "react";
+import { observer } from "mobx-react-lite";
+import { Accordion, Badge, Group, Stack, Table, Text } from "@mantine/core";
+import { EngineStatusBadge } from "#ui/infrastructure/Shared/engines/EngineStatusBadge.js";
+import type { ProjectDetailPresenter } from "../abstractions/ProjectDetailPresenter.js";
+
+interface EngineStatusSectionProps {
+    presenter: ProjectDetailPresenter.Interface;
+}
+
+function formatEolDate(eolDate: number | null): string | null {
+    if (eolDate === null) {
+        return null;
+    }
+    return new Date(eolDate).toLocaleDateString();
+}
+
+export const EngineStatusSection = observer(function EngineStatusSection({
+    presenter
+}: EngineStatusSectionProps): React.ReactNode {
+    const { vm } = presenter;
+    const engineData = vm.engineData;
+
+    return (
+        <Accordion>
+            <Accordion.Item value="engines">
+                <Accordion.Control>Node.js Engine Compatibility</Accordion.Control>
+                <Accordion.Panel>
+                    {!engineData ? (
+                        <Text size="sm" c="dimmed">
+                            No engine scan data available. Run a scan to check Node.js
+                            compatibility.
+                        </Text>
+                    ) : (
+                        <Stack gap="md">
+                            <Group gap="sm">
+                                <EngineStatusBadge status={engineData.rootStatus} />
+                                <Text size="sm">
+                                    engines.node: {engineData.rootEnginesNode ?? "not specified"}
+                                </Text>
+                                {engineData.rootEolDate !== null && (
+                                    <Badge color="red" variant="light">
+                                        EOL {formatEolDate(engineData.rootEolDate)}
+                                    </Badge>
+                                )}
+                            </Group>
+
+                            {engineData.findings.length === 0 ? (
+                                <Text size="sm" c="dimmed">
+                                    No dependency-level engine findings.
+                                </Text>
+                            ) : (
+                                <Table striped highlightOnHover>
+                                    <Table.Thead>
+                                        <Table.Tr>
+                                            <Table.Th>Package</Table.Th>
+                                            <Table.Th>engines.node</Table.Th>
+                                            <Table.Th>Status</Table.Th>
+                                        </Table.Tr>
+                                    </Table.Thead>
+                                    <Table.Tbody>
+                                        {engineData.findings.map(finding => (
+                                            <Table.Tr key={finding.packageName}>
+                                                <Table.Td>{finding.packageName}</Table.Td>
+                                                <Table.Td>{finding.enginesNode ?? "—"}</Table.Td>
+                                                <Table.Td>
+                                                    <EngineStatusBadge status={finding.status} />
+                                                </Table.Td>
+                                            </Table.Tr>
+                                        ))}
+                                    </Table.Tbody>
+                                </Table>
+                            )}
+                        </Stack>
+                    )}
+                </Accordion.Panel>
+            </Accordion.Item>
+        </Accordion>
+    );
+});

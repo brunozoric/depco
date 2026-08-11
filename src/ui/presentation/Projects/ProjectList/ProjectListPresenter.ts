@@ -10,6 +10,9 @@ import { ProjectsRepository } from "../../../features/Projects/abstractions/Proj
 import { ProjectsGateway } from "../../../features/Projects/abstractions/ProjectsGateway.js";
 import { FilesystemGateway } from "../../../features/Filesystem/abstractions/FilesystemGateway.js";
 import { TeamFilterService } from "../../../features/TeamFilter/abstractions/TeamFilterService.js";
+import { EnginesGateway } from "../../../features/Engines/abstractions/EnginesGateway.js";
+import { EnginesRepository } from "../../../features/Engines/abstractions/EnginesRepository.js";
+import type { EngineStatus } from "#shared/engines/types.js";
 
 class ProjectListPresenterImpl implements Abstraction.Interface {
     private loading = false;
@@ -33,6 +36,8 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
         private readonly projectsGateway: ProjectsGateway.Interface,
         private readonly filesystemGateway: FilesystemGateway.Interface,
         private readonly teamFilterService: TeamFilterService.Interface,
+        private readonly enginesGateway: EnginesGateway.Interface,
+        private readonly enginesRepository: EnginesRepository.Interface,
         cloneManagerFactory: CloneManagerFactory.Interface,
         directoryScanManagerFactory: DirectoryScanManagerFactory.Interface,
         scanStatusManagerFactory: ScanStatusManagerFactory.Interface
@@ -68,6 +73,12 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
               )
             : teamFiltered;
 
+        const engineSummary = this.enginesRepository.getSummary();
+        const engineStatusByProjectId = new Map<string, EngineStatus>();
+        for (const projectSummary of engineSummary?.projectSummaries ?? []) {
+            engineStatusByProjectId.set(projectSummary.projectId, projectSummary.rootStatus);
+        }
+
         return {
             loading: this.loading,
             bulkActionRunning: this.scanStatusManager.isBulkRunning,
@@ -86,7 +97,8 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
                     id: team.id,
                     name: team.name,
                     color: team.color
-                }))
+                })),
+                engineStatus: engineStatusByProjectId.get(project.id) ?? null
             })),
             addProjectPath: this.addProjectPathValue,
             addProjectLoading: this.addProjectLoading,
@@ -109,11 +121,22 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
     public load = async (): Promise<void> => {
         this.loading = true;
         try {
-            await this.loadProjectsUseCase.execute();
+            await Promise.all([this.loadProjectsUseCase.execute(), this.loadEngineSummary()]);
         } finally {
             runInAction(() => {
                 this.loading = false;
             });
+        }
+    };
+
+    private loadEngineSummary = async (): Promise<void> => {
+        try {
+            const summary = await this.enginesGateway.getSummary();
+            runInAction(() => {
+                this.enginesRepository.setSummary(summary);
+            });
+        } catch {
+            // Engine summary is supplementary — its failure should not block the project list.
         }
     };
 
@@ -251,6 +274,8 @@ export const ProjectListPresenter = Abstraction.createImplementation({
         ProjectsGateway,
         FilesystemGateway,
         TeamFilterService,
+        EnginesGateway,
+        EnginesRepository,
         CloneManagerFactory,
         DirectoryScanManagerFactory,
         ScanStatusManagerFactory

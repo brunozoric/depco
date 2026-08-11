@@ -4,6 +4,7 @@ import { ActionIcon, Badge, Group, Menu, Stack, Table, Text, Tooltip } from "@ma
 import { observer } from "mobx-react-lite";
 import { navigate } from "#ui/infrastructure/Router/router.js";
 import { ConfirmDialog } from "#ui/infrastructure/Shared/components/ConfirmDialog.js";
+import { EngineStatusBadge } from "#ui/infrastructure/Shared/engines/EngineStatusBadge.js";
 import type { ProjectListPresenter } from "../abstractions/ProjectListPresenter.js";
 
 interface ProjectRowProps {
@@ -101,6 +102,15 @@ export const ProjectRow = observer(function ProjectRow({
                 <Badge size="sm" color={project.hasNodeModules ? "green" : "gray"}>
                     {project.hasNodeModules ? "Installed" : "Not Installed"}
                 </Badge>
+            </Table.Td>
+            <Table.Td>
+                {project.engineStatus ? (
+                    <EngineStatusBadge status={project.engineStatus} />
+                ) : (
+                    <Text size="xs" c="dimmed">
+                        —
+                    </Text>
+                )}
             </Table.Td>
             <Table.Td>
                 {project.securityChecks ? (
