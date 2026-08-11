@@ -19,6 +19,7 @@ import { DependencyChangeFeature } from "./services/DependencyChange/index.js";
 import { DependencyGraphFeature } from "./services/DependencyGraph/index.js";
 import { EmailFeature } from "./services/Email/index.js";
 import { EncryptionFeature } from "./services/Encryption/index.js";
+import { EngineFeature } from "./services/Engine/index.js";
 import { ErrorReporterFeature } from "./services/ErrorReporter/index.js";
 import { EventBusFeature } from "./services/EventBus/index.js";
 import { FileConfigFeature } from "./services/FileConfig/index.js";
@@ -80,6 +81,7 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
         LicenseFeature.register(container);
         SharedVulnerabilityFeature.register(container);
         VulnerabilityFeature.register(container);
+        EngineFeature.register(container);
         DependencyGraphFeature.register(container);
         UpgradeSessionFeature.register(container);
         AuthFeature.register(container);

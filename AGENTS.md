@@ -80,6 +80,7 @@ src/
       DependencyGraph/ — DependencyGraphService + LockfileParserService (thin router, delegates to parsers/ subfolder: parseNpmLockfile, parseYarnLockfile, parsePnpmLockfile, parseBunLockfile + shared types.ts). BFS path finding, search
       Email/          — ConsoleEmailService (EmailService abstraction, console-based impl)
       Encryption/     — EncryptionService (AES-256-GCM + argon2id KDF from ENCRYPTION_KEY env var)
+      Engine/         — NodeReleaseDataService (Node.js release schedule: DB cache → endoflife.date API → embedded NODE_RELEASES fallback) + EngineService (scan() reads root package.json engines.node plus walks node_modules recursively — skips .bin, handles scoped @scope/name packages, symlink-cycle guarded via realpath dedup, malformed per-package package.json logged as warning and classified "unknown" — classifies each via shared parseEnginesNode/classifyNodeVersion, upserts to engineChecks with stale-row sweep keyed on scannedAt (same pattern as VulnerabilityService); root's own check is stored as packageName="" alongside dependency findings. getByProject(projectId) returns all persisted checks (root + deps). getSummary(options?) aggregates root status + dependency EngineStatus counts per project across the engineChecks table)
       ErrorReporter/  — ErrorReporter (domain-specific convenience wrapper around AppLogService)
       EventBus/       — EventBus (typed pub/sub, IEventMap extensible via declare module)
       FileConfig/     — FileConfigService (reads .dependency-upgrader.json global/project config)
