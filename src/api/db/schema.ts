@@ -513,3 +513,39 @@ export const loginCodes = sqliteTable("login_codes", {
     usedAt: integer("used_at"),
     createdAt: integer("created_at").notNull()
 });
+
+export const nodeReleaseData = sqliteTable(
+    "node_release_data",
+    {
+        id: text("id").primaryKey(),
+        version: integer("version").notNull(),
+        codename: text("codename"),
+        releaseDate: integer("release_date").notNull(),
+        ltsStart: integer("lts_start"),
+        maintenanceStart: integer("maintenance_start"),
+        eolDate: integer("eol_date").notNull(),
+        fetchedAt: integer("fetched_at").notNull()
+    },
+    table => ({
+        uniqueVersion: unique().on(table.version)
+    })
+);
+
+export const engineChecks = sqliteTable(
+    "engine_checks",
+    {
+        id: text("id").primaryKey(),
+        projectId: text("project_id")
+            .notNull()
+            .references(() => projects.id, { onDelete: "cascade" }),
+        packageName: text("package_name").notNull(),
+        enginesNode: text("engines_node"),
+        minimumMajor: integer("minimum_major"),
+        status: text("status").notNull(),
+        eolDate: integer("eol_date"),
+        scannedAt: integer("scanned_at").notNull()
+    },
+    table => ({
+        uniqueProjectPackage: unique().on(table.projectId, table.packageName)
+    })
+);
