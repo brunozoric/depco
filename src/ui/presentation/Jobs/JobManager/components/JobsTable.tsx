@@ -100,7 +100,7 @@ export function JobsTable({
                                         size="sm"
                                         onClick={event => {
                                             event.stopPropagation();
-                                            navigate(`/Projects/${job.referenceId}`);
+                                            navigate(`/projects/${job.referenceId}`);
                                         }}
                                     >
                                         {job.projectName}

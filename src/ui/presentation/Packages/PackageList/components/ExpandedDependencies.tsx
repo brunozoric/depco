@@ -60,7 +60,7 @@ export function ExpandedDependencies({
                                             component="button"
                                             size="sm"
                                             onClick={() =>
-                                                navigate(`/Projects/${project.projectId}`)
+                                                navigate(`/projects/${project.projectId}`)
                                             }
                                         >
                                             {project.projectName}

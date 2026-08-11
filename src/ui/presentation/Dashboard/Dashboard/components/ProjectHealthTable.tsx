@@ -59,7 +59,7 @@ export function ProjectHealthTable({
                     <Table.Tr
                         key={project.projectId}
                         style={{ cursor: "pointer" }}
-                        onClick={() => navigate(`/Projects/${project.projectId}`)}
+                        onClick={() => navigate(`/projects/${project.projectId}`)}
                     >
                         <Table.Td>{project.projectName}</Table.Td>
                         <Table.Td>

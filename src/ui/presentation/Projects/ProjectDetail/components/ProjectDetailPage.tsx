@@ -206,12 +206,12 @@ export const ProjectDetailPage = observer(function ProjectDetailPage({
                 onScan={() => presenter.scan()}
                 onUpgradeSelected={() => {
                     const selected = vm.dependencies.filter(d => d.selected).map(d => d.name);
-                    navigate(`/Projects/${projectId}/upgrade?selected=${selected.join(",")}`);
+                    navigate(`/projects/${projectId}/upgrade?selected=${selected.join(",")}`);
                 }}
                 onRefreshTransient={() => presenter.refreshTransient()}
                 onInstall={() => setInstallDialogOpened(true)}
-                onStepHooks={() => navigate(`/Projects/${projectId}/step-hooks`)}
-                onDependencyGraph={() => navigate(`/Projects/${projectId}/graph`)}
+                onStepHooks={() => navigate(`/projects/${projectId}/step-hooks`)}
+                onDependencyGraph={() => navigate(`/projects/${projectId}/graph`)}
                 onExportSbom={format => void presenter.exportSbom(format)}
             />
 

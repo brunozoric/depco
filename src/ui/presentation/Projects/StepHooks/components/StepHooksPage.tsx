@@ -35,7 +35,7 @@ export const StepHooksPage = observer(function StepHooksPage({
                     <ActionIcon
                         variant="subtle"
                         size="lg"
-                        onClick={() => navigate(`/Projects/${projectId}`)}
+                        onClick={() => navigate(`/projects/${projectId}`)}
                     >
                         &larr;
                     </ActionIcon>

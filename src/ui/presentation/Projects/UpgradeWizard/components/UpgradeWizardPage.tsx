@@ -138,7 +138,7 @@ export const UpgradeWizardPage = observer(function UpgradeWizardPage({
                     <ActionIcon
                         variant="subtle"
                         size="lg"
-                        onClick={() => navigate(`/Projects/${projectId}`)}
+                        onClick={() => navigate(`/projects/${projectId}`)}
                     >
                         &larr;
                     </ActionIcon>

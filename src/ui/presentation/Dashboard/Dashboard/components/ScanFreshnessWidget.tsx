@@ -48,7 +48,7 @@ export function ScanFreshnessWidget({ projects }: ScanFreshnessWidgetProps): Rea
                             justify="space-between"
                             wrap="nowrap"
                             style={{ cursor: "pointer" }}
-                            onClick={() => navigate(`/Projects/${project.projectId}`)}
+                            onClick={() => navigate(`/projects/${project.projectId}`)}
                         >
                             <Text size="sm" truncate>
                                 {project.projectName}

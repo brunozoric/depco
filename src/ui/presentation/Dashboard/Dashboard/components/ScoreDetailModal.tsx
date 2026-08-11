@@ -272,7 +272,7 @@ export function ScoreDetailModal({
                         size="sm"
                         onClick={() => {
                             onClose();
-                            navigate(`/Projects/${project.projectId}`);
+                            navigate(`/projects/${project.projectId}`);
                         }}
                     >
                         View Project

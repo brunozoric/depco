@@ -81,7 +81,7 @@ export const ProjectRow = observer(function ProjectRow({
                     <Text
                         size="sm"
                         style={{ cursor: "pointer", textDecoration: "underline" }}
-                        onClick={() => navigate(`/Projects/${project.id}`)}
+                        onClick={() => navigate(`/projects/${project.id}`)}
                     >
                         {project.name}
                     </Text>
@@ -149,7 +149,7 @@ export const ProjectRow = observer(function ProjectRow({
                         </ActionIcon>
                     </Menu.Target>
                     <Menu.Dropdown>
-                        <Menu.Item onClick={() => navigate(`/Projects/${project.id}`)}>
+                        <Menu.Item onClick={() => navigate(`/projects/${project.id}`)}>
                             View
                         </Menu.Item>
                         <Menu.Item onClick={() => onScan(project.id)}>Scan</Menu.Item>
