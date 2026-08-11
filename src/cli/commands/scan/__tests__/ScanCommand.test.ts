@@ -9,16 +9,17 @@ describe("ScanCommand", () => {
         container = createTestCliContainer();
     });
 
-    it("returns 6 steps in correct order", () => {
+    it("returns 7 steps in correct order", () => {
         const command = container.resolve(ScanCommand);
         const steps = command.steps();
-        expect(steps).toHaveLength(6);
+        expect(steps).toHaveLength(7);
         expect(steps.map(step => step.name)).toEqual([
             "detect-package-manager",
             "load-config",
             "parse-lockfile",
             "check-licenses",
             "check-vulnerabilities",
+            "check-engines",
             "render-output"
         ]);
     });

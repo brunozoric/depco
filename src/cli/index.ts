@@ -38,7 +38,7 @@ cli = cli.command(
                 type: "string",
                 description: "Check to run",
                 default: "license",
-                choices: ["license", "vulnerability", "all"]
+                choices: ["license", "vulnerability", "engines", "all"]
             })
             .option("format", {
                 type: "string",

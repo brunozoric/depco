@@ -11,9 +11,14 @@ export interface IVulnerabilityScanConfig {
     ignoredPackages?: string[];
 }
 
+export interface IEnginesScanConfig {
+    ignore?: string[];
+}
+
 export interface IScanConfig {
     license?: ILicenseScanConfig;
     vulnerability?: IVulnerabilityScanConfig;
+    engines?: IEnginesScanConfig;
     ignoredPackages?: string[];
     registryUrl?: string;
 }

@@ -12,9 +12,14 @@ const vulnerabilityScanConfigSchema = z.object({
     ignoredPackages: z.array(z.string()).optional()
 });
 
+const enginesScanConfigSchema = z.object({
+    ignore: z.array(z.string()).optional()
+});
+
 const scanConfigSchema = z.object({
     license: licenseScanConfigSchema.optional(),
     vulnerability: vulnerabilityScanConfigSchema.optional(),
+    engines: enginesScanConfigSchema.optional(),
     ignoredPackages: z.array(z.string()).optional(),
     registryUrl: z.string().url().optional()
 });

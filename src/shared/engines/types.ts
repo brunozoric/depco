@@ -28,3 +28,13 @@ export interface IClassifyNodeVersionInput {
     schedule: INodeRelease[];
     now?: number;
 }
+
+export interface IEnginesFinding {
+    packageName: string;
+    version: string;
+    enginesNode: string | null;
+    minimumMajor: number | null;
+    status: EngineStatus;
+    eolDate: number | null;
+    isRoot: boolean;
+}
