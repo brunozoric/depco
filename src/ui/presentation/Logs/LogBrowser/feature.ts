@@ -5,9 +5,6 @@ import { AppLogsUseCasesFeature } from "../useCases/feature.js";
 import { ProjectsFeature } from "../../../features/Projects/feature.js";
 import { ProjectsUseCasesFeature } from "../../Projects/useCases/feature.js";
 import { WebSocketFeature } from "../../../infrastructure/WebSocket/feature.js";
-import { RouterFeature } from "../../../infrastructure/Router/feature.js";
-import { RouteRegistry } from "../../../infrastructure/Router/abstractions/RouteRegistry.js";
-import { LogBrowserRoute as LogBrowserRouteAbstraction } from "./abstractions/LogBrowserRoute.js";
 import { LogBrowserRoute } from "./LogBrowserRoute.js";
 
 export interface ILogBrowserPresentationFeatureExports {
@@ -20,7 +17,6 @@ export const LogBrowserPresentationFeature = createFeature<
 >({
     name: "Ui/LogBrowserPresentation",
     dependencies: [
-        RouterFeature,
         AppLogsUseCasesFeature,
         ProjectsFeature,
         ProjectsUseCasesFeature,
@@ -29,8 +25,6 @@ export const LogBrowserPresentationFeature = createFeature<
     register(container) {
         container.register(LogBrowserPresenter);
         container.register(LogBrowserRoute).inSingletonScope();
-        const registry = container.resolve(RouteRegistry);
-        registry.register(container.resolve(LogBrowserRouteAbstraction));
     },
     resolve(container) {
         return {

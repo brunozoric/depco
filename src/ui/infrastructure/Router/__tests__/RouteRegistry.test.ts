@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { createContainer } from "#shared/index.js";
-import { RouterFeature } from "../feature.js";
+import { Route } from "../abstractions/Route.js";
 import { RouteRegistry } from "../abstractions/RouteRegistry.js";
+import { RouteRegistry as RouteRegistryImpl } from "../RouteRegistry.js";
 import type { IRoute, IRouteMatch } from "../abstractions/Route.js";
 
 function createSimpleRoute(name: string, path: string): IRoute {
@@ -34,18 +35,18 @@ function createRegexRoute(args: { name: string; path: RegExp; paramName: string 
     };
 }
 
+function createRegistry(routes: IRoute[]): RouteRegistry.Interface {
+    const container = createContainer();
+    for (const route of routes) {
+        container.registerInstance(Route, route);
+    }
+    container.register(RouteRegistryImpl).inSingletonScope();
+    return container.resolve(RouteRegistry);
+}
+
 describe("RouteRegistry", () => {
-    let container: ReturnType<typeof createContainer>;
-    let registry: RouteRegistry.Interface;
-
-    beforeEach(() => {
-        container = createContainer();
-        RouterFeature.register(container);
-        registry = container.resolve(RouteRegistry);
-    });
-
     it("resolves matching string route", () => {
-        registry.register(createSimpleRoute("jobs", "/jobs"));
+        const registry = createRegistry([createSimpleRoute("jobs", "/jobs")]);
         const result = registry.resolve({ path: "/jobs", query: new URLSearchParams() });
         expect(result).toBeDefined();
         expect(result!.route.name).toBe("jobs");
@@ -53,26 +54,28 @@ describe("RouteRegistry", () => {
     });
 
     it("returns undefined for no match", () => {
-        registry.register(createSimpleRoute("jobs", "/jobs"));
+        const registry = createRegistry([createSimpleRoute("jobs", "/jobs")]);
         const result = registry.resolve({ path: "/settings", query: new URLSearchParams() });
         expect(result).toBeUndefined();
     });
 
     it("resolves first matching route (insertion order)", () => {
-        registry.register(createSimpleRoute("first", "/test"));
-        registry.register(createSimpleRoute("second", "/test"));
+        const registry = createRegistry([
+            createSimpleRoute("first", "/test"),
+            createSimpleRoute("second", "/test")
+        ]);
         const result = registry.resolve({ path: "/test", query: new URLSearchParams() });
         expect(result!.route.name).toBe("first");
     });
 
     it("resolves regex route with params", () => {
-        registry.register(
+        const registry = createRegistry([
             createRegexRoute({
                 name: "project-detail",
                 path: /^\/projects\/([^/]+)$/,
                 paramName: "projectId"
             })
-        );
+        ]);
         const result = registry.resolve({ path: "/projects/abc123", query: new URLSearchParams() });
         expect(result).toBeDefined();
         expect(result!.match.params).toEqual({ projectId: "abc123" });
@@ -92,25 +95,18 @@ describe("RouteRegistry", () => {
                 return null;
             }
         };
-        registry.register(route);
+        const registry = createRegistry([route]);
         const result = registry.resolve({ path: "/test", query: new URLSearchParams("page=3") });
         expect(result!.match.query).toEqual({ page: "3" });
     });
 
     it("returns empty query when validateQueryString not defined", () => {
-        registry.register(createSimpleRoute("jobs", "/jobs"));
+        const registry = createRegistry([createSimpleRoute("jobs", "/jobs")]);
         const result = registry.resolve({ path: "/jobs", query: new URLSearchParams("x=1") });
         expect(result!.match.query).toEqual({});
     });
 
     it("more specific regex matches before catch-all", () => {
-        registry.register(
-            createRegexRoute({
-                name: "detail",
-                path: /^\/projects\/([^/]+)$/,
-                paramName: "projectId"
-            })
-        );
         const catchAll: IRoute = {
             name: "fallback",
             path: "/",
@@ -121,7 +117,14 @@ describe("RouteRegistry", () => {
                 return null;
             }
         };
-        registry.register(catchAll);
+        const registry = createRegistry([
+            createRegexRoute({
+                name: "detail",
+                path: /^\/projects\/([^/]+)$/,
+                paramName: "projectId"
+            }),
+            catchAll
+        ]);
         const result = registry.resolve({ path: "/projects/abc", query: new URLSearchParams() });
         expect(result!.route.name).toBe("detail");
     });

@@ -1,5 +1,5 @@
 import type React from "react";
-import { ProjectListRoute as Abstraction } from "./abstractions/ProjectListRoute.js";
+import { Route as Abstraction } from "../../../infrastructure/Router/abstractions/Route.js";
 import type { IRouteMatch } from "../../../infrastructure/Router/abstractions/Route.js";
 import { ProjectListProvider } from "./ProjectListProvider.js";
 import { ProjectListPage } from "./components/ProjectListPage.js";

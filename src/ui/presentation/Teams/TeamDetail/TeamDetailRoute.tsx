@@ -1,5 +1,5 @@
 import type React from "react";
-import { TeamDetailRoute as Abstraction } from "./abstractions/TeamDetailRoute.js";
+import { Route as Abstraction } from "../../../infrastructure/Router/abstractions/Route.js";
 import type { IRouteMatch } from "../../../infrastructure/Router/abstractions/Route.js";
 import { TeamDetailProvider } from "./TeamDetailProvider.js";
 import { TeamDetailPage } from "./components/TeamDetailPage.js";

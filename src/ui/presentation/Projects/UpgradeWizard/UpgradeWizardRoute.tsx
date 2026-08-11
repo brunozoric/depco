@@ -1,5 +1,5 @@
 import type React from "react";
-import { UpgradeWizardRoute as Abstraction } from "./abstractions/UpgradeWizardRoute.js";
+import { Route as Abstraction } from "../../../infrastructure/Router/abstractions/Route.js";
 import type { IRouteMatch } from "../../../infrastructure/Router/abstractions/Route.js";
 import { UpgradeWizardProvider } from "./UpgradeWizardProvider.js";
 import { UpgradeWizardPage } from "./components/UpgradeWizardPage.js";

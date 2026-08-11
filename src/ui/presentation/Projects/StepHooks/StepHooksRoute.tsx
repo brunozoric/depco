@@ -1,5 +1,5 @@
 import type React from "react";
-import { StepHooksRoute as Abstraction } from "./abstractions/StepHooksRoute.js";
+import { Route as Abstraction } from "../../../infrastructure/Router/abstractions/Route.js";
 import type { IRouteMatch } from "../../../infrastructure/Router/abstractions/Route.js";
 import { StepHooksProvider } from "./StepHooksProvider.js";
 import { StepHooksPage } from "./components/StepHooksPage.js";

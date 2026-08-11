@@ -1,12 +1,9 @@
 import { RouteRegistry as Abstraction } from "./abstractions/RouteRegistry.js";
+import { Route } from "./abstractions/Route.js";
 import type { IRoute } from "./abstractions/Route.js";
 
 class RouteRegistryImpl implements Abstraction.Interface {
-    private readonly routes: IRoute[] = [];
-
-    public register(route: IRoute): void {
-        this.routes.push(route);
-    }
+    public constructor(private readonly routes: IRoute[]) {}
 
     public resolve(args: Abstraction.ResolveArgs): Abstraction.ResolveResult | undefined {
         for (const route of this.routes) {
@@ -24,5 +21,5 @@ class RouteRegistryImpl implements Abstraction.Interface {
 
 export const RouteRegistry = Abstraction.createImplementation({
     implementation: RouteRegistryImpl,
-    dependencies: []
+    dependencies: [[Route, { multiple: true }]]
 });

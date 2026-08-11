@@ -1,5 +1,5 @@
 import type React from "react";
-import { PmSettingsRoute as Abstraction } from "./abstractions/PmSettingsRoute.js";
+import { Route as Abstraction } from "../../../infrastructure/Router/abstractions/Route.js";
 import type { IRouteMatch } from "../../../infrastructure/Router/abstractions/Route.js";
 import { PmSettingsProvider } from "./PmSettingsProvider.js";
 import { PmSettingsPage } from "./components/PmSettingsPage.js";

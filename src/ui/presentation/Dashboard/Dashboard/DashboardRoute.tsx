@@ -1,5 +1,5 @@
 import type React from "react";
-import { DashboardRoute as Abstraction } from "./abstractions/DashboardRoute.js";
+import { Route as Abstraction } from "../../../infrastructure/Router/abstractions/Route.js";
 import type { IRouteMatch } from "../../../infrastructure/Router/abstractions/Route.js";
 import { DashboardProvider } from "./DashboardProvider.js";
 import { DashboardPage } from "./components/DashboardPage.js";

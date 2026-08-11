@@ -1,5 +1,5 @@
 import type React from "react";
-import { LicensesListRoute as Abstraction } from "./abstractions/LicensesListRoute.js";
+import { Route as Abstraction } from "../../../infrastructure/Router/abstractions/Route.js";
 import type { IRouteMatch } from "../../../infrastructure/Router/abstractions/Route.js";
 import { LicensesProvider } from "./LicensesProvider.js";
 import { LicensesPage } from "./components/LicensesPage.js";

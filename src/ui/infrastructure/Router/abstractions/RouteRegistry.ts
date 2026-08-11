@@ -12,7 +12,6 @@ export interface IRouteResolveResult {
 }
 
 export interface IRouteRegistry {
-    register(route: Route.Interface): void;
     resolve(args: IRouteResolveArgs): IRouteResolveResult | undefined;
 }
 

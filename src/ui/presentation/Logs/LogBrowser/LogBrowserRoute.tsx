@@ -1,5 +1,5 @@
 import type React from "react";
-import { LogBrowserRoute as Abstraction } from "./abstractions/LogBrowserRoute.js";
+import { Route as Abstraction } from "../../../infrastructure/Router/abstractions/Route.js";
 import type { IRouteMatch } from "../../../infrastructure/Router/abstractions/Route.js";
 import { LogBrowserProvider } from "./LogBrowserProvider.js";
 import { LogBrowserPage } from "./components/LogBrowserPage.js";

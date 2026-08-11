@@ -1,5 +1,5 @@
 import type React from "react";
-import { UserListRoute as Abstraction } from "./abstractions/UserListRoute.js";
+import { Route as Abstraction } from "../../../infrastructure/Router/abstractions/Route.js";
 import type { IRouteMatch } from "../../../infrastructure/Router/abstractions/Route.js";
 import { UserListProvider } from "./UserListProvider.js";
 import { UserListPage } from "./components/UserListPage.js";

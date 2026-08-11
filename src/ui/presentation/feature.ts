@@ -1,4 +1,5 @@
 import { createFeature } from "#shared/index.js";
+import { RouterFeature } from "../infrastructure/Router/feature.js";
 
 import { AuthPresentationFeature } from "./Auth/feature.js";
 import { AutoFixPresentationFeature } from "./AutoFix/feature.js";
@@ -22,6 +23,7 @@ import { VulnerabilitiesDomainFeature } from "./Vulnerabilities/feature.js";
 export const PresentationFeature = createFeature({
     name: "Ui/Presentation",
     dependencies: [
+        RouterFeature,
         AuthPresentationFeature,
         AutoFixPresentationFeature,
         BackupDomainFeature,

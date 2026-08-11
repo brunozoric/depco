@@ -1,5 +1,5 @@
 import type React from "react";
-import { AppSettingsRoute as Abstraction } from "./abstractions/AppSettingsRoute.js";
+import { Route as Abstraction } from "../../../infrastructure/Router/abstractions/Route.js";
 import type { IRouteMatch } from "../../../infrastructure/Router/abstractions/Route.js";
 import { AppSettingsProvider } from "./AppSettingsProvider.js";
 import { AppSettingsPage } from "./components/AppSettingsPage.js";

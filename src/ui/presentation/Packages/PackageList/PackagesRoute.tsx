@@ -1,5 +1,5 @@
 import type React from "react";
-import { PackagesRoute as Abstraction } from "./abstractions/PackagesRoute.js";
+import { Route as Abstraction } from "../../../infrastructure/Router/abstractions/Route.js";
 import type { IRouteMatch } from "../../../infrastructure/Router/abstractions/Route.js";
 import { PackagesProvider } from "./PackagesProvider.js";
 import { PackagesPage } from "./components/PackagesPage.js";

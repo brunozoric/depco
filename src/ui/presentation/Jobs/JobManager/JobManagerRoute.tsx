@@ -1,5 +1,5 @@
 import type React from "react";
-import { JobManagerRoute as Abstraction } from "./abstractions/JobManagerRoute.js";
+import { Route as Abstraction } from "../../../infrastructure/Router/abstractions/Route.js";
 import type { IRouteMatch } from "../../../infrastructure/Router/abstractions/Route.js";
 import { JobManagerProvider } from "./JobManagerProvider.js";
 import { JobManagerPage } from "./components/JobManagerPage.js";

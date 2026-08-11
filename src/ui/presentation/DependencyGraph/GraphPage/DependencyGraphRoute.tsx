@@ -1,5 +1,5 @@
 import type React from "react";
-import { DependencyGraphRoute as Abstraction } from "./abstractions/DependencyGraphRoute.js";
+import { Route as Abstraction } from "../../../infrastructure/Router/abstractions/Route.js";
 import type { IRouteMatch } from "../../../infrastructure/Router/abstractions/Route.js";
 import { DependencyGraphProvider } from "./DependencyGraphProvider.js";
 import { DependencyGraphPage } from "./components/DependencyGraphPage.js";

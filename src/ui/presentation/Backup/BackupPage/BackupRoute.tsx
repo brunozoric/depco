@@ -1,5 +1,5 @@
 import type React from "react";
-import { BackupRoute as Abstraction } from "./abstractions/BackupRoute.js";
+import { Route as Abstraction } from "../../../infrastructure/Router/abstractions/Route.js";
 import type { IRouteMatch } from "../../../infrastructure/Router/abstractions/Route.js";
 import { BackupProvider } from "./BackupProvider.js";
 import { BackupPage } from "./components/BackupPage.js";

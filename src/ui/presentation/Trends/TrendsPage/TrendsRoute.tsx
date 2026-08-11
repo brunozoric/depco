@@ -1,5 +1,5 @@
 import type React from "react";
-import { TrendsRoute as Abstraction } from "./abstractions/TrendsRoute.js";
+import { Route as Abstraction } from "../../../infrastructure/Router/abstractions/Route.js";
 import type { IRouteMatch } from "../../../infrastructure/Router/abstractions/Route.js";
 import { TrendsProvider } from "./TrendsProvider.js";
 import { TrendsPage } from "./components/TrendsPage.js";
