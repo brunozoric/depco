@@ -3,11 +3,13 @@
 ## What was done
 
 **Refactoring (3 commits)**
+
 - Extracted modules from 5 large files: VulnerabilityService (497 → 290), JobWorker (467 → 411), AutoFixPrService (331 → 285), ProjectListPresenter (355 → 273), pnpm lockfile Zod validation
 - Added injectable factories for 4 directly-created classes: CloneManagerFactory, DirectoryScanManagerFactory, ScanStatusManagerFactory, JobExecutionContextFactory
 - Refactored RouteRegistry to `{ multiple: true }` DI injection — deleted 19 dead per-route abstraction files, simplified 19 feature files
 
 **Engines check feature (15 commits)**
+
 - Full Node.js EOL detection across root project + all node_modules dependencies
 - Shared classification: `parseEnginesNode`, `classifyNodeVersion`, `NODE_RELEASES` embedded schedule
 - API: EngineService (scan/getByProject/getSummary), NodeReleaseDataService (endoflife.date API + 24h DB cache + embedded fallback), 4 routes, EngineScanJobExecutor chained in ScanJobExecutor
@@ -17,6 +19,7 @@
 - Config: `scan.engines.ignore`, `scan.engines.warnMaintenance`
 
 **Bug fixes (2 commits)**
+
 - DashboardRoute matchPath catch-all matched all paths after RouteRegistry refactor — fixed to match "/" only
 - Navigate calls used `/Projects/` (capital P) while routes match `/projects/` — fixed 14 files
 
