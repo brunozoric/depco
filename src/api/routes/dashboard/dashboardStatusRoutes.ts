@@ -11,6 +11,7 @@ import {
 } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { dependencyChanges, projects } from "#api/db/schema.js";
+import { teamProjectIds } from "#api/utils/teamFilter.js";
 
 interface IRawActivityRow {
     id: string;
@@ -46,7 +47,7 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
     registerRoute(app, dashboardActivityRoute, {}, async (request, reply) => {
         const { teamId } = request.query;
         const teamCondition = teamId
-            ? sql`WHERE reference_type = 'project' AND reference_id IN (SELECT project_id FROM team_projects WHERE team_id = ${teamId})`
+            ? sql`WHERE reference_type = 'project' AND reference_id IN ${teamProjectIds(teamId)}`
             : sql``;
 
         const rows = await db.all<IRawActivityRow>(sql`
@@ -64,9 +65,7 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
 
     registerRoute(app, dashboardStalenessRoute, {}, async (request, reply) => {
         const { teamId } = request.query;
-        const teamCondition = teamId
-            ? sql`WHERE id IN (SELECT project_id FROM team_projects WHERE team_id = ${teamId})`
-            : sql``;
+        const teamCondition = teamId ? sql`WHERE id IN ${teamProjectIds(teamId)}` : sql``;
 
         const rows = await db.all<IRawStalenessRow>(sql`
             SELECT
@@ -85,9 +84,7 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
 
     registerRoute(app, dashboardSecurityRoute, {}, async (request, reply) => {
         const { teamId } = request.query;
-        const teamCondition = teamId
-            ? sql`AND sc.project_id IN (SELECT project_id FROM team_projects WHERE team_id = ${teamId})`
-            : sql``;
+        const teamCondition = teamId ? sql`AND sc.project_id IN ${teamProjectIds(teamId)}` : sql``;
 
         const rows = await db.all<IRawSecurityRow>(sql`
             SELECT
@@ -119,9 +116,7 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
             conditions.push(eq(dependencyChanges.projectId, projectId));
         }
         if (teamId) {
-            conditions.push(
-                sql`${dependencyChanges.projectId} IN (SELECT project_id FROM team_projects WHERE team_id = ${teamId})`
-            );
+            conditions.push(sql`${dependencyChanges.projectId} IN ${teamProjectIds(teamId)}`);
         }
         const where = conditions.length > 0 ? and(...conditions) : undefined;
 

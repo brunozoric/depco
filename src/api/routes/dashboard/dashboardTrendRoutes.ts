@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
 import { sql } from "drizzle-orm";
 import { registerRoute } from "#shared/routing/index.js";
+import { DAY_MS } from "#shared/time.js";
 import {
     dashboardTrendRoute,
     dashboardVulnerabilityTrendRoute,
@@ -10,6 +11,7 @@ import {
     dashboardAutoFixTrendRoute
 } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { teamProjectIds } from "#api/utils/teamFilter.js";
 
 interface IRawTrendRow {
     projectId: string;
@@ -72,7 +74,7 @@ function daysToCutoff(days: string | undefined): string | undefined {
     if (!days) {
         return undefined;
     }
-    const cutoff = new Date(Date.now() - Number(days) * 86400000).toISOString().slice(0, 10);
+    const cutoff = new Date(Date.now() - Number(days) * DAY_MS).toISOString().slice(0, 10);
     return cutoff;
 }
 
@@ -87,9 +89,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
 
         const modifier = `-${days} days`;
         const dateFilter = days ? sql`AND hs.date >= DATE('now', ${modifier})` : sql``;
-        const teamCondition = teamId
-            ? sql`AND hs.project_id IN (SELECT project_id FROM team_projects WHERE team_id = ${teamId})`
-            : sql``;
+        const teamCondition = teamId ? sql`AND hs.project_id IN ${teamProjectIds(teamId)}` : sql``;
 
         const rows = await db.all<IRawTrendRow>(sql`
             SELECT
@@ -120,9 +120,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
         const { days, teamId } = request.query;
         const dateFilter = daysToCutoff(days);
         const dateCondition = dateFilter ? sql`AND date >= ${dateFilter}` : sql``;
-        const teamCondition = teamId
-            ? sql`AND project_id IN (SELECT project_id FROM team_projects WHERE team_id = ${teamId})`
-            : sql``;
+        const teamCondition = teamId ? sql`AND project_id IN ${teamProjectIds(teamId)}` : sql``;
 
         const rows = await db.all<IRawVulnerabilityTrendRow>(sql`
             SELECT
@@ -144,9 +142,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
         const { days, teamId } = request.query;
         const dateFilter = daysToCutoff(days);
         const dateCondition = dateFilter ? sql`AND date >= ${dateFilter}` : sql``;
-        const teamCondition = teamId
-            ? sql`AND project_id IN (SELECT project_id FROM team_projects WHERE team_id = ${teamId})`
-            : sql``;
+        const teamCondition = teamId ? sql`AND project_id IN ${teamProjectIds(teamId)}` : sql``;
 
         const rows = await db.all<IRawStalenessTrendRow>(sql`
             SELECT
@@ -168,9 +164,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
         const { days, teamId } = request.query;
         const dateFilter = daysToCutoff(days);
         const dateCondition = dateFilter ? sql`AND date >= ${dateFilter}` : sql``;
-        const teamCondition = teamId
-            ? sql`AND project_id IN (SELECT project_id FROM team_projects WHERE team_id = ${teamId})`
-            : sql``;
+        const teamCondition = teamId ? sql`AND project_id IN ${teamProjectIds(teamId)}` : sql``;
 
         const rows = await db.all<IRawLicenseTrendRow>(sql`
             SELECT
@@ -194,9 +188,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
         const dateCondition = dateFilter
             ? sql`AND DATE(updated_at/1000, 'unixepoch') >= ${dateFilter}`
             : sql``;
-        const teamCondition = teamId
-            ? sql`AND project_id IN (SELECT project_id FROM team_projects WHERE team_id = ${teamId})`
-            : sql``;
+        const teamCondition = teamId ? sql`AND project_id IN ${teamProjectIds(teamId)}` : sql``;
 
         const rows = await db.all<IRawAutoFixTrendRow>(sql`
             SELECT

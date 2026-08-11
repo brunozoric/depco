@@ -15,7 +15,7 @@ import { PackageManagerService } from "../../services/PackageManager/index.js";
 import { JobWorker } from "../../services/JobExecution/index.js";
 import { registerProject as registerProjectHelper } from "../../utils/registerProject.js";
 import { projects } from "#api/db/schema.js";
-import { existsSync } from "fs";
+import { access } from "fs/promises";
 
 function extractRepoName(url: string): string | null {
     const match = url.match(/\/([^/]+?)(?:\.git)?$/);
@@ -135,7 +135,9 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
                 return;
             }
 
-            if (!existsSync(destination)) {
+            try {
+                await access(destination);
+            } catch {
                 sendError({
                     reply,
                     statusCode: 400,

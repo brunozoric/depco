@@ -8,6 +8,7 @@ import { listPackagesRoute, rescanPackageRoute } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { RegistryCacheService } from "../services/RegistryCache/index.js";
 import { scanResults } from "#api/db/schema.js";
+import { teamProjectIds } from "#api/utils/teamFilter.js";
 
 interface PluginOptions extends FastifyPluginOptions {
     container: Container;
@@ -78,9 +79,7 @@ export async function packagesRoutes(app: FastifyInstance, options: PluginOption
             conditions.push(sql`sr.project_id = ${projectId}`);
         }
         if (teamId) {
-            conditions.push(
-                sql`sr.project_id IN (SELECT project_id FROM team_projects WHERE team_id = ${teamId})`
-            );
+            conditions.push(sql`sr.project_id IN ${teamProjectIds(teamId)}`);
         }
 
         const whereClause =

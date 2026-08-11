@@ -1,4 +1,4 @@
-import { existsSync } from "fs";
+import { access } from "fs/promises";
 import { join } from "path";
 import { and, eq, lt, sql } from "drizzle-orm";
 import type { JobExecutor } from "./abstractions/JobExecutor.js";
@@ -111,7 +111,9 @@ class ScanJobExecutorImpl implements JobExecutor.Interface {
             }
 
             const driver = this.packageManagerDriverRegistry.getDriver(packageManager);
-            if (!existsSync(join(projectPath, driver.lockfileName))) {
+            try {
+                await access(join(projectPath, driver.lockfileName));
+            } catch {
                 throw new Error(`Lockfile not found: ${driver.lockfileName}`);
             }
 

@@ -8,6 +8,7 @@ import { LoadProjectsUseCase } from "../../Projects/useCases/abstractions/LoadPr
 import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBridge.js";
 import "../../../infrastructure/Events/eventMap.js";
 import type { AppLogsGateway } from "../../../features/AppLogs/abstractions/AppLogsGateway.js";
+import { getErrorMessage } from "#shared/errors.js";
 
 const PAGE_SIZE = 50;
 
@@ -95,7 +96,7 @@ class LogBrowserPresenterImpl implements Abstraction.Interface {
             ]);
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to load logs";
+                this.error = getErrorMessage(err, "Failed to load logs");
             });
         } finally {
             runInAction(() => {
@@ -152,7 +153,7 @@ class LogBrowserPresenterImpl implements Abstraction.Interface {
             );
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to delete logs";
+                this.error = getErrorMessage(err, "Failed to delete logs");
             });
         } finally {
             runInAction(() => {

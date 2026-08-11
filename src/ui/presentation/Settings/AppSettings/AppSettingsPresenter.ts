@@ -3,6 +3,7 @@ import { AppSettingsPresenter as Abstraction } from "./abstractions/AppSettingsP
 import { LoadAppSettingsUseCase } from "../appSettingsUseCases/abstractions/LoadAppSettingsUseCase.js";
 import { UpsertAppSettingUseCase } from "../appSettingsUseCases/abstractions/UpsertAppSettingUseCase.js";
 import { AppSettingsRepository } from "../../../features/AppSettings/abstractions/AppSettingsRepository.js";
+import { getErrorMessage } from "#shared/errors.js";
 
 interface IKnownSettingMeta {
     label: string;
@@ -153,7 +154,7 @@ class AppSettingsPresenterImpl implements Abstraction.Interface {
             });
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to save setting";
+                this.error = getErrorMessage(err, "Failed to save setting");
             });
         }
     };

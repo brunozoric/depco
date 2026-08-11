@@ -7,6 +7,7 @@ import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBr
 import "../../../infrastructure/Events/eventMap.js";
 import { TeamFilterService } from "../../../features/TeamFilter/abstractions/TeamFilterService.js";
 import { DashboardGateway } from "../../../features/Dashboard/abstractions/DashboardGateway.js";
+import { getErrorMessage } from "#shared/errors.js";
 
 type VulnerabilityTrendDays = 7 | 30 | 90 | undefined;
 
@@ -96,7 +97,7 @@ class DashboardPresenterImpl implements Abstraction.Interface {
             ]);
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to load dashboard";
+                this.error = getErrorMessage(err, "Failed to load dashboard");
             });
         } finally {
             runInAction(() => {

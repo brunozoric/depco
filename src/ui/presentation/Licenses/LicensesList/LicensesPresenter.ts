@@ -13,6 +13,7 @@ import { TeamFilterService } from "../../../features/TeamFilter/abstractions/Tea
 import { UrlFilterService } from "../../../features/UrlFilter/abstractions/UrlFilterService.js";
 import type { z } from "zod";
 import { listLicensesRoute } from "#shared/routes/index.js";
+import { getErrorMessage } from "#shared/errors.js";
 
 const FILTER_SCHEMA = listLicensesRoute.querystring as NonNullable<
     typeof listLicensesRoute.querystring
@@ -127,7 +128,7 @@ class LicensesPresenterImpl implements Abstraction.Interface {
             });
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to load licenses";
+                this.error = getErrorMessage(err, "Failed to load licenses");
             });
         } finally {
             runInAction(() => {

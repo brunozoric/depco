@@ -1,4 +1,4 @@
-import { existsSync } from "fs";
+import { access } from "fs/promises";
 import { join } from "path";
 import { PackageManagerService as Abstraction } from "./abstractions/PackageManagerService.js";
 import { CommandRunner } from "../CommandRunner/index.js";
@@ -14,8 +14,11 @@ class PackageManagerServiceImpl implements Abstraction.Interface {
 
     public async detect(projectPath: string): Promise<Abstraction.PackageManager> {
         for (const driver of this.registry.getAllDrivers()) {
-            if (existsSync(join(projectPath, driver.lockfileName))) {
+            try {
+                await access(join(projectPath, driver.lockfileName));
                 return driver.id;
+            } catch {
+                continue;
             }
         }
         throw new Error(

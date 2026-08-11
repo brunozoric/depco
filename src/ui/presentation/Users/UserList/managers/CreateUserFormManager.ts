@@ -2,6 +2,7 @@ import { makeAutoObservable, runInAction } from "mobx";
 import type { UserPermission } from "#shared/users/index.js";
 import type { UserListPresenter } from "../abstractions/UserListPresenter.js";
 import type { CreateUserUseCase } from "../../useCases/abstractions/CreateUserUseCase.js";
+import { getErrorMessage } from "#shared/errors.js";
 
 interface ICreateUserFormManagerDependencies {
     createUserUseCase: CreateUserUseCase.Interface;
@@ -74,7 +75,7 @@ export class CreateUserFormManager {
             });
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to create user";
+                this.error = getErrorMessage(err, "Failed to create user");
             });
         } finally {
             runInAction(() => {

@@ -7,6 +7,7 @@ import { TeamsRepository } from "../../../features/Teams/abstractions/TeamsRepos
 import { TeamsGateway } from "../../../features/Teams/abstractions/TeamsGateway.js";
 import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
 import { LoadProjectsUseCase } from "../../Projects/useCases/abstractions/LoadProjectsUseCase.js";
+import { getErrorMessage } from "#shared/errors.js";
 
 const DEFAULT_TEAM_COLOR = "#228be6";
 
@@ -48,7 +49,7 @@ class TeamsPresenterImpl implements Abstraction.Interface {
             await this.loadTeamsUseCase.execute();
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to load teams";
+                this.error = getErrorMessage(err, "Failed to load teams");
             });
         } finally {
             runInAction(() => {
@@ -153,7 +154,7 @@ class TeamsPresenterImpl implements Abstraction.Interface {
             });
         } catch (err) {
             runInAction(() => {
-                this.mutationError = err instanceof Error ? err.message : "Failed to save team";
+                this.mutationError = getErrorMessage(err, "Failed to save team");
             });
         }
     };
@@ -176,7 +177,7 @@ class TeamsPresenterImpl implements Abstraction.Interface {
             await this.manageTeamUseCase.remove(id);
         } catch (err) {
             runInAction(() => {
-                this.mutationError = err instanceof Error ? err.message : "Failed to delete team";
+                this.mutationError = getErrorMessage(err, "Failed to delete team");
             });
         } finally {
             runInAction(() => {

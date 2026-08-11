@@ -7,6 +7,7 @@ import type { TrendsGateway } from "../../../features/Trends/abstractions/Trends
 import { LoadProjectsUseCase } from "../../Projects/useCases/abstractions/LoadProjectsUseCase.js";
 import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
 import { TeamFilterService } from "../../../features/TeamFilter/abstractions/TeamFilterService.js";
+import { getErrorMessage } from "#shared/errors.js";
 
 const DEFAULT_RANGE = "30";
 
@@ -80,7 +81,7 @@ class TrendsPresenterImpl implements Abstraction.Interface {
             await Promise.all(tasks);
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to load trends";
+                this.error = getErrorMessage(err, "Failed to load trends");
             });
         } finally {
             runInAction(() => {
@@ -96,8 +97,7 @@ class TrendsPresenterImpl implements Abstraction.Interface {
             .execute({ staleness: range, ...this.buildTeamIdFilter() })
             .catch(err => {
                 runInAction(() => {
-                    this.error =
-                        err instanceof Error ? err.message : "Failed to load staleness trend";
+                    this.error = getErrorMessage(err, "Failed to load staleness trend");
                 });
             });
     };
@@ -109,8 +109,7 @@ class TrendsPresenterImpl implements Abstraction.Interface {
             .execute({ license: range, ...this.buildTeamIdFilter() })
             .catch(err => {
                 runInAction(() => {
-                    this.error =
-                        err instanceof Error ? err.message : "Failed to load license trend";
+                    this.error = getErrorMessage(err, "Failed to load license trend");
                 });
             });
     };
@@ -122,8 +121,7 @@ class TrendsPresenterImpl implements Abstraction.Interface {
             .execute({ autoFix: range, ...this.buildTeamIdFilter() })
             .catch(err => {
                 runInAction(() => {
-                    this.error =
-                        err instanceof Error ? err.message : "Failed to load auto-fix trend";
+                    this.error = getErrorMessage(err, "Failed to load auto-fix trend");
                 });
             });
     };
@@ -135,8 +133,7 @@ class TrendsPresenterImpl implements Abstraction.Interface {
             .execute(this.buildDependencyChangesFilters())
             .catch(err => {
                 runInAction(() => {
-                    this.error =
-                        err instanceof Error ? err.message : "Failed to load dependency changes";
+                    this.error = getErrorMessage(err, "Failed to load dependency changes");
                 });
             });
     };

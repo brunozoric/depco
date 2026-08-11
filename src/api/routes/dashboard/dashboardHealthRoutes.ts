@@ -5,6 +5,7 @@ import { registerRoute } from "#shared/routing/index.js";
 import { dashboardHealthRoute, dashboardScoreDetailRoute } from "#shared/routes/index.js";
 import { VULNERABILITY_PENALTY } from "#shared/vulnerabilities/types.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { teamProjectIds } from "#api/utils/teamFilter.js";
 
 interface IRawHealthRow {
     projectId: string;
@@ -43,9 +44,7 @@ export function registerDashboardHealthRoutes(app: FastifyInstance, container: C
 
     registerRoute(app, dashboardHealthRoute, {}, async (request, reply) => {
         const { teamId } = request.query;
-        const teamCondition = teamId
-            ? sql`AND hs.project_id IN (SELECT project_id FROM team_projects WHERE team_id = ${teamId})`
-            : sql``;
+        const teamCondition = teamId ? sql`AND hs.project_id IN ${teamProjectIds(teamId)}` : sql``;
 
         const rows = await db.all<IRawHealthRow>(sql`
             SELECT

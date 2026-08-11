@@ -2,6 +2,7 @@ import { makeAutoObservable, runInAction, computed } from "mobx";
 import { BackupPresenter as Abstraction } from "./abstractions/BackupPresenter.js";
 import type { BackupGateway } from "../../../features/Backup/abstractions/BackupGateway.js";
 import { downloadBlob } from "#ui/infrastructure/Shared/download/downloadBlob.js";
+import { getErrorMessage } from "#shared/errors.js";
 
 function backupFilename(): string {
     const now = new Date();
@@ -41,7 +42,7 @@ class BackupPresenterImpl implements Abstraction.Interface {
             downloadBlob(blob, backupFilename());
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to export backup";
+                this.error = getErrorMessage(err, "Failed to export backup");
             });
         } finally {
             runInAction(() => {
@@ -69,7 +70,7 @@ class BackupPresenterImpl implements Abstraction.Interface {
             });
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to import backup";
+                this.error = getErrorMessage(err, "Failed to import backup");
             });
         } finally {
             runInAction(() => {

@@ -6,6 +6,7 @@ import { DependencyGraphRepository } from "../../../features/DependencyGraph/abs
 import { DependencyGraphGateway } from "../../../features/DependencyGraph/abstractions/DependencyGraphGateway.js";
 import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBridge.js";
 import "../../../infrastructure/Events/eventMap.js";
+import { getErrorMessage } from "#shared/errors.js";
 
 class DependencyGraphPresenterImpl implements Abstraction.Interface {
     private loading = true;
@@ -77,7 +78,7 @@ class DependencyGraphPresenterImpl implements Abstraction.Interface {
             await this.loadDependencyGraphUseCase.execute(projectId);
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to load dependency graph";
+                this.error = getErrorMessage(err, "Failed to load dependency graph");
             });
         } finally {
             runInAction(() => {
@@ -110,8 +111,7 @@ class DependencyGraphPresenterImpl implements Abstraction.Interface {
             });
         } catch (err) {
             runInAction(() => {
-                this.error =
-                    err instanceof Error ? err.message : "Failed to search dependency paths";
+                this.error = getErrorMessage(err, "Failed to search dependency paths");
             });
         }
     };
@@ -208,8 +208,7 @@ class DependencyGraphPresenterImpl implements Abstraction.Interface {
             await this.refreshDependencyGraphUseCase.execute(this.projectId);
         } catch (err) {
             runInAction(() => {
-                this.error =
-                    err instanceof Error ? err.message : "Failed to refresh dependency graph";
+                this.error = getErrorMessage(err, "Failed to refresh dependency graph");
             });
         } finally {
             runInAction(() => {

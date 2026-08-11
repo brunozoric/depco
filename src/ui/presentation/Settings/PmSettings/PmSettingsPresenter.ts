@@ -11,6 +11,7 @@ import type { PmSettingsGateway } from "../../../features/Settings/abstractions/
 import { SECURITY_FIELD_REGISTRY, type PackageManagerId } from "#shared/security/index.js";
 import { SavePmConfigUseCase } from "../useCases/abstractions/SavePmConfigUseCase.js";
 import { notifications } from "@mantine/notifications";
+import { getErrorMessage } from "#shared/errors.js";
 
 class PmSettingsPresenterImpl implements Abstraction.Interface {
     private loading = false;
@@ -161,7 +162,7 @@ class PmSettingsPresenterImpl implements Abstraction.Interface {
             });
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to create setting";
+                this.error = getErrorMessage(err, "Failed to create setting");
             });
         }
     };
@@ -191,7 +192,7 @@ class PmSettingsPresenterImpl implements Abstraction.Interface {
             });
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to update setting";
+                this.error = getErrorMessage(err, "Failed to update setting");
             });
         }
     };
@@ -213,7 +214,7 @@ class PmSettingsPresenterImpl implements Abstraction.Interface {
             });
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to toggle setting";
+                this.error = getErrorMessage(err, "Failed to toggle setting");
             });
         }
     };
@@ -230,7 +231,7 @@ class PmSettingsPresenterImpl implements Abstraction.Interface {
             });
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to reset settings";
+                this.error = getErrorMessage(err, "Failed to reset settings");
             });
         } finally {
             runInAction(() => {
@@ -290,7 +291,7 @@ class PmSettingsPresenterImpl implements Abstraction.Interface {
                 notifications.show({
                     color: "red",
                     title: "Save failed",
-                    message: err instanceof Error ? err.message : "Failed to save PM settings",
+                    message: getErrorMessage(err, "Failed to save PM settings"),
                     autoClose: 5000
                 });
             });

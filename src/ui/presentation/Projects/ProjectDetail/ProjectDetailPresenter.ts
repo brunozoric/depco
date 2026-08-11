@@ -16,8 +16,6 @@ import { LoadScanSchedulesUseCase } from "../../ScanSchedules/useCases/abstracti
 import { UpdateScanScheduleUseCase } from "../../ScanSchedules/useCases/abstractions/UpdateScanScheduleUseCase.js";
 import { ResetScanScheduleUseCase } from "../../ScanSchedules/useCases/abstractions/ResetScanScheduleUseCase.js";
 import { VulnerabilitiesGateway } from "../../../features/Vulnerabilities/abstractions/VulnerabilitiesGateway.js";
-import { VULNERABILITY_SEVERITIES } from "#shared/vulnerabilities/types.js";
-import type { VulnerabilitySeverity } from "#shared/vulnerabilities/types.js";
 import { LicensesGateway } from "../../../features/Licenses/abstractions/LicensesGateway.js";
 import { AutoFixGateway } from "../../../features/AutoFix/abstractions/AutoFixGateway.js";
 import { SbomGateway } from "../../../features/Sbom/abstractions/SbomGateway.js";
@@ -29,6 +27,8 @@ import type { z } from "zod";
 import { AutoFixManager } from "./AutoFixManager.js";
 import { SbomExportManager } from "./SbomExportManager.js";
 import { DependencySelectionManager } from "./DependencySelectionManager.js";
+import { ScanManager } from "./ScanManager.js";
+import { PackageOverlayLoader } from "./PackageOverlayLoader.js";
 
 const DEFAULT_PAGE_SIZE = 25;
 
@@ -37,47 +37,28 @@ const DEPENDENCY_FILTER_SCHEMA = getProjectDependenciesRoute.querystring as NonN
 > &
     z.ZodObject<z.ZodRawShape>;
 
-interface LicenseData {
-    licenseName: string;
-    riskTier: string;
-}
-
-interface ScanState {
-    scanning: boolean;
-    progress: Abstraction.ScanProgressViewModel | null;
-    error: string | null;
-}
-
 class ProjectDetailPresenterImpl implements Abstraction.Interface {
     private loading = false;
-    private readonly scanStates = new Map<string, ScanState>();
     private currentProjectId: string | null = null;
     private packageManagerUpdateVersionValue = "";
-    private scanWarning: string | null = null;
     private upgradeFilterValue: UpgradeFilter = "all";
-    private vulnerabilitiesByPackage = new Map<
-        string,
-        { count: number; maxSeverity: VulnerabilitySeverity }
-    >();
-    private licenseByPackage = new Map<string, LicenseData>();
     private projectTeamIdValues: string[] = [];
 
     private readonly autoFixManager: AutoFixManager;
     private readonly sbomExportManager: SbomExportManager;
     private readonly selectionManager: DependencySelectionManager;
+    private readonly scanManager: ScanManager;
+    private readonly overlayLoader: PackageOverlayLoader;
 
     private readonly changelogTracker: ChangelogTracker;
     private readonly disposeUrlListener: () => void;
 
-    private readonly handleScanProgress: EventBridge.Callback<"scan:progress">;
-    private readonly handleScanComplete: EventBridge.Callback<"scan:complete">;
-    private readonly handleScanFailed: EventBridge.Callback<"scan:failed">;
     private readonly handleInstallComplete: EventBridge.Callback<"install:complete">;
     private readonly handleTransitiveResolveComplete: EventBridge.Callback<"transitive-resolve:complete">;
 
     public constructor(
         private readonly loadProjectsUseCase: LoadProjectsUseCase.Interface,
-        private readonly scanProjectUseCase: ScanProjectUseCase.Interface,
+        scanProjectUseCase: ScanProjectUseCase.Interface,
         private readonly refreshTransientUseCase: RefreshTransientUseCase.Interface,
         private readonly updatePackageManagerUseCase: UpdatePackageManagerUseCase.Interface,
         private readonly projectsGateway: ProjectsGateway.Interface,
@@ -87,62 +68,34 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         private readonly loadScanSchedulesUseCase: LoadScanSchedulesUseCase.Interface,
         private readonly updateScanScheduleUseCase: UpdateScanScheduleUseCase.Interface,
         private readonly resetScanScheduleUseCase: ResetScanScheduleUseCase.Interface,
-        private readonly vulnerabilitiesGateway: VulnerabilitiesGateway.Interface,
-        private readonly licensesGateway: LicensesGateway.Interface,
-        private readonly autoFixGateway: AutoFixGateway.Interface,
-        private readonly sbomGateway: SbomGateway.Interface,
+        vulnerabilitiesGateway: VulnerabilitiesGateway.Interface,
+        licensesGateway: LicensesGateway.Interface,
+        autoFixGateway: AutoFixGateway.Interface,
+        sbomGateway: SbomGateway.Interface,
         private readonly teamsGateway: TeamsGateway.Interface,
         private readonly teamListService: TeamListService.Interface,
         private readonly urlFilterService: UrlFilterService.Interface
     ) {
         const getProjectId = (): string | null => this.currentProjectId;
 
-        this.autoFixManager = new AutoFixManager({
-            autoFixGateway: this.autoFixGateway,
-            getProjectId
-        });
-        this.sbomExportManager = new SbomExportManager({
-            sbomGateway: this.sbomGateway,
-            getProjectId
-        });
+        this.autoFixManager = new AutoFixManager({ autoFixGateway, getProjectId });
+        this.sbomExportManager = new SbomExportManager({ sbomGateway, getProjectId });
         this.selectionManager = new DependencySelectionManager({
             projectsRepository: this.projectsRepository,
             getProjectId
         });
+        this.scanManager = new ScanManager({
+            scanProjectUseCase,
+            eventBridge: this.eventBridge,
+            getProjectId,
+            onScanComplete: async projectId => {
+                await Promise.all([this.loadDependencies(projectId), this.loadSecurity(projectId)]);
+            }
+        });
+        this.overlayLoader = new PackageOverlayLoader({ vulnerabilitiesGateway, licensesGateway });
 
         makeAutoObservable(this, { vm: computed });
         this.changelogTracker = new ChangelogTracker(this.eventBridge);
-
-        this.handleScanProgress = data => {
-            runInAction(() => {
-                this.scanStates.set(data.projectId, {
-                    scanning: true,
-                    progress: {
-                        packageName: data.packageName,
-                        current: data.current,
-                        total: data.total
-                    },
-                    error: null
-                });
-            });
-        };
-
-        this.handleScanComplete = data => {
-            runInAction(() => {
-                this.scanWarning = data.warning ?? null;
-            });
-            void this.finishScan(data.projectId);
-        };
-
-        this.handleScanFailed = data => {
-            runInAction(() => {
-                this.scanStates.set(data.projectId, {
-                    scanning: false,
-                    progress: null,
-                    error: data.error
-                });
-            });
-        };
 
         this.handleInstallComplete = data => {
             if (data.projectId === this.currentProjectId) {
@@ -156,9 +109,6 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
             }
         };
 
-        this.eventBridge.on("scan:progress", this.handleScanProgress);
-        this.eventBridge.on("scan:complete", this.handleScanComplete);
-        this.eventBridge.on("scan:failed", this.handleScanFailed);
         this.eventBridge.on("install:complete", this.handleInstallComplete);
         this.eventBridge.on("transitive-resolve:complete", this.handleTransitiveResolveComplete);
 
@@ -183,7 +133,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
             : undefined;
 
         const scanState = this.currentProjectId
-            ? this.scanStates.get(this.currentProjectId)
+            ? this.scanManager.getState(this.currentProjectId)
             : undefined;
 
         const schedule = this.currentProjectId
@@ -196,8 +146,10 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
 
         const dependencies = (dependenciesResponse?.dependencies ?? []).map(
             (dependency): Abstraction.DependencyViewModel => {
-                const vulnerabilityData = this.vulnerabilitiesByPackage.get(dependency.name);
-                const licenseData = this.licenseByPackage.get(dependency.name);
+                const vulnerabilityData = this.overlayLoader.vulnerabilitiesByPackage.get(
+                    dependency.name
+                );
+                const licenseData = this.overlayLoader.licenseByPackage.get(dependency.name);
                 return {
                     name: dependency.name,
                     currentVersion: dependency.currentVersion,
@@ -221,7 +173,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
             scanning: scanState?.scanning ?? false,
             scanProgress: scanState?.progress ?? null,
             scanError: scanState?.error ?? null,
-            scanWarning: this.scanWarning,
+            scanWarning: this.scanManager.scanWarning,
             project: project
                 ? {
                       id: project.id,
@@ -231,12 +183,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
                       packageManager: project.packageManager ?? null
                   }
                 : null,
-            security: security
-                ? {
-                      passes: security.passes,
-                      checks: security.checks
-                  }
-                : null,
+            security: security ? { passes: security.passes, checks: security.checks } : null,
             dependencies,
             upgradeFilter: this.upgradeFilterValue,
             totalDependencyCount: totalCount,
@@ -294,8 +241,8 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
                 this.loadSecurity(projectId),
                 this.loadDependencies(projectId),
                 this.loadScanSchedulesUseCase.execute(),
-                this.loadVulnerabilities(projectId),
-                this.loadLicenses(projectId),
+                this.overlayLoader.loadVulnerabilities(projectId),
+                this.overlayLoader.loadLicenses(projectId),
                 this.autoFixManager.loadSettings(projectId),
                 this.autoFixManager.loadPullRequests(projectId),
                 this.loadProjectTeams(projectId),
@@ -309,28 +256,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
     };
 
     public scan = async (force?: boolean): Promise<void> => {
-        if (!this.currentProjectId) {
-            return;
-        }
-
-        const projectId = this.currentProjectId;
-        this.scanStates.set(projectId, { scanning: true, progress: null, error: null });
-        this.scanWarning = null;
-        try {
-            await this.scanProjectUseCase.execute(projectId, force);
-        } catch (error) {
-            runInAction(() => {
-                this.scanStates.set(projectId, { scanning: false, progress: null, error: null });
-            });
-            throw error;
-        }
-    };
-
-    private finishScan = async (projectId: string): Promise<void> => {
-        await Promise.all([this.loadDependencies(projectId), this.loadSecurity(projectId)]);
-        runInAction(() => {
-            this.scanStates.set(projectId, { scanning: false, progress: null, error: null });
-        });
+        await this.scanManager.scan(force);
     };
 
     private loadDependencies = async (projectId: string): Promise<void> => {
@@ -345,56 +271,6 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
     private loadSecurity = async (projectId: string): Promise<void> => {
         const status = await this.projectsGateway.getSecurity(projectId);
         this.projectsRepository.setSecurityStatus(projectId, status);
-    };
-
-    private loadVulnerabilities = async (projectId: string): Promise<void> => {
-        try {
-            const response = await this.vulnerabilitiesGateway.getByProject(projectId);
-            const grouped = new Map<
-                string,
-                { count: number; maxSeverity: VulnerabilitySeverity }
-            >();
-            for (const vulnerability of response.items) {
-                const existing = grouped.get(vulnerability.packageName);
-                if (existing) {
-                    existing.count++;
-                    if (
-                        VULNERABILITY_SEVERITIES.indexOf(vulnerability.severity) <
-                        VULNERABILITY_SEVERITIES.indexOf(existing.maxSeverity)
-                    ) {
-                        existing.maxSeverity = vulnerability.severity;
-                    }
-                } else {
-                    grouped.set(vulnerability.packageName, {
-                        count: 1,
-                        maxSeverity: vulnerability.severity
-                    });
-                }
-            }
-            runInAction(() => {
-                this.vulnerabilitiesByPackage = grouped;
-            });
-        } catch {
-            // Vulnerability fetch failure should not break the page
-        }
-    };
-
-    private loadLicenses = async (projectId: string): Promise<void> => {
-        try {
-            const response = await this.licensesGateway.getByProject(projectId);
-            const grouped = new Map<string, LicenseData>();
-            for (const license of response.items) {
-                grouped.set(license.packageName, {
-                    licenseName: license.licenseName,
-                    riskTier: license.riskTier
-                });
-            }
-            runInAction(() => {
-                this.licenseByPackage = grouped;
-            });
-        } catch {
-            // License fetch failure should not break the page
-        }
     };
 
     private loadProjectTeams = async (projectId: string): Promise<void> => {
@@ -414,17 +290,9 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         }
     };
 
-    public togglePackage = (name: string): void => {
-        this.selectionManager.toggle(name);
-    };
-
-    public selectAll = (): void => {
-        this.selectionManager.selectAll();
-    };
-
-    public deselectAll = (): void => {
-        this.selectionManager.deselectAll();
-    };
+    public togglePackage = (name: string): void => this.selectionManager.toggle(name);
+    public selectAll = (): void => this.selectionManager.selectAll();
+    public deselectAll = (): void => this.selectionManager.deselectAll();
 
     public setUpgradeFilter = (filter: UpgradeFilter): void => {
         this.upgradeFilterValue = filter;
@@ -447,7 +315,6 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         if (!this.currentProjectId) {
             return;
         }
-
         await this.refreshTransientUseCase.execute(this.currentProjectId);
     };
 
@@ -455,7 +322,6 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         if (!this.currentProjectId) {
             return;
         }
-
         await this.updatePackageManagerUseCase.execute(
             this.currentProjectId,
             this.packageManagerUpdateVersionValue
@@ -538,10 +404,8 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
 
     public dispose = (): void => {
         this.changelogTracker.dispose();
+        this.scanManager.dispose();
         this.disposeUrlListener();
-        this.eventBridge.off("scan:progress", this.handleScanProgress);
-        this.eventBridge.off("scan:complete", this.handleScanComplete);
-        this.eventBridge.off("scan:failed", this.handleScanFailed);
         this.eventBridge.off("install:complete", this.handleInstallComplete);
         this.eventBridge.off("transitive-resolve:complete", this.handleTransitiveResolveComplete);
     };

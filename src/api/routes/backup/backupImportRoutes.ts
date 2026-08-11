@@ -1,4 +1,4 @@
-import { existsSync } from "fs";
+import { access } from "fs/promises";
 import { z } from "zod";
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
@@ -9,6 +9,7 @@ import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { PackageManagerService } from "../../services/PackageManager/index.js";
 import { registerProject } from "../../utils/registerProject.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
+import { getErrorMessage } from "#shared/errors.js";
 import {
     appSettings,
     pmSecuritySettings,
@@ -161,7 +162,9 @@ export function registerBackupImportRoutes(app: FastifyInstance, container: Cont
             }
 
             for (const project of backup.projects) {
-                if (!existsSync(project.path)) {
+                try {
+                    await access(project.path);
+                } catch {
                     result.projects.failed++;
                     result.projects.errors.push(`Path does not exist: ${project.path}`);
                     continue;
@@ -188,7 +191,7 @@ export function registerBackupImportRoutes(app: FastifyInstance, container: Cont
                 } catch (err) {
                     result.projects.failed++;
                     result.projects.errors.push(
-                        `${project.path}: ${err instanceof Error ? err.message : "Unknown error"}`
+                        `${project.path}: ${getErrorMessage(err, "Unknown error")}`
                     );
                 }
             }

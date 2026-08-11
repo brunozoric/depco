@@ -1,5 +1,6 @@
 import { makeAutoObservable, runInAction } from "mobx";
 import type { DeleteUserUseCase } from "../../useCases/abstractions/DeleteUserUseCase.js";
+import { getErrorMessage } from "#shared/errors.js";
 
 interface IDeleteUserManagerDependencies {
     deleteUserUseCase: DeleteUserUseCase.Interface;
@@ -38,7 +39,7 @@ export class DeleteUserManager {
             await this.onDeleted();
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to delete user";
+                this.error = getErrorMessage(err, "Failed to delete user");
             });
         } finally {
             runInAction(() => {

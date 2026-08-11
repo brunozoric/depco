@@ -3,6 +3,7 @@ import { SbomPresenter as Abstraction } from "./abstractions/SbomPresenter.js";
 import { ExportSbomUseCase } from "../useCases/abstractions/ExportSbomUseCase.js";
 import { LoadProjectsUseCase } from "../../Projects/useCases/abstractions/LoadProjectsUseCase.js";
 import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
+import { getErrorMessage } from "#shared/errors.js";
 
 class SbomPresenterImpl implements Abstraction.Interface {
     private loading = true;
@@ -43,7 +44,7 @@ class SbomPresenterImpl implements Abstraction.Interface {
             }
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to load projects";
+                this.error = getErrorMessage(err, "Failed to load projects");
             });
         } finally {
             runInAction(() => {
@@ -70,7 +71,7 @@ class SbomPresenterImpl implements Abstraction.Interface {
             await this.exportSbomUseCase.exportProject(this.selectedProjectId, this.selectedFormat);
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Export failed";
+                this.error = getErrorMessage(err, "Export failed");
             });
         } finally {
             runInAction(() => {
@@ -86,7 +87,7 @@ class SbomPresenterImpl implements Abstraction.Interface {
             await this.exportSbomUseCase.exportAll(this.selectedFormat);
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Export failed";
+                this.error = getErrorMessage(err, "Export failed");
             });
         } finally {
             runInAction(() => {

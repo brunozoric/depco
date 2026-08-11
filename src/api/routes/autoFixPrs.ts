@@ -13,6 +13,7 @@ import {
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { JobWorker } from "#api/services/JobExecution/index.js";
 import { autoFixPullRequests, projects } from "#api/db/schema.js";
+import { teamProjectIds } from "#api/utils/teamFilter.js";
 
 interface PluginOptions extends FastifyPluginOptions {
     container: Container;
@@ -33,9 +34,7 @@ function buildAutoFixPullRequestConditions(query: IAutoFixPullRequestListQueryst
         conditions.push(eq(autoFixPullRequests.status, query.status));
     }
     if (query.teamId) {
-        conditions.push(
-            sql`${autoFixPullRequests.projectId} IN (SELECT project_id FROM team_projects WHERE team_id = ${query.teamId})`
-        );
+        conditions.push(sql`${autoFixPullRequests.projectId} IN ${teamProjectIds(query.teamId)}`);
     }
     return conditions;
 }

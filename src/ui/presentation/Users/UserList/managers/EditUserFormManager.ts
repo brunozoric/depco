@@ -4,6 +4,7 @@ import type { UserListPresenter } from "../abstractions/UserListPresenter.js";
 import type { UpdateUserUseCase } from "../../useCases/abstractions/UpdateUserUseCase.js";
 import type { UsersRepository } from "../../../../features/Users/abstractions/UsersRepository.js";
 import type { AuthRepository } from "../../../../features/Auth/abstractions/AuthRepository.js";
+import { getErrorMessage } from "#shared/errors.js";
 
 interface IEditUserFormManagerDependencies {
     updateUserUseCase: UpdateUserUseCase.Interface;
@@ -77,7 +78,7 @@ export class EditUserFormManager {
             });
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to update user";
+                this.error = getErrorMessage(err, "Failed to update user");
             });
         } finally {
             runInAction(() => {

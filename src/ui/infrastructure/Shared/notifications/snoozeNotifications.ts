@@ -3,7 +3,9 @@ import type { WSSnoozeExpired } from "#shared/websocket/types.js";
 import { navigate } from "../../Router/router.js";
 
 let lastNotificationTime = 0;
-const DEDUP_WINDOW_MS = 60000;
+import { MINUTE_MS } from "#shared/time.js";
+
+const DEDUP_WINDOW_MS = MINUTE_MS;
 
 export function handleSnoozeExpired(data: WSSnoozeExpired): void {
     if (data.count === 0) {

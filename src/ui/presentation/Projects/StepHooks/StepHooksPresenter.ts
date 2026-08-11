@@ -2,6 +2,7 @@ import { computed, makeAutoObservable, runInAction } from "mobx";
 import { StepHooksPresenter as Abstraction } from "./abstractions/StepHooksPresenter.js";
 import { StepHooksGateway } from "../../../features/StepHooks/abstractions/StepHooksGateway.js";
 import { StepHooksRepository } from "../../../features/StepHooks/abstractions/StepHooksRepository.js";
+import { getErrorMessage } from "#shared/errors.js";
 
 class StepHooksPresenterImpl implements Abstraction.Interface {
     private loading = false;
@@ -61,7 +62,7 @@ class StepHooksPresenterImpl implements Abstraction.Interface {
             });
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to load step hooks";
+                this.error = getErrorMessage(err, "Failed to load step hooks");
             });
         } finally {
             runInAction(() => {
@@ -83,7 +84,7 @@ class StepHooksPresenterImpl implements Abstraction.Interface {
             });
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to create step hook";
+                this.error = getErrorMessage(err, "Failed to create step hook");
             });
         }
     };
@@ -101,7 +102,7 @@ class StepHooksPresenterImpl implements Abstraction.Interface {
             });
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to update step hook";
+                this.error = getErrorMessage(err, "Failed to update step hook");
             });
         }
     };
@@ -116,7 +117,7 @@ class StepHooksPresenterImpl implements Abstraction.Interface {
             await this.load(this.projectId);
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to remove step hook";
+                this.error = getErrorMessage(err, "Failed to remove step hook");
             });
         }
     };

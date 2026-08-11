@@ -13,6 +13,7 @@ import {
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { JobWorker } from "../../services/JobExecution/index.js";
 import { licenses, licenseViolations, projects, teamProjects } from "#api/db/schema.js";
+import { teamProjectIds } from "#api/utils/teamFilter.js";
 
 interface ILicenseQuerystring {
     projectId?: string | undefined;
@@ -38,9 +39,7 @@ function buildLicenseConditions(query: ILicenseQuerystring): SQL[] {
         conditions.push(like(licenses.packageName, `%${query.packageName}%`));
     }
     if (query.teamId) {
-        conditions.push(
-            sql`${licenses.projectId} IN (SELECT project_id FROM team_projects WHERE team_id = ${query.teamId})`
-        );
+        conditions.push(sql`${licenses.projectId} IN ${teamProjectIds(query.teamId)}`);
     }
     if (query.violationAction) {
         conditions.push(

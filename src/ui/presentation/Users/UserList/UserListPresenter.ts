@@ -14,6 +14,7 @@ import { UrlFilterService } from "../../../features/UrlFilter/abstractions/UrlFi
 import { CreateUserFormManager } from "./managers/CreateUserFormManager.js";
 import { EditUserFormManager } from "./managers/EditUserFormManager.js";
 import { DeleteUserManager } from "./managers/DeleteUserManager.js";
+import { getErrorMessage } from "#shared/errors.js";
 
 const FILTER_SCHEMA = listUsersRoute.querystring as NonNullable<typeof listUsersRoute.querystring> &
     z.ZodObject<z.ZodRawShape>;
@@ -121,7 +122,7 @@ class UserListPresenterImpl implements Abstraction.Interface {
             });
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to load users";
+                this.error = getErrorMessage(err, "Failed to load users");
             });
         } finally {
             runInAction(() => {
@@ -182,8 +183,7 @@ class UserListPresenterImpl implements Abstraction.Interface {
             await this.forceLogoutUserUseCase.execute(id);
         } catch (err) {
             runInAction(() => {
-                this.mutationError =
-                    err instanceof Error ? err.message : "Failed to force logout user";
+                this.mutationError = getErrorMessage(err, "Failed to force logout user");
             });
         }
     };

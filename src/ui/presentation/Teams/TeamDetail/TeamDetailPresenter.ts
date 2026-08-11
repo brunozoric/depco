@@ -3,6 +3,7 @@ import { TeamDetailPresenter as Abstraction } from "./abstractions/TeamDetailPre
 import { TeamsGateway } from "../../../features/Teams/abstractions/TeamsGateway.js";
 import { TeamFilterService } from "../../../features/TeamFilter/abstractions/TeamFilterService.js";
 import { DashboardPresenter } from "../../Dashboard/Dashboard/abstractions/DashboardPresenter.js";
+import { getErrorMessage } from "#shared/errors.js";
 
 class TeamDetailPresenterImpl implements Abstraction.Interface {
     private loading = false;
@@ -49,7 +50,7 @@ class TeamDetailPresenterImpl implements Abstraction.Interface {
             });
         } catch (err) {
             runInAction(() => {
-                this.error = err instanceof Error ? err.message : "Failed to load team";
+                this.error = getErrorMessage(err, "Failed to load team");
             });
         } finally {
             runInAction(() => {

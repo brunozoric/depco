@@ -9,6 +9,7 @@ import {
 } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { licenseViolations, projects, teamProjects } from "#api/db/schema.js";
+import { teamProjectIds } from "#api/utils/teamFilter.js";
 
 interface ILicenseViolationQuerystring {
     projectId?: string | undefined;
@@ -29,9 +30,7 @@ function buildViolationConditions(query: ILicenseViolationQuerystring): SQL[] {
         conditions.push(like(licenseViolations.packageName, `%${query.packageName}%`));
     }
     if (query.teamId) {
-        conditions.push(
-            sql`${licenseViolations.projectId} IN (SELECT project_id FROM team_projects WHERE team_id = ${query.teamId})`
-        );
+        conditions.push(sql`${licenseViolations.projectId} IN ${teamProjectIds(query.teamId)}`);
     }
     return conditions;
 }

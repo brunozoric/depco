@@ -2,6 +2,7 @@
 import "dotenv/config";
 import { eq } from "drizzle-orm";
 import { existsSync, mkdirSync } from "fs";
+import { HOUR_MS } from "#shared/time.js";
 import { resolve } from "path";
 import { pathToFileURL } from "url";
 import Fastify from "fastify";
@@ -82,8 +83,8 @@ export async function createServer(): Promise<FastifyInstance> {
         .where(eq(appSettings.key, "snooze_check_interval"))
         .get();
     const snoozeCheckIntervalMs = snoozeIntervalRow
-        ? parseInt(snoozeIntervalRow.value, 10) || 3600000
-        : 3600000;
+        ? parseInt(snoozeIntervalRow.value, 10) || HOUR_MS
+        : HOUR_MS;
 
     const jobWorker = container.resolve(JobWorker);
     await jobWorker.recoverStaleJobs();
