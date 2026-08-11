@@ -19,7 +19,7 @@ interface IUpgradeTarget {
     latestVersion: string;
 }
 
-interface IExpandedDependenciesProps {
+interface ExpandedDependenciesProps {
     packageName: string;
     projects: PackagesGateway.PackageProject[];
     page: number;
@@ -33,7 +33,7 @@ export function ExpandedDependencies({
     page,
     onPageChange,
     onUpgrade
-}: IExpandedDependenciesProps): React.ReactNode {
+}: ExpandedDependenciesProps): React.ReactNode {
     const totalPages = Math.max(1, Math.ceil(projects.length / PAGE_SIZE));
     const start = (page - 1) * PAGE_SIZE;
     const visibleProjects = projects.slice(start, start + PAGE_SIZE);

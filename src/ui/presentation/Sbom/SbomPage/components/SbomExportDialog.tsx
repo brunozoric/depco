@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import type { SbomPresenter } from "../abstractions/SbomPresenter.js";
 
-interface ISbomExportDialogProps {
+interface SbomExportDialogProps {
     opened: boolean;
     onClose: () => void;
     presenter: SbomPresenter.Interface;
@@ -28,7 +28,7 @@ export const SbomExportDialog = observer(function SbomExportDialog({
     opened,
     onClose,
     presenter
-}: ISbomExportDialogProps): React.ReactNode {
+}: SbomExportDialogProps): React.ReactNode {
     const { vm } = presenter;
 
     useEffect(() => {

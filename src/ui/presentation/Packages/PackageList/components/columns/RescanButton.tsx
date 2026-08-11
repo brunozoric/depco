@@ -1,12 +1,12 @@
 import type React from "react";
 import { Button, Table } from "@mantine/core";
 
-interface IRescanButtonProps {
+interface RescanButtonProps {
     packageName: string;
     onRescan: (packageName: string) => void;
 }
 
-export function RescanButton({ packageName, onRescan }: IRescanButtonProps): React.ReactNode {
+export function RescanButton({ packageName, onRescan }: RescanButtonProps): React.ReactNode {
     return (
         <Table.Td>
             <Button

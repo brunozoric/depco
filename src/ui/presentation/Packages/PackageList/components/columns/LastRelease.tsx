@@ -9,11 +9,11 @@ function formatDate(timestamp: number | null): string {
     return new Date(timestamp).toLocaleDateString();
 }
 
-interface ILastReleaseProps {
+interface LastReleaseProps {
     pkg: IPackageListItemViewModel;
 }
 
-export function LastRelease({ pkg }: ILastReleaseProps): React.ReactNode {
+export function LastRelease({ pkg }: LastReleaseProps): React.ReactNode {
     return (
         <Table.Td>
             <Text size="sm">{formatDate(pkg.lastPublishedAt)}</Text>

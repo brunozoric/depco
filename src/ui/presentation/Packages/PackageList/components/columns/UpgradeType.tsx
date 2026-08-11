@@ -9,11 +9,11 @@ const UPGRADE_BADGE_COLOR: Record<string, string> = {
     none: "gray"
 };
 
-interface IUpgradeTypeProps {
+interface UpgradeTypeProps {
     pkg: IPackageListItemViewModel;
 }
 
-export function UpgradeType({ pkg }: IUpgradeTypeProps): React.ReactNode {
+export function UpgradeType({ pkg }: UpgradeTypeProps): React.ReactNode {
     return (
         <Table.Td>
             {pkg.highestUpgradeType !== "none" && (
