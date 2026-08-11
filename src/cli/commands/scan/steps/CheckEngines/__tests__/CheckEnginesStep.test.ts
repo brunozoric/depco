@@ -40,6 +40,7 @@ describe("CheckEnginesStep", () => {
 
     afterEach(() => {
         vi.restoreAllMocks();
+        vi.useRealTimers();
         rmSync(tempDirectory, { recursive: true, force: true });
     });
 
@@ -238,5 +239,48 @@ describe("CheckEnginesStep", () => {
 
         const findings = context.results.get("engines") as IEnginesFinding[];
         expect(findings.map(finding => finding.packageName)).toEqual(["root-pkg"]);
+    });
+
+    it("excludes maintenance findings when warnMaintenance is false", async () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(Date.UTC(2026, 7, 1));
+
+        writePackageJson(tempDirectory, { name: "root-pkg", version: "1.0.0" });
+        writePackageJson(join(tempDirectory, "node_modules", "pkg-maint"), {
+            name: "pkg-maint",
+            version: "2.0.0",
+            engines: { node: ">=22" }
+        });
+
+        const step = container.resolve(CheckEnginesStep);
+        const context = createTestContext({ dataDirectory: tempDirectory });
+        context.results.set("config", {
+            scan: { engines: { warnMaintenance: false } }
+        });
+        await step.execute(context);
+
+        const findings = context.results.get("engines") as IEnginesFinding[];
+        expect(findings.some(finding => finding.status === "maintenance")).toBe(false);
+        expect(findings.map(finding => finding.packageName)).not.toContain("pkg-maint");
+    });
+
+    it("includes maintenance findings when warnMaintenance is true (default)", async () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(Date.UTC(2026, 7, 1));
+
+        writePackageJson(tempDirectory, { name: "root-pkg", version: "1.0.0" });
+        writePackageJson(join(tempDirectory, "node_modules", "pkg-maint"), {
+            name: "pkg-maint",
+            version: "2.0.0",
+            engines: { node: ">=22" }
+        });
+
+        const step = container.resolve(CheckEnginesStep);
+        const context = createTestContext({ dataDirectory: tempDirectory });
+        await step.execute(context);
+
+        const findings = context.results.get("engines") as IEnginesFinding[];
+        const maintenanceFinding = findings.find(finding => finding.packageName === "pkg-maint");
+        expect(maintenanceFinding?.status).toBe("maintenance");
     });
 });

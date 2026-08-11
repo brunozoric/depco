@@ -77,17 +77,28 @@ function buildFinding(input: IBuildFindingInput): IEnginesFinding {
     };
 }
 
-interface IFilterIgnoredFindingsInput {
+interface IFilterFindingsInput {
     findings: IEnginesFinding[];
     config: IDepcoConfig;
 }
 
-function filterIgnoredFindings(input: IFilterIgnoredFindingsInput): IEnginesFinding[] {
+function filterFindings(input: IFilterFindingsInput): IEnginesFinding[] {
+    const engineConfig = input.config.scan?.engines;
     const ignoredPackages = new Set([
-        ...(input.config.scan?.engines?.ignore ?? []),
+        ...(engineConfig?.ignore ?? []),
         ...(input.config.scan?.ignoredPackages ?? [])
     ]);
-    return input.findings.filter(finding => !ignoredPackages.has(finding.packageName));
+    const warnMaintenance = engineConfig?.warnMaintenance ?? true;
+
+    return input.findings.filter(finding => {
+        if (ignoredPackages.has(finding.packageName)) {
+            return false;
+        }
+        if (!warnMaintenance && finding.status === "maintenance") {
+            return false;
+        }
+        return true;
+    });
 }
 
 class CheckEnginesStepImpl implements Abstraction.Interface {
@@ -126,7 +137,7 @@ class CheckEnginesStepImpl implements Abstraction.Interface {
             );
         }
 
-        const filtered = filterIgnoredFindings({ findings, config });
+        const filtered = filterFindings({ findings, config });
 
         context.results.set("engines", filtered);
 
