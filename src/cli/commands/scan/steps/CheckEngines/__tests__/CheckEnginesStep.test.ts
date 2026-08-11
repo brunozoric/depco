@@ -283,4 +283,27 @@ describe("CheckEnginesStep", () => {
         const maintenanceFinding = findings.find(finding => finding.packageName === "pkg-maint");
         expect(maintenanceFinding?.status).toBe("maintenance");
     });
+
+    it("preserves root finding with maintenance status when warnMaintenance is false", async () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(Date.UTC(2026, 7, 1));
+
+        writePackageJson(tempDirectory, {
+            name: "root-pkg",
+            version: "1.0.0",
+            engines: { node: ">=22" }
+        });
+
+        const step = container.resolve(CheckEnginesStep);
+        const context = createTestContext({ dataDirectory: tempDirectory });
+        context.results.set("config", {
+            scan: { engines: { warnMaintenance: false } }
+        });
+        await step.execute(context);
+
+        const findings = context.results.get("engines") as IEnginesFinding[];
+        const rootFinding = findings.find(finding => finding.isRoot);
+        expect(rootFinding).toBeDefined();
+        expect(rootFinding?.status).toBe("maintenance");
+    });
 });

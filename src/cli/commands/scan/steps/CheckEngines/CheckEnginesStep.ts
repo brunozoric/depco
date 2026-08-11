@@ -94,7 +94,7 @@ function filterFindings(input: IFilterFindingsInput): IEnginesFinding[] {
         if (ignoredPackages.has(finding.packageName)) {
             return false;
         }
-        if (!warnMaintenance && finding.status === "maintenance") {
+        if (!warnMaintenance && finding.status === "maintenance" && !finding.isRoot) {
             return false;
         }
         return true;
