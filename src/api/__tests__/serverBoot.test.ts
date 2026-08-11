@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import { mkdtempSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
@@ -7,7 +7,20 @@ import type { FastifyInstance } from "fastify";
 const tempDir = mkdtempSync(join(tmpdir(), "depco-server-boot-"));
 let app: FastifyInstance;
 
+// GET /api/engines/summary and /api/engines/releases both resolve the Node.js
+// release schedule via NodeReleaseDataService, which calls out to the real
+// endoflife.date API on a cold cache. Stubbing fetch to fail keeps this route
+// audit hermetic and fast — NodeReleaseDataService.getSchedule() catches the
+// failure and falls back to the embedded NODE_RELEASES schedule, so the route
+// still resolves successfully.
+beforeAll(() => {
+    vi.spyOn(globalThis, "fetch").mockRejectedValue(
+        new Error("network unavailable in test environment")
+    );
+});
+
 afterAll(async () => {
+    vi.restoreAllMocks();
     if (app) {
         await app.close();
     }
@@ -73,7 +86,10 @@ describe("Server Boot", () => {
             "/api/scan-schedules",
             "/api/projects/backup",
             "/api/auto-fix/pull-requests",
-            "/api/sbom"
+            "/api/sbom",
+            "/api/engines/summary",
+            "/api/engines/releases",
+            "/api/engines/nonexistent-project-id"
         ];
 
         for (const url of endpoints) {
@@ -84,5 +100,21 @@ describe("Server Boot", () => {
             });
             expect(response.statusCode, `${url} returned 404`).not.toBe(404);
         }
+    });
+
+    it("POST /api/engines/:projectId/scan resolves (route is registered)", async () => {
+        const server = await getServer();
+
+        // As above, the bogus bearer token never resolves to a real session,
+        // so the auth hook (see authHook.ts) rejects with 401 before the
+        // route handler runs. That 401 — rather than a 404 — still proves
+        // this POST route is registered on the Fastify instance.
+        const response = await server.inject({
+            method: "POST",
+            url: "/api/engines/nonexistent-project-id/scan",
+            headers: { authorization: "Bearer test-token" }
+        });
+
+        expect(response.statusCode, "POST /api/engines/:projectId/scan returned 404").not.toBe(404);
     });
 });

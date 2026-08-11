@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { execSync } from "node:child_process";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createTestCliContainer } from "#testing/helpers/createTestCliContainer.js";
 import { ScanCommand } from "../abstractions/ScanCommand.js";
@@ -152,6 +154,17 @@ function findJsonConsoleCall(consoleSpy: ReturnType<typeof vi.spyOn>, marker: st
         throw new Error(`No console.info call found containing marker: ${marker}`);
     }
     return call;
+}
+
+interface IPackageJsonFixture {
+    name?: string;
+    version?: string;
+    engines?: { node?: string };
+}
+
+function writePackageJsonFixture(directory: string, packageJson: IPackageJsonFixture): void {
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(join(directory, "package.json"), JSON.stringify(packageJson));
 }
 
 describe("ScanPipeline integration", () => {
@@ -320,5 +333,80 @@ describe("ScanPipeline integration", () => {
 
         const output = consoleSpy.mock.calls.map((call: unknown[]) => String(call[0])).join("\n");
         expect(output).toContain("express");
+    });
+
+    describe("engines check", () => {
+        let enginesProjectDirectory: string;
+
+        beforeEach(() => {
+            enginesProjectDirectory = mkdtempSync(join(tmpdir(), "scan-pipeline-engines-"));
+            writeFileSync(join(enginesProjectDirectory, "yarn.lock"), "");
+            writePackageJsonFixture(enginesProjectDirectory, {
+                name: "engines-root",
+                version: "1.0.0",
+                engines: { node: ">=16" }
+            });
+            writePackageJsonFixture(join(enginesProjectDirectory, "node_modules", "old-dep"), {
+                name: "old-dep",
+                version: "2.0.0",
+                engines: { node: ">=16" }
+            });
+        });
+
+        afterEach(() => {
+            rmSync(enginesProjectDirectory, { recursive: true, force: true });
+        });
+
+        it("runs engines check and reports EOL findings for the root and dependency", async () => {
+            const container = setupContainer();
+            const { runner, command } = runPipeline({ container });
+            const context = command.context({ check: "engines", format: "json" });
+            context.dataDirectory = enginesProjectDirectory;
+
+            await runner.run({ steps: command.steps(), context });
+
+            const jsonText = findJsonConsoleCall(consoleSpy, '"findings"');
+            const parsed = JSON.parse(jsonText);
+
+            expect(parsed.findings.engines.length).toBeGreaterThanOrEqual(2);
+
+            const rootFinding = parsed.findings.engines.find(
+                (finding: { isRoot: boolean }) => finding.isRoot
+            );
+            expect(rootFinding).toMatchObject({
+                packageName: "engines-root",
+                enginesNode: ">=16",
+                status: "eol"
+            });
+
+            const dependencyFinding = parsed.findings.engines.find(
+                (finding: { packageName: string }) => finding.packageName === "old-dep"
+            );
+            expect(dependencyFinding).toMatchObject({
+                packageName: "old-dep",
+                enginesNode: ">=16",
+                status: "eol"
+            });
+        });
+
+        it("sets exit code 1 when the root engines.node is EOL", async () => {
+            // CheckLicensesStep always runs and would independently flag
+            // gpl-licensed as a violation (default allowedRiskTiers is
+            // ["permissive"]), which would also set exit code 1. Excluding
+            // it here isolates the assertion to the engines EOL branch of
+            // applyExitCode (see RenderOutputStep.ts).
+            const container = setupContainer({
+                packages: FIXTURE_PACKAGES.filter(
+                    packageEntry => packageEntry.name !== "gpl-licensed"
+                )
+            });
+            const { runner, command } = runPipeline({ container });
+            const context = command.context({ check: "engines", format: "table" });
+            context.dataDirectory = enginesProjectDirectory;
+
+            await runner.run({ steps: command.steps(), context });
+
+            expect(process.exitCode).toBe(1);
+        });
     });
 });
