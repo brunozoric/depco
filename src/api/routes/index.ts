@@ -24,3 +24,4 @@ export { sbomRoutes } from "./sbom.js";
 export { teamsRoutes } from "./teams.js";
 export { userRoutes } from "./users.js";
 export { authRoutes } from "./auth.js";
+export { engineRoutes } from "./engines.js";

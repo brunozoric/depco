@@ -52,7 +52,8 @@ import {
     sbomRoutes,
     teamsRoutes,
     userRoutes,
-    authRoutes
+    authRoutes,
+    engineRoutes
 } from "./routes/index.js";
 import { websocketRoutes } from "./websocket/WebSocketPlugin.js";
 
@@ -144,6 +145,7 @@ export async function createServer(): Promise<FastifyInstance> {
     await app.register(autoFixPrRoutes, { container });
     await app.register(dependencyGraphRoutes, { container });
     await app.register(sbomRoutes, { container });
+    await app.register(engineRoutes, { container });
     await app.register(teamsRoutes, { container });
     await app.register(userRoutes, { container });
     await app.register(authRoutes, { container });
