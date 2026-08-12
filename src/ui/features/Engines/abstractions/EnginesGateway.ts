@@ -19,12 +19,17 @@ export interface IProjectEngineSummaryItem {
     rootStatus: EngineStatus;
     rootEnginesNode: string | null;
     dependencyCounts: IEngineStatusCounts;
+    lastScannedAt: number | null;
+    engineScanStale: boolean;
+    engineScanStaleReason: "time" | "release" | "both" | null;
 }
 
 export interface IEngineSummaryData {
     totalProjects: number;
     counts: IEngineStatusCounts;
     projectSummaries: IProjectEngineSummaryItem[];
+    staleProjectCount: number;
+    stalenessThresholdMs: number;
 }
 
 export interface IEngineListResponse {

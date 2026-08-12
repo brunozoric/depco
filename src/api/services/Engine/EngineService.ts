@@ -18,6 +18,9 @@ import type { EngineStatus, IEngineStatusCounts, INodeRelease } from "#shared/en
 /** The project's own package.json is stored alongside its dependencies using an empty packageName. */
 const ROOT_PACKAGE_NAME = "";
 
+/** A project's engine scan is considered stale once it is older than this. */
+const ENGINE_STALENESS_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000;
+
 const packageJsonEnginesSchema = z.object({
     engines: z
         .object({
@@ -59,6 +62,35 @@ function classifyEntry(input: IClassifyEntryInput): Abstraction.Check {
         eolDate: classification.eolDate,
         scannedAt: 0
     };
+}
+
+interface IComputeStalenessInput {
+    lastScannedAt: number;
+    maxReleaseDate: number;
+    now: number;
+    thresholdMs: number;
+}
+
+interface IStalenessResult {
+    engineScanStale: boolean;
+    engineScanStaleReason: Abstraction.StaleReason | null;
+}
+
+function computeStaleness(input: IComputeStalenessInput): IStalenessResult {
+    const { lastScannedAt, maxReleaseDate, now, thresholdMs } = input;
+    const isTimeStale = lastScannedAt < now - thresholdMs;
+    const isReleaseStale = lastScannedAt < maxReleaseDate;
+
+    if (isTimeStale && isReleaseStale) {
+        return { engineScanStale: true, engineScanStaleReason: "both" };
+    }
+    if (isTimeStale) {
+        return { engineScanStale: true, engineScanStaleReason: "time" };
+    }
+    if (isReleaseStale) {
+        return { engineScanStale: true, engineScanStaleReason: "release" };
+    }
+    return { engineScanStale: false, engineScanStaleReason: null };
 }
 
 function computeStatusCounts(statuses: EngineStatus[]): IEngineStatusCounts {
@@ -197,6 +229,10 @@ class EngineServiceImpl implements Abstraction.Interface {
     }
 
     public async getSummary(options?: Abstraction.GetSummaryOptions): Promise<Abstraction.Summary> {
+        const schedule = await this.nodeReleaseDataService.getSchedule();
+        const maxReleaseDate =
+            schedule.length === 0 ? 0 : Math.max(...schedule.map(release => release.releaseDate));
+
         const conditions = [];
         if (options?.projectIds && options.projectIds.length > 0) {
             conditions.push(inArray(engineChecks.projectId, options.projectIds));
@@ -220,6 +256,7 @@ class EngineServiceImpl implements Abstraction.Interface {
             rootStatus: EngineStatus;
             rootEnginesNode: string | null;
             dependencyStatuses: EngineStatus[];
+            maxScannedAt: number;
         }
 
         const dataByProject = new Map<string, IProjectAccumulator>();
@@ -227,7 +264,8 @@ class EngineServiceImpl implements Abstraction.Interface {
             const existing = dataByProject.get(row.projectId) ?? {
                 rootStatus: "unknown",
                 rootEnginesNode: null,
-                dependencyStatuses: []
+                dependencyStatuses: [],
+                maxScannedAt: 0
             };
             if (row.packageName === ROOT_PACKAGE_NAME) {
                 existing.rootStatus = row.status as EngineStatus;
@@ -235,18 +273,41 @@ class EngineServiceImpl implements Abstraction.Interface {
             } else {
                 existing.dependencyStatuses.push(row.status as EngineStatus);
             }
+            existing.maxScannedAt = Math.max(existing.maxScannedAt, row.scannedAt);
             dataByProject.set(row.projectId, existing);
         }
 
+        const now = Date.now();
+        let staleProjectCount = 0;
+
         const projectSummaries: Abstraction.ProjectSummary[] = Array.from(
             dataByProject.entries()
-        ).map(([projectId, data]) => ({
-            projectId,
-            projectName: projectNameById.get(projectId) ?? projectId,
-            rootStatus: data.rootStatus,
-            rootEnginesNode: data.rootEnginesNode,
-            dependencyCounts: computeStatusCounts(data.dependencyStatuses)
-        }));
+        ).map(([projectId, data]) => {
+            const lastScannedAt = data.maxScannedAt > 0 ? data.maxScannedAt : null;
+            const staleness =
+                lastScannedAt === null
+                    ? { engineScanStale: false, engineScanStaleReason: null }
+                    : computeStaleness({
+                          lastScannedAt,
+                          maxReleaseDate,
+                          now,
+                          thresholdMs: ENGINE_STALENESS_THRESHOLD_MS
+                      });
+            if (staleness.engineScanStale) {
+                staleProjectCount += 1;
+            }
+
+            return {
+                projectId,
+                projectName: projectNameById.get(projectId) ?? projectId,
+                rootStatus: data.rootStatus,
+                rootEnginesNode: data.rootEnginesNode,
+                dependencyCounts: computeStatusCounts(data.dependencyStatuses),
+                lastScannedAt,
+                engineScanStale: staleness.engineScanStale,
+                engineScanStaleReason: staleness.engineScanStaleReason
+            };
+        });
 
         const allDependencyStatuses = Array.from(dataByProject.values()).flatMap(
             data => data.dependencyStatuses
@@ -255,7 +316,9 @@ class EngineServiceImpl implements Abstraction.Interface {
         return {
             totalProjects: projectSummaries.length,
             counts: computeStatusCounts(allDependencyStatuses),
-            projectSummaries
+            projectSummaries,
+            staleProjectCount,
+            stalenessThresholdMs: ENGINE_STALENESS_THRESHOLD_MS
         };
     }
 

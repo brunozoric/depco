@@ -153,6 +153,41 @@ describe("engine routes", () => {
                 rootStatus: "active-lts"
             });
         });
+
+        it("flags a project with an old engine scan as stale", async () => {
+            await insertTestProject(db, "proj-1", "/tmp/proj-1");
+
+            const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+            await db
+                .insert(engineChecks)
+                .values({
+                    id: "check-stale",
+                    projectId: "proj-1",
+                    packageName: "",
+                    enginesNode: ">=20",
+                    minimumMajor: 20,
+                    status: "active-lts",
+                    eolDate: null,
+                    scannedAt: thirtyDaysAgo
+                })
+                .run();
+
+            const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "GET",
+                url: "/api/engines/summary"
+            });
+
+            expect(response.statusCode).toBe(200);
+            const body = response.json();
+            expect(body.item.staleProjectCount).toBeGreaterThanOrEqual(1);
+            expect(body.item.stalenessThresholdMs).toBe(604800000);
+            expect(body.item.projectSummaries[0]).toMatchObject({
+                projectId: "proj-1",
+                lastScannedAt: thirtyDaysAgo,
+                engineScanStale: true
+            });
+        });
     });
 
     describe("GET /api/engines/releases", () => {

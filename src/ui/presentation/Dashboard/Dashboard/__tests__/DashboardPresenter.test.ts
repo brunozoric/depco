@@ -173,7 +173,9 @@ describe("DashboardPresenter", () => {
         engineSummaryResult = {
             totalProjects: 0,
             counts: { eol: 0, maintenance: 0, activeLts: 0, current: 0, unknown: 0 },
-            projectSummaries: []
+            projectSummaries: [],
+            staleProjectCount: 0,
+            stalenessThresholdMs: 604800000
         };
         changelogStatsResult = {
             total: 0,

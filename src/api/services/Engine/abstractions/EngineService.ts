@@ -13,18 +13,26 @@ export interface IEngineCheck {
     scannedAt: number;
 }
 
+/** Why an engine scan is considered stale: elapsed too much time since the last scan ("time"), a newer Node.js release has since been published ("release"), or both. */
+export type EngineScanStaleReason = "time" | "release" | "both";
+
 export interface IProjectEngineSummary {
     projectId: string;
     projectName: string;
     rootStatus: EngineStatus;
     rootEnginesNode: string | null;
     dependencyCounts: IEngineStatusCounts;
+    lastScannedAt: number | null;
+    engineScanStale: boolean;
+    engineScanStaleReason: EngineScanStaleReason | null;
 }
 
 export interface IEngineSummary {
     totalProjects: number;
     counts: IEngineStatusCounts;
     projectSummaries: IProjectEngineSummary[];
+    staleProjectCount: number;
+    stalenessThresholdMs: number;
 }
 
 export interface IEngineScanResult {
@@ -61,4 +69,5 @@ export namespace EngineService {
     export type Summary = IEngineSummary;
     export type ProjectSummary = IProjectEngineSummary;
     export type GetSummaryOptions = IEngineGetSummaryOptions;
+    export type StaleReason = EngineScanStaleReason;
 }

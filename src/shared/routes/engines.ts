@@ -27,13 +27,18 @@ const projectEngineSummarySchema = z.object({
     projectName: z.string(),
     rootStatus: engineStatusSchema,
     rootEnginesNode: z.string().nullable(),
-    dependencyCounts: engineStatusCountsSchema
+    dependencyCounts: engineStatusCountsSchema,
+    lastScannedAt: z.number().nullable(),
+    engineScanStale: z.boolean(),
+    engineScanStaleReason: z.enum(["time", "release", "both"]).nullable()
 });
 
 const engineSummarySchema = z.object({
     totalProjects: z.number(),
     counts: engineStatusCountsSchema,
-    projectSummaries: z.array(projectEngineSummarySchema)
+    projectSummaries: z.array(projectEngineSummarySchema),
+    staleProjectCount: z.number(),
+    stalenessThresholdMs: z.number()
 });
 
 const nodeReleaseSchema = z.object({

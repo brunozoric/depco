@@ -26,7 +26,9 @@ function createStubEngineService(
         summary: {
             totalProjects: 1,
             counts: DEFAULT_COUNTS,
-            projectSummaries: []
+            projectSummaries: [],
+            staleProjectCount: 0,
+            stalenessThresholdMs: 604800000
         }
     }
 ): EngineService.Interface {
