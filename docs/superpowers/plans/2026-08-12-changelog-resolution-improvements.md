@@ -24,10 +24,12 @@
 ### Task 1: RawGitHubChangelogResolver
 
 **Files:**
+
 - Create: `src/api/services/Changelog/resolvers/RawGitHubChangelogResolver.ts`
 - Create: `src/api/services/Changelog/__tests__/RawGitHubChangelogResolver.test.ts`
 
 **Interfaces:**
+
 - Consumes: `ChangelogResolver` abstraction (`src/api/services/Changelog/abstractions/ChangelogResolver.ts`), `extractOwnerRepo` (`src/api/services/Changelog/extractOwnerRepo.ts`), `parseVersionSections` (`src/api/services/Changelog/parseVersionSections.ts`)
 - Produces: `RawGitHubChangelogResolver` — DI token registered as `ChangelogResolver` implementation. Class exported for DI registration in feature.ts (Task 5).
 
@@ -42,184 +44,147 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { RawGitHubChangelogResolver } from "../resolvers/RawGitHubChangelogResolver.js";
 
 const CHANGELOG_CONTENT = [
-    "# Changelog",
-    "",
-    "## 3.0.0 - 2023-01-15",
-    "",
-    "### Breaking changes",
-    "",
-    "- Dropped support for Node 14",
-    "",
-    "## 2.0.0 - 2022-06-01",
-    "",
-    "- Added new feature"
+  "# Changelog",
+  "",
+  "## 3.0.0 - 2023-01-15",
+  "",
+  "### Breaking changes",
+  "",
+  "- Dropped support for Node 14",
+  "",
+  "## 2.0.0 - 2022-06-01",
+  "",
+  "- Added new feature"
 ].join("\n");
 
 describe("RawGitHubChangelogResolver", () => {
-    let resolver: InstanceType<typeof RawGitHubChangelogResolver>;
-    let fetchMock: ReturnType<typeof vi.fn>;
+  let resolver: InstanceType<typeof RawGitHubChangelogResolver>;
+  let fetchMock: ReturnType<typeof vi.fn>;
 
-    beforeEach(() => {
-        fetchMock = vi.fn();
-        vi.stubGlobal("fetch", fetchMock);
-        resolver = new RawGitHubChangelogResolver();
+  beforeEach(() => {
+    fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    resolver = new RawGitHubChangelogResolver();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("has the name 'raw-github-changelog'", () => {
+    expect(resolver.name).toBe("raw-github-changelog");
+  });
+
+  it("returns empty map when repoUrl is null", async () => {
+    const result = await resolver.resolve("some-pkg", null, ["3.0.0"]);
+    expect(result.size).toBe(0);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("returns empty map when repoUrl is not a GitHub URL", async () => {
+    const result = await resolver.resolve("some-pkg", "https://gitlab.com/owner/repo", ["3.0.0"]);
+    expect(result.size).toBe(0);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("fetches CHANGELOG.md from main branch first", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      text: async () => CHANGELOG_CONTENT
     });
 
-    afterEach(() => {
-        vi.unstubAllGlobals();
+    const result = await resolver.resolve("some-pkg", "https://github.com/owner/repo", ["3.0.0"]);
+
+    expect(result.size).toBe(1);
+    expect(result.get("3.0.0")).toContain("Dropped support for Node 14");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://raw.githubusercontent.com/owner/repo/main/CHANGELOG.md"
+    );
+  });
+
+  it("falls back to master branch when main returns 404", async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 404 }).mockResolvedValueOnce({
+      ok: true,
+      text: async () => CHANGELOG_CONTENT
     });
 
-    it("has the name 'raw-github-changelog'", () => {
-        expect(resolver.name).toBe("raw-github-changelog");
+    const result = await resolver.resolve("some-pkg", "https://github.com/owner/repo", ["3.0.0"]);
+
+    expect(result.size).toBe(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "https://raw.githubusercontent.com/owner/repo/master/CHANGELOG.md"
+    );
+  });
+
+  it("tries repoDirectory path first when provided", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      text: async () => CHANGELOG_CONTENT
     });
 
-    it("returns empty map when repoUrl is null", async () => {
-        const result = await resolver.resolve("some-pkg", null, ["3.0.0"]);
-        expect(result.size).toBe(0);
-        expect(fetchMock).not.toHaveBeenCalled();
+    await resolver.resolve("some-pkg", "https://github.com/owner/repo", ["3.0.0"], "packages/core");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://raw.githubusercontent.com/owner/repo/main/packages/core/CHANGELOG.md"
+    );
+  });
+
+  it("tries scoped package path for @scope/name packages", async () => {
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url.includes("packages/my-lib/CHANGELOG.md") && url.includes("/main/")) {
+        return { ok: true, text: async () => CHANGELOG_CONTENT };
+      }
+      return { ok: false, status: 404 };
     });
 
-    it("returns empty map when repoUrl is not a GitHub URL", async () => {
-        const result = await resolver.resolve(
-            "some-pkg",
-            "https://gitlab.com/owner/repo",
-            ["3.0.0"]
-        );
-        expect(result.size).toBe(0);
-        expect(fetchMock).not.toHaveBeenCalled();
+    const result = await resolver.resolve("@scope/my-lib", "https://github.com/owner/repo", [
+      "3.0.0"
+    ]);
+
+    expect(result.size).toBe(1);
+  });
+
+  it("returns empty map when all paths return 404", async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 404 });
+
+    const result = await resolver.resolve("some-pkg", "https://github.com/owner/repo", ["3.0.0"]);
+
+    expect(result.size).toBe(0);
+  });
+
+  it("returns empty map when fetch throws", async () => {
+    fetchMock.mockRejectedValue(new Error("network error"));
+
+    const result = await resolver.resolve("some-pkg", "https://github.com/owner/repo", ["3.0.0"]);
+
+    expect(result.size).toBe(0);
+  });
+
+  it("returns empty map when CHANGELOG.md has no matching versions", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      text: async () => "# Changelog\n\n## 99.0.0\n\nFuture release"
     });
 
-    it("fetches CHANGELOG.md from main branch first", async () => {
-        fetchMock.mockResolvedValueOnce({
-            ok: true,
-            text: async () => CHANGELOG_CONTENT
-        });
+    const result = await resolver.resolve("some-pkg", "https://github.com/owner/repo", ["3.0.0"]);
 
-        const result = await resolver.resolve(
-            "some-pkg",
-            "https://github.com/owner/repo",
-            ["3.0.0"]
-        );
+    expect(result.size).toBe(0);
+  });
 
-        expect(result.size).toBe(1);
-        expect(result.get("3.0.0")).toContain("Dropped support for Node 14");
-        expect(fetchMock).toHaveBeenCalledWith(
-            "https://raw.githubusercontent.com/owner/repo/main/CHANGELOG.md"
-        );
+  it("tries CHANGES.md and History.md after CHANGELOG.md", async () => {
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url.includes("CHANGES.md") && url.includes("/main/")) {
+        return { ok: true, text: async () => CHANGELOG_CONTENT };
+      }
+      return { ok: false, status: 404 };
     });
 
-    it("falls back to master branch when main returns 404", async () => {
-        fetchMock
-            .mockResolvedValueOnce({ ok: false, status: 404 })
-            .mockResolvedValueOnce({
-                ok: true,
-                text: async () => CHANGELOG_CONTENT
-            });
+    const result = await resolver.resolve("some-pkg", "https://github.com/owner/repo", ["3.0.0"]);
 
-        const result = await resolver.resolve(
-            "some-pkg",
-            "https://github.com/owner/repo",
-            ["3.0.0"]
-        );
-
-        expect(result.size).toBe(1);
-        expect(fetchMock).toHaveBeenCalledTimes(2);
-        expect(fetchMock).toHaveBeenNthCalledWith(
-            2,
-            "https://raw.githubusercontent.com/owner/repo/master/CHANGELOG.md"
-        );
-    });
-
-    it("tries repoDirectory path first when provided", async () => {
-        fetchMock.mockResolvedValueOnce({
-            ok: true,
-            text: async () => CHANGELOG_CONTENT
-        });
-
-        await resolver.resolve(
-            "some-pkg",
-            "https://github.com/owner/repo",
-            ["3.0.0"],
-            "packages/core"
-        );
-
-        expect(fetchMock).toHaveBeenCalledWith(
-            "https://raw.githubusercontent.com/owner/repo/main/packages/core/CHANGELOG.md"
-        );
-    });
-
-    it("tries scoped package path for @scope/name packages", async () => {
-        fetchMock.mockImplementation(async (url: string) => {
-            if (url.includes("packages/my-lib/CHANGELOG.md") && url.includes("/main/")) {
-                return { ok: true, text: async () => CHANGELOG_CONTENT };
-            }
-            return { ok: false, status: 404 };
-        });
-
-        const result = await resolver.resolve(
-            "@scope/my-lib",
-            "https://github.com/owner/repo",
-            ["3.0.0"]
-        );
-
-        expect(result.size).toBe(1);
-    });
-
-    it("returns empty map when all paths return 404", async () => {
-        fetchMock.mockResolvedValue({ ok: false, status: 404 });
-
-        const result = await resolver.resolve(
-            "some-pkg",
-            "https://github.com/owner/repo",
-            ["3.0.0"]
-        );
-
-        expect(result.size).toBe(0);
-    });
-
-    it("returns empty map when fetch throws", async () => {
-        fetchMock.mockRejectedValue(new Error("network error"));
-
-        const result = await resolver.resolve(
-            "some-pkg",
-            "https://github.com/owner/repo",
-            ["3.0.0"]
-        );
-
-        expect(result.size).toBe(0);
-    });
-
-    it("returns empty map when CHANGELOG.md has no matching versions", async () => {
-        fetchMock.mockResolvedValueOnce({
-            ok: true,
-            text: async () => "# Changelog\n\n## 99.0.0\n\nFuture release"
-        });
-
-        const result = await resolver.resolve(
-            "some-pkg",
-            "https://github.com/owner/repo",
-            ["3.0.0"]
-        );
-
-        expect(result.size).toBe(0);
-    });
-
-    it("tries CHANGES.md and History.md after CHANGELOG.md", async () => {
-        fetchMock.mockImplementation(async (url: string) => {
-            if (url.includes("CHANGES.md") && url.includes("/main/")) {
-                return { ok: true, text: async () => CHANGELOG_CONTENT };
-            }
-            return { ok: false, status: 404 };
-        });
-
-        const result = await resolver.resolve(
-            "some-pkg",
-            "https://github.com/owner/repo",
-            ["3.0.0"]
-        );
-
-        expect(result.size).toBe(1);
-    });
+    expect(result.size).toBe(1);
+  });
 });
 ```
 
@@ -241,88 +206,86 @@ const CHANGELOG_FILES = ["CHANGELOG.md", "CHANGES.md", "History.md"];
 const BRANCHES = ["main", "master"];
 
 interface IFetchChangelogInput {
-    ownerRepo: string;
-    path: string;
-    versions: Set<string>;
+  ownerRepo: string;
+  path: string;
+  versions: Set<string>;
 }
 
-async function fetchChangelog(
-    input: IFetchChangelogInput
-): Promise<Map<string, string>> {
-    const { ownerRepo, path, versions } = input;
+async function fetchChangelog(input: IFetchChangelogInput): Promise<Map<string, string>> {
+  const { ownerRepo, path, versions } = input;
 
-    for (const branch of BRANCHES) {
-        try {
-            const url = `https://raw.githubusercontent.com/${ownerRepo}/${branch}/${path}`;
-            const response = await fetch(url);
-            if (!response.ok) {
-                continue;
-            }
-            const body = await response.text();
-            const found = parseVersionSections(body, versions);
-            if (found.size > 0) {
-                return found;
-            }
-        } catch {
-            continue;
-        }
+  for (const branch of BRANCHES) {
+    try {
+      const url = `https://raw.githubusercontent.com/${ownerRepo}/${branch}/${path}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        continue;
+      }
+      const body = await response.text();
+      const found = parseVersionSections(body, versions);
+      if (found.size > 0) {
+        return found;
+      }
+    } catch {
+      continue;
     }
+  }
 
-    return new Map();
+  return new Map();
 }
 
 class RawGitHubChangelogResolverImpl implements Abstraction.Interface {
-    public readonly name = "raw-github-changelog";
+  public readonly name = "raw-github-changelog";
 
-    public async resolve(
-        packageName: string,
-        repoUrl: string | null,
-        versions: string[],
-        repoDirectory?: string | null
-    ): Promise<Map<string, string>> {
-        if (!repoUrl) {
-            return new Map();
-        }
-
-        const ownerRepo = extractOwnerRepo(repoUrl);
-        if (!ownerRepo) {
-            return new Map();
-        }
-
-        const versionSet = new Set(versions);
-        const paths: string[] = [];
-
-        if (repoDirectory) {
-            for (const filename of CHANGELOG_FILES) {
-                paths.push(`${repoDirectory}/${filename}`);
-            }
-        }
-
-        paths.push(...CHANGELOG_FILES);
-
-        if (packageName.startsWith("@")) {
-            const unscoped = packageName.split("/")[1];
-            if (unscoped) {
-                for (const filename of CHANGELOG_FILES) {
-                    paths.push(`packages/${unscoped}/${filename}`);
-                }
-            }
-        }
-
-        for (const path of paths) {
-            const found = await fetchChangelog({ ownerRepo, path, versions: versionSet });
-            if (found.size > 0) {
-                return found;
-            }
-        }
-
-        return new Map();
+  public async resolve(
+    packageName: string,
+    repoUrl: string | null,
+    versions: string[],
+    repoDirectory?: string | null
+  ): Promise<Map<string, string>> {
+    if (!repoUrl) {
+      return new Map();
     }
+
+    const ownerRepo = extractOwnerRepo(repoUrl);
+    if (!ownerRepo) {
+      return new Map();
+    }
+
+    const versionSet = new Set(versions);
+    const paths: string[] = [];
+
+    if (repoDirectory) {
+      for (const filename of CHANGELOG_FILES) {
+        paths.push(`${repoDirectory}/${filename}`);
+      }
+    }
+
+    paths.push(...CHANGELOG_FILES);
+
+    if (packageName.startsWith("@")) {
+      const unscoped = packageName.split("/")[1];
+      if (unscoped) {
+        for (const filename of CHANGELOG_FILES) {
+          paths.push(`packages/${unscoped}/${filename}`);
+        }
+      }
+    }
+
+    for (const path of paths) {
+      const found = await fetchChangelog({ ownerRepo, path, versions: versionSet });
+      if (found.size > 0) {
+        return found;
+      }
+    }
+
+    return new Map();
+  }
 }
 
 export const RawGitHubChangelogResolver = Abstraction.createImplementation({
-    implementation: RawGitHubChangelogResolverImpl,
-    dependencies: []
+  implementation: RawGitHubChangelogResolverImpl,
+  dependencies: []
 });
 ```
 
@@ -345,10 +308,12 @@ git commit -m "feat: add RawGitHubChangelogResolver for unauthenticated public r
 ### Task 2: Shared GitHub token helper
 
 **Files:**
+
 - Create: `src/api/services/Changelog/resolvers/readGitHubToken.ts`
 - Create: `src/api/services/Changelog/__tests__/readGitHubToken.test.ts`
 
 **Interfaces:**
+
 - Consumes: `DatabaseClient` (`src/api/db/abstractions/DatabaseClient.ts`), `EncryptionService` (`src/api/services/Encryption/abstractions/EncryptionService.ts`), `appSettings` table (`src/api/db/schema.ts`)
 - Produces: `readGitHubToken(input: IReadGitHubTokenInput): Promise<IGitHubTokenResult>` — used by Task 3 and Task 4
 
@@ -367,73 +332,64 @@ import { EncryptionService } from "#api/services/Encryption/abstractions/Encrypt
 import { readGitHubToken } from "../resolvers/readGitHubToken.js";
 
 describe("readGitHubToken", () => {
-    it("returns the decrypted token when github_token is configured", async () => {
-        const { container, db } = createTestApiContainer();
-        registerEncryption(container);
-        const encryptionService = container.resolve(EncryptionService);
-        const databaseClient = container.resolve(DatabaseClient);
+  it("returns the decrypted token when github_token is configured", async () => {
+    const { container, db } = createTestApiContainer();
+    registerEncryption(container);
+    const encryptionService = container.resolve(EncryptionService);
+    const databaseClient = container.resolve(DatabaseClient);
 
-        const encrypted = encryptionService.encrypt("ghp_test123");
-        await db
-            .insert(appSettings)
-            .values({ key: "github_token", value: encrypted })
-            .run();
+    const encrypted = encryptionService.encrypt("ghp_test123");
+    await db.insert(appSettings).values({ key: "github_token", value: encrypted }).run();
 
-        const result = await readGitHubToken({ databaseClient, encryptionService });
+    const result = await readGitHubToken({ databaseClient, encryptionService });
 
-        expect(result.token).toBe("ghp_test123");
+    expect(result.token).toBe("ghp_test123");
+  });
+
+  it("returns null when github_token is not configured", async () => {
+    const { container } = createTestApiContainer();
+    registerEncryption(container);
+    const encryptionService = container.resolve(EncryptionService);
+    const databaseClient = container.resolve(DatabaseClient);
+
+    const result = await readGitHubToken({ databaseClient, encryptionService });
+
+    expect(result.token).toBeNull();
+  });
+
+  it("returns null when github_token value is empty", async () => {
+    const { container, db } = createTestApiContainer();
+    registerEncryption(container);
+    const encryptionService = container.resolve(EncryptionService);
+    const databaseClient = container.resolve(DatabaseClient);
+
+    await db.insert(appSettings).values({ key: "github_token", value: "" }).run();
+
+    const result = await readGitHubToken({ databaseClient, encryptionService });
+
+    expect(result.token).toBeNull();
+  });
+
+  it("returns null when decryption fails", async () => {
+    const { container, db } = createTestApiContainer();
+    registerEncryption(container);
+    const databaseClient = container.resolve(DatabaseClient);
+    const failingEncryptionService: EncryptionService.Interface = {
+      encrypt: () => "",
+      decrypt: () => {
+        throw new Error("decryption failed");
+      }
+    };
+
+    await db.insert(appSettings).values({ key: "github_token", value: "invalid-cipher" }).run();
+
+    const result = await readGitHubToken({
+      databaseClient,
+      encryptionService: failingEncryptionService
     });
 
-    it("returns null when github_token is not configured", async () => {
-        const { container } = createTestApiContainer();
-        registerEncryption(container);
-        const encryptionService = container.resolve(EncryptionService);
-        const databaseClient = container.resolve(DatabaseClient);
-
-        const result = await readGitHubToken({ databaseClient, encryptionService });
-
-        expect(result.token).toBeNull();
-    });
-
-    it("returns null when github_token value is empty", async () => {
-        const { container, db } = createTestApiContainer();
-        registerEncryption(container);
-        const encryptionService = container.resolve(EncryptionService);
-        const databaseClient = container.resolve(DatabaseClient);
-
-        await db
-            .insert(appSettings)
-            .values({ key: "github_token", value: "" })
-            .run();
-
-        const result = await readGitHubToken({ databaseClient, encryptionService });
-
-        expect(result.token).toBeNull();
-    });
-
-    it("returns null when decryption fails", async () => {
-        const { container, db } = createTestApiContainer();
-        registerEncryption(container);
-        const databaseClient = container.resolve(DatabaseClient);
-        const failingEncryptionService: EncryptionService.Interface = {
-            encrypt: () => "",
-            decrypt: () => {
-                throw new Error("decryption failed");
-            }
-        };
-
-        await db
-            .insert(appSettings)
-            .values({ key: "github_token", value: "invalid-cipher" })
-            .run();
-
-        const result = await readGitHubToken({
-            databaseClient,
-            encryptionService: failingEncryptionService
-        });
-
-        expect(result.token).toBeNull();
-    });
+    expect(result.token).toBeNull();
+  });
 });
 ```
 
@@ -453,35 +409,33 @@ import type { EncryptionService } from "#api/services/Encryption/abstractions/En
 import { appSettings } from "#api/db/schema.js";
 
 export interface IReadGitHubTokenInput {
-    databaseClient: DatabaseClient.Interface;
-    encryptionService: EncryptionService.Interface;
+  databaseClient: DatabaseClient.Interface;
+  encryptionService: EncryptionService.Interface;
 }
 
 export interface IGitHubTokenResult {
-    token: string | null;
+  token: string | null;
 }
 
-export async function readGitHubToken(
-    input: IReadGitHubTokenInput
-): Promise<IGitHubTokenResult> {
-    const { databaseClient, encryptionService } = input;
+export async function readGitHubToken(input: IReadGitHubTokenInput): Promise<IGitHubTokenResult> {
+  const { databaseClient, encryptionService } = input;
 
-    const row = await databaseClient.db
-        .select()
-        .from(appSettings)
-        .where(eq(appSettings.key, "github_token"))
-        .get();
+  const row = await databaseClient.db
+    .select()
+    .from(appSettings)
+    .where(eq(appSettings.key, "github_token"))
+    .get();
 
-    if (!row?.value) {
-        return { token: null };
-    }
+  if (!row?.value) {
+    return { token: null };
+  }
 
-    try {
-        const token = encryptionService.decrypt(row.value);
-        return { token };
-    } catch {
-        return { token: null };
-    }
+  try {
+    const token = encryptionService.decrypt(row.value);
+    return { token };
+  } catch {
+    return { token: null };
+  }
 }
 ```
 
@@ -504,10 +458,12 @@ git commit -m "feat: add readGitHubToken shared helper for HTTP changelog resolv
 ### Task 3: GitHubHttpReleasesResolver
 
 **Files:**
+
 - Create: `src/api/services/Changelog/resolvers/GitHubHttpReleasesResolver.ts`
 - Create: `src/api/services/Changelog/__tests__/GitHubHttpReleasesResolver.test.ts`
 
 **Interfaces:**
+
 - Consumes: `ChangelogResolver` abstraction, `extractOwnerRepo`, `readGitHubToken` (from Task 2), `DatabaseClient`, `EncryptionService`
 - Produces: `GitHubHttpReleasesResolver` — DI token registered as `ChangelogResolver` implementation. Class exported for DI registration in feature.ts (Task 5).
 
@@ -522,241 +478,190 @@ import type { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import type { EncryptionService } from "#api/services/Encryption/abstractions/EncryptionService.js";
 
 function createMockDeps(): {
-    databaseClient: DatabaseClient.Interface;
-    encryptionService: EncryptionService.Interface;
+  databaseClient: DatabaseClient.Interface;
+  encryptionService: EncryptionService.Interface;
 } {
-    return {
-        databaseClient: {
-            db: {
-                select: () => ({
-                    from: () => ({
-                        where: () => ({
-                            get: async () => null
-                        })
-                    })
-                })
-            }
-        } as unknown as DatabaseClient.Interface,
-        encryptionService: {
-            encrypt: (value: string) => value,
-            decrypt: (value: string) => value
-        }
-    };
+  return {
+    databaseClient: {
+      db: {
+        select: () => ({
+          from: () => ({
+            where: () => ({
+              get: async () => null
+            })
+          })
+        })
+      }
+    } as unknown as DatabaseClient.Interface,
+    encryptionService: {
+      encrypt: (value: string) => value,
+      decrypt: (value: string) => value
+    }
+  };
 }
 
 const RELEASES_JSON = JSON.stringify([
-    { tag_name: "v3.0.0", body: "## Breaking changes\n\nDropped Node 14" },
-    { tag_name: "v2.0.0", body: "## New features\n\nAdded widgets" },
-    { tag_name: "v1.0.0", body: null }
+  { tag_name: "v3.0.0", body: "## Breaking changes\n\nDropped Node 14" },
+  { tag_name: "v2.0.0", body: "## New features\n\nAdded widgets" },
+  { tag_name: "v1.0.0", body: null }
 ]);
 
 describe("GitHubHttpReleasesResolver", () => {
-    let fetchMock: ReturnType<typeof vi.fn>;
+  let fetchMock: ReturnType<typeof vi.fn>;
 
-    beforeEach(() => {
-        fetchMock = vi.fn();
-        vi.stubGlobal("fetch", fetchMock);
+  beforeEach(() => {
+    fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("has the name 'github-http-releases'", () => {
+    const deps = createMockDeps();
+    const resolver = new GitHubHttpReleasesResolver(deps.databaseClient, deps.encryptionService);
+    expect(resolver.name).toBe("github-http-releases");
+  });
+
+  it("returns empty map when repoUrl is null", async () => {
+    const deps = createMockDeps();
+    const resolver = new GitHubHttpReleasesResolver(deps.databaseClient, deps.encryptionService);
+    const result = await resolver.resolve("pkg", null, ["3.0.0"]);
+    expect(result.size).toBe(0);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("fetches releases and matches versions by stripping v prefix", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => JSON.parse(RELEASES_JSON)
     });
 
-    afterEach(() => {
-        vi.unstubAllGlobals();
+    const deps = createMockDeps();
+    const resolver = new GitHubHttpReleasesResolver(deps.databaseClient, deps.encryptionService);
+
+    const result = await resolver.resolve("some-pkg", "https://github.com/owner/repo", [
+      "3.0.0",
+      "2.0.0"
+    ]);
+
+    expect(result.size).toBe(2);
+    expect(result.get("3.0.0")).toContain("Dropped Node 14");
+    expect(result.get("2.0.0")).toContain("Added widgets");
+  });
+
+  it("handles monorepo tags with packageName@version format", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [
+        { tag_name: "@scope/pkg@4.0.0", body: "Release 4.0" },
+        { tag_name: "other-pkg@4.0.0", body: "Wrong package" }
+      ]
     });
 
-    it("has the name 'github-http-releases'", () => {
-        const deps = createMockDeps();
-        const resolver = new GitHubHttpReleasesResolver(
-            deps.databaseClient,
-            deps.encryptionService
-        );
-        expect(resolver.name).toBe("github-http-releases");
+    const deps = createMockDeps();
+    const resolver = new GitHubHttpReleasesResolver(deps.databaseClient, deps.encryptionService);
+
+    const result = await resolver.resolve("@scope/pkg", "https://github.com/owner/repo", ["4.0.0"]);
+
+    expect(result.size).toBe(1);
+    expect(result.get("4.0.0")).toBe("Release 4.0");
+  });
+
+  it("sends Authorization header when github_token is configured", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => []
     });
 
-    it("returns empty map when repoUrl is null", async () => {
-        const deps = createMockDeps();
-        const resolver = new GitHubHttpReleasesResolver(
-            deps.databaseClient,
-            deps.encryptionService
-        );
-        const result = await resolver.resolve("pkg", null, ["3.0.0"]);
-        expect(result.size).toBe(0);
-        expect(fetchMock).not.toHaveBeenCalled();
-    });
-
-    it("fetches releases and matches versions by stripping v prefix", async () => {
-        fetchMock.mockResolvedValueOnce({
-            ok: true,
-            json: async () => JSON.parse(RELEASES_JSON)
-        });
-
-        const deps = createMockDeps();
-        const resolver = new GitHubHttpReleasesResolver(
-            deps.databaseClient,
-            deps.encryptionService
-        );
-
-        const result = await resolver.resolve(
-            "some-pkg",
-            "https://github.com/owner/repo",
-            ["3.0.0", "2.0.0"]
-        );
-
-        expect(result.size).toBe(2);
-        expect(result.get("3.0.0")).toContain("Dropped Node 14");
-        expect(result.get("2.0.0")).toContain("Added widgets");
-    });
-
-    it("handles monorepo tags with packageName@version format", async () => {
-        fetchMock.mockResolvedValueOnce({
-            ok: true,
-            json: async () => [
-                { tag_name: "@scope/pkg@4.0.0", body: "Release 4.0" },
-                { tag_name: "other-pkg@4.0.0", body: "Wrong package" }
-            ]
-        });
-
-        const deps = createMockDeps();
-        const resolver = new GitHubHttpReleasesResolver(
-            deps.databaseClient,
-            deps.encryptionService
-        );
-
-        const result = await resolver.resolve(
-            "@scope/pkg",
-            "https://github.com/owner/repo",
-            ["4.0.0"]
-        );
-
-        expect(result.size).toBe(1);
-        expect(result.get("4.0.0")).toBe("Release 4.0");
-    });
-
-    it("sends Authorization header when github_token is configured", async () => {
-        fetchMock.mockResolvedValueOnce({
-            ok: true,
-            json: async () => []
-        });
-
-        const deps = createMockDeps();
-        deps.databaseClient = {
-            db: {
-                select: () => ({
-                    from: () => ({
-                        where: () => ({
-                            get: async () => ({ key: "github_token", value: "encrypted" })
-                        })
-                    })
-                })
-            }
-        } as unknown as DatabaseClient.Interface;
-        deps.encryptionService.decrypt = () => "ghp_realtoken";
-
-        const resolver = new GitHubHttpReleasesResolver(
-            deps.databaseClient,
-            deps.encryptionService
-        );
-        await resolver.resolve("pkg", "https://github.com/owner/repo", ["1.0.0"]);
-
-        expect(fetchMock).toHaveBeenCalledWith(
-            expect.stringContaining("api.github.com"),
-            expect.objectContaining({
-                headers: expect.objectContaining({
-                    Authorization: "Bearer ghp_realtoken"
-                })
+    const deps = createMockDeps();
+    deps.databaseClient = {
+      db: {
+        select: () => ({
+          from: () => ({
+            where: () => ({
+              get: async () => ({ key: "github_token", value: "encrypted" })
             })
-        );
+          })
+        })
+      }
+    } as unknown as DatabaseClient.Interface;
+    deps.encryptionService.decrypt = () => "ghp_realtoken";
+
+    const resolver = new GitHubHttpReleasesResolver(deps.databaseClient, deps.encryptionService);
+    await resolver.resolve("pkg", "https://github.com/owner/repo", ["1.0.0"]);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("api.github.com"),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: "Bearer ghp_realtoken"
+        })
+      })
+    );
+  });
+
+  it("works without auth header when no token configured", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => []
     });
 
-    it("works without auth header when no token configured", async () => {
-        fetchMock.mockResolvedValueOnce({
-            ok: true,
-            json: async () => []
-        });
+    const deps = createMockDeps();
+    const resolver = new GitHubHttpReleasesResolver(deps.databaseClient, deps.encryptionService);
+    await resolver.resolve("pkg", "https://github.com/owner/repo", ["1.0.0"]);
 
-        const deps = createMockDeps();
-        const resolver = new GitHubHttpReleasesResolver(
-            deps.databaseClient,
-            deps.encryptionService
-        );
-        await resolver.resolve("pkg", "https://github.com/owner/repo", ["1.0.0"]);
+    const callArgs = fetchMock.mock.calls[0];
+    const headers = callArgs?.[1]?.headers ?? {};
+    expect(headers).not.toHaveProperty("Authorization");
+  });
 
-        const callArgs = fetchMock.mock.calls[0];
-        const headers = callArgs?.[1]?.headers ?? {};
-        expect(headers).not.toHaveProperty("Authorization");
+  it("returns empty map on HTTP error", async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 403 });
+
+    const deps = createMockDeps();
+    const resolver = new GitHubHttpReleasesResolver(deps.databaseClient, deps.encryptionService);
+    const result = await resolver.resolve("pkg", "https://github.com/owner/repo", ["1.0.0"]);
+
+    expect(result.size).toBe(0);
+  });
+
+  it("returns empty map on fetch error", async () => {
+    fetchMock.mockRejectedValueOnce(new Error("network error"));
+
+    const deps = createMockDeps();
+    const resolver = new GitHubHttpReleasesResolver(deps.databaseClient, deps.encryptionService);
+    const result = await resolver.resolve("pkg", "https://github.com/owner/repo", ["1.0.0"]);
+
+    expect(result.size).toBe(0);
+  });
+
+  it("returns empty map on invalid JSON response (Zod validation)", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ not: "an array" })
     });
 
-    it("returns empty map on HTTP error", async () => {
-        fetchMock.mockResolvedValueOnce({ ok: false, status: 403 });
+    const deps = createMockDeps();
+    const resolver = new GitHubHttpReleasesResolver(deps.databaseClient, deps.encryptionService);
+    const result = await resolver.resolve("pkg", "https://github.com/owner/repo", ["1.0.0"]);
 
-        const deps = createMockDeps();
-        const resolver = new GitHubHttpReleasesResolver(
-            deps.databaseClient,
-            deps.encryptionService
-        );
-        const result = await resolver.resolve(
-            "pkg",
-            "https://github.com/owner/repo",
-            ["1.0.0"]
-        );
+    expect(result.size).toBe(0);
+  });
 
-        expect(result.size).toBe(0);
+  it("skips releases with null body", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [{ tag_name: "v1.0.0", body: null }]
     });
 
-    it("returns empty map on fetch error", async () => {
-        fetchMock.mockRejectedValueOnce(new Error("network error"));
+    const deps = createMockDeps();
+    const resolver = new GitHubHttpReleasesResolver(deps.databaseClient, deps.encryptionService);
+    const result = await resolver.resolve("pkg", "https://github.com/owner/repo", ["1.0.0"]);
 
-        const deps = createMockDeps();
-        const resolver = new GitHubHttpReleasesResolver(
-            deps.databaseClient,
-            deps.encryptionService
-        );
-        const result = await resolver.resolve(
-            "pkg",
-            "https://github.com/owner/repo",
-            ["1.0.0"]
-        );
-
-        expect(result.size).toBe(0);
-    });
-
-    it("returns empty map on invalid JSON response (Zod validation)", async () => {
-        fetchMock.mockResolvedValueOnce({
-            ok: true,
-            json: async () => ({ not: "an array" })
-        });
-
-        const deps = createMockDeps();
-        const resolver = new GitHubHttpReleasesResolver(
-            deps.databaseClient,
-            deps.encryptionService
-        );
-        const result = await resolver.resolve(
-            "pkg",
-            "https://github.com/owner/repo",
-            ["1.0.0"]
-        );
-
-        expect(result.size).toBe(0);
-    });
-
-    it("skips releases with null body", async () => {
-        fetchMock.mockResolvedValueOnce({
-            ok: true,
-            json: async () => [{ tag_name: "v1.0.0", body: null }]
-        });
-
-        const deps = createMockDeps();
-        const resolver = new GitHubHttpReleasesResolver(
-            deps.databaseClient,
-            deps.encryptionService
-        );
-        const result = await resolver.resolve(
-            "pkg",
-            "https://github.com/owner/repo",
-            ["1.0.0"]
-        );
-
-        expect(result.size).toBe(0);
-    });
+    expect(result.size).toBe(0);
+  });
 });
 ```
 
@@ -778,93 +683,93 @@ import { extractOwnerRepo } from "../extractOwnerRepo.js";
 import { readGitHubToken } from "./readGitHubToken.js";
 
 const githubReleasesSchema = z.array(
-    z.object({
-        tag_name: z.string(),
-        body: z.string().nullable().default(null)
-    })
+  z.object({
+    tag_name: z.string(),
+    body: z.string().nullable().default(null)
+  })
 );
 
 class GitHubHttpReleasesResolverImpl implements Abstraction.Interface {
-    public readonly name = "github-http-releases";
+  public readonly name = "github-http-releases";
 
-    public constructor(
-        private readonly databaseClient: DatabaseClient.Interface,
-        private readonly encryptionService: EncryptionService.Interface
-    ) {}
+  public constructor(
+    private readonly databaseClient: DatabaseClient.Interface,
+    private readonly encryptionService: EncryptionService.Interface
+  ) {}
 
-    public async resolve(
-        packageName: string,
-        repoUrl: string | null,
-        versions: string[],
-        _repoDirectory?: string | null
-    ): Promise<Map<string, string>> {
-        if (!repoUrl) {
-            return new Map();
-        }
-
-        const ownerRepo = extractOwnerRepo(repoUrl);
-        if (!ownerRepo) {
-            return new Map();
-        }
-
-        try {
-            const { token } = await readGitHubToken({
-                databaseClient: this.databaseClient,
-                encryptionService: this.encryptionService
-            });
-
-            const headers: Record<string, string> = {
-                Accept: "application/vnd.github+json"
-            };
-            if (token) {
-                headers["Authorization"] = `Bearer ${token}`;
-            }
-
-            const response = await fetch(
-                `https://api.github.com/repos/${ownerRepo}/releases?per_page=100`,
-                { headers }
-            );
-
-            if (!response.ok) {
-                return new Map();
-            }
-
-            const releases = githubReleasesSchema.parse(await response.json());
-            const versionSet = new Set(versions);
-            const found = new Map<string, string>();
-
-            for (const release of releases) {
-                if (!release.body) {
-                    continue;
-                }
-
-                const tag = release.tag_name;
-                const stripped = tag.replace(/^v/i, "");
-                if (versionSet.has(stripped)) {
-                    found.set(stripped, release.body);
-                    continue;
-                }
-
-                const lastAt = tag.lastIndexOf("@");
-                if (lastAt > 0) {
-                    const tagPackage = tag.substring(0, lastAt);
-                    const tagVersion = tag.substring(lastAt + 1).replace(/^v/i, "");
-                    if (tagPackage === packageName && versionSet.has(tagVersion)) {
-                        found.set(tagVersion, release.body);
-                    }
-                }
-            }
-
-            return found;
-        } catch {
-            return new Map();
-        }
+  public async resolve(
+    packageName: string,
+    repoUrl: string | null,
+    versions: string[],
+    _repoDirectory?: string | null
+  ): Promise<Map<string, string>> {
+    if (!repoUrl) {
+      return new Map();
     }
+
+    const ownerRepo = extractOwnerRepo(repoUrl);
+    if (!ownerRepo) {
+      return new Map();
+    }
+
+    try {
+      const { token } = await readGitHubToken({
+        databaseClient: this.databaseClient,
+        encryptionService: this.encryptionService
+      });
+
+      const headers: Record<string, string> = {
+        Accept: "application/vnd.github+json"
+      };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(
+        `https://api.github.com/repos/${ownerRepo}/releases?per_page=100`,
+        { headers }
+      );
+
+      if (!response.ok) {
+        return new Map();
+      }
+
+      const releases = githubReleasesSchema.parse(await response.json());
+      const versionSet = new Set(versions);
+      const found = new Map<string, string>();
+
+      for (const release of releases) {
+        if (!release.body) {
+          continue;
+        }
+
+        const tag = release.tag_name;
+        const stripped = tag.replace(/^v/i, "");
+        if (versionSet.has(stripped)) {
+          found.set(stripped, release.body);
+          continue;
+        }
+
+        const lastAt = tag.lastIndexOf("@");
+        if (lastAt > 0) {
+          const tagPackage = tag.substring(0, lastAt);
+          const tagVersion = tag.substring(lastAt + 1).replace(/^v/i, "");
+          if (tagPackage === packageName && versionSet.has(tagVersion)) {
+            found.set(tagVersion, release.body);
+          }
+        }
+      }
+
+      return found;
+    } catch {
+      return new Map();
+    }
+  }
 }
 
 export const GitHubHttpReleasesResolver = Abstraction.createImplementation({
-    implementation: GitHubHttpReleasesResolverImpl,
-    dependencies: [DatabaseClient, EncryptionService]
+  implementation: GitHubHttpReleasesResolverImpl,
+  dependencies: [DatabaseClient, EncryptionService]
 });
 ```
 
@@ -887,10 +792,12 @@ git commit -m "feat: add GitHubHttpReleasesResolver for HTTP-based GitHub releas
 ### Task 4: GitHubHttpFileResolver
 
 **Files:**
+
 - Create: `src/api/services/Changelog/resolvers/GitHubHttpFileResolver.ts`
 - Create: `src/api/services/Changelog/__tests__/GitHubHttpFileResolver.test.ts`
 
 **Interfaces:**
+
 - Consumes: `ChangelogResolver` abstraction, `extractOwnerRepo`, `parseVersionSections`, `readGitHubToken` (Task 2), `DatabaseClient`, `EncryptionService`
 - Produces: `GitHubHttpFileResolver` — DI token for feature.ts (Task 5)
 
@@ -905,222 +812,175 @@ import type { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import type { EncryptionService } from "#api/services/Encryption/abstractions/EncryptionService.js";
 
 function createMockDeps(): {
-    databaseClient: DatabaseClient.Interface;
-    encryptionService: EncryptionService.Interface;
+  databaseClient: DatabaseClient.Interface;
+  encryptionService: EncryptionService.Interface;
 } {
-    return {
-        databaseClient: {
-            db: {
-                select: () => ({
-                    from: () => ({
-                        where: () => ({
-                            get: async () => null
-                        })
-                    })
-                })
-            }
-        } as unknown as DatabaseClient.Interface,
-        encryptionService: {
-            encrypt: (value: string) => value,
-            decrypt: (value: string) => value
-        }
-    };
+  return {
+    databaseClient: {
+      db: {
+        select: () => ({
+          from: () => ({
+            where: () => ({
+              get: async () => null
+            })
+          })
+        })
+      }
+    } as unknown as DatabaseClient.Interface,
+    encryptionService: {
+      encrypt: (value: string) => value,
+      decrypt: (value: string) => value
+    }
+  };
 }
 
 const CHANGELOG_CONTENT = [
-    "# Changelog",
-    "",
-    "## 3.0.0",
-    "",
-    "- Breaking change",
-    "",
-    "## 2.0.0",
-    "",
-    "- New feature"
+  "# Changelog",
+  "",
+  "## 3.0.0",
+  "",
+  "- Breaking change",
+  "",
+  "## 2.0.0",
+  "",
+  "- New feature"
 ].join("\n");
 
 function toBase64(content: string): string {
-    return Buffer.from(content, "utf-8").toString("base64");
+  return Buffer.from(content, "utf-8").toString("base64");
 }
 
 describe("GitHubHttpFileResolver", () => {
-    let fetchMock: ReturnType<typeof vi.fn>;
+  let fetchMock: ReturnType<typeof vi.fn>;
 
-    beforeEach(() => {
-        fetchMock = vi.fn();
-        vi.stubGlobal("fetch", fetchMock);
+  beforeEach(() => {
+    fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("has the name 'github-http-file'", () => {
+    const deps = createMockDeps();
+    const resolver = new GitHubHttpFileResolver(deps.databaseClient, deps.encryptionService);
+    expect(resolver.name).toBe("github-http-file");
+  });
+
+  it("returns empty map when repoUrl is null", async () => {
+    const deps = createMockDeps();
+    const resolver = new GitHubHttpFileResolver(deps.databaseClient, deps.encryptionService);
+    const result = await resolver.resolve("pkg", null, ["3.0.0"]);
+    expect(result.size).toBe(0);
+  });
+
+  it("fetches and decodes base64 CHANGELOG.md content", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        content: toBase64(CHANGELOG_CONTENT),
+        encoding: "base64"
+      })
     });
 
-    afterEach(() => {
-        vi.unstubAllGlobals();
+    const deps = createMockDeps();
+    const resolver = new GitHubHttpFileResolver(deps.databaseClient, deps.encryptionService);
+
+    const result = await resolver.resolve("pkg", "https://github.com/owner/repo", ["3.0.0"]);
+
+    expect(result.size).toBe(1);
+    expect(result.get("3.0.0")).toContain("Breaking change");
+  });
+
+  it("tries repoDirectory path first", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        content: toBase64(CHANGELOG_CONTENT),
+        encoding: "base64"
+      })
     });
 
-    it("has the name 'github-http-file'", () => {
-        const deps = createMockDeps();
-        const resolver = new GitHubHttpFileResolver(
-            deps.databaseClient,
-            deps.encryptionService
-        );
-        expect(resolver.name).toBe("github-http-file");
+    const deps = createMockDeps();
+    const resolver = new GitHubHttpFileResolver(deps.databaseClient, deps.encryptionService);
+
+    await resolver.resolve("pkg", "https://github.com/owner/repo", ["3.0.0"], "packages/core");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("contents/packages/core/CHANGELOG.md"),
+      expect.anything()
+    );
+  });
+
+  it("falls through on 404 to next path", async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 404 }).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        content: toBase64(CHANGELOG_CONTENT),
+        encoding: "base64"
+      })
     });
 
-    it("returns empty map when repoUrl is null", async () => {
-        const deps = createMockDeps();
-        const resolver = new GitHubHttpFileResolver(
-            deps.databaseClient,
-            deps.encryptionService
-        );
-        const result = await resolver.resolve("pkg", null, ["3.0.0"]);
-        expect(result.size).toBe(0);
-    });
+    const deps = createMockDeps();
+    const resolver = new GitHubHttpFileResolver(deps.databaseClient, deps.encryptionService);
 
-    it("fetches and decodes base64 CHANGELOG.md content", async () => {
-        fetchMock.mockResolvedValueOnce({
-            ok: true,
-            json: async () => ({
-                content: toBase64(CHANGELOG_CONTENT),
-                encoding: "base64"
+    const result = await resolver.resolve("pkg", "https://github.com/owner/repo", ["3.0.0"]);
+
+    expect(result.size).toBe(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("sends Authorization header when token is configured", async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 404 });
+    fetchMock.mockResolvedValue({ ok: false, status: 404 });
+
+    const deps = createMockDeps();
+    deps.databaseClient = {
+      db: {
+        select: () => ({
+          from: () => ({
+            where: () => ({
+              get: async () => ({ key: "github_token", value: "encrypted" })
             })
-        });
+          })
+        })
+      }
+    } as unknown as DatabaseClient.Interface;
+    deps.encryptionService.decrypt = () => "ghp_token123";
 
-        const deps = createMockDeps();
-        const resolver = new GitHubHttpFileResolver(
-            deps.databaseClient,
-            deps.encryptionService
-        );
+    const resolver = new GitHubHttpFileResolver(deps.databaseClient, deps.encryptionService);
+    await resolver.resolve("pkg", "https://github.com/owner/repo", ["1.0.0"]);
 
-        const result = await resolver.resolve(
-            "pkg",
-            "https://github.com/owner/repo",
-            ["3.0.0"]
-        );
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: "Bearer ghp_token123"
+        })
+      })
+    );
+  });
 
-        expect(result.size).toBe(1);
-        expect(result.get("3.0.0")).toContain("Breaking change");
-    });
+  it("returns empty map when all paths return 404", async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 404 });
 
-    it("tries repoDirectory path first", async () => {
-        fetchMock.mockResolvedValueOnce({
-            ok: true,
-            json: async () => ({
-                content: toBase64(CHANGELOG_CONTENT),
-                encoding: "base64"
-            })
-        });
+    const deps = createMockDeps();
+    const resolver = new GitHubHttpFileResolver(deps.databaseClient, deps.encryptionService);
+    const result = await resolver.resolve("pkg", "https://github.com/owner/repo", ["3.0.0"]);
 
-        const deps = createMockDeps();
-        const resolver = new GitHubHttpFileResolver(
-            deps.databaseClient,
-            deps.encryptionService
-        );
+    expect(result.size).toBe(0);
+  });
 
-        await resolver.resolve(
-            "pkg",
-            "https://github.com/owner/repo",
-            ["3.0.0"],
-            "packages/core"
-        );
+  it("returns empty map on fetch error", async () => {
+    fetchMock.mockRejectedValue(new Error("network error"));
 
-        expect(fetchMock).toHaveBeenCalledWith(
-            expect.stringContaining("contents/packages/core/CHANGELOG.md"),
-            expect.anything()
-        );
-    });
+    const deps = createMockDeps();
+    const resolver = new GitHubHttpFileResolver(deps.databaseClient, deps.encryptionService);
+    const result = await resolver.resolve("pkg", "https://github.com/owner/repo", ["3.0.0"]);
 
-    it("falls through on 404 to next path", async () => {
-        fetchMock
-            .mockResolvedValueOnce({ ok: false, status: 404 })
-            .mockResolvedValueOnce({
-                ok: true,
-                json: async () => ({
-                    content: toBase64(CHANGELOG_CONTENT),
-                    encoding: "base64"
-                })
-            });
-
-        const deps = createMockDeps();
-        const resolver = new GitHubHttpFileResolver(
-            deps.databaseClient,
-            deps.encryptionService
-        );
-
-        const result = await resolver.resolve(
-            "pkg",
-            "https://github.com/owner/repo",
-            ["3.0.0"]
-        );
-
-        expect(result.size).toBe(1);
-        expect(fetchMock).toHaveBeenCalledTimes(2);
-    });
-
-    it("sends Authorization header when token is configured", async () => {
-        fetchMock.mockResolvedValueOnce({ ok: false, status: 404 });
-        fetchMock.mockResolvedValue({ ok: false, status: 404 });
-
-        const deps = createMockDeps();
-        deps.databaseClient = {
-            db: {
-                select: () => ({
-                    from: () => ({
-                        where: () => ({
-                            get: async () => ({ key: "github_token", value: "encrypted" })
-                        })
-                    })
-                })
-            }
-        } as unknown as DatabaseClient.Interface;
-        deps.encryptionService.decrypt = () => "ghp_token123";
-
-        const resolver = new GitHubHttpFileResolver(
-            deps.databaseClient,
-            deps.encryptionService
-        );
-        await resolver.resolve("pkg", "https://github.com/owner/repo", ["1.0.0"]);
-
-        expect(fetchMock).toHaveBeenCalledWith(
-            expect.anything(),
-            expect.objectContaining({
-                headers: expect.objectContaining({
-                    Authorization: "Bearer ghp_token123"
-                })
-            })
-        );
-    });
-
-    it("returns empty map when all paths return 404", async () => {
-        fetchMock.mockResolvedValue({ ok: false, status: 404 });
-
-        const deps = createMockDeps();
-        const resolver = new GitHubHttpFileResolver(
-            deps.databaseClient,
-            deps.encryptionService
-        );
-        const result = await resolver.resolve(
-            "pkg",
-            "https://github.com/owner/repo",
-            ["3.0.0"]
-        );
-
-        expect(result.size).toBe(0);
-    });
-
-    it("returns empty map on fetch error", async () => {
-        fetchMock.mockRejectedValue(new Error("network error"));
-
-        const deps = createMockDeps();
-        const resolver = new GitHubHttpFileResolver(
-            deps.databaseClient,
-            deps.encryptionService
-        );
-        const result = await resolver.resolve(
-            "pkg",
-            "https://github.com/owner/repo",
-            ["3.0.0"]
-        );
-
-        expect(result.size).toBe(0);
-    });
+    expect(result.size).toBe(0);
+  });
 });
 ```
 
@@ -1143,98 +1003,98 @@ import { parseVersionSections } from "../parseVersionSections.js";
 import { readGitHubToken } from "./readGitHubToken.js";
 
 const githubContentsSchema = z.object({
-    content: z.string().optional(),
-    encoding: z.string().optional()
+  content: z.string().optional(),
+  encoding: z.string().optional()
 });
 
 const CHANGELOG_FILES = ["CHANGELOG.md", "CHANGES.md", "History.md"];
 
 class GitHubHttpFileResolverImpl implements Abstraction.Interface {
-    public readonly name = "github-http-file";
+  public readonly name = "github-http-file";
 
-    public constructor(
-        private readonly databaseClient: DatabaseClient.Interface,
-        private readonly encryptionService: EncryptionService.Interface
-    ) {}
+  public constructor(
+    private readonly databaseClient: DatabaseClient.Interface,
+    private readonly encryptionService: EncryptionService.Interface
+  ) {}
 
-    public async resolve(
-        packageName: string,
-        repoUrl: string | null,
-        versions: string[],
-        repoDirectory?: string | null
-    ): Promise<Map<string, string>> {
-        if (!repoUrl) {
-            return new Map();
-        }
-
-        const ownerRepo = extractOwnerRepo(repoUrl);
-        if (!ownerRepo) {
-            return new Map();
-        }
-
-        const { token } = await readGitHubToken({
-            databaseClient: this.databaseClient,
-            encryptionService: this.encryptionService
-        });
-
-        const headers: Record<string, string> = {
-            Accept: "application/vnd.github+json"
-        };
-        if (token) {
-            headers["Authorization"] = `Bearer ${token}`;
-        }
-
-        const versionSet = new Set(versions);
-        const paths: string[] = [];
-
-        if (repoDirectory) {
-            for (const filename of CHANGELOG_FILES) {
-                paths.push(`${repoDirectory}/${filename}`);
-            }
-        }
-
-        paths.push(...CHANGELOG_FILES);
-
-        if (packageName.startsWith("@")) {
-            const unscoped = packageName.split("/")[1];
-            if (unscoped) {
-                for (const filename of CHANGELOG_FILES) {
-                    paths.push(`packages/${unscoped}/${filename}`);
-                }
-            }
-        }
-
-        for (const filePath of paths) {
-            try {
-                const response = await fetch(
-                    `https://api.github.com/repos/${ownerRepo}/contents/${filePath}`,
-                    { headers }
-                );
-
-                if (!response.ok) {
-                    continue;
-                }
-
-                const data = githubContentsSchema.parse(await response.json());
-                if (data.content && data.encoding === "base64") {
-                    const decoded = Buffer.from(data.content, "base64").toString("utf-8");
-                    const found = parseVersionSections(decoded, versionSet);
-                    if (found.size > 0) {
-                        return found;
-                    }
-                }
-            } catch {
-                continue;
-            }
-        }
-
-        return new Map();
+  public async resolve(
+    packageName: string,
+    repoUrl: string | null,
+    versions: string[],
+    repoDirectory?: string | null
+  ): Promise<Map<string, string>> {
+    if (!repoUrl) {
+      return new Map();
     }
+
+    const ownerRepo = extractOwnerRepo(repoUrl);
+    if (!ownerRepo) {
+      return new Map();
+    }
+
+    const { token } = await readGitHubToken({
+      databaseClient: this.databaseClient,
+      encryptionService: this.encryptionService
+    });
+
+    const headers: Record<string, string> = {
+      Accept: "application/vnd.github+json"
+    };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const versionSet = new Set(versions);
+    const paths: string[] = [];
+
+    if (repoDirectory) {
+      for (const filename of CHANGELOG_FILES) {
+        paths.push(`${repoDirectory}/${filename}`);
+      }
+    }
+
+    paths.push(...CHANGELOG_FILES);
+
+    if (packageName.startsWith("@")) {
+      const unscoped = packageName.split("/")[1];
+      if (unscoped) {
+        for (const filename of CHANGELOG_FILES) {
+          paths.push(`packages/${unscoped}/${filename}`);
+        }
+      }
+    }
+
+    for (const filePath of paths) {
+      try {
+        const response = await fetch(
+          `https://api.github.com/repos/${ownerRepo}/contents/${filePath}`,
+          { headers }
+        );
+
+        if (!response.ok) {
+          continue;
+        }
+
+        const data = githubContentsSchema.parse(await response.json());
+        if (data.content && data.encoding === "base64") {
+          const decoded = Buffer.from(data.content, "base64").toString("utf-8");
+          const found = parseVersionSections(decoded, versionSet);
+          if (found.size > 0) {
+            return found;
+          }
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return new Map();
+  }
 }
 
 export const GitHubHttpFileResolver = Abstraction.createImplementation({
-    implementation: GitHubHttpFileResolverImpl,
-    dependencies: [DatabaseClient, EncryptionService]
+  implementation: GitHubHttpFileResolverImpl,
+  dependencies: [DatabaseClient, EncryptionService]
 });
 ```
 
@@ -1257,10 +1117,12 @@ git commit -m "feat: add GitHubHttpFileResolver for authenticated CHANGELOG.md f
 ### Task 5: DI registration and resolver chain ordering
 
 **Files:**
+
 - Modify: `src/api/services/Changelog/feature.ts`
 - Modify: `src/api/services/Changelog/index.ts` (if it exists and needs new exports)
 
 **Interfaces:**
+
 - Consumes: All four resolver DI tokens: `RawGitHubChangelogResolver` (Task 1), `GitHubHttpReleasesResolver` (Task 3), `GitHubHttpFileResolver` (Task 4), plus existing `GitHubReleasesResolver`, `ChangelogFileResolver`, `NpmReadmeResolver`
 - Produces: Updated `ChangelogFeature` with all 6 resolvers registered in correct order
 
@@ -1281,16 +1143,16 @@ import { GitHubHttpFileResolver } from "./resolvers/GitHubHttpFileResolver.js";
 import { NpmReadmeResolver } from "./resolvers/NpmReadmeResolver.js";
 
 export const ChangelogFeature = createFeature({
-    name: "Api/ChangelogFeature",
-    register(container) {
-        container.register(GitHubReleasesResolver);
-        container.register(ChangelogFileResolver);
-        container.register(RawGitHubChangelogResolver);
-        container.register(GitHubHttpReleasesResolver);
-        container.register(GitHubHttpFileResolver);
-        container.register(NpmReadmeResolver);
-        container.register(ChangelogService).inSingletonScope();
-    }
+  name: "Api/ChangelogFeature",
+  register(container) {
+    container.register(GitHubReleasesResolver);
+    container.register(ChangelogFileResolver);
+    container.register(RawGitHubChangelogResolver);
+    container.register(GitHubHttpReleasesResolver);
+    container.register(GitHubHttpFileResolver);
+    container.register(NpmReadmeResolver);
+    container.register(ChangelogService).inSingletonScope();
+  }
 });
 ```
 
@@ -1308,6 +1170,7 @@ git commit -m "feat: register three new HTTP changelog resolvers in resolver cha
 ### Task 6: Changelog count accuracy — full data layer
 
 **Files:**
+
 - Modify: `src/api/routes/packages.ts`
 - Modify: `src/shared/routes/packages.ts`
 - Modify: `src/ui/features/Packages/abstractions/PackagesGateway.ts`
@@ -1322,6 +1185,7 @@ git commit -m "feat: register three new HTTP changelog resolvers in resolver cha
 - Modify: `src/api/routes/__tests__/packages.test.ts`
 
 **Interfaces:**
+
 - Consumes: existing `changelogCount: number` field across all layers
 - Produces: `resolvedChangelogCount: number` and `totalChangelogCount: number` across all layers
 
@@ -1330,37 +1194,41 @@ git commit -m "feat: register three new HTTP changelog resolvers in resolver cha
 In `src/api/routes/packages.ts`, replace the changelog subquery in both `countQuery` and `dataQuery`. Also update `IRawPackageRow` and `IPackageListItem` interfaces, the `havingClause`, and the row mapping.
 
 Replace `IRawPackageRow`:
+
 ```typescript
 interface IRawPackageRow {
-    name: string;
-    projects: string;
-    resolvedChangelogCount: number;
-    totalChangelogCount: number;
-    lastPublishedAt: number | null;
-    dependencyKind: string;
-    registryResolved: number;
+  name: string;
+  projects: string;
+  resolvedChangelogCount: number;
+  totalChangelogCount: number;
+  lastPublishedAt: number | null;
+  dependencyKind: string;
+  registryResolved: number;
 }
 ```
 
 Replace `IPackageListItem`:
+
 ```typescript
 interface IPackageListItem {
-    name: string;
-    projects: IPackageProject[];
-    resolvedChangelogCount: number;
-    totalChangelogCount: number;
-    lastPublishedAt: number | null;
-    dependencyKind: string;
-    registryResolved: boolean;
+  name: string;
+  projects: IPackageProject[];
+  resolvedChangelogCount: number;
+  totalChangelogCount: number;
+  lastPublishedAt: number | null;
+  dependencyKind: string;
+  registryResolved: boolean;
 }
 ```
 
 Replace the `havingClause`:
+
 ```typescript
 const havingClause = hasChangelog === "true" ? sql`HAVING totalChangelogCount > 0` : sql``;
 ```
 
 Replace the changelog subquery in `countQuery` (lines 101-106):
+
 ```sql
 LEFT JOIN (
     SELECT d.name AS dep_name,
@@ -1375,27 +1243,30 @@ LEFT JOIN (
 In `countQuery`, replace `COALESCE(cl.cnt, 0) AS changelogCount` with `COALESCE(cl.total_cnt, 0) AS totalChangelogCount`.
 
 Replace the same subquery in `dataQuery` (lines 131-136), and replace `COALESCE(cl.cnt, 0) AS changelogCount` with:
+
 ```sql
 COALESCE(cl.resolved_cnt, 0) AS resolvedChangelogCount,
 COALESCE(cl.total_cnt, 0) AS totalChangelogCount,
 ```
 
 Replace the row mapping (line 160):
+
 ```typescript
 const items: IPackageListItem[] = rawRows.map(row => ({
-    name: row.name,
-    projects: JSON.parse(row.projects) as IPackageProject[],
-    resolvedChangelogCount: row.resolvedChangelogCount ?? 0,
-    totalChangelogCount: row.totalChangelogCount ?? 0,
-    lastPublishedAt: row.lastPublishedAt ?? null,
-    dependencyKind: row.dependencyKind,
-    registryResolved: row.registryResolved === 1
+  name: row.name,
+  projects: JSON.parse(row.projects) as IPackageProject[],
+  resolvedChangelogCount: row.resolvedChangelogCount ?? 0,
+  totalChangelogCount: row.totalChangelogCount ?? 0,
+  lastPublishedAt: row.lastPublishedAt ?? null,
+  dependencyKind: row.dependencyKind,
+  registryResolved: row.registryResolved === 1
 }));
 ```
 
 - [ ] **Step 2: Update the shared route schema**
 
 In `src/shared/routes/packages.ts`, replace `changelogCount: z.number()` in `packageListItemSchema` with:
+
 ```typescript
 resolvedChangelogCount: z.number(),
 totalChangelogCount: z.number(),
@@ -1404,6 +1275,7 @@ totalChangelogCount: z.number(),
 - [ ] **Step 3: Update the gateway abstraction**
 
 In `src/ui/features/Packages/abstractions/PackagesGateway.ts`, replace `changelogCount: number` in `IPackageListItem` with:
+
 ```typescript
 resolvedChangelogCount: number;
 totalChangelogCount: number;
@@ -1416,12 +1288,14 @@ In `src/ui/features/Packages/PackagesGateway.ts`, the `list()` method returns `r
 - [ ] **Step 4: Update the presenter abstraction and implementation**
 
 In `src/ui/presentation/Packages/PackageList/abstractions/PackagesPresenter.ts`, replace `changelogCount: number` in `IPackageListItemViewModel` with:
+
 ```typescript
 resolvedChangelogCount: number;
 totalChangelogCount: number;
 ```
 
 In `src/ui/presentation/Packages/PackageList/PackagesPresenter.ts`, replace `changelogCount: pkg.changelogCount` in the mapping (around line 103) with:
+
 ```typescript
 resolvedChangelogCount: pkg.resolvedChangelogCount,
 totalChangelogCount: pkg.totalChangelogCount,
@@ -1483,6 +1357,7 @@ export function ChangelogButton({ pkg, onOpenChangelog }: ChangelogButtonProps):
 - [ ] **Step 6: Update the presenter test**
 
 In `src/ui/presentation/Packages/PackageList/__tests__/PackagesPresenter.test.ts`, replace `changelogCount: 3` in the `packagesResult` fixture (around line 90) with:
+
 ```typescript
 resolvedChangelogCount: 3,
 totalChangelogCount: 5,

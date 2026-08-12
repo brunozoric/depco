@@ -29,6 +29,7 @@ Fetches `https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}` via g
 **Input:** `packageName`, `repoUrl`, `versions`, `repoDirectory`
 
 **Logic:**
+
 1. `extractOwnerRepo(repoUrl)` — return empty on null/non-GitHub URL
 2. Build path list (same priority as existing ChangelogFileResolver):
    - `{repoDirectory}/CHANGELOG.md` (if `repoDirectory` set)
@@ -80,15 +81,15 @@ Both HTTP resolvers need to read and decrypt `github_token`. Extract a shared he
 
 ```typescript
 interface IReadGitHubTokenInput {
-    databaseClient: DatabaseClient.Interface;
-    encryptionService: EncryptionService.Interface;
+  databaseClient: DatabaseClient.Interface;
+  encryptionService: EncryptionService.Interface;
 }
 
 interface IGitHubTokenResult {
-    token: string | null;
+  token: string | null;
 }
 
-async function readGitHubToken(input: IReadGitHubTokenInput): Promise<IGitHubTokenResult>
+async function readGitHubToken(input: IReadGitHubTokenInput): Promise<IGitHubTokenResult>;
 ```
 
 Located in `src/api/services/Changelog/resolvers/readGitHubToken.ts`. Reads `github_token` row from `app_settings`, decrypts via `EncryptionService`. Returns `{ token: null }` when not configured or when decryption fails — resolvers proceed without auth.
@@ -98,6 +99,7 @@ Located in `src/api/services/Changelog/resolvers/readGitHubToken.ts`. Reads `git
 **API packages route SQL** — the existing `LEFT JOIN` changelog subquery in `src/api/routes/packages.ts` (lines 98-106 for count query, lines 131-136 for data query) changes from a single `COUNT(*)` to two counts:
 
 Current subquery:
+
 ```sql
 LEFT JOIN (
     SELECT d.name AS dep_name, COUNT(*) AS cnt
@@ -108,6 +110,7 @@ LEFT JOIN (
 ```
 
 New subquery:
+
 ```sql
 LEFT JOIN (
     SELECT d.name AS dep_name,
@@ -120,6 +123,7 @@ LEFT JOIN (
 ```
 
 Mapped as:
+
 - `COALESCE(cl.resolved_cnt, 0) AS resolvedChangelogCount`
 - `COALESCE(cl.total_cnt, 0) AS totalChangelogCount`
 
@@ -136,6 +140,7 @@ This change applies to BOTH the count query (line 98) and the data query (line 1
 7. `src/ui/presentation/Packages/PackageList/components/columns/ChangelogButton.tsx` — display logic (see below)
 
 **ChangelogButton display logic** — currently renders static "Changelog" text. Updated to compute `pending = totalChangelogCount - resolvedChangelogCount` and render:
+
 - `resolved > 0 && pending > 0` — `Changelog (3+2)` — "+2" in dimmed/secondary text color
 - `resolved > 0 && pending === 0` — `Changelog (3)`
 - `resolved === 0 && pending > 0` — `Changelog (+2)` — all pending, dimmed
