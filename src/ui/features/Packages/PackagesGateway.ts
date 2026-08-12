@@ -4,7 +4,8 @@ import {
     listPackagesRoute,
     rescanPackageRoute,
     getChangelogsRoute,
-    reResolveChangelogsRoute
+    reResolveChangelogsRoute,
+    getPackageDetailRoute
 } from "#shared/routes/index.js";
 
 class PackagesGatewayImpl implements Abstraction.Interface {
@@ -79,6 +80,13 @@ class PackagesGatewayImpl implements Abstraction.Interface {
             body: { from, to }
         });
         return { entries: response.items, resolving: response.resolving };
+    }
+
+    public async getPackageDetail(packageName: string): Promise<Abstraction.PackageDetail> {
+        const response = await this.httpClient.request(getPackageDetailRoute, {
+            params: { packageName }
+        });
+        return response.item;
     }
 }
 

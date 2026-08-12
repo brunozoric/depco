@@ -4,7 +4,8 @@ import {
     listPackagesRoute,
     rescanPackageRoute,
     getChangelogsRoute,
-    reResolveChangelogsRoute
+    reResolveChangelogsRoute,
+    getPackageDetailRoute
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { PackagesGateway } from "../abstractions/PackagesGateway.js";
@@ -174,5 +175,34 @@ describe("PackagesGateway", () => {
             }
         ]);
         expect(result).toEqual({ entries, resolving: true });
+    });
+
+    it("getPackageDetail() calls getPackageDetailRoute with the package name and returns the item", async () => {
+        const gateway = createGateway();
+        const detail: PackagesGateway.PackageDetail = {
+            name: "left-pad",
+            repoUrl: "https://github.com/left-pad/left-pad",
+            projects: [
+                {
+                    projectId: "p1",
+                    projectName: "my-project",
+                    currentVersion: "1.0.0",
+                    latestVersion: "2.0.0",
+                    upgradeType: "major",
+                    dependencyKind: "dependency"
+                }
+            ],
+            latestVersion: "2.0.0",
+            lastPublishedAt: 1000,
+            registryResolved: true
+        };
+        mockResult = { item: detail };
+
+        const result = await gateway.getPackageDetail("left-pad");
+
+        expect(calls).toEqual([
+            { route: getPackageDetailRoute, args: { params: { packageName: "left-pad" } } }
+        ]);
+        expect(result).toEqual(detail);
     });
 });

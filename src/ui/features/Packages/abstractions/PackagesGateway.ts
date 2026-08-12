@@ -42,11 +42,30 @@ export interface IPackageListFilters {
     teamId?: string;
 }
 
+export interface IPackageDetailProject {
+    projectId: string;
+    projectName: string;
+    currentVersion: string;
+    latestVersion: string;
+    upgradeType: string;
+    dependencyKind: string;
+}
+
+export interface IPackageDetail {
+    name: string;
+    repoUrl: string | null;
+    projects: IPackageDetailProject[];
+    latestVersion: string | null;
+    lastPublishedAt: number | null;
+    registryResolved: boolean;
+}
+
 export interface IPackagesGateway {
     list(filters?: IPackageListFilters): Promise<IPackageListResponse>;
     rescanPackage(packageName: string): Promise<void>;
     getChangelogs(packageName: string, from: string, to: string): Promise<IChangelogResult>;
     reResolveChangelogs(packageName: string, from: string, to: string): Promise<IChangelogResult>;
+    getPackageDetail(packageName: string): Promise<IPackageDetail>;
 }
 
 export const PackagesGateway = createAbstraction<IPackagesGateway>("Ui/PackagesGateway");
@@ -59,4 +78,6 @@ export namespace PackagesGateway {
     export type ChangelogResult = IChangelogResult;
     export type Filters = IPackageListFilters;
     export type ListResponse = IPackageListResponse;
+    export type PackageDetail = IPackageDetail;
+    export type PackageDetailProject = IPackageDetailProject;
 }
