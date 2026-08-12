@@ -20,7 +20,6 @@ export function ChangelogButton({ pkg, onOpenChangelog }: ChangelogButtonProps):
                     }}
                 >
                     Changelog
-                    {pkg.changelogCount > 0 && ` (${pkg.changelogCount})`}
                 </Button>
             )}
         </Table.Td>
