@@ -329,7 +329,7 @@ export const RawGitHubChangelogResolver = Abstraction.createImplementation({
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `yarn vitest run src/api/services/Changelog/__tests__/RawGitHubChangelogResolver.test.ts`
-Expected: PASS — all 10 tests green
+Expected: PASS — all 11 tests green
 
 - [ ] **Step 5: Run full suite and commit**
 
@@ -718,6 +718,26 @@ describe("GitHubHttpReleasesResolver", () => {
         expect(result.size).toBe(0);
     });
 
+    it("returns empty map on invalid JSON response (Zod validation)", async () => {
+        fetchMock.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({ not: "an array" })
+        });
+
+        const deps = createMockDeps();
+        const resolver = new GitHubHttpReleasesResolver(
+            deps.databaseClient,
+            deps.encryptionService
+        );
+        const result = await resolver.resolve(
+            "pkg",
+            "https://github.com/owner/repo",
+            ["1.0.0"]
+        );
+
+        expect(result.size).toBe(0);
+    });
+
     it("skips releases with null body", async () => {
         fetchMock.mockResolvedValueOnce({
             ok: true,
@@ -851,7 +871,7 @@ export const GitHubHttpReleasesResolver = Abstraction.createImplementation({
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `yarn vitest run src/api/services/Changelog/__tests__/GitHubHttpReleasesResolver.test.ts`
-Expected: PASS — all 9 tests green
+Expected: PASS — all 10 tests green
 
 - [ ] **Step 5: Run full suite and commit**
 
@@ -1296,7 +1316,10 @@ git commit -m "feat: register three new HTTP changelog resolvers in resolver cha
 - Modify: `src/ui/presentation/Packages/PackageList/PackagesPresenter.ts`
 - Modify: `src/ui/presentation/Packages/PackageList/components/columns/ChangelogButton.tsx`
 - Modify: `src/ui/presentation/Packages/PackageList/__tests__/PackagesPresenter.test.ts`
-- Modify: `src/ui/features/Packages/__tests__/PackagesGateway.test.ts` (if it exists)
+- Modify: `src/ui/features/Packages/__tests__/PackagesGateway.test.ts`
+- Modify: `src/ui/features/Packages/__tests__/PackagesRepository.test.ts`
+- Modify: `src/ui/presentation/Packages/useCases/__tests__/LoadPackagesUseCase.test.ts`
+- Modify: `src/api/routes/__tests__/packages.test.ts`
 
 **Interfaces:**
 - Consumes: existing `changelogCount: number` field across all layers
@@ -1386,6 +1409,10 @@ resolvedChangelogCount: number;
 totalChangelogCount: number;
 ```
 
+- [ ] **Step 3b: Update the gateway implementation mapping**
+
+In `src/ui/features/Packages/PackagesGateway.ts`, the `list()` method returns `response.items` directly from the HTTP client. Since the schema validation handles the field mapping, no explicit mapping change is needed — the `IPackageListItem` interface change (Step 3) ensures type safety. Verify the response passthrough at line 50 (`return { items: response.items, total: response.total }`) still works with the new fields.
+
 - [ ] **Step 4: Update the presenter abstraction and implementation**
 
 In `src/ui/presentation/Packages/PackageList/abstractions/PackagesPresenter.ts`, replace `changelogCount: number` in `IPackageListItemViewModel` with:
@@ -1463,11 +1490,24 @@ totalChangelogCount: 5,
 
 Update any assertions that reference `changelogCount` to use the new field names.
 
+Also update the second fixture around line 221 that has `changelogCount: 3`.
+
+- [ ] **Step 6b: Update all other test files referencing changelogCount**
+
+The following test files also reference `changelogCount` and must be updated to use `resolvedChangelogCount` and `totalChangelogCount`:
+
+1. `src/ui/features/Packages/__tests__/PackagesGateway.test.ts` (line 54) — replace `changelogCount: 3` with `resolvedChangelogCount: 3, totalChangelogCount: 3`
+2. `src/ui/features/Packages/__tests__/PackagesRepository.test.ts` (lines 24, 54) — replace `changelogCount` values with both fields
+3. `src/ui/presentation/Packages/useCases/__tests__/LoadPackagesUseCase.test.ts` (line 63) — replace `changelogCount: 3` with both fields
+4. `src/api/routes/__tests__/packages.test.ts` (lines 168, 463) — replace `changelogCount` assertions with `resolvedChangelogCount` and `totalChangelogCount` assertions. For the test at line 463 that asserts `changelogCount` is 1, update to assert `totalChangelogCount` is 1 and `resolvedChangelogCount` is 0 or 1 depending on whether the seeded changelog has content.
+
+For each file, find all `changelogCount` references and replace with the appropriate new fields. Use `resolvedChangelogCount` + `totalChangelogCount` in fixture data, and update assertions accordingly.
+
 - [ ] **Step 7: Run full suite and commit**
 
 Run: `yarn full`
 
 ```bash
-git add src/api/routes/packages.ts src/shared/routes/packages.ts src/ui/features/Packages/abstractions/PackagesGateway.ts src/ui/features/Packages/PackagesGateway.ts src/ui/presentation/Packages/PackageList/abstractions/PackagesPresenter.ts src/ui/presentation/Packages/PackageList/PackagesPresenter.ts src/ui/presentation/Packages/PackageList/components/columns/ChangelogButton.tsx src/ui/presentation/Packages/PackageList/__tests__/PackagesPresenter.test.ts
+git add src/api/routes/packages.ts src/shared/routes/packages.ts src/ui/features/Packages/abstractions/PackagesGateway.ts src/ui/features/Packages/PackagesGateway.ts src/ui/presentation/Packages/PackageList/abstractions/PackagesPresenter.ts src/ui/presentation/Packages/PackageList/PackagesPresenter.ts src/ui/presentation/Packages/PackageList/components/columns/ChangelogButton.tsx src/ui/presentation/Packages/PackageList/__tests__/PackagesPresenter.test.ts src/ui/features/Packages/__tests__/PackagesGateway.test.ts src/ui/features/Packages/__tests__/PackagesRepository.test.ts src/ui/presentation/Packages/useCases/__tests__/LoadPackagesUseCase.test.ts src/api/routes/__tests__/packages.test.ts
 git commit -m "feat: split changelog count into resolved/pending for accurate display"
 ```
