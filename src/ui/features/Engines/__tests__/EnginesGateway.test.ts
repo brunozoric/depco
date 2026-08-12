@@ -75,7 +75,7 @@ describe("EnginesGateway", () => {
 
         expect(calls).toHaveLength(1);
         expect(calls[0]!.route).toBe(scanProjectEnginesRoute);
-        expect(calls[0]!.args).toEqual({ params: { projectId: "project-1" } });
+        expect(calls[0]!.args).toEqual({ params: { projectId: "project-1" }, query: {} });
         expect(result.rootStatus).toBe("current");
     });
 

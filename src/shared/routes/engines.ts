@@ -81,5 +81,11 @@ export const scanProjectEnginesRoute = defineRoute({
     path: "/api/engines/:projectId/scan",
     description: "Trigger an engine scan for a project",
     params: z.object({ projectId: z.string() }),
+    querystring: z.object({
+        warnMaintenance: z
+            .enum(["true", "false"])
+            .transform(value => value === "true")
+            .optional()
+    }),
     response: engineScanResultSchema
 });

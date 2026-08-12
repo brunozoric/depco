@@ -110,7 +110,8 @@ describe("EngineScanJobExecutor", () => {
 
         expect(engineService.scan).toHaveBeenCalledWith({
             projectId: "project-1",
-            projectPath: testDir
+            projectPath: testDir,
+            warnMaintenance: true
         });
     });
 

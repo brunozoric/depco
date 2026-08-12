@@ -24,7 +24,8 @@ class EnginesGatewayImpl implements Abstraction.Interface {
 
     public async scan(projectId: string): Promise<Abstraction.ScanResult> {
         return this.httpClient.request(scanProjectEnginesRoute, {
-            params: { projectId }
+            params: { projectId },
+            query: {}
         });
     }
 

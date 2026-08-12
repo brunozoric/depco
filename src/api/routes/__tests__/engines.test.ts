@@ -242,6 +242,47 @@ describe("engine routes", () => {
             expect(persisted.length).toBeGreaterThan(0);
         });
 
+        it("passes warnMaintenance querystring param to the engine service", async () => {
+            const projectPath = createTestDir();
+            testDirs.push(projectPath);
+            writePackageJson(projectPath, { name: "root-app", engines: { node: ">=14.0.0" } });
+
+            const nodeModulesDir = join(projectPath, "node_modules", "old-dep");
+            mkdirSync(nodeModulesDir, { recursive: true });
+            writeFileSync(
+                join(nodeModulesDir, "package.json"),
+                JSON.stringify({ name: "old-dep", engines: { node: ">=14.0.0" } })
+            );
+            await insertTestProject(db, "proj-maint", projectPath);
+
+            const withMaintenance = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "POST",
+                url: "/api/engines/proj-maint/scan?warnMaintenance=true"
+            });
+            expect(withMaintenance.statusCode).toBe(200);
+            const findingsWithMaintenance = withMaintenance.json().item.findings;
+
+            await db.delete(engineChecks).where(eq(engineChecks.projectId, "proj-maint")).run();
+
+            const withoutMaintenance = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "POST",
+                url: "/api/engines/proj-maint/scan?warnMaintenance=false"
+            });
+            expect(withoutMaintenance.statusCode).toBe(200);
+            const findingsWithoutMaintenance = withoutMaintenance.json().item.findings;
+
+            const maintenanceCountBefore = findingsWithMaintenance.filter(
+                (finding: { status: string }) => finding.status === "maintenance"
+            ).length;
+            const maintenanceCountAfter = findingsWithoutMaintenance.filter(
+                (finding: { status: string }) => finding.status === "maintenance"
+            ).length;
+
+            expect(maintenanceCountAfter).toBeLessThanOrEqual(maintenanceCountBefore);
+        });
+
         it("returns 404 when the project does not exist", async () => {
             const response = await app.inject({
                 headers: { authorization: `Bearer ${token}` },

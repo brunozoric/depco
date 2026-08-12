@@ -39,6 +39,7 @@ export async function engineRoutes(
 
     registerRoute(app, scanProjectEnginesRoute, {}, async (request, reply) => {
         const { projectId } = request.params;
+        const { warnMaintenance } = request.query;
 
         const project = await databaseClient.db
             .select()
@@ -50,7 +51,11 @@ export async function engineRoutes(
             return;
         }
 
-        const result = await engineService.scan({ projectId, projectPath: project.path });
+        const result = await engineService.scan({
+            projectId,
+            projectPath: project.path,
+            ...(warnMaintenance !== undefined && { warnMaintenance })
+        });
         sendOne({ reply: reply, data: result });
     });
 }

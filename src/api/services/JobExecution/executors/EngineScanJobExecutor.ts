@@ -19,7 +19,8 @@ class EngineScanJobExecutorImpl implements Abstraction.Interface {
 
         const result = await this.engineService.scan({
             projectId,
-            projectPath: context.projectPath
+            projectPath: context.projectPath,
+            warnMaintenance: true
         });
 
         this.webSocketBroadcaster.broadcast("engine-scan:complete", {
