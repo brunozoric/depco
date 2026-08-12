@@ -1,5 +1,5 @@
 import { join } from "path";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendList, sendError } from "#shared/routing/index.js";
@@ -7,14 +7,15 @@ import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     exportProjectsRoute,
     importProjectsRoute,
-    cloneProjectRoute
+    cloneProjectRoute,
+    bulkScanProjectsRoute
 } from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { SecurityService } from "../../services/Security/index.js";
 import { PackageManagerService } from "../../services/PackageManager/index.js";
 import { JobWorker } from "../../services/JobExecution/index.js";
 import { registerProject as registerProjectHelper } from "../../utils/registerProject.js";
-import { projects } from "#api/db/schema.js";
+import { projects, upgradeJobs } from "#api/db/schema.js";
 import { access } from "fs/promises";
 
 function extractRepoName(url: string): string | null {
@@ -170,6 +171,45 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
             });
 
             sendOne({ reply, data: { jobId } });
+        }
+    );
+
+    registerRoute(
+        app,
+        bulkScanProjectsRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const { projectIds, force } = request.body;
+            let enqueuedCount = 0;
+            let skippedCount = 0;
+
+            for (const projectId of projectIds) {
+                const activeJob = await db
+                    .select()
+                    .from(upgradeJobs)
+                    .where(
+                        and(
+                            eq(upgradeJobs.referenceId, projectId),
+                            eq(upgradeJobs.type, "scan"),
+                            inArray(upgradeJobs.status, ["pending", "running"])
+                        )
+                    )
+                    .get();
+
+                if (activeJob && !force) {
+                    skippedCount++;
+                    continue;
+                }
+
+                await jobWorker.enqueue({
+                    referenceId: projectId,
+                    referenceType: "project",
+                    type: "scan"
+                });
+                enqueuedCount++;
+            }
+
+            reply.send({ enqueuedCount, skippedCount });
         }
     );
 }

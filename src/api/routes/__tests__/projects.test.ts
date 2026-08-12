@@ -968,6 +968,79 @@ describe("project routes", () => {
         expect(response.statusCode).toBe(400);
     });
 
+    it("POST /api/projects/bulk-scan enqueues scans and skips projects with an active scan job", async () => {
+        await db
+            .insert(projects)
+            .values([
+                { id: "p1", name: "alpha", path: "/tmp/alpha", addedAt: Date.now() },
+                { id: "p2", name: "beta", path: "/tmp/beta", addedAt: Date.now() },
+                { id: "p3", name: "gamma", path: "/tmp/gamma", addedAt: Date.now() }
+            ])
+            .run();
+
+        await db
+            .insert(upgradeJobs)
+            .values({
+                id: "active-job",
+                referenceId: "p2",
+                referenceType: "project",
+                type: "scan",
+                status: "running"
+            })
+            .run();
+
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "POST",
+            url: "/api/projects/bulk-scan",
+            payload: { projectIds: ["p1", "p2", "p3"] }
+        });
+
+        expect(response.statusCode).toBe(200);
+        const body = response.json() as { enqueuedCount: number; skippedCount: number };
+        expect(body.enqueuedCount).toBe(2);
+        expect(body.skippedCount).toBe(1);
+
+        const scanJobs = (await db.select().from(upgradeJobs).all()).filter(
+            job => job.type === "scan"
+        );
+        const enqueuedReferenceIds = scanJobs
+            .filter(job => job.id !== "active-job")
+            .map(job => job.referenceId)
+            .sort();
+        expect(enqueuedReferenceIds).toEqual(["p1", "p3"]);
+    });
+
+    it("POST /api/projects/bulk-scan enqueues anyway when force is true", async () => {
+        await db
+            .insert(projects)
+            .values({ id: "p1", name: "alpha", path: "/tmp/alpha", addedAt: Date.now() })
+            .run();
+
+        await db
+            .insert(upgradeJobs)
+            .values({
+                id: "active-job",
+                referenceId: "p1",
+                referenceType: "project",
+                type: "scan",
+                status: "pending"
+            })
+            .run();
+
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "POST",
+            url: "/api/projects/bulk-scan",
+            payload: { projectIds: ["p1"], force: true }
+        });
+
+        expect(response.statusCode).toBe(200);
+        const body = response.json() as { enqueuedCount: number; skippedCount: number };
+        expect(body.enqueuedCount).toBe(1);
+        expect(body.skippedCount).toBe(0);
+    });
+
     it("POST /api/projects/clone rejects already-registered path", async () => {
         // First add a project at testDir
         await app.inject({

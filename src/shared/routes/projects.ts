@@ -195,3 +195,18 @@ export const cloneProjectRoute = defineRoute({
     }),
     response: z.object({ item: z.object({ jobId: z.string() }) })
 });
+
+export const bulkScanProjectsRoute = defineRoute({
+    method: "POST",
+    path: "/api/projects/bulk-scan",
+    description: "Enqueue scan jobs for multiple projects",
+    params: z.object({}),
+    body: z.object({
+        projectIds: z.array(z.string()).min(1),
+        force: z.boolean().optional()
+    }),
+    response: z.object({
+        enqueuedCount: z.number(),
+        skippedCount: z.number()
+    })
+});
