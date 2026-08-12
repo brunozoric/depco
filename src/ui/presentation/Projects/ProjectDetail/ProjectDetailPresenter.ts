@@ -31,17 +31,10 @@ import { AutoFixManager } from "./AutoFixManager.js";
 import { SbomExportManager } from "./SbomExportManager.js";
 import { DependencySelectionManager } from "./DependencySelectionManager.js";
 import { ScanManager } from "./ScanManager.js";
+import { EngineManager } from "./EngineManager.js";
 import { PackageOverlayLoader } from "./PackageOverlayLoader.js";
 
 const DEFAULT_PAGE_SIZE = 25;
-
-const ENGINE_STATUS_SORT_PRIORITY: Record<string, number> = {
-    eol: 0,
-    maintenance: 1,
-    unknown: 2,
-    "active-lts": 3,
-    current: 4
-};
 
 const DEPENDENCY_FILTER_SCHEMA = getProjectDependenciesRoute.querystring as NonNullable<
     typeof getProjectDependenciesRoute.querystring
@@ -54,13 +47,12 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
     private packageManagerUpdateVersionValue = "";
     private upgradeFilterValue: UpgradeFilter = "all";
     private projectTeamIdValues: string[] = [];
-    private engineStaleness: EnginesGateway.StalenessData | null = null;
-    private showMaintenanceValue = true;
 
     private readonly autoFixManager: AutoFixManager;
     private readonly sbomExportManager: SbomExportManager;
     private readonly selectionManager: DependencySelectionManager;
     private readonly scanManager: ScanManager;
+    private readonly engineManager: EngineManager;
     private readonly overlayLoader: PackageOverlayLoader;
 
     private readonly changelogTracker: ChangelogTracker;
@@ -68,7 +60,6 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
 
     private readonly handleInstallComplete: EventBridge.Callback<"install:complete">;
     private readonly handleTransitiveResolveComplete: EventBridge.Callback<"transitive-resolve:complete">;
-    private readonly handleEngineScanComplete: EventBridge.Callback<"engine-scan:complete">;
 
     public constructor(
         private readonly loadProjectsUseCase: LoadProjectsUseCase.Interface,
@@ -89,8 +80,8 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         private readonly teamsGateway: TeamsGateway.Interface,
         private readonly teamListService: TeamListService.Interface,
         private readonly urlFilterService: UrlFilterService.Interface,
-        private readonly enginesGateway: EnginesGateway.Interface,
-        private readonly enginesRepository: EnginesRepository.Interface,
+        enginesGateway: EnginesGateway.Interface,
+        enginesRepository: EnginesRepository.Interface,
         private readonly changelogsGateway: ChangelogsGateway.Interface
     ) {
         const getProjectId = (): string | null => this.currentProjectId;
@@ -109,6 +100,12 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
                 await Promise.all([this.loadDependencies(projectId), this.loadSecurity(projectId)]);
             }
         });
+        this.engineManager = new EngineManager({
+            enginesGateway,
+            enginesRepository,
+            eventBridge: this.eventBridge,
+            getProjectId
+        });
         this.overlayLoader = new PackageOverlayLoader({ vulnerabilitiesGateway, licensesGateway });
 
         makeAutoObservable(this, { vm: computed });
@@ -126,15 +123,8 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
             }
         };
 
-        this.handleEngineScanComplete = data => {
-            if (data.projectId === this.currentProjectId) {
-                void this.loadEngineData(data.projectId);
-            }
-        };
-
         this.eventBridge.on("install:complete", this.handleInstallComplete);
         this.eventBridge.on("transitive-resolve:complete", this.handleTransitiveResolveComplete);
-        this.eventBridge.on("engine-scan:complete", this.handleEngineScanComplete);
 
         this.disposeUrlListener = this.urlFilterService.onChange(() => {
             if (this.currentProjectId) {
@@ -253,44 +243,8 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
             projectTeamIds: this.projectTeamIdValues,
             availableTeams: this.teamListService.getTeams(),
             changelogState: this.changelogTracker.state,
-            engineData: this.buildEngineDataViewModel(),
-            showMaintenance: this.showMaintenanceValue
-        };
-    }
-
-    private buildEngineDataViewModel(): Abstraction.EngineDataViewModel | null {
-        if (!this.currentProjectId) {
-            return null;
-        }
-
-        const checks = this.enginesRepository.getChecks();
-        const rootCheck = checks.find(check => check.packageName === "");
-        if (!rootCheck) {
-            return null;
-        }
-
-        const findings = checks
-            .filter(check => check.packageName !== "")
-            .map((check): Abstraction.EngineFindingViewModel => ({
-                packageName: check.packageName,
-                enginesNode: check.enginesNode,
-                status: check.status,
-                eolDate: check.eolDate
-            }))
-            .sort(
-                (a, b) =>
-                    (ENGINE_STATUS_SORT_PRIORITY[a.status] ?? 99) -
-                    (ENGINE_STATUS_SORT_PRIORITY[b.status] ?? 99)
-            );
-
-        return {
-            rootStatus: rootCheck.status,
-            rootEnginesNode: rootCheck.enginesNode,
-            rootEolDate: rootCheck.eolDate,
-            findings,
-            lastScannedAt: this.engineStaleness?.lastScannedAt ?? null,
-            engineScanStale: this.engineStaleness?.engineScanStale ?? false,
-            engineScanStaleReason: this.engineStaleness?.engineScanStaleReason ?? null
+            engineData: this.engineManager.getViewModel(this.currentProjectId),
+            showMaintenance: this.engineManager.showMaintenance
         };
     }
 
@@ -309,7 +263,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
                 this.autoFixManager.loadPullRequests(projectId),
                 this.loadProjectTeams(projectId),
                 this.loadAvailableTeams(),
-                this.loadEngineData(projectId)
+                this.engineManager.load(projectId)
             ]);
         } finally {
             runInAction(() => {
@@ -350,21 +304,6 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
     private loadAvailableTeams = async (): Promise<void> => {
         if (this.teamListService.getTeams().length === 0) {
             await this.teamListService.loadTeams();
-        }
-    };
-
-    private loadEngineData = async (projectId: string): Promise<void> => {
-        try {
-            const [response, staleness] = await Promise.all([
-                this.enginesGateway.getByProject(projectId),
-                this.enginesGateway.getStaleness(projectId)
-            ]);
-            runInAction(() => {
-                this.enginesRepository.setChecks(response.items, response.total);
-                this.engineStaleness = staleness;
-            });
-        } catch {
-            // Engine data is supplementary — its failure should not break the detail page.
         }
     };
 
@@ -481,16 +420,16 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
     };
 
     public toggleMaintenance = (): void => {
-        this.showMaintenanceValue = !this.showMaintenanceValue;
+        this.engineManager.toggleMaintenance();
     };
 
     public dispose = (): void => {
         this.changelogTracker.dispose();
         this.scanManager.dispose();
+        this.engineManager.dispose();
         this.disposeUrlListener();
         this.eventBridge.off("install:complete", this.handleInstallComplete);
         this.eventBridge.off("transitive-resolve:complete", this.handleTransitiveResolveComplete);
-        this.eventBridge.off("engine-scan:complete", this.handleEngineScanComplete);
     };
 
     public exportSbom = async (format: string): Promise<void> => {
