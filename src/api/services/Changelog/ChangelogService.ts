@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { ChangelogService as Abstraction } from "./abstractions/ChangelogService.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { changelogs, dependencies, dependencyVersions } from "#api/db/schema.js";
@@ -203,35 +203,46 @@ class ChangelogServiceImpl implements Abstraction.Interface {
     }
 
     public async getStats(): Promise<Abstraction.Stats> {
-        const rows = await this.databaseClient.db
-            .select({
-                source: changelogs.source,
-                content: changelogs.content
-            })
-            .from(changelogs)
-            .all();
-
-        let total = 0;
-        let resolved = 0;
-        let failed = 0;
-        let pending = 0;
-        const byResolver: Record<string, number> = {};
-
-        for (const row of rows) {
-            total++;
-            if (row.content === null) {
-                pending++;
-            } else if (row.source === "none") {
-                failed++;
-            } else {
-                resolved++;
-                if (row.source) {
-                    byResolver[row.source] = (byResolver[row.source] ?? 0) + 1;
-                }
-            }
+        interface IStatsRow {
+            total: number;
+            resolved: number;
+            failed: number;
+            pending: number;
         }
 
-        return { total, resolved, failed, pending, byResolver };
+        const countsRow = await this.databaseClient.db.get<IStatsRow>(sql`
+            SELECT
+                COUNT(*) AS total,
+                COUNT(CASE WHEN content IS NOT NULL AND content != '' AND source != 'none' THEN 1 END) AS resolved,
+                COUNT(CASE WHEN source = 'none' THEN 1 END) AS failed,
+                COUNT(CASE WHEN content IS NULL THEN 1 END) AS pending
+            FROM changelogs
+        `);
+
+        interface IResolverRow {
+            source: string;
+            count: number;
+        }
+
+        const resolverRows = await this.databaseClient.db.all<IResolverRow>(sql`
+            SELECT source, COUNT(*) AS count
+            FROM changelogs
+            WHERE content IS NOT NULL AND content != '' AND source != 'none' AND source IS NOT NULL
+            GROUP BY source
+        `);
+
+        const byResolver: Record<string, number> = {};
+        for (const row of resolverRows) {
+            byResolver[row.source] = row.count;
+        }
+
+        return {
+            total: countsRow?.total ?? 0,
+            resolved: countsRow?.resolved ?? 0,
+            failed: countsRow?.failed ?? 0,
+            pending: countsRow?.pending ?? 0,
+            byResolver
+        };
     }
 }
 

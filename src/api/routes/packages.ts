@@ -57,6 +57,7 @@ interface IPackageDetailScanRow {
     latestVersion: string;
     upgradeType: string;
     dependencyKind: string;
+    registryResolved: number;
 }
 
 interface IPackageDetailVersionRow {
@@ -198,7 +199,8 @@ export async function packagesRoutes(app: FastifyInstance, options: PluginOption
         const scanRows = await db.all<IPackageDetailScanRow>(sql`
             SELECT sr.project_id AS projectId, p.name AS projectName,
                    sr.current_version AS currentVersion, sr.latest_version AS latestVersion,
-                   sr.upgrade_type AS upgradeType, sr.dependency_kind AS dependencyKind
+                   sr.upgrade_type AS upgradeType, sr.dependency_kind AS dependencyKind,
+                   sr.registry_resolved AS registryResolved
             FROM scan_results sr
             JOIN projects p ON sr.project_id = p.id
             WHERE sr.name = ${packageName}
@@ -224,15 +226,24 @@ export async function packagesRoutes(app: FastifyInstance, options: PluginOption
             LIMIT 1
         `);
 
+        const projects = scanRows.map(row => ({
+            projectId: row.projectId,
+            projectName: row.projectName,
+            currentVersion: row.currentVersion,
+            latestVersion: row.latestVersion,
+            upgradeType: row.upgradeType,
+            dependencyKind: row.dependencyKind
+        }));
+
         sendOne({
             reply,
             data: {
                 name: packageName,
                 repoUrl: depRow?.repoUrl ?? null,
-                projects: scanRows,
+                projects,
                 latestVersion: versionRow?.latestVersion ?? scanRows[0]?.latestVersion ?? null,
                 lastPublishedAt: versionRow?.lastPublishedAt ?? null,
-                registryResolved: true
+                registryResolved: scanRows.every(row => row.registryResolved === 1)
             }
         });
     });
