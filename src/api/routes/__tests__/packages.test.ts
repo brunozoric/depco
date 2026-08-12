@@ -464,4 +464,121 @@ describe("packages routes", () => {
         expect(json.items[0].totalChangelogCount).toBe(1);
         expect(json.items[0].resolvedChangelogCount).toBe(1);
     });
+
+    describe("GET /api/packages/:packageName", () => {
+        it("returns package detail with projects from every project using it", async () => {
+            const projectAId = await insertProject(db, "project-a");
+            const projectBId = await insertProject(db, "project-b");
+
+            await insertScanResult(db, {
+                projectId: projectAId,
+                name: "react",
+                currentVersion: "18.0.0",
+                latestVersion: "18.2.0",
+                upgradeType: "minor",
+                dependencyKind: "dependency"
+            });
+            await insertScanResult(db, {
+                projectId: projectBId,
+                name: "react",
+                currentVersion: "17.0.0",
+                latestVersion: "18.2.0",
+                upgradeType: "major",
+                dependencyKind: "devDependency"
+            });
+
+            const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "GET",
+                url: "/api/packages/react"
+            });
+
+            expect(response.statusCode).toBe(200);
+            const json = response.json();
+            expect(json.item.name).toBe("react");
+            expect(json.item.projects).toHaveLength(2);
+
+            const byProjectId = Object.fromEntries(
+                json.item.projects.map((p: { projectId: string }) => [p.projectId, p])
+            );
+            expect(byProjectId[projectAId]).toEqual({
+                projectId: projectAId,
+                projectName: "project-a",
+                currentVersion: "18.0.0",
+                latestVersion: "18.2.0",
+                upgradeType: "minor",
+                dependencyKind: "dependency"
+            });
+            expect(byProjectId[projectBId]).toEqual({
+                projectId: projectBId,
+                projectName: "project-b",
+                currentVersion: "17.0.0",
+                latestVersion: "18.2.0",
+                upgradeType: "major",
+                dependencyKind: "devDependency"
+            });
+        });
+
+        it("includes repoUrl and the most recently published version from the registry tables", async () => {
+            const projectId = await insertProject(db, "project-a");
+            await insertScanResult(db, {
+                projectId,
+                name: "react",
+                currentVersion: "18.0.0",
+                latestVersion: "18.2.0",
+                upgradeType: "minor"
+            });
+
+            const depId = generateId();
+            await db
+                .insert(dependencies)
+                .values({
+                    id: depId,
+                    name: "react",
+                    repoUrl: "https://github.com/facebook/react",
+                    createdAt: Date.now()
+                })
+                .run();
+            await db
+                .insert(dependencyVersions)
+                .values({
+                    id: generateId(),
+                    dependencyId: depId,
+                    version: "18.1.0",
+                    publishedAt: 1000
+                })
+                .run();
+            await db
+                .insert(dependencyVersions)
+                .values({
+                    id: generateId(),
+                    dependencyId: depId,
+                    version: "18.2.0",
+                    publishedAt: 2000
+                })
+                .run();
+
+            const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "GET",
+                url: "/api/packages/react"
+            });
+
+            expect(response.statusCode).toBe(200);
+            const json = response.json();
+            expect(json.item.repoUrl).toBe("https://github.com/facebook/react");
+            expect(json.item.latestVersion).toBe("18.2.0");
+            expect(json.item.lastPublishedAt).toBe(2000);
+        });
+
+        it("returns 404 when the package has no scan results", async () => {
+            const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "GET",
+                url: "/api/packages/does-not-exist"
+            });
+
+            expect(response.statusCode).toBe(404);
+        });
+    });
 });

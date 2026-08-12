@@ -61,3 +61,29 @@ export const rescanPackageRoute = defineRoute({
         item: z.object({ updated: z.number() })
     })
 });
+
+const packageDetailProjectSchema = z.object({
+    projectId: z.string(),
+    projectName: z.string(),
+    currentVersion: z.string(),
+    latestVersion: z.string(),
+    upgradeType: z.string(),
+    dependencyKind: z.string()
+});
+
+const packageDetailSchema = z.object({
+    name: z.string(),
+    repoUrl: z.string().nullable(),
+    projects: z.array(packageDetailProjectSchema),
+    latestVersion: z.string().nullable(),
+    lastPublishedAt: z.number().nullable(),
+    registryResolved: z.boolean()
+});
+
+export const getPackageDetailRoute = defineRoute({
+    method: "GET",
+    path: "/api/packages/:packageName",
+    description: "Get detail for a single package across all projects",
+    params: z.object({ packageName: z.string() }),
+    response: z.object({ item: packageDetailSchema })
+});

@@ -2,12 +2,16 @@ import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import semver from "semver";
 import { eq, sql, type SQL } from "drizzle-orm";
-import { registerRoute, sendOne } from "#shared/routing/index.js";
+import { registerRoute, sendOne, sendError } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
-import { listPackagesRoute, rescanPackageRoute } from "#shared/routes/index.js";
+import {
+    listPackagesRoute,
+    rescanPackageRoute,
+    getPackageDetailRoute
+} from "#shared/routes/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { RegistryCacheService } from "../services/RegistryCache/index.js";
-import { scanResults } from "#api/db/schema.js";
+import { scanResults, dependencies } from "#api/db/schema.js";
 import { teamProjectIds } from "#api/utils/teamFilter.js";
 
 interface PluginOptions extends FastifyPluginOptions {
@@ -44,6 +48,20 @@ interface IPackageListItem {
 
 interface IRawCountRow {
     cnt: number;
+}
+
+interface IPackageDetailScanRow {
+    projectId: string;
+    projectName: string;
+    currentVersion: string;
+    latestVersion: string;
+    upgradeType: string;
+    dependencyKind: string;
+}
+
+interface IPackageDetailVersionRow {
+    latestVersion: string;
+    lastPublishedAt: number | null;
 }
 
 const DEFAULT_PAGE_SIZE = 50;
@@ -172,6 +190,51 @@ export async function packagesRoutes(app: FastifyInstance, options: PluginOption
         }));
 
         reply.send({ items, total });
+    });
+
+    registerRoute(app, getPackageDetailRoute, {}, async (request, reply) => {
+        const { packageName } = request.params;
+
+        const scanRows = await db.all<IPackageDetailScanRow>(sql`
+            SELECT sr.project_id AS projectId, p.name AS projectName,
+                   sr.current_version AS currentVersion, sr.latest_version AS latestVersion,
+                   sr.upgrade_type AS upgradeType, sr.dependency_kind AS dependencyKind
+            FROM scan_results sr
+            JOIN projects p ON sr.project_id = p.id
+            WHERE sr.name = ${packageName}
+        `);
+
+        if (scanRows.length === 0) {
+            sendError({ reply, statusCode: 404, message: "Package not found" });
+            return;
+        }
+
+        const depRow = await db
+            .select({ repoUrl: dependencies.repoUrl })
+            .from(dependencies)
+            .where(eq(dependencies.name, packageName))
+            .get();
+
+        const versionRow = await db.get<IPackageDetailVersionRow>(sql`
+            SELECT dv.version AS latestVersion, dv.published_at AS lastPublishedAt
+            FROM dependency_versions dv
+            JOIN dependencies d ON dv.dependency_id = d.id
+            WHERE d.name = ${packageName}
+            ORDER BY dv.published_at DESC
+            LIMIT 1
+        `);
+
+        sendOne({
+            reply,
+            data: {
+                name: packageName,
+                repoUrl: depRow?.repoUrl ?? null,
+                projects: scanRows,
+                latestVersion: versionRow?.latestVersion ?? scanRows[0]?.latestVersion ?? null,
+                lastPublishedAt: versionRow?.lastPublishedAt ?? null,
+                registryResolved: true
+            }
+        });
     });
 
     const registryCacheService = container.resolve(RegistryCacheService);
