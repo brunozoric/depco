@@ -3,8 +3,6 @@ import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPCli
 import {
     listPackagesRoute,
     rescanPackageRoute,
-    getChangelogsRoute,
-    reResolveChangelogsRoute,
     getPackageDetailRoute
 } from "#shared/routes/index.js";
 
@@ -56,30 +54,6 @@ class PackagesGatewayImpl implements Abstraction.Interface {
             params: { packageName },
             query: {}
         });
-    }
-
-    public async getChangelogs(
-        packageName: string,
-        from: string,
-        to: string
-    ): Promise<Abstraction.ChangelogResult> {
-        const response = await this.httpClient.request(getChangelogsRoute, {
-            params: { packageName },
-            query: { from, to }
-        });
-        return { entries: response.items, resolving: response.resolving };
-    }
-
-    public async reResolveChangelogs(
-        packageName: string,
-        from: string,
-        to: string
-    ): Promise<Abstraction.ChangelogResult> {
-        const response = await this.httpClient.request(reResolveChangelogsRoute, {
-            params: { packageName },
-            body: { from, to }
-        });
-        return { entries: response.items, resolving: response.resolving };
     }
 
     public async getPackageDetail(packageName: string): Promise<Abstraction.PackageDetail> {

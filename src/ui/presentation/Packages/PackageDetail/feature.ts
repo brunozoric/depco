@@ -4,6 +4,7 @@ import { PackageDetailPresenter } from "./PackageDetailPresenter.js";
 import { PackagesFeature } from "../../../features/Packages/feature.js";
 import { VulnerabilitiesFeature } from "../../../features/Vulnerabilities/feature.js";
 import { LicensesFeature } from "../../../features/Licenses/feature.js";
+import { ChangelogsFeature } from "../../../features/Changelogs/feature.js";
 import { PackageDetailRoute } from "./PackageDetailRoute.js";
 
 export interface IPackageDetailFeatureExports {
@@ -12,7 +13,7 @@ export interface IPackageDetailFeatureExports {
 
 export const PackageDetailFeature = createFeature<void, IPackageDetailFeatureExports>({
     name: "Ui/PackageDetail",
-    dependencies: [PackagesFeature, VulnerabilitiesFeature, LicensesFeature],
+    dependencies: [PackagesFeature, VulnerabilitiesFeature, LicensesFeature, ChangelogsFeature],
     register(container) {
         container.register(PackageDetailPresenter);
         container.register(PackageDetailRoute).inSingletonScope();

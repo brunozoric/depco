@@ -2,8 +2,8 @@ import { computed, makeAutoObservable, runInAction } from "mobx";
 import { UpgradeWizardPresenter as Abstraction } from "./abstractions/UpgradeWizardPresenter.js";
 import { UpgradeSessionsGateway } from "../../../features/UpgradeSessions/abstractions/UpgradeSessionsGateway.js";
 import { UpgradeSessionsRepository } from "../../../features/UpgradeSessions/abstractions/UpgradeSessionsRepository.js";
-import { ProjectsGateway } from "../../../features/Projects/abstractions/ProjectsGateway.js";
 import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
+import { ChangelogsGateway } from "../../../features/Changelogs/abstractions/ChangelogsGateway.js";
 import { LoadProjectsUseCase } from "../useCases/abstractions/LoadProjectsUseCase.js";
 import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBridge.js";
 import "../../../infrastructure/Events/eventMap.js";
@@ -35,11 +35,11 @@ class UpgradeWizardPresenterImpl implements Abstraction.Interface {
     public constructor(
         private readonly upgradeSessionsGateway: UpgradeSessionsGateway.Interface,
         private readonly upgradeSessionsRepository: UpgradeSessionsRepository.Interface,
-        private readonly projectsGateway: ProjectsGateway.Interface,
         private readonly projectsRepository: ProjectsRepository.Interface,
         private readonly loadProjectsUseCase: LoadProjectsUseCase.Interface,
         private readonly eventBridge: EventBridge.Interface,
-        private readonly appSettingsGateway: AppSettingsGateway.Interface
+        private readonly appSettingsGateway: AppSettingsGateway.Interface,
+        private readonly changelogsGateway: ChangelogsGateway.Interface
     ) {
         makeAutoObservable(this, { vm: computed });
         this.changelogTracker = new ChangelogTracker(this.eventBridge);
@@ -228,16 +228,16 @@ class UpgradeWizardPresenterImpl implements Abstraction.Interface {
         packageName: string,
         from: string,
         to: string
-    ): Promise<ProjectsGateway.ChangelogResult> => {
-        return this.projectsGateway.getChangelogs(packageName, from, to);
+    ): Promise<ChangelogsGateway.ChangelogResult> => {
+        return this.changelogsGateway.getChangelogs(packageName, from, to);
     };
 
     public reResolveChangelogs = async (
         packageName: string,
         from: string,
         to: string
-    ): Promise<ProjectsGateway.ChangelogResult> => {
-        return this.projectsGateway.reResolveChangelogs(packageName, from, to);
+    ): Promise<ChangelogsGateway.ChangelogResult> => {
+        return this.changelogsGateway.reResolveChangelogs(packageName, from, to);
     };
 
     public startChangelogTracking = (input: IStartChangelogTrackingInput): void => {
@@ -276,10 +276,10 @@ export const UpgradeWizardPresenter = Abstraction.createImplementation({
     dependencies: [
         UpgradeSessionsGateway,
         UpgradeSessionsRepository,
-        ProjectsGateway,
         ProjectsRepository,
         LoadProjectsUseCase,
         EventBridge,
-        AppSettingsGateway
+        AppSettingsGateway,
+        ChangelogsGateway
     ]
 });

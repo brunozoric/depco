@@ -8,6 +8,7 @@ import { ProjectsFeature } from "../../../features/Projects/feature.js";
 import { ProjectsUseCasesFeature } from "../useCases/feature.js";
 import { WebSocketFeature } from "../../../infrastructure/WebSocket/feature.js";
 import { AppSettingsFeature } from "../../../features/AppSettings/feature.js";
+import { ChangelogsFeature } from "../../../features/Changelogs/feature.js";
 import { UpgradeWizardRoute } from "./UpgradeWizardRoute.js";
 
 export interface IUpgradeWizardFeatureExports {
@@ -21,7 +22,8 @@ export const UpgradeWizardFeature = createFeature<void, IUpgradeWizardFeatureExp
         ProjectsFeature,
         ProjectsUseCasesFeature,
         WebSocketFeature,
-        AppSettingsFeature
+        AppSettingsFeature,
+        ChangelogsFeature
     ],
     register(container) {
         container.register(UpgradeSessionsGateway).inSingletonScope();

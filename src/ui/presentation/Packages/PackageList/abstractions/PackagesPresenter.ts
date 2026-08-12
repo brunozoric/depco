@@ -65,12 +65,12 @@ export interface IPackagesPresenter {
         packageName: string,
         from: string,
         to: string
-    ) => Promise<PackagesGateway.ChangelogResult>;
+    ) => Promise<ChangelogsGateway.ChangelogResult>;
     reResolveChangelogs: (
         packageName: string,
         from: string,
         to: string
-    ) => Promise<PackagesGateway.ChangelogResult>;
+    ) => Promise<ChangelogsGateway.ChangelogResult>;
     startChangelogTracking: (input: IStartChangelogTrackingInput) => void;
     stopChangelogTracking: () => void;
     dispose: () => void;

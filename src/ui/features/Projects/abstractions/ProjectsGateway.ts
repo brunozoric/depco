@@ -1,6 +1,5 @@
 import { createAbstraction } from "#shared/index.js";
 import type { IInstallFlagDefinition } from "#shared/install/types.js";
-import type { IChangelogEntry } from "#shared/changelog/types.js";
 
 export type { IInstallFlagDefinition };
 
@@ -57,11 +56,6 @@ export interface IScanJob {
     jobId: string;
 }
 
-export interface IChangelogResult {
-    entries: IChangelogEntry[];
-    resolving: boolean;
-}
-
 export interface IBulkScanResult {
     enqueuedCount: number;
     skippedCount: number;
@@ -79,8 +73,6 @@ export interface IProjectsGateway {
     clone(url: string, destination: string, folderName?: string): Promise<IScanJob>;
     install(id: string, flags?: string[]): Promise<IScanJob>;
     getInstallOptions(packageManager: string): Promise<IInstallFlagDefinition[]>;
-    getChangelogs(packageName: string, from: string, to: string): Promise<IChangelogResult>;
-    reResolveChangelogs(packageName: string, from: string, to: string): Promise<IChangelogResult>;
     bulkScan(projectIds: string[], force?: boolean): Promise<IBulkScanResult>;
 }
 
@@ -95,7 +87,5 @@ export namespace ProjectsGateway {
     export type DependencyFilters = IDependencyFilters;
     export type ScanJob = IScanJob;
     export type InstallFlagDefinition = IInstallFlagDefinition;
-    export type ChangelogEntry = IChangelogEntry;
-    export type ChangelogResult = IChangelogResult;
     export type BulkScanResult = IBulkScanResult;
 }

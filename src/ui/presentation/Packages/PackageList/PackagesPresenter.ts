@@ -241,16 +241,16 @@ class PackagesPresenterImpl implements Abstraction.Interface {
         packageName: string,
         from: string,
         to: string
-    ): Promise<PackagesGateway.ChangelogResult> => {
-        return this.packagesGateway.getChangelogs(packageName, from, to);
+    ): Promise<ChangelogsGateway.ChangelogResult> => {
+        return this.changelogsGateway.getChangelogs(packageName, from, to);
     };
 
     public reResolveChangelogs = async (
         packageName: string,
         from: string,
         to: string
-    ): Promise<PackagesGateway.ChangelogResult> => {
-        return this.packagesGateway.reResolveChangelogs(packageName, from, to);
+    ): Promise<ChangelogsGateway.ChangelogResult> => {
+        return this.changelogsGateway.reResolveChangelogs(packageName, from, to);
     };
 
     private buildFilters(): PackagesGateway.Filters {

@@ -24,11 +24,6 @@ export interface IPackageListResponse {
     total: number;
 }
 
-export interface IChangelogResult {
-    entries: IChangelogEntry[];
-    resolving: boolean;
-}
-
 export interface IPackageListFilters {
     search?: string;
     upgradeType?: string;
@@ -63,8 +58,6 @@ export interface IPackageDetail {
 export interface IPackagesGateway {
     list(filters?: IPackageListFilters): Promise<IPackageListResponse>;
     rescanPackage(packageName: string): Promise<void>;
-    getChangelogs(packageName: string, from: string, to: string): Promise<IChangelogResult>;
-    reResolveChangelogs(packageName: string, from: string, to: string): Promise<IChangelogResult>;
     getPackageDetail(packageName: string): Promise<IPackageDetail>;
 }
 
@@ -75,7 +68,6 @@ export namespace PackagesGateway {
     export type PackageListItem = IPackageListItem;
     export type PackageProject = IPackageProject;
     export type ChangelogEntry = IChangelogEntry;
-    export type ChangelogResult = IChangelogResult;
     export type Filters = IPackageListFilters;
     export type ListResponse = IPackageListResponse;
     export type PackageDetail = IPackageDetail;

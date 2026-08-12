@@ -7,6 +7,7 @@ import { RefreshTransientUseCase } from "../../Upgrades/useCases/abstractions/Re
 import { UpdatePackageManagerUseCase } from "../../Upgrades/useCases/abstractions/UpdatePackageManagerUseCase.js";
 import { ProjectsGateway } from "../../../features/Projects/abstractions/ProjectsGateway.js";
 import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
+import { ChangelogsGateway } from "../../../features/Changelogs/abstractions/ChangelogsGateway.js";
 import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBridge.js";
 import "../../../infrastructure/Events/eventMap.js";
 import { ChangelogTracker } from "../../Shared/ChangelogTracker.js";
@@ -88,7 +89,8 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         private readonly teamListService: TeamListService.Interface,
         private readonly urlFilterService: UrlFilterService.Interface,
         private readonly enginesGateway: EnginesGateway.Interface,
-        private readonly enginesRepository: EnginesRepository.Interface
+        private readonly enginesRepository: EnginesRepository.Interface,
+        private readonly changelogsGateway: ChangelogsGateway.Interface
     ) {
         const getProjectId = (): string | null => this.currentProjectId;
 
@@ -429,7 +431,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         from: string,
         to: string
     ): Promise<Abstraction.ChangelogResult> => {
-        return this.projectsGateway.getChangelogs(packageName, from, to);
+        return this.changelogsGateway.getChangelogs(packageName, from, to);
     };
 
     public reResolveChangelogs = async (
@@ -437,7 +439,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         from: string,
         to: string
     ): Promise<Abstraction.ChangelogResult> => {
-        return this.projectsGateway.reResolveChangelogs(packageName, from, to);
+        return this.changelogsGateway.reResolveChangelogs(packageName, from, to);
     };
 
     public updateSchedule = async (interval: string): Promise<void> => {
@@ -521,6 +523,7 @@ export const ProjectDetailPresenter = Abstraction.createImplementation({
         TeamListService,
         UrlFilterService,
         EnginesGateway,
-        EnginesRepository
+        EnginesRepository,
+        ChangelogsGateway
     ]
 });

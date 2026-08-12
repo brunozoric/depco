@@ -135,8 +135,6 @@ describe("TeamsPresenter", () => {
             clone: async () => ({}) as never,
             install: async () => ({}) as never,
             getInstallOptions: async () => [],
-            getChangelogs: async () => ({}) as never,
-            reResolveChangelogs: async () => ({}) as never,
             bulkScan: async () => ({}) as never
         });
         container.register(ProjectsRepositoryRegistration).inSingletonScope();

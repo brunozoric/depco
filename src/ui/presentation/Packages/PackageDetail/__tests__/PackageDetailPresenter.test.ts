@@ -4,6 +4,7 @@ import { createContainer } from "#shared/index.js";
 import { PackagesGateway } from "../../../../features/Packages/abstractions/PackagesGateway.js";
 import { VulnerabilitiesGateway } from "../../../../features/Vulnerabilities/abstractions/VulnerabilitiesGateway.js";
 import { LicensesGateway } from "../../../../features/Licenses/abstractions/LicensesGateway.js";
+import { ChangelogsGateway } from "../../../../features/Changelogs/abstractions/ChangelogsGateway.js";
 import { PackageDetailPresenter } from "../abstractions/PackageDetailPresenter.js";
 import { PackageDetailPresenter as PackageDetailPresenterRegistration } from "../PackageDetailPresenter.js";
 
@@ -38,7 +39,7 @@ const packageDetail: PackagesGateway.PackageDetail = {
     registryResolved: true
 };
 
-const changelogEntries: PackagesGateway.ChangelogEntry[] = [
+const changelogEntries: ChangelogsGateway.ChangelogEntry[] = [
     { version: "2.0.0", content: "breaking changes", source: "github" }
 ];
 
@@ -91,7 +92,18 @@ describe("PackageDetailPresenter", () => {
             getPackageDetail: async (packageName: string) => {
                 calls.push({ method: "getPackageDetail", args: [packageName] });
                 return overrides?.getPackageDetail ? overrides.getPackageDetail() : packageDetail;
-            },
+            }
+        } satisfies PackagesGateway.Interface);
+
+        container.registerInstance(ChangelogsGateway, {
+            getStats: async () => ({
+                total: 0,
+                resolved: 0,
+                failed: 0,
+                pending: 0,
+                byResolver: {}
+            }),
+            reResolveAll: async () => ({ packageCount: 0 }),
             getChangelogs: async (packageName: string, from: string, to: string) => {
                 calls.push({ method: "getChangelogs", args: [packageName, from, to] });
                 return { entries: changelogEntries, resolving: false };
@@ -100,7 +112,7 @@ describe("PackageDetailPresenter", () => {
                 calls.push({ method: "reResolveChangelogs", args: [packageName, from, to] });
                 return { entries: changelogEntries, resolving: true };
             }
-        } satisfies PackagesGateway.Interface);
+        } satisfies ChangelogsGateway.Interface);
 
         container.registerInstance(VulnerabilitiesGateway, {
             list: async filters => {

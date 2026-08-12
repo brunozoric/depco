@@ -12,6 +12,7 @@ import { SbomFeature } from "../../../features/Sbom/feature.js";
 import { TeamsFeature } from "../../../features/Teams/feature.js";
 import { TeamFilterFeature } from "../../../features/TeamFilter/feature.js";
 import { EnginesFeature } from "../../../features/Engines/feature.js";
+import { ChangelogsFeature } from "../../../features/Changelogs/feature.js";
 import { ProjectDetailRoute } from "./ProjectDetailRoute.js";
 
 export interface IProjectDetailFeatureExports {
@@ -31,7 +32,8 @@ export const ProjectDetailFeature = createFeature<void, IProjectDetailFeatureExp
         SbomFeature,
         TeamsFeature,
         TeamFilterFeature,
-        EnginesFeature
+        EnginesFeature,
+        ChangelogsFeature
     ],
     register(container) {
         container.register(ProjectDetailPresenter);

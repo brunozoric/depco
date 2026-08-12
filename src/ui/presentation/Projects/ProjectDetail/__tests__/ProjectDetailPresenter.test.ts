@@ -35,6 +35,7 @@ import { AutoFixFeature } from "../../../../features/AutoFix/feature.js";
 import { TeamsFeature } from "../../../../features/Teams/feature.js";
 import { TeamFilterFeature } from "../../../../features/TeamFilter/feature.js";
 import { EnginesFeature } from "../../../../features/Engines/feature.js";
+import { ChangelogsFeature } from "../../../../features/Changelogs/feature.js";
 import { SbomGateway as SbomGatewayAbstraction } from "../../../../features/Sbom/abstractions/SbomGateway.js";
 import { EventBridge } from "../../../../infrastructure/Events/abstractions/EventBridge.js";
 import "../../../../infrastructure/Events/eventMap.js";
@@ -262,6 +263,7 @@ describe("ProjectDetailPresenter", () => {
         TeamsFeature.register(container);
         TeamFilterFeature.register(container);
         EnginesFeature.register(container);
+        ChangelogsFeature.register(container);
         container.registerInstance(UrlFilterService, {
             read: () => ({}),
             update: () => {},

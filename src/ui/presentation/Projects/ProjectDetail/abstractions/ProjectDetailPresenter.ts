@@ -1,8 +1,8 @@
 import { createAbstraction } from "#shared/index.js";
 import type { IInstallFlagDefinition } from "#shared/install/types.js";
 import type { VulnerabilitySeverity } from "#shared/vulnerabilities/types.js";
-import type { IChangelogEntry } from "#shared/changelog/types.js";
 import type { EngineStatus } from "#shared/engines/types.js";
+import type { ChangelogsGateway } from "../../../../features/Changelogs/abstractions/ChangelogsGateway.js";
 import type {
     IChangelogTrackingState,
     IStartChangelogTrackingInput
@@ -41,11 +41,6 @@ export interface IProjectDetailDependencyViewModel {
     licenseRiskTier: string | null;
     dependencyKind: string;
     registryResolved: boolean;
-}
-
-export interface IChangelogResult {
-    entries: IChangelogEntry[];
-    resolving: boolean;
 }
 
 export type UpgradeFilter = "all" | "upgradeable" | "up-to-date";
@@ -154,12 +149,16 @@ export interface IProjectDetailPresenter {
     setPackageManagerUpdateVersion: (version: string) => void;
     install: (flags?: string[]) => Promise<void>;
     getInstallOptions: (packageManager: string) => Promise<IInstallFlagDefinition[]>;
-    getChangelogs: (packageName: string, from: string, to: string) => Promise<IChangelogResult>;
+    getChangelogs: (
+        packageName: string,
+        from: string,
+        to: string
+    ) => Promise<ChangelogsGateway.ChangelogResult>;
     reResolveChangelogs: (
         packageName: string,
         from: string,
         to: string
-    ) => Promise<IChangelogResult>;
+    ) => Promise<ChangelogsGateway.ChangelogResult>;
     updateSchedule: (interval: string) => Promise<void>;
     resetSchedule: () => Promise<void>;
     updateAutoFixSettings: (input: IUpdateAutoFixSettingsInput) => Promise<void>;
@@ -186,8 +185,7 @@ export namespace ProjectDetailPresenter {
     export type DependencyViewModel = IProjectDetailDependencyViewModel;
     export type ScanProgressViewModel = IProjectDetailScanProgressViewModel;
     export type InstallFlagDefinition = IInstallFlagDefinition;
-    export type ChangelogEntry = IChangelogEntry;
-    export type ChangelogResult = IChangelogResult;
+    export type ChangelogResult = ChangelogsGateway.ChangelogResult;
     export type Filter = UpgradeFilter;
     export type ScheduleViewModel = IProjectDetailScheduleViewModel;
     export type Source = ScheduleSource;

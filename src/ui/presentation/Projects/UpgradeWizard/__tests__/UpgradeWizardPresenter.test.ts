@@ -15,6 +15,7 @@ import {
 import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { ProjectsFeature } from "../../../../features/Projects/feature.js";
 import { AppSettingsFeature } from "../../../../features/AppSettings/feature.js";
+import { ChangelogsFeature } from "../../../../features/Changelogs/feature.js";
 import { ProjectsUseCasesFeature } from "../../useCases/feature.js";
 import { UpgradeSessionsGateway } from "../../../../features/UpgradeSessions/UpgradeSessionsGateway.js";
 import { UpgradeSessionsRepository } from "../../../../features/UpgradeSessions/UpgradeSessionsRepository.js";
@@ -153,6 +154,7 @@ describe("UpgradeWizardPresenter", () => {
         ProjectsFeature.register(container);
         AppSettingsFeature.register(container);
         ProjectsUseCasesFeature.register(container);
+        ChangelogsFeature.register(container);
         container.register(UpgradeSessionsGateway).inSingletonScope();
         container.register(UpgradeSessionsRepository).inSingletonScope();
         container.register(UpgradeWizardPresenterRegistration);
@@ -372,7 +374,7 @@ describe("UpgradeWizardPresenter", () => {
         expect(calls).toEqual([]);
     });
 
-    it("getChangelogs delegates to projectsGateway", async () => {
+    it("getChangelogs delegates to changelogsGateway", async () => {
         changelogResult = {
             items: [{ version: "2.0.0", content: "changelog", source: "github" }],
             total: 1,
@@ -387,7 +389,7 @@ describe("UpgradeWizardPresenter", () => {
         ]);
     });
 
-    it("reResolveChangelogs delegates to projectsGateway", async () => {
+    it("reResolveChangelogs delegates to changelogsGateway", async () => {
         changelogResult = { items: [], total: 0, resolving: true };
         const presenter = createPresenter();
 

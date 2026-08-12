@@ -10,8 +10,6 @@ import {
     cloneProjectRoute,
     installProjectRoute,
     getInstallOptionsRoute,
-    getChangelogsRoute,
-    reResolveChangelogsRoute,
     bulkScanProjectsRoute
 } from "#shared/routes/index.js";
 import type { IDependency, IProject } from "./abstractions/ProjectsGateway.js";
@@ -192,30 +190,6 @@ class ProjectsGatewayImpl implements Abstraction.Interface {
             params: { packageManager }
         });
         return response.items.map(toInstallFlagDefinition);
-    }
-
-    public async getChangelogs(
-        packageName: string,
-        from: string,
-        to: string
-    ): Promise<Abstraction.ChangelogResult> {
-        const response = await this.httpClient.request(getChangelogsRoute, {
-            params: { packageName },
-            query: { from, to }
-        });
-        return { entries: response.items, resolving: response.resolving };
-    }
-
-    public async reResolveChangelogs(
-        packageName: string,
-        from: string,
-        to: string
-    ): Promise<Abstraction.ChangelogResult> {
-        const response = await this.httpClient.request(reResolveChangelogsRoute, {
-            params: { packageName },
-            body: { from, to }
-        });
-        return { entries: response.items, resolving: response.resolving };
     }
 
     public async bulkScan(

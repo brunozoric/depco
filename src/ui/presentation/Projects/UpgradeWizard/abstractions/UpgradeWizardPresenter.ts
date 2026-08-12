@@ -1,6 +1,6 @@
 import { createAbstraction } from "#shared/index.js";
 import type { UpgradeSessionsGateway } from "../../../../features/UpgradeSessions/abstractions/UpgradeSessionsGateway.js";
-import type { IChangelogResult } from "../../ProjectDetail/abstractions/ProjectDetailPresenter.js";
+import type { ChangelogsGateway } from "../../../../features/Changelogs/abstractions/ChangelogsGateway.js";
 import type {
     IChangelogTrackingState,
     IStartChangelogTrackingInput
@@ -26,12 +26,16 @@ export interface IUpgradeWizardPresenter {
     executeStep: (stepType: string, input: Record<string, unknown>) => Promise<void>;
     skipStep: (stepType: string) => Promise<void>;
     abort: () => Promise<void>;
-    getChangelogs: (packageName: string, from: string, to: string) => Promise<IChangelogResult>;
+    getChangelogs: (
+        packageName: string,
+        from: string,
+        to: string
+    ) => Promise<ChangelogsGateway.ChangelogResult>;
     reResolveChangelogs: (
         packageName: string,
         from: string,
         to: string
-    ) => Promise<IChangelogResult>;
+    ) => Promise<ChangelogsGateway.ChangelogResult>;
     startChangelogTracking: (input: IStartChangelogTrackingInput) => void;
     stopChangelogTracking: () => void;
     dispose: () => void;

@@ -3,6 +3,7 @@ import { PackageDetailPresenter as Abstraction } from "./abstractions/PackageDet
 import { PackagesGateway } from "../../../features/Packages/abstractions/PackagesGateway.js";
 import { VulnerabilitiesGateway } from "../../../features/Vulnerabilities/abstractions/VulnerabilitiesGateway.js";
 import { LicensesGateway } from "../../../features/Licenses/abstractions/LicensesGateway.js";
+import { ChangelogsGateway } from "../../../features/Changelogs/abstractions/ChangelogsGateway.js";
 import { compareVersions } from "#ui/infrastructure/Shared/versionCompare.js";
 
 function findMinCurrentVersion(projects: PackagesGateway.PackageDetailProject[]): string | null {
@@ -27,7 +28,8 @@ class PackageDetailPresenterImpl implements Abstraction.Interface {
     public constructor(
         private readonly packagesGateway: PackagesGateway.Interface,
         private readonly vulnerabilitiesGateway: VulnerabilitiesGateway.Interface,
-        private readonly licensesGateway: LicensesGateway.Interface
+        private readonly licensesGateway: LicensesGateway.Interface,
+        private readonly changelogsGateway: ChangelogsGateway.Interface
     ) {
         makeAutoObservable(this, { vm: computed });
     }
@@ -87,7 +89,7 @@ class PackageDetailPresenterImpl implements Abstraction.Interface {
         });
 
         try {
-            const result = await this.packagesGateway.reResolveChangelogs(
+            const result = await this.changelogsGateway.reResolveChangelogs(
                 this.packageName,
                 from,
                 to
@@ -120,7 +122,7 @@ class PackageDetailPresenterImpl implements Abstraction.Interface {
             return;
         }
 
-        const result = await this.packagesGateway.getChangelogs(packageDetail.name, from, to);
+        const result = await this.changelogsGateway.getChangelogs(packageDetail.name, from, to);
         runInAction(() => {
             this.changelogs = result.entries;
             this.changelogsResolving = result.resolving;
@@ -144,5 +146,5 @@ class PackageDetailPresenterImpl implements Abstraction.Interface {
 
 export const PackageDetailPresenter = Abstraction.createImplementation({
     implementation: PackageDetailPresenterImpl,
-    dependencies: [PackagesGateway, VulnerabilitiesGateway, LicensesGateway]
+    dependencies: [PackagesGateway, VulnerabilitiesGateway, LicensesGateway, ChangelogsGateway]
 });
