@@ -25,6 +25,7 @@ import { EventBusFeature } from "./services/EventBus/index.js";
 import { FileConfigFeature } from "./services/FileConfig/index.js";
 import { GitFeature } from "./services/Git/index.js";
 import { JobExecutionFeature } from "./services/JobExecution/index.js";
+import { JobsUseCasesFeature } from "./routes/useCases/jobs/index.js";
 import { LicenseFeature } from "./services/License/index.js";
 import { PackageFeature } from "./services/Package/index.js";
 import { PackageJsonFeature } from "./services/PackageJson/index.js";
@@ -88,5 +89,6 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
         UpgradeSessionFeature.register(container);
         AuthFeature.register(container);
         JobExecutionFeature.register(container);
+        JobsUseCasesFeature.register(container);
     }
 });

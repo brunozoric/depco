@@ -1,3 +1,4 @@
+export { Result } from "@webiny/stdlib";
 export { createAbstraction, type Abstraction } from "./di/createAbstraction.js";
 export {
     createFeature,
