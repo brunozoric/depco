@@ -6,7 +6,8 @@ import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     getChangelogsRoute,
     reResolveChangelogsRoute,
-    reResolveAllChangelogsRoute
+    reResolveAllChangelogsRoute,
+    getChangelogStatsRoute
 } from "#shared/routes/index.js";
 import { ChangelogService } from "#api/services/Changelog/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
@@ -104,6 +105,11 @@ export async function changelogRoutes(app: FastifyInstance, options: PluginOptio
             reply.send({ packageCount: resetPackages.length });
         }
     );
+
+    registerRoute(app, getChangelogStatsRoute, {}, async (_request, reply) => {
+        const stats = await changelogService.getStats();
+        reply.send(stats);
+    });
 
     registerRoute(app, getChangelogsRoute, {}, async (request, reply) => {
         const { packageName } = request.params;

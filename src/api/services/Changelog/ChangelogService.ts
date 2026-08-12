@@ -201,6 +201,38 @@ class ChangelogServiceImpl implements Abstraction.Interface {
                 source: row.source
             }));
     }
+
+    public async getStats(): Promise<Abstraction.Stats> {
+        const rows = await this.databaseClient.db
+            .select({
+                source: changelogs.source,
+                content: changelogs.content
+            })
+            .from(changelogs)
+            .all();
+
+        let total = 0;
+        let resolved = 0;
+        let failed = 0;
+        let pending = 0;
+        const byResolver: Record<string, number> = {};
+
+        for (const row of rows) {
+            total++;
+            if (row.content === null) {
+                pending++;
+            } else if (row.source === "none") {
+                failed++;
+            } else {
+                resolved++;
+                if (row.source) {
+                    byResolver[row.source] = (byResolver[row.source] ?? 0) + 1;
+                }
+            }
+        }
+
+        return { total, resolved, failed, pending, byResolver };
+    }
 }
 
 export const ChangelogService = Abstraction.createImplementation({

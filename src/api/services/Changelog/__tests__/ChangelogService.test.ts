@@ -394,4 +394,38 @@ describe("ChangelogService", () => {
 
         expect(result).toEqual([]);
     });
+
+    it("getStats() returns correct counts and resolver breakdown", async () => {
+        const { service, db } = createService();
+
+        await insertChangelogRow(db, {
+            packageName: "pkg-a",
+            version: "1.0.0",
+            content: "notes",
+            source: "github-releases",
+            fetchedAt: Date.now()
+        });
+        await insertChangelogRow(db, {
+            packageName: "pkg-a",
+            version: "2.0.0",
+            content: "",
+            source: "none",
+            fetchedAt: Date.now()
+        });
+        await insertChangelogRow(db, {
+            packageName: "pkg-b",
+            version: "1.0.0",
+            content: null,
+            source: null,
+            fetchedAt: null
+        });
+
+        const stats = await service.getStats();
+
+        expect(stats.total).toBe(3);
+        expect(stats.resolved).toBe(1);
+        expect(stats.failed).toBe(1);
+        expect(stats.pending).toBe(1);
+        expect(stats.byResolver).toEqual({ "github-releases": 1 });
+    });
 });

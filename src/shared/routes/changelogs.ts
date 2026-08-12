@@ -46,3 +46,19 @@ export const reResolveAllChangelogsRoute = defineRoute({
         packageCount: z.number()
     })
 });
+
+const changelogStatsSchema = z.object({
+    total: z.number(),
+    resolved: z.number(),
+    failed: z.number(),
+    pending: z.number(),
+    byResolver: z.record(z.string(), z.number())
+});
+
+export const getChangelogStatsRoute = defineRoute({
+    method: "GET",
+    path: "/api/changelogs/stats",
+    description: "Get changelog resolution statistics",
+    params: z.object({}),
+    response: changelogStatsSchema
+});

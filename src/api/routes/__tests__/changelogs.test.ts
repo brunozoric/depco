@@ -634,4 +634,35 @@ describe("changelog routes", () => {
         expect(enqueued.from).toBe("18.0.0");
         expect(enqueued.to).toBe("18.2.0");
     });
+
+    it("GET /api/changelogs/stats returns correct resolution statistics", async () => {
+        await insertChangelogFixture(db, {
+            packageName: "react",
+            version: "18.1.0",
+            content: "notes",
+            source: "github-releases",
+            fetchedAt: Date.now()
+        });
+        await insertChangelogFixture(db, {
+            packageName: "react",
+            version: "18.2.0",
+            content: "",
+            source: "none",
+            fetchedAt: Date.now()
+        });
+
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "GET",
+            url: "/api/changelogs/stats"
+        });
+
+        expect(response.statusCode).toBe(200);
+        const json = response.json();
+        expect(json.total).toBe(2);
+        expect(json.resolved).toBe(1);
+        expect(json.failed).toBe(1);
+        expect(json.pending).toBe(0);
+        expect(json.byResolver["github-releases"]).toBe(1);
+    });
 });
