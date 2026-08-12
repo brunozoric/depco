@@ -8,7 +8,8 @@ import type {
 export interface IPackageListItemViewModel {
     name: string;
     projects: PackagesGateway.PackageProject[];
-    changelogCount: number;
+    resolvedChangelogCount: number;
+    totalChangelogCount: number;
     highestUpgradeType: string;
     minCurrentVersion: string;
     maxLatestVersion: string;

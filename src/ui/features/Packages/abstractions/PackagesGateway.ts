@@ -12,7 +12,8 @@ export interface IPackageProject {
 export interface IPackageListItem {
     name: string;
     projects: IPackageProject[];
-    changelogCount: number;
+    resolvedChangelogCount: number;
+    totalChangelogCount: number;
     lastPublishedAt: number | null;
     dependencyKind: string;
     registryResolved: boolean;

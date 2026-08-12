@@ -165,7 +165,8 @@ describe("packages routes", () => {
         expect(json.total).toBe(1);
         expect(json.items).toHaveLength(1);
         expect(json.items[0].name).toBe("react");
-        expect(json.items[0].changelogCount).toBe(0);
+        expect(json.items[0].resolvedChangelogCount).toBe(0);
+        expect(json.items[0].totalChangelogCount).toBe(0);
         expect(json.items[0].projects).toHaveLength(2);
 
         const byProjectId = Object.fromEntries(
@@ -460,6 +461,7 @@ describe("packages routes", () => {
         const json = response.json();
         expect(json.items).toHaveLength(1);
         expect(json.items[0].name).toBe("react");
-        expect(json.items[0].changelogCount).toBe(1);
+        expect(json.items[0].totalChangelogCount).toBe(1);
+        expect(json.items[0].resolvedChangelogCount).toBe(1);
     });
 });

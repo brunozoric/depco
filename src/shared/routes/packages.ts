@@ -12,7 +12,8 @@ const packageProjectSchema = z.object({
 const packageListItemSchema = z.object({
     name: z.string(),
     projects: z.array(packageProjectSchema),
-    changelogCount: z.number(),
+    resolvedChangelogCount: z.number(),
+    totalChangelogCount: z.number(),
     lastPublishedAt: z.number().nullable(),
     dependencyKind: z.string(),
     registryResolved: z.boolean()

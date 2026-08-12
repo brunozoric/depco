@@ -60,7 +60,8 @@ describe("LoadPackagesUseCase", () => {
                     upgradeType: "major"
                 }
             ],
-            changelogCount: 3,
+            resolvedChangelogCount: 3,
+            totalChangelogCount: 3,
             lastPublishedAt: 1000,
             dependencyKind: "dependency",
             registryResolved: true

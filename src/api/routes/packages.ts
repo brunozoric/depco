@@ -17,7 +17,8 @@ interface PluginOptions extends FastifyPluginOptions {
 interface IRawPackageRow {
     name: string;
     projects: string;
-    changelogCount: number;
+    resolvedChangelogCount: number;
+    totalChangelogCount: number;
     lastPublishedAt: number | null;
     dependencyKind: string;
     registryResolved: number;
@@ -34,7 +35,8 @@ interface IPackageProject {
 interface IPackageListItem {
     name: string;
     projects: IPackageProject[];
-    changelogCount: number;
+    resolvedChangelogCount: number;
+    totalChangelogCount: number;
     lastPublishedAt: number | null;
     dependencyKind: string;
     registryResolved: boolean;
@@ -85,7 +87,7 @@ export async function packagesRoutes(app: FastifyInstance, options: PluginOption
         const whereClause =
             conditions.length > 0 ? sql`WHERE ${sql.join(conditions, sql` AND `)}` : sql``;
 
-        const havingClause = hasChangelog === "true" ? sql`HAVING changelogCount > 0` : sql``;
+        const havingClause = hasChangelog === "true" ? sql`HAVING totalChangelogCount > 0` : sql``;
 
         const orderColumn = sortBy === "lastPublishedAt" ? sql`lastPublishedAt` : sql`sr.name`;
         const orderDir = sortOrder === "desc" ? sql`DESC` : sql`ASC`;
@@ -95,11 +97,13 @@ export async function packagesRoutes(app: FastifyInstance, options: PluginOption
 
         const countQuery = sql`
             SELECT COUNT(*) AS cnt FROM (
-                SELECT sr.name, COALESCE(cl.cnt, 0) AS changelogCount
+                SELECT sr.name, COALESCE(cl.total_cnt, 0) AS totalChangelogCount
                 FROM scan_results sr
                 JOIN projects p ON sr.project_id = p.id
                 LEFT JOIN (
-                    SELECT d.name AS dep_name, COUNT(*) AS cnt
+                    SELECT d.name AS dep_name,
+                        COUNT(*) AS total_cnt,
+                        COUNT(CASE WHEN c.content IS NOT NULL AND c.content != '' AND c.source != 'none' THEN 1 END) AS resolved_cnt
                     FROM changelogs c
                     JOIN dependencies d ON c.dependency_id = d.id
                     GROUP BY d.name
@@ -122,14 +126,17 @@ export async function packagesRoutes(app: FastifyInstance, options: PluginOption
                         'upgradeType', sr.upgrade_type
                     )
                 ) AS projects,
-                COALESCE(cl.cnt, 0) AS changelogCount,
+                COALESCE(cl.resolved_cnt, 0) AS resolvedChangelogCount,
+                COALESCE(cl.total_cnt, 0) AS totalChangelogCount,
                 dv_latest.max_published_at AS lastPublishedAt,
                 MIN(sr.dependency_kind) AS dependencyKind,
                 MIN(sr.registry_resolved) AS registryResolved
             FROM scan_results sr
             JOIN projects p ON sr.project_id = p.id
             LEFT JOIN (
-                SELECT d.name AS dep_name, COUNT(*) AS cnt
+                SELECT d.name AS dep_name,
+                    COUNT(*) AS total_cnt,
+                    COUNT(CASE WHEN c.content IS NOT NULL AND c.content != '' AND c.source != 'none' THEN 1 END) AS resolved_cnt
                 FROM changelogs c
                 JOIN dependencies d ON c.dependency_id = d.id
                 GROUP BY d.name
@@ -157,7 +164,8 @@ export async function packagesRoutes(app: FastifyInstance, options: PluginOption
         const items: IPackageListItem[] = rawRows.map(row => ({
             name: row.name,
             projects: JSON.parse(row.projects) as IPackageProject[],
-            changelogCount: row.changelogCount ?? 0,
+            resolvedChangelogCount: row.resolvedChangelogCount ?? 0,
+            totalChangelogCount: row.totalChangelogCount ?? 0,
             lastPublishedAt: row.lastPublishedAt ?? null,
             dependencyKind: row.dependencyKind,
             registryResolved: row.registryResolved === 1

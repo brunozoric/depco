@@ -21,7 +21,8 @@ const pkg: PackagesGateway.PackageListItem = {
             upgradeType: "major"
         }
     ],
-    changelogCount: 3,
+    resolvedChangelogCount: 3,
+    totalChangelogCount: 3,
     lastPublishedAt: 1000,
     dependencyKind: "dependency",
     registryResolved: true
@@ -51,7 +52,8 @@ describe("PackagesRepository", () => {
         const otherPkg: PackagesGateway.PackageListItem = {
             name: "right-pad",
             projects: [],
-            changelogCount: 0,
+            resolvedChangelogCount: 0,
+            totalChangelogCount: 0,
             lastPublishedAt: null,
             dependencyKind: "dependency",
             registryResolved: true

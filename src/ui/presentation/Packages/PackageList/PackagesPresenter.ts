@@ -100,7 +100,8 @@ class PackagesPresenterImpl implements Abstraction.Interface {
                 return {
                     name: pkg.name,
                     projects: pkg.projects,
-                    changelogCount: pkg.changelogCount,
+                    resolvedChangelogCount: pkg.resolvedChangelogCount,
+                    totalChangelogCount: pkg.totalChangelogCount,
                     highestUpgradeType: highest.type,
                     minCurrentVersion: versions[0] ?? "",
                     maxLatestVersion: latestVersions[latestVersions.length - 1] ?? "",

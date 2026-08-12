@@ -87,7 +87,8 @@ const packagesResult: PackagesGateway.PackageListItem[] = [
                 upgradeType: "minor"
             }
         ],
-        changelogCount: 3,
+        resolvedChangelogCount: 3,
+        totalChangelogCount: 5,
         lastPublishedAt: 1000,
         dependencyKind: "dependency",
         registryResolved: true
@@ -218,7 +219,8 @@ describe("PackagesPresenter", () => {
             {
                 name: "left-pad",
                 projects: packagesResult[0]!.projects,
-                changelogCount: 3,
+                resolvedChangelogCount: 3,
+                totalChangelogCount: 5,
                 highestUpgradeType: "major",
                 minCurrentVersion: "1.0.0",
                 maxLatestVersion: "2.0.0",

@@ -1,5 +1,5 @@
 import type React from "react";
-import { Button, Table } from "@mantine/core";
+import { Button, Table, Text } from "@mantine/core";
 import type { IPackageListItemViewModel } from "../../abstractions/PackagesPresenter.js";
 
 interface ChangelogButtonProps {
@@ -8,9 +8,13 @@ interface ChangelogButtonProps {
 }
 
 export function ChangelogButton({ pkg, onOpenChangelog }: ChangelogButtonProps): React.ReactNode {
+    const resolved = pkg.resolvedChangelogCount;
+    const pending = pkg.totalChangelogCount - resolved;
+    const hasAny = pkg.totalChangelogCount > 0;
+
     return (
         <Table.Td>
-            {pkg.highestUpgradeType !== "none" && (
+            {pkg.highestUpgradeType !== "none" && hasAny && (
                 <Button
                     size="xs"
                     variant="subtle"
@@ -20,6 +24,21 @@ export function ChangelogButton({ pkg, onOpenChangelog }: ChangelogButtonProps):
                     }}
                 >
                     Changelog
+                    {resolved > 0 && pending > 0 && (
+                        <>
+                            {` (${resolved}`}
+                            <Text component="span" size="xs" c="dimmed">
+                                {`+${pending}`}
+                            </Text>
+                            {")"}
+                        </>
+                    )}
+                    {resolved > 0 && pending === 0 && ` (${resolved})`}
+                    {resolved === 0 && pending > 0 && (
+                        <Text component="span" size="xs" c="dimmed">
+                            {` (+${pending})`}
+                        </Text>
+                    )}
                 </Button>
             )}
         </Table.Td>
