@@ -1,8 +1,9 @@
 import type React from "react";
-import { Badge, Button, Checkbox, Group, Table } from "@mantine/core";
+import { Anchor, Badge, Button, Checkbox, Group, Table } from "@mantine/core";
 import { observer } from "mobx-react-lite";
 import type { ProjectDetailPresenter } from "../abstractions/ProjectDetailPresenter.js";
 import { SEVERITY_COLORS } from "#ui/infrastructure/Shared/vulnerabilities/severityColors.js";
+import { navigate } from "#ui/infrastructure/Router/router.js";
 
 interface DependencyTableProps {
     dependencies: ProjectDetailPresenter.DependencyViewModel[];
@@ -71,7 +72,17 @@ const DependencyRow = observer(function DependencyRow({
             </Table.Td>
             <Table.Td>
                 <Group gap="xs" wrap="nowrap">
-                    {dependency.name}
+                    <Anchor
+                        size="sm"
+                        component="button"
+                        variant="subtle"
+                        onClick={(event: React.MouseEvent) => {
+                            event.stopPropagation();
+                            navigate(`/packages/${dependency.name}`);
+                        }}
+                    >
+                        {dependency.name}
+                    </Anchor>
                     {dependency.vulnerabilityCount > 0 && dependency.vulnerabilityMaxSeverity && (
                         <Badge
                             size="xs"
