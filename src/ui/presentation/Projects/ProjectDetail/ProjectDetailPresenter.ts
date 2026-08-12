@@ -53,6 +53,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
     private packageManagerUpdateVersionValue = "";
     private upgradeFilterValue: UpgradeFilter = "all";
     private projectTeamIdValues: string[] = [];
+    private showMaintenanceValue = true;
 
     private readonly autoFixManager: AutoFixManager;
     private readonly sbomExportManager: SbomExportManager;
@@ -249,7 +250,8 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
             projectTeamIds: this.projectTeamIdValues,
             availableTeams: this.teamListService.getTeams(),
             changelogState: this.changelogTracker.state,
-            engineData: this.buildEngineDataViewModel()
+            engineData: this.buildEngineDataViewModel(),
+            showMaintenance: this.showMaintenanceValue
         };
     }
 
@@ -466,6 +468,10 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
 
     public stopChangelogTracking = (): void => {
         this.changelogTracker.stopTracking();
+    };
+
+    public toggleMaintenance = (): void => {
+        this.showMaintenanceValue = !this.showMaintenanceValue;
     };
 
     public dispose = (): void => {

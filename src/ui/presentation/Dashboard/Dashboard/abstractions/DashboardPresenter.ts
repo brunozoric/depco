@@ -24,6 +24,7 @@ export interface IDashboardViewModel {
     scoreDetailLoading: boolean;
     scoreDetail: DashboardGateway.ScoreDetailResponse | null;
     engineSummary: EnginesGateway.SummaryData | null;
+    showMaintenance: boolean;
 }
 
 export interface IDashboardPresenter {
@@ -33,6 +34,7 @@ export interface IDashboardPresenter {
     setVulnerabilityTrendRange: (range: string) => void;
     openScoreModal: (projectId: string) => void;
     closeScoreModal: () => void;
+    toggleMaintenance: () => void;
     dispose: () => void;
 }
 

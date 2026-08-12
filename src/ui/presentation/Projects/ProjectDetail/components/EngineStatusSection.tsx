@@ -1,6 +1,6 @@
 import type React from "react";
 import { observer } from "mobx-react-lite";
-import { Accordion, Badge, Group, Stack, Table, Text } from "@mantine/core";
+import { Accordion, Badge, Group, Stack, Switch, Table, Text } from "@mantine/core";
 import { EngineStatusBadge } from "#ui/infrastructure/Shared/engines/EngineStatusBadge.js";
 import type { ProjectDetailPresenter } from "../abstractions/ProjectDetailPresenter.js";
 
@@ -20,6 +20,11 @@ export const EngineStatusSection = observer(function EngineStatusSection({
 }: EngineStatusSectionProps): React.ReactNode {
     const { vm } = presenter;
     const engineData = vm.engineData;
+    const visibleFindings = engineData
+        ? engineData.findings.filter(
+              finding => vm.showMaintenance || finding.status !== "maintenance"
+          )
+        : [];
 
     return (
         <Accordion>
@@ -33,19 +38,28 @@ export const EngineStatusSection = observer(function EngineStatusSection({
                         </Text>
                     ) : (
                         <Stack gap="md">
-                            <Group gap="sm">
-                                <EngineStatusBadge status={engineData.rootStatus} />
-                                <Text size="sm">
-                                    engines.node: {engineData.rootEnginesNode ?? "not specified"}
-                                </Text>
-                                {engineData.rootEolDate !== null && (
-                                    <Badge color="red" variant="light">
-                                        EOL {formatEolDate(engineData.rootEolDate)}
-                                    </Badge>
-                                )}
+                            <Group gap="sm" justify="space-between">
+                                <Group gap="sm">
+                                    <EngineStatusBadge status={engineData.rootStatus} />
+                                    <Text size="sm">
+                                        engines.node:{" "}
+                                        {engineData.rootEnginesNode ?? "not specified"}
+                                    </Text>
+                                    {engineData.rootEolDate !== null && (
+                                        <Badge color="red" variant="light">
+                                            EOL {formatEolDate(engineData.rootEolDate)}
+                                        </Badge>
+                                    )}
+                                </Group>
+                                <Switch
+                                    size="sm"
+                                    label="Show maintenance"
+                                    checked={vm.showMaintenance}
+                                    onChange={() => presenter.toggleMaintenance()}
+                                />
                             </Group>
 
-                            {engineData.findings.length === 0 ? (
+                            {visibleFindings.length === 0 ? (
                                 <Text size="sm" c="dimmed">
                                     No dependency-level engine findings.
                                 </Text>
@@ -59,7 +73,7 @@ export const EngineStatusSection = observer(function EngineStatusSection({
                                         </Table.Tr>
                                     </Table.Thead>
                                     <Table.Tbody>
-                                        {engineData.findings.map(finding => (
+                                        {visibleFindings.map(finding => (
                                             <Table.Tr key={finding.packageName}>
                                                 <Table.Td>{finding.packageName}</Table.Td>
                                                 <Table.Td>{finding.enginesNode ?? "—"}</Table.Td>

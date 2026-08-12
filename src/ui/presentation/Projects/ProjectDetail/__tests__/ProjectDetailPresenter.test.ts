@@ -360,7 +360,8 @@ describe("ProjectDetailPresenter", () => {
             projectTeamIds: [],
             availableTeams: [],
             changelogState: null,
-            engineData: null
+            engineData: null,
+            showMaintenance: true
         });
     });
 
@@ -1097,5 +1098,19 @@ describe("ProjectDetailPresenter", () => {
 
             expect(calls.some(c => c.route === setProjectTeamsRoute)).toBe(false);
         });
+    });
+
+    it("showMaintenance defaults to true and toggleMaintenance flips it", () => {
+        const presenter = createPresenter();
+
+        expect(presenter.vm.showMaintenance).toBe(true);
+
+        presenter.toggleMaintenance();
+
+        expect(presenter.vm.showMaintenance).toBe(false);
+
+        presenter.toggleMaintenance();
+
+        expect(presenter.vm.showMaintenance).toBe(true);
     });
 });

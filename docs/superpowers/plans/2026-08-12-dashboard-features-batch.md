@@ -23,6 +23,7 @@
 ### Task 1: Engines Maintenance Toggle (UI only)
 
 **Files:**
+
 - Modify: `src/ui/presentation/Dashboard/Dashboard/abstractions/DashboardPresenter.ts`
 - Modify: `src/ui/presentation/Dashboard/Dashboard/DashboardPresenter.ts`
 - Modify: `src/ui/presentation/Dashboard/Dashboard/components/EngineOverviewWidget.tsx`
@@ -33,16 +34,20 @@
 - Test: `src/ui/presentation/Projects/ProjectDetail/__tests__/ProjectDetailPresenter.test.ts`
 
 **Interfaces:**
+
 - Consumes: Existing `IDashboardViewModel.engineSummary`, `IProjectDetailEngineDataViewModel`
 - Produces: `IDashboardViewModel.showMaintenance: boolean`, `IDashboardPresenter.toggleMaintenance()`, `IProjectDetailViewModel.showMaintenance: boolean`, `IProjectDetailPresenter.toggleMaintenance()`
 
 - [ ] **Step 1: Add showMaintenance to DashboardPresenter abstraction**
 
 In `src/ui/presentation/Dashboard/Dashboard/abstractions/DashboardPresenter.ts`, add to `IDashboardViewModel`:
+
 ```typescript
 showMaintenance: boolean;
 ```
+
 Add to `IDashboardPresenter`:
+
 ```typescript
 toggleMaintenance: () => void;
 ```
@@ -92,6 +97,7 @@ git add -A && git commit -m "feat: add engines maintenance visibility toggle to 
 ### Task 2: Changelog Stats API Endpoint
 
 **Files:**
+
 - Modify: `src/shared/routes/changelogs.ts`
 - Modify: `src/api/routes/changelogs.ts`
 - Modify: `src/api/services/Changelog/abstractions/ChangelogService.ts`
@@ -100,51 +106,58 @@ git add -A && git commit -m "feat: add engines maintenance visibility toggle to 
 - Test: `src/api/routes/__tests__/changelogs.test.ts`
 
 **Interfaces:**
+
 - Consumes: `changelogs` table (content, source columns)
 - Produces: `GET /api/changelogs/stats` returning `{ total, resolved, failed, pending, byResolver }`
 
 - [ ] **Step 1: Add route definition**
 
 In `src/shared/routes/changelogs.ts`, add:
+
 ```typescript
 const changelogStatsSchema = z.object({
-    total: z.number(),
-    resolved: z.number(),
-    failed: z.number(),
-    pending: z.number(),
-    byResolver: z.record(z.string(), z.number())
+  total: z.number(),
+  resolved: z.number(),
+  failed: z.number(),
+  pending: z.number(),
+  byResolver: z.record(z.string(), z.number())
 });
 
 export const getChangelogStatsRoute = defineRoute({
-    method: "GET",
-    path: "/api/changelogs/stats",
-    description: "Get changelog resolution statistics",
-    params: z.object({}),
-    response: changelogStatsSchema
+  method: "GET",
+  path: "/api/changelogs/stats",
+  description: "Get changelog resolution statistics",
+  params: z.object({}),
+  response: changelogStatsSchema
 });
 ```
 
 - [ ] **Step 2: Add getStats to ChangelogService abstraction**
 
 In `src/api/services/Changelog/abstractions/ChangelogService.ts`, add to `IChangelogService`:
+
 ```typescript
 getStats(): Promise<IChangelogStats>;
 ```
+
 Add interface:
+
 ```typescript
 export interface IChangelogStats {
-    total: number;
-    resolved: number;
-    failed: number;
-    pending: number;
-    byResolver: Record<string, number>;
+  total: number;
+  resolved: number;
+  failed: number;
+  pending: number;
+  byResolver: Record<string, number>;
 }
 ```
+
 Add to namespace: `export type Stats = IChangelogStats;`
 
 - [ ] **Step 3: Implement getStats in ChangelogService**
 
 In `src/api/services/Changelog/ChangelogService.ts`, add:
+
 ```typescript
 public async getStats(): Promise<Abstraction.Stats> {
     const rows = await this.databaseClient.db
@@ -182,85 +195,88 @@ public async getStats(): Promise<Abstraction.Stats> {
 - [ ] **Step 4: Write ChangelogService.getStats test**
 
 In `src/api/services/Changelog/__tests__/ChangelogService.test.ts`, add:
+
 ```typescript
 it("getStats() returns correct counts and resolver breakdown", async () => {
-    const { service, db } = createService();
+  const { service, db } = createService();
 
-    await insertChangelogRow(db, {
-        packageName: "pkg-a",
-        version: "1.0.0",
-        content: "notes",
-        source: "github-releases",
-        fetchedAt: Date.now()
-    });
-    await insertChangelogRow(db, {
-        packageName: "pkg-a",
-        version: "2.0.0",
-        content: "",
-        source: "none",
-        fetchedAt: Date.now()
-    });
-    await insertChangelogRow(db, {
-        packageName: "pkg-b",
-        version: "1.0.0",
-        content: null,
-        source: null,
-        fetchedAt: null
-    });
+  await insertChangelogRow(db, {
+    packageName: "pkg-a",
+    version: "1.0.0",
+    content: "notes",
+    source: "github-releases",
+    fetchedAt: Date.now()
+  });
+  await insertChangelogRow(db, {
+    packageName: "pkg-a",
+    version: "2.0.0",
+    content: "",
+    source: "none",
+    fetchedAt: Date.now()
+  });
+  await insertChangelogRow(db, {
+    packageName: "pkg-b",
+    version: "1.0.0",
+    content: null,
+    source: null,
+    fetchedAt: null
+  });
 
-    const stats = await service.getStats();
+  const stats = await service.getStats();
 
-    expect(stats.total).toBe(3);
-    expect(stats.resolved).toBe(1);
-    expect(stats.failed).toBe(1);
-    expect(stats.pending).toBe(1);
-    expect(stats.byResolver).toEqual({ "github-releases": 1 });
+  expect(stats.total).toBe(3);
+  expect(stats.resolved).toBe(1);
+  expect(stats.failed).toBe(1);
+  expect(stats.pending).toBe(1);
+  expect(stats.byResolver).toEqual({ "github-releases": 1 });
 });
 ```
 
 - [ ] **Step 5: Add route handler**
 
 In `src/api/routes/changelogs.ts`, register the route BEFORE the parameterized routes (same as `reResolveAllChangelogsRoute`). The `changelogService` is already resolved from the container at the top of `changelogRoutes()` (line 84). Add import for `getChangelogStatsRoute` to the existing import block:
+
 ```typescript
 registerRoute(app, getChangelogStatsRoute, {}, async (_request, reply) => {
-    const stats = await changelogService.getStats();
-    reply.send(stats);
+  const stats = await changelogService.getStats();
+  reply.send(stats);
 });
 ```
 
 - [ ] **Step 6: Write route handler test**
 
 In `src/api/routes/__tests__/changelogs.test.ts`, add:
+
 ```typescript
 it("GET /api/changelogs/stats returns correct resolution statistics", async () => {
-    await insertChangelogFixture(db, {
-        packageName: "react",
-        version: "18.1.0",
-        content: "notes",
-        source: "github-releases",
-        fetchedAt: Date.now()
-    });
-    await insertChangelogFixture(db, {
-        packageName: "react",
-        version: "18.2.0",
-        content: "",
-        source: "none",
-        fetchedAt: Date.now()
-    });
+  await insertChangelogFixture(db, {
+    packageName: "react",
+    version: "18.1.0",
+    content: "notes",
+    source: "github-releases",
+    fetchedAt: Date.now()
+  });
+  await insertChangelogFixture(db, {
+    packageName: "react",
+    version: "18.2.0",
+    content: "",
+    source: "none",
+    fetchedAt: Date.now()
+  });
 
-    const response = await app.inject({
-        headers: { authorization: `Bearer ${token}` },
-        method: "GET",
-        url: "/api/changelogs/stats"
-    });
+  const response = await app.inject({
+    headers: { authorization: `Bearer ${token}` },
+    method: "GET",
+    url: "/api/changelogs/stats"
+  });
 
-    expect(response.statusCode).toBe(200);
-    const json = response.json();
-    expect(json.total).toBe(2);
-    expect(json.resolved).toBe(1);
-    expect(json.failed).toBe(1);
-    expect(json.pending).toBe(0);
-    expect(json.byResolver["github-releases"]).toBe(1);
+  expect(response.statusCode).toBe(200);
+  const json = response.json();
+  expect(json.total).toBe(2);
+  expect(json.resolved).toBe(1);
+  expect(json.failed).toBe(1);
+  expect(json.pending).toBe(0);
+  expect(json.byResolver["github-releases"]).toBe(1);
 });
 ```
 
@@ -277,6 +293,7 @@ git add -A && git commit -m "feat: add changelog resolution stats API endpoint"
 ### Task 3: Changelog Stats UI Widgets
 
 **Files:**
+
 - Create: `src/ui/features/Changelogs/abstractions/ChangelogsGateway.ts`
 - Create: `src/ui/features/Changelogs/ChangelogsGateway.ts`
 - Create: `src/ui/features/Changelogs/feature.ts` (no Repository needed — stats are read-only, no client-side caching)
@@ -292,64 +309,67 @@ git add -A && git commit -m "feat: add changelog resolution stats API endpoint"
 - Modify: `src/ui/features/index.ts` (or wherever features are registered)
 
 **Interfaces:**
+
 - Consumes: `getChangelogStatsRoute` from Task 2, `reResolveAllChangelogsRoute` (already exists)
 - Produces: `ChangelogsGateway.Interface` with `getStats()` and `reResolveAll()`, dashboard widget, packages stats bar
 
 - [ ] **Step 1: Create ChangelogsGateway abstraction**
 
 Create `src/ui/features/Changelogs/abstractions/ChangelogsGateway.ts`:
+
 ```typescript
 import { createAbstraction } from "#shared/index.js";
 
 export interface IChangelogStats {
-    total: number;
-    resolved: number;
-    failed: number;
-    pending: number;
-    byResolver: Record<string, number>;
+  total: number;
+  resolved: number;
+  failed: number;
+  pending: number;
+  byResolver: Record<string, number>;
 }
 
 export interface IReResolveAllResult {
-    packageCount: number;
+  packageCount: number;
 }
 
 export interface IChangelogsGateway {
-    getStats(): Promise<IChangelogStats>;
-    reResolveAll(): Promise<IReResolveAllResult>;
+  getStats(): Promise<IChangelogStats>;
+  reResolveAll(): Promise<IReResolveAllResult>;
 }
 
 export const ChangelogsGateway = createAbstraction<IChangelogsGateway>("Ui/ChangelogsGateway");
 
 export namespace ChangelogsGateway {
-    export type Interface = IChangelogsGateway;
-    export type Stats = IChangelogStats;
-    export type ReResolveAllResult = IReResolveAllResult;
+  export type Interface = IChangelogsGateway;
+  export type Stats = IChangelogStats;
+  export type ReResolveAllResult = IReResolveAllResult;
 }
 ```
 
 - [ ] **Step 2: Create ChangelogsGateway implementation**
 
 Create `src/ui/features/Changelogs/ChangelogsGateway.ts`:
+
 ```typescript
 import { ChangelogsGateway as Abstraction } from "./abstractions/ChangelogsGateway.js";
 import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { getChangelogStatsRoute, reResolveAllChangelogsRoute } from "#shared/routes/index.js";
 
 class ChangelogsGatewayImpl implements Abstraction.Interface {
-    public constructor(private readonly httpClient: HTTPClient.Interface) {}
+  public constructor(private readonly httpClient: HTTPClient.Interface) {}
 
-    public async getStats(): Promise<Abstraction.Stats> {
-        return this.httpClient.request(getChangelogStatsRoute, { params: {} });
-    }
+  public async getStats(): Promise<Abstraction.Stats> {
+    return this.httpClient.request(getChangelogStatsRoute, { params: {} });
+  }
 
-    public async reResolveAll(): Promise<Abstraction.ReResolveAllResult> {
-        return this.httpClient.request(reResolveAllChangelogsRoute, { params: {} });
-    }
+  public async reResolveAll(): Promise<Abstraction.ReResolveAllResult> {
+    return this.httpClient.request(reResolveAllChangelogsRoute, { params: {} });
+  }
 }
 
 export const ChangelogsGateway = Abstraction.createImplementation({
-    implementation: ChangelogsGatewayImpl,
-    dependencies: [HTTPClient]
+  implementation: ChangelogsGatewayImpl,
+  dependencies: [HTTPClient]
 });
 ```
 
@@ -362,11 +382,14 @@ Write `src/ui/features/Changelogs/__tests__/ChangelogsGateway.test.ts` following
 - [ ] **Step 4: Add changelogStats to DashboardPresenter**
 
 In `DashboardPresenter` abstraction, add to `IDashboardViewModel`:
+
 ```typescript
 changelogStats: ChangelogsGateway.Stats | null;
 reResolvingChangelogs: boolean;
 ```
+
 Add to `IDashboardPresenter`:
+
 ```typescript
 reResolveAllChangelogs: () => Promise<void>;
 ```
@@ -376,6 +399,7 @@ Implement in DashboardPresenter: initialize `changelogStats = null` and `reResol
 - [ ] **Step 5: Create ChangelogResolutionWidget**
 
 Create `src/ui/presentation/Dashboard/Dashboard/components/ChangelogResolutionWidget.tsx`:
+
 - Card with title "Changelog Resolution"
 - Three Badge elements: resolved (green), failed (red), pending (yellow) showing counts
 - Resolver breakdown as list of `Text` elements: `"{source}: {count}"` for each entry in `byResolver`
@@ -388,6 +412,7 @@ Wire in `DashboardPage.tsx` — add the widget to the dashboard grid alongside e
 - [ ] **Step 7: Add changelogStats to PackagesPresenter**
 
 In `PackagesPresenter` abstraction, add to `IPackagesViewModel`:
+
 ```typescript
 changelogStats: ChangelogsGateway.Stats | null;
 ```
@@ -397,6 +422,7 @@ Implement: load stats during `load()`.
 - [ ] **Step 8: Create ChangelogStatsBar**
 
 Create `src/ui/presentation/Packages/PackageList/components/ChangelogStatsBar.tsx`:
+
 - Horizontal Group with three Badge elements showing resolved/failed/pending counts
 - Compact single-line display above the packages table
 
@@ -417,6 +443,7 @@ git add -A && git commit -m "feat: add changelog resolution stats to dashboard a
 ### Task 4: Stale Engine Scan Detection (API)
 
 **Files:**
+
 - Modify: `src/api/services/Engine/abstractions/EngineService.ts`
 - Modify: `src/api/services/Engine/EngineService.ts`
 - Modify: `src/shared/routes/engines.ts`
@@ -425,6 +452,7 @@ git add -A && git commit -m "feat: add changelog resolution stats to dashboard a
 - Test: `src/api/routes/__tests__/engines.test.ts`
 
 **Interfaces:**
+
 - Consumes: `engineChecks.scannedAt`, `NodeReleaseDataService.getSchedule()`
 - Produces: Extended `IEngineSummary` with `staleProjectCount`, `stalenessThresholdMs`; extended `IProjectEngineSummary` with `lastScannedAt`, `engineScanStale`, `engineScanStaleReason`
 
@@ -433,11 +461,13 @@ git add -A && git commit -m "feat: add changelog resolution stats to dashboard a
 In `src/api/services/Engine/abstractions/EngineService.ts`:
 
 Add `engineScanStaleReason` type:
+
 ```typescript
 export type EngineScanStaleReason = "time" | "release" | "both";
 ```
 
 Extend `IProjectEngineSummary`:
+
 ```typescript
 lastScannedAt: number | null;
 engineScanStale: boolean;
@@ -445,6 +475,7 @@ engineScanStaleReason: EngineScanStaleReason | null;
 ```
 
 Extend `IEngineSummary`:
+
 ```typescript
 staleProjectCount: number;
 stalenessThresholdMs: number;
@@ -457,11 +488,13 @@ Add to namespace: `export type StaleReason = EngineScanStaleReason;`
 In `src/api/services/Engine/EngineService.ts`:
 
 Add constant:
+
 ```typescript
 const ENGINE_STALENESS_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000;
 ```
 
 In `getSummary()`, after building `projectSummaries`, compute staleness for each:
+
 - `nodeReleaseDataService` is already a constructor dependency of `EngineServiceImpl` — no new injection needed
 - Call `this.nodeReleaseDataService.getSchedule()` once at the top of `getSummary()`
 - Find `maxReleaseDate`: guard for empty schedule (`schedule.length === 0 ? 0 : Math.max(...schedule.map(r => r.releaseDate))`)
@@ -473,6 +506,7 @@ In `getSummary()`, after building `projectSummaries`, compute staleness for each
 - [ ] **Step 3: Update route response schema**
 
 In `src/shared/routes/engines.ts`, extend `projectEngineSummarySchema` with:
+
 ```typescript
 lastScannedAt: z.number().nullable(),
 engineScanStale: z.boolean(),
@@ -480,6 +514,7 @@ engineScanStaleReason: z.enum(["time", "release", "both"]).nullable()
 ```
 
 Extend `engineSummarySchema` with:
+
 ```typescript
 staleProjectCount: z.number(),
 stalenessThresholdMs: z.number()
@@ -488,6 +523,7 @@ stalenessThresholdMs: z.number()
 - [ ] **Step 4: Update UI gateway types**
 
 In `src/ui/features/Engines/abstractions/EnginesGateway.ts`, extend `IProjectEngineSummaryItem`:
+
 ```typescript
 lastScannedAt: number | null;
 engineScanStale: boolean;
@@ -495,6 +531,7 @@ engineScanStaleReason: "time" | "release" | "both" | null;
 ```
 
 Extend `IEngineSummaryData`:
+
 ```typescript
 staleProjectCount: number;
 stalenessThresholdMs: number;
@@ -503,6 +540,7 @@ stalenessThresholdMs: number;
 - [ ] **Step 5: Write API test for staleness**
 
 In `src/api/routes/__tests__/engines.test.ts`, add test:
+
 - Insert a project with old engine check data (scannedAt = 30 days ago)
 - Call `GET /api/engines/summary`
 - Assert `staleProjectCount >= 1` and `projectSummaries[0].engineScanStale === true`
@@ -520,29 +558,35 @@ git add -A && git commit -m "feat: add stale engine scan detection to engines su
 ### Task 5: Stale Engine Scan Detection (UI)
 
 **Files:**
+
 - Modify: `src/ui/presentation/Dashboard/Dashboard/components/EngineOverviewWidget.tsx`
 - Modify: `src/ui/presentation/Projects/ProjectDetail/components/EngineStatusSection.tsx`
 - Modify: `src/ui/presentation/Projects/ProjectDetail/abstractions/ProjectDetailPresenter.ts`
 - Modify: `src/ui/presentation/Projects/ProjectDetail/ProjectDetailPresenter.ts`
 
 **Interfaces:**
+
 - Consumes: Extended `EnginesGateway.SummaryData` from Task 4
 - Produces: Stale badge on dashboard widget, "Last scanned X days ago" on project detail
 
 - [ ] **Step 1: Add stale badge to EngineOverviewWidget**
 
 In `EngineOverviewWidget.tsx`, after the SimpleGrid, add:
+
 ```tsx
-{summary && summary.staleProjectCount > 0 && (
+{
+  summary && summary.staleProjectCount > 0 && (
     <Badge color="orange" variant="light" mt="sm">
-        {summary.staleProjectCount} project{summary.staleProjectCount !== 1 ? "s" : ""} stale
+      {summary.staleProjectCount} project{summary.staleProjectCount !== 1 ? "s" : ""} stale
     </Badge>
-)}
+  );
+}
 ```
 
 - [ ] **Step 2: Add lastScannedAt to ProjectDetail engine data**
 
 In `ProjectDetailPresenter` abstraction, add to `IProjectDetailEngineDataViewModel`:
+
 ```typescript
 lastScannedAt: number | null;
 engineScanStale: boolean;
@@ -554,30 +598,34 @@ In `ProjectDetailPresenter` implementation, populate these fields from the engin
 - [ ] **Step 3: Show staleness in EngineStatusSection**
 
 In `EngineStatusSection.tsx`, add below the root status line:
+
 ```tsx
-{engineData.lastScannedAt !== null && (
+{
+  engineData.lastScannedAt !== null && (
     <Text size="sm" c={engineData.engineScanStale ? "orange" : "dimmed"}>
-        Last scanned {formatRelativeTime(engineData.lastScannedAt)}
-        {engineData.engineScanStale && engineData.engineScanStaleReason && (
-            <> — {formatStaleReason(engineData.engineScanStaleReason)}</>
-        )}
+      Last scanned {formatRelativeTime(engineData.lastScannedAt)}
+      {engineData.engineScanStale && engineData.engineScanStaleReason && (
+        <> — {formatStaleReason(engineData.engineScanStaleReason)}</>
+      )}
     </Text>
-)}
+  );
+}
 ```
 
 Add helper functions:
+
 ```typescript
 function formatRelativeTime(timestamp: number): string {
-    const days = Math.floor((Date.now() - timestamp) / (1000 * 60 * 60 * 24));
-    if (days === 0) return "today";
-    if (days === 1) return "1 day ago";
-    return `${days} days ago`;
+  const days = Math.floor((Date.now() - timestamp) / (1000 * 60 * 60 * 24));
+  if (days === 0) return "today";
+  if (days === 1) return "1 day ago";
+  return `${days} days ago`;
 }
 
 function formatStaleReason(reason: "time" | "release" | "both"): string {
-    if (reason === "time") return "Scan older than 7 days";
-    if (reason === "release") return "New Node release since last scan";
-    return "Scan older than 7 days + new Node release";
+  if (reason === "time") return "Scan older than 7 days";
+  if (reason === "release") return "New Node release since last scan";
+  return "Scan older than 7 days + new Node release";
 }
 ```
 
@@ -594,31 +642,34 @@ git add -A && git commit -m "feat: show stale engine scan indicators in dashboar
 ### Task 6: Bulk Scan API Endpoint
 
 **Files:**
+
 - Modify: `src/shared/routes/projects.ts`
 - Modify: `src/api/routes/projects/projectBulkRoutes.ts` (or create if pattern differs)
 - Test: `src/api/routes/__tests__/projects.test.ts` (or the appropriate test file)
 
 **Interfaces:**
+
 - Consumes: `upgradeJobs` table, `JobWorker.enqueue()`
 - Produces: `POST /api/projects/bulk-scan` accepting `{ projectIds, force? }` returning `{ enqueuedCount, skippedCount }`
 
 - [ ] **Step 1: Add route definition**
 
 In `src/shared/routes/projects.ts`, add:
+
 ```typescript
 export const bulkScanProjectsRoute = defineRoute({
-    method: "POST",
-    path: "/api/projects/bulk-scan",
-    description: "Enqueue scan jobs for multiple projects",
-    params: z.object({}),
-    body: z.object({
-        projectIds: z.array(z.string()).min(1),
-        force: z.boolean().optional()
-    }),
-    response: z.object({
-        enqueuedCount: z.number(),
-        skippedCount: z.number()
-    })
+  method: "POST",
+  path: "/api/projects/bulk-scan",
+  description: "Enqueue scan jobs for multiple projects",
+  params: z.object({}),
+  body: z.object({
+    projectIds: z.array(z.string()).min(1),
+    force: z.boolean().optional()
+  }),
+  response: z.object({
+    enqueuedCount: z.number(),
+    skippedCount: z.number()
+  })
 });
 ```
 
@@ -631,37 +682,37 @@ const databaseClient = container.resolve(DatabaseClient);
 const jobWorker = container.resolve(JobWorker);
 
 registerRoute(app, bulkScanProjectsRoute, {}, async (request, reply) => {
-    const { projectIds, force } = request.body;
-    let enqueuedCount = 0;
-    let skippedCount = 0;
+  const { projectIds, force } = request.body;
+  let enqueuedCount = 0;
+  let skippedCount = 0;
 
-    for (const projectId of projectIds) {
-        const activeJob = await databaseClient.db
-            .select()
-            .from(upgradeJobs)
-            .where(
-                and(
-                    eq(upgradeJobs.referenceId, projectId),
-                    eq(upgradeJobs.type, "scan"),
-                    inArray(upgradeJobs.status, ["pending", "running"])
-                )
-            )
-            .get();
+  for (const projectId of projectIds) {
+    const activeJob = await databaseClient.db
+      .select()
+      .from(upgradeJobs)
+      .where(
+        and(
+          eq(upgradeJobs.referenceId, projectId),
+          eq(upgradeJobs.type, "scan"),
+          inArray(upgradeJobs.status, ["pending", "running"])
+        )
+      )
+      .get();
 
-        if (activeJob && !force) {
-            skippedCount++;
-            continue;
-        }
-
-        await jobWorker.enqueue({
-            referenceId: projectId,
-            referenceType: "project",
-            type: "scan"
-        });
-        enqueuedCount++;
+    if (activeJob && !force) {
+      skippedCount++;
+      continue;
     }
 
-    reply.send({ enqueuedCount, skippedCount });
+    await jobWorker.enqueue({
+      referenceId: projectId,
+      referenceType: "project",
+      type: "scan"
+    });
+    enqueuedCount++;
+  }
+
+  reply.send({ enqueuedCount, skippedCount });
 });
 ```
 
@@ -682,6 +733,7 @@ git add -A && git commit -m "feat: add bulk scan API endpoint for multiple proje
 ### Task 7: Bulk Scan UI (Project List Selection)
 
 **Files:**
+
 - Modify: `src/ui/features/Projects/abstractions/ProjectsGateway.ts`
 - Modify: `src/ui/features/Projects/ProjectsGateway.ts`
 - Modify: `src/ui/presentation/Projects/ProjectList/abstractions/ProjectListPresenter.ts`
@@ -690,25 +742,31 @@ git add -A && git commit -m "feat: add bulk scan API endpoint for multiple proje
 - Test: `src/ui/features/Projects/__tests__/ProjectsGateway.test.ts`
 
 **Interfaces:**
+
 - Consumes: `bulkScanProjectsRoute` from Task 6
 - Produces: Checkbox selection on project list with "Scan selected (N)" button
 
 - [ ] **Step 1: Add bulkScan to ProjectsGateway**
 
 In abstraction, add:
+
 ```typescript
 export interface IBulkScanResult {
-    enqueuedCount: number;
-    skippedCount: number;
+  enqueuedCount: number;
+  skippedCount: number;
 }
 ```
+
 Add to `IProjectsGateway`:
+
 ```typescript
 bulkScan(projectIds: string[], force?: boolean): Promise<IBulkScanResult>;
 ```
+
 Add to namespace: `export type BulkScanResult = IBulkScanResult;`
 
 Implement in `ProjectsGateway.ts`:
+
 ```typescript
 public async bulkScan(projectIds: string[], force?: boolean): Promise<ProjectsGateway.BulkScanResult> {
     return this.httpClient.request(bulkScanProjectsRoute, {
@@ -721,10 +779,13 @@ public async bulkScan(projectIds: string[], force?: boolean): Promise<ProjectsGa
 - [ ] **Step 2: Add selection state to ProjectListPresenter**
 
 In abstraction, add to `IProjectListViewModel`:
+
 ```typescript
 selectedProjectIds: string[];
 ```
+
 Add to `IProjectListPresenter`:
+
 ```typescript
 toggleProjectSelection: (id: string) => void;
 selectAllProjects: () => void;
@@ -737,6 +798,7 @@ Implement with MobX `observable` Set, actions for toggle/selectAll/deselectAll, 
 - [ ] **Step 3: Add checkboxes and bulk bar to ProjectListPage**
 
 In `ProjectListPage.tsx`:
+
 - Add `Checkbox` column to the projects table
 - Add select-all checkbox in the table header
 - Show a bulk action bar when `selectedProjectIds.length > 0` with a "Scan selected (N)" button
@@ -759,42 +821,45 @@ git add -A && git commit -m "feat: add bulk scan with project selection to proje
 ### Task 8: Package Detail API Endpoint
 
 **Files:**
+
 - Modify: `src/shared/routes/packages.ts`
 - Modify: `src/api/routes/packages.ts`
 - Test: `src/api/routes/__tests__/packages.test.ts`
 
 **Interfaces:**
+
 - Consumes: `scan_results`, `dependencies`, `dependency_versions` tables
 - Produces: `GET /api/packages/:packageName` returning package detail with project list
 
 - [ ] **Step 1: Add route definition**
 
 In `src/shared/routes/packages.ts`, add:
+
 ```typescript
 const packageDetailProjectSchema = z.object({
-    projectId: z.string(),
-    projectName: z.string(),
-    currentVersion: z.string(),
-    latestVersion: z.string(),
-    upgradeType: z.string(),
-    dependencyKind: z.string()
+  projectId: z.string(),
+  projectName: z.string(),
+  currentVersion: z.string(),
+  latestVersion: z.string(),
+  upgradeType: z.string(),
+  dependencyKind: z.string()
 });
 
 const packageDetailSchema = z.object({
-    name: z.string(),
-    repoUrl: z.string().nullable(),
-    projects: z.array(packageDetailProjectSchema),
-    latestVersion: z.string().nullable(),
-    lastPublishedAt: z.number().nullable(),
-    registryResolved: z.boolean()
+  name: z.string(),
+  repoUrl: z.string().nullable(),
+  projects: z.array(packageDetailProjectSchema),
+  latestVersion: z.string().nullable(),
+  lastPublishedAt: z.number().nullable(),
+  registryResolved: z.boolean()
 });
 
 export const getPackageDetailRoute = defineRoute({
-    method: "GET",
-    path: "/api/packages/:packageName",
-    description: "Get detail for a single package across all projects",
-    params: z.object({ packageName: z.string() }),
-    response: z.object({ item: packageDetailSchema })
+  method: "GET",
+  path: "/api/packages/:packageName",
+  description: "Get detail for a single package across all projects",
+  params: z.object({ packageName: z.string() }),
+  response: z.object({ item: packageDetailSchema })
 });
 ```
 
@@ -806,10 +871,10 @@ The route file already imports `sendOne`, `sendError` and resolves `databaseClie
 
 ```typescript
 registerRoute(app, getPackageDetailRoute, {}, async (request, reply) => {
-    const { packageName } = request.params;
-    const db = databaseClient.db;
+  const { packageName } = request.params;
+  const db = databaseClient.db;
 
-    const scanRows = await db.all(sql`
+  const scanRows = await db.all(sql`
         SELECT sr.project_id AS projectId, p.name AS projectName,
                sr.current_version AS currentVersion, sr.latest_version AS latestVersion,
                sr.upgrade_type AS upgradeType, sr.dependency_kind AS dependencyKind
@@ -818,18 +883,18 @@ registerRoute(app, getPackageDetailRoute, {}, async (request, reply) => {
         WHERE sr.name = ${packageName}
     `);
 
-    if (scanRows.length === 0) {
-        sendError({ reply, statusCode: 404, message: "Package not found" });
-        return;
-    }
+  if (scanRows.length === 0) {
+    sendError({ reply, statusCode: 404, message: "Package not found" });
+    return;
+  }
 
-    const depRow = await db
-        .select({ repoUrl: dependencies.repoUrl })
-        .from(dependencies)
-        .where(eq(dependencies.name, packageName))
-        .get();
+  const depRow = await db
+    .select({ repoUrl: dependencies.repoUrl })
+    .from(dependencies)
+    .where(eq(dependencies.name, packageName))
+    .get();
 
-    const versionRow = await db.get(sql`
+  const versionRow = await db.get(sql`
         SELECT dv.version AS latestVersion, dv.published_at AS lastPublishedAt
         FROM dependency_versions dv
         JOIN dependencies d ON dv.dependency_id = d.id
@@ -838,17 +903,17 @@ registerRoute(app, getPackageDetailRoute, {}, async (request, reply) => {
         LIMIT 1
     `);
 
-    sendOne({
-        reply,
-        data: {
-            name: packageName,
-            repoUrl: depRow?.repoUrl ?? null,
-            projects: scanRows,
-            latestVersion: versionRow?.latestVersion ?? scanRows[0]?.latestVersion ?? null,
-            lastPublishedAt: versionRow?.lastPublishedAt ?? null,
-            registryResolved: true
-        }
-    });
+  sendOne({
+    reply,
+    data: {
+      name: packageName,
+      repoUrl: depRow?.repoUrl ?? null,
+      projects: scanRows,
+      latestVersion: versionRow?.latestVersion ?? scanRows[0]?.latestVersion ?? null,
+      lastPublishedAt: versionRow?.lastPublishedAt ?? null,
+      registryResolved: true
+    }
+  });
 });
 ```
 
@@ -869,6 +934,7 @@ git add -A && git commit -m "feat: add package detail API endpoint"
 ### Task 9: Package Detail Page (UI)
 
 **Files:**
+
 - Modify: `src/ui/features/Packages/abstractions/PackagesGateway.ts`
 - Modify: `src/ui/features/Packages/PackagesGateway.ts`
 - Create: `src/ui/presentation/Packages/PackageDetail/abstractions/PackageDetailPresenter.ts`
@@ -879,34 +945,38 @@ git add -A && git commit -m "feat: add package detail API endpoint"
 - Test: `src/ui/features/Packages/__tests__/PackagesGateway.test.ts`
 
 **Interfaces:**
+
 - Consumes: `getPackageDetailRoute` from Task 8, existing changelog/vulnerability/license routes
 - Produces: `/packages/:packageName` page with header, projects table, changelog section, vulnerability section, license section
 
 - [ ] **Step 1: Add getPackageDetail to PackagesGateway**
 
 In abstraction, add a separate interface for detail projects (existing `IPackageProject` lacks `dependencyKind` and is used by list — don't modify it):
+
 ```typescript
 export interface IPackageDetailProject {
-    projectId: string;
-    projectName: string;
-    currentVersion: string;
-    latestVersion: string;
-    upgradeType: string;
-    dependencyKind: string;
+  projectId: string;
+  projectName: string;
+  currentVersion: string;
+  latestVersion: string;
+  upgradeType: string;
+  dependencyKind: string;
 }
 
 export interface IPackageDetail {
-    name: string;
-    repoUrl: string | null;
-    projects: IPackageDetailProject[];
-    latestVersion: string | null;
-    lastPublishedAt: number | null;
-    registryResolved: boolean;
+  name: string;
+  repoUrl: string | null;
+  projects: IPackageDetailProject[];
+  latestVersion: string | null;
+  lastPublishedAt: number | null;
+  registryResolved: boolean;
 }
 ```
+
 Add to namespace: `export type PackageDetail = IPackageDetail;` and `export type PackageDetailProject = IPackageDetailProject;`
 
 Add to `IPackagesGateway`:
+
 ```typescript
 getPackageDetail(packageName: string): Promise<IPackageDetail>;
 ```
@@ -916,12 +986,14 @@ Implement in `PackagesGateway.ts`.
 - [ ] **Step 2: Create PackageDetailPresenter abstraction**
 
 Create `src/ui/presentation/Packages/PackageDetail/abstractions/PackageDetailPresenter.ts`:
+
 - View model with: `loading`, `packageDetail`, `changelogs`, `changelogsResolving`, `vulnerabilities`, `licenses`
 - Methods: `load(packageName)`, `reResolveChangelogs()`, `dispose()`
 
 - [ ] **Step 3: Create PackageDetailPresenter implementation**
 
 Create `src/ui/presentation/Packages/PackageDetail/PackageDetailPresenter.ts`:
+
 - Constructor dependencies (injected via DI): `PackagesGateway.Interface`, `VulnerabilitiesGateway.Interface`, `LicensesGateway.Interface`
 - On `load(packageName)`: call `packagesGateway.getPackageDetail(packageName)`, then in parallel load changelogs (compute from/to from min currentVersion / latestVersion), vulnerabilities (from `vulnerabilitiesGateway.list({ packageName })`), licenses (from `licensesGateway.list({ packageName })`)
 - MobX observables for all view model fields
@@ -930,6 +1002,7 @@ Create `src/ui/presentation/Packages/PackageDetail/PackageDetailPresenter.ts`:
 - [ ] **Step 4: Create PackageDetailPage component**
 
 Create `src/ui/presentation/Packages/PackageDetail/components/PackageDetailPage.tsx`:
+
 - Header: package name as title, repo link (Anchor), latest version badge, last published date, ActionIcon back button
 - Projects table: Table with columns for project name (link to `/projects/:projectId`), current version, latest version, upgrade type badge, dependency kind
 - Changelog section: Accordion with version entries showing markdown content. Re-resolve button.
@@ -957,10 +1030,12 @@ git add -A && git commit -m "feat: add package detail page with changelog, vulne
 ### Task 10: Package Detail Navigation Links
 
 **Files:**
+
 - Modify: `src/ui/presentation/Packages/PackageList/components/columns/PackageName.tsx`
 - Modify: `src/ui/presentation/Projects/ProjectDetail/components/DependencyTable.tsx`
 
 **Interfaces:**
+
 - Consumes: Package detail route from Task 9
 - Produces: Clickable package names linking to `/packages/:packageName`
 

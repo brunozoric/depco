@@ -71,7 +71,8 @@ describe("TeamDetailPresenter", () => {
                     scoreModalProjectId: null,
                     scoreDetailLoading: false,
                     scoreDetail: null,
-                    engineSummary: null
+                    engineSummary: null,
+                    showMaintenance: true
                 };
             },
             load: vi.fn(),
@@ -79,6 +80,7 @@ describe("TeamDetailPresenter", () => {
             setVulnerabilityTrendRange: vi.fn(),
             openScoreModal: vi.fn(),
             closeScoreModal: vi.fn(),
+            toggleMaintenance: vi.fn(),
             dispose: vi.fn()
         };
     });

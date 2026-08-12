@@ -133,6 +133,7 @@ export interface IProjectDetailViewModel {
     availableTeams: ITeamOption[];
     changelogState: IChangelogTrackingState | null;
     engineData: IProjectDetailEngineDataViewModel | null;
+    showMaintenance: boolean;
 }
 
 export interface IProjectDetailPresenter {
@@ -164,6 +165,7 @@ export interface IProjectDetailPresenter {
     setPage: (page: number) => void;
     startChangelogTracking: (input: IStartChangelogTrackingInput) => void;
     stopChangelogTracking: () => void;
+    toggleMaintenance: () => void;
     dispose: () => void;
 }
 
