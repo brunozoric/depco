@@ -280,11 +280,18 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
                     (ENGINE_STATUS_SORT_PRIORITY[b.status] ?? 99)
             );
 
+        const projectSummary = this.enginesRepository
+            .getSummary()
+            ?.projectSummaries.find(summary => summary.projectId === this.currentProjectId);
+
         return {
             rootStatus: rootCheck.status,
             rootEnginesNode: rootCheck.enginesNode,
             rootEolDate: rootCheck.eolDate,
-            findings
+            findings,
+            lastScannedAt: projectSummary?.lastScannedAt ?? null,
+            engineScanStale: projectSummary?.engineScanStale ?? false,
+            engineScanStaleReason: projectSummary?.engineScanStaleReason ?? null
         };
     }
 
@@ -349,9 +356,13 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
 
     private loadEngineData = async (projectId: string): Promise<void> => {
         try {
-            const response = await this.enginesGateway.getByProject(projectId);
+            const [response, summary] = await Promise.all([
+                this.enginesGateway.getByProject(projectId),
+                this.enginesGateway.getSummary()
+            ]);
             runInAction(() => {
                 this.enginesRepository.setChecks(response.items, response.total);
+                this.enginesRepository.setSummary(summary);
             });
         } catch {
             // Engine data is supplementary — its failure should not break the detail page.

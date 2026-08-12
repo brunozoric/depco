@@ -1,5 +1,5 @@
 import type React from "react";
-import { Card, SimpleGrid, Text } from "@mantine/core";
+import { Badge, Card, SimpleGrid, Text } from "@mantine/core";
 import { navigate } from "#ui/infrastructure/Router/router.js";
 import type { EnginesGateway } from "#ui/features/Engines/abstractions/EnginesGateway.js";
 
@@ -71,6 +71,13 @@ export function EngineOverviewWidget({ summary }: EngineOverviewWidgetProps): Re
                         </Text>
                     </div>
                 </SimpleGrid>
+            )}
+
+            {summary && summary.staleProjectCount > 0 && (
+                <Badge color="orange" variant="light" mt="sm">
+                    {summary.staleProjectCount} project{summary.staleProjectCount !== 1 ? "s" : ""}{" "}
+                    stale
+                </Badge>
             )}
         </Card>
     );

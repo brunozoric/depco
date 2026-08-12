@@ -3,6 +3,7 @@ import { observer } from "mobx-react-lite";
 import { Accordion, Badge, Group, Stack, Switch, Table, Text } from "@mantine/core";
 import { EngineStatusBadge } from "#ui/infrastructure/Shared/engines/EngineStatusBadge.js";
 import type { ProjectDetailPresenter } from "../abstractions/ProjectDetailPresenter.js";
+import type { EngineScanStaleReason } from "../abstractions/ProjectDetailPresenter.js";
 
 interface EngineStatusSectionProps {
     presenter: ProjectDetailPresenter.Interface;
@@ -13,6 +14,27 @@ function formatEolDate(eolDate: number | null): string | null {
         return null;
     }
     return new Date(eolDate).toLocaleDateString();
+}
+
+function formatRelativeTime(timestamp: number): string {
+    const days = Math.floor((Date.now() - timestamp) / (1000 * 60 * 60 * 24));
+    if (days === 0) {
+        return "today";
+    }
+    if (days === 1) {
+        return "1 day ago";
+    }
+    return `${days} days ago`;
+}
+
+function formatStaleReason(reason: EngineScanStaleReason): string {
+    if (reason === "time") {
+        return "Scan older than 7 days";
+    }
+    if (reason === "release") {
+        return "New Node release since last scan";
+    }
+    return "Scan older than 7 days + new Node release";
 }
 
 export const EngineStatusSection = observer(function EngineStatusSection({
@@ -58,6 +80,25 @@ export const EngineStatusSection = observer(function EngineStatusSection({
                                     onChange={() => presenter.toggleMaintenance()}
                                 />
                             </Group>
+
+                            {engineData.lastScannedAt !== null && (
+                                <Text
+                                    size="sm"
+                                    c={engineData.engineScanStale ? "orange" : "dimmed"}
+                                >
+                                    Last scanned {formatRelativeTime(engineData.lastScannedAt)}
+                                    {engineData.engineScanStale &&
+                                        engineData.engineScanStaleReason && (
+                                            <>
+                                                {" "}
+                                                —{" "}
+                                                {formatStaleReason(
+                                                    engineData.engineScanStaleReason
+                                                )}
+                                            </>
+                                        )}
+                                </Text>
+                            )}
 
                             {visibleFindings.length === 0 ? (
                                 <Text size="sm" c="dimmed">

@@ -98,11 +98,16 @@ export interface IProjectDetailEngineFindingViewModel {
     eolDate: number | null;
 }
 
+export type EngineScanStaleReason = "time" | "release" | "both";
+
 export interface IProjectDetailEngineDataViewModel {
     rootStatus: EngineStatus;
     rootEnginesNode: string | null;
     rootEolDate: number | null;
     findings: IProjectDetailEngineFindingViewModel[];
+    lastScannedAt: number | null;
+    engineScanStale: boolean;
+    engineScanStaleReason: EngineScanStaleReason | null;
 }
 
 export interface IProjectDetailViewModel {
@@ -194,4 +199,5 @@ export namespace ProjectDetailPresenter {
     export type StartChangelogTrackingInput = IStartChangelogTrackingInput;
     export type EngineFindingViewModel = IProjectDetailEngineFindingViewModel;
     export type EngineDataViewModel = IProjectDetailEngineDataViewModel;
+    export type EngineScanStaleReasonValue = EngineScanStaleReason;
 }
