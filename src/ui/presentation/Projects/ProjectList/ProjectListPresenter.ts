@@ -1,4 +1,6 @@
 import { computed, makeAutoObservable, runInAction } from "mobx";
+import { notifications } from "@mantine/notifications";
+import { getErrorMessage } from "#shared/errors.js";
 import { ProjectListPresenter as Abstraction } from "./abstractions/ProjectListPresenter.js";
 import { CloneManagerFactory } from "./abstractions/CloneManagerFactory.js";
 import { DirectoryScanManagerFactory } from "./abstractions/DirectoryScanManagerFactory.js";
@@ -23,6 +25,7 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
     private browseItems: Abstraction.BrowseItem[] = [];
     private browseLoading = false;
     private searchQuery = "";
+    private readonly selectedProjectIds = new Set<string>();
 
     public readonly cloneManager: CloneManagerFactory.Manager;
     public readonly directoryScanManager: DirectoryScanManagerFactory.Manager;
@@ -114,7 +117,10 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
             scanLoading: this.directoryScanManager.loading,
             scanSummary: this.directoryScanManager.summary,
             scanDepth: this.directoryScanManager.depth,
-            searchQuery: this.searchQuery
+            searchQuery: this.searchQuery,
+            selectedProjectIds: allProjects
+                .map(project => project.id)
+                .filter(id => this.selectedProjectIds.has(id))
         };
     }
 
@@ -186,6 +192,9 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
 
     public removeProject = async (id: string): Promise<void> => {
         await this.removeProjectUseCase.execute(id);
+        runInAction(() => {
+            this.selectedProjectIds.delete(id);
+        });
     };
 
     public scanAll = async (): Promise<void> => {
@@ -253,6 +262,52 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
 
     public scanProject = async (id: string): Promise<void> => {
         await this.scanStatusManager.scanProject(id);
+    };
+
+    public toggleProjectSelection = (id: string): void => {
+        if (this.selectedProjectIds.has(id)) {
+            this.selectedProjectIds.delete(id);
+        } else {
+            this.selectedProjectIds.add(id);
+        }
+    };
+
+    public selectAllProjects = (): void => {
+        for (const project of this.vm.projects) {
+            this.selectedProjectIds.add(project.id);
+        }
+    };
+
+    public deselectAllProjects = (): void => {
+        this.selectedProjectIds.clear();
+    };
+
+    public bulkScanSelected = async (): Promise<void> => {
+        const projectIds = Array.from(this.selectedProjectIds);
+        if (projectIds.length === 0) {
+            return;
+        }
+        try {
+            const result = await this.projectsGateway.bulkScan(projectIds);
+            runInAction(() => {
+                this.selectedProjectIds.clear();
+            });
+            notifications.show({
+                color: result.skippedCount > 0 ? "yellow" : "green",
+                title: "Bulk scan enqueued",
+                message:
+                    `Enqueued ${result.enqueuedCount} scan${result.enqueuedCount === 1 ? "" : "s"}` +
+                    (result.skippedCount > 0
+                        ? `, skipped ${result.skippedCount} already scanning`
+                        : "")
+            });
+        } catch (error) {
+            notifications.show({
+                color: "red",
+                title: "Bulk scan failed",
+                message: getErrorMessage(error, "Failed to enqueue bulk scan")
+            });
+        }
     };
 
     public dispose = (): void => {

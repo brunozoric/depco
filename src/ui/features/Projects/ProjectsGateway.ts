@@ -11,7 +11,8 @@ import {
     installProjectRoute,
     getInstallOptionsRoute,
     getChangelogsRoute,
-    reResolveChangelogsRoute
+    reResolveChangelogsRoute,
+    bulkScanProjectsRoute
 } from "#shared/routes/index.js";
 import type { IDependency, IProject } from "./abstractions/ProjectsGateway.js";
 import { ProjectsGateway as Abstraction } from "./abstractions/ProjectsGateway.js";
@@ -215,6 +216,16 @@ class ProjectsGatewayImpl implements Abstraction.Interface {
             body: { from, to }
         });
         return { entries: response.items, resolving: response.resolving };
+    }
+
+    public async bulkScan(
+        projectIds: string[],
+        force?: boolean
+    ): Promise<Abstraction.BulkScanResult> {
+        return this.httpClient.request(bulkScanProjectsRoute, {
+            params: {},
+            body: { projectIds, force }
+        });
     }
 }
 

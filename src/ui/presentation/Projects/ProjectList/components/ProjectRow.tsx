@@ -1,6 +1,16 @@
 import type React from "react";
 import { useState } from "react";
-import { ActionIcon, Badge, Group, Menu, Stack, Table, Text, Tooltip } from "@mantine/core";
+import {
+    ActionIcon,
+    Badge,
+    Checkbox,
+    Group,
+    Menu,
+    Stack,
+    Table,
+    Text,
+    Tooltip
+} from "@mantine/core";
 import { observer } from "mobx-react-lite";
 import { navigate } from "#ui/infrastructure/Router/router.js";
 import { ConfirmDialog } from "#ui/infrastructure/Shared/components/ConfirmDialog.js";
@@ -9,6 +19,8 @@ import type { ProjectListPresenter } from "../abstractions/ProjectListPresenter.
 
 interface ProjectRowProps {
     project: ProjectListPresenter.ProjectListItem;
+    selected: boolean;
+    onToggleSelect: (id: string) => void;
     onRemove: (id: string) => Promise<void>;
     onInstall: (project: ProjectListPresenter.ProjectListItem) => void;
     onScan: (id: string) => Promise<void>;
@@ -68,6 +80,8 @@ const SCAN_STATUS_LABEL: Record<ProjectListPresenter.ScanStatus, string> = {
 
 export const ProjectRow = observer(function ProjectRow({
     project,
+    selected,
+    onToggleSelect,
     onRemove,
     onInstall,
     onScan
@@ -76,6 +90,13 @@ export const ProjectRow = observer(function ProjectRow({
 
     return (
         <Table.Tr>
+            <Table.Td>
+                <Checkbox
+                    aria-label={`Select ${project.name}`}
+                    checked={selected}
+                    onChange={() => onToggleSelect(project.id)}
+                />
+            </Table.Td>
             <Table.Td>
                 <Group gap="xs" wrap="nowrap">
                     <Text

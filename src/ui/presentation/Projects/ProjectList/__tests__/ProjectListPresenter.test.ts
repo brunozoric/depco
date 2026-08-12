@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { Container } from "@webiny/di";
 import { createContainer } from "#shared/index.js";
 import { generateId } from "@webiny/stdlib";
@@ -11,8 +11,15 @@ import {
     checkProjectSecurityRoute,
     cloneProjectRoute,
     browseFilesystemRoute,
-    getEngineSummaryRoute
+    getEngineSummaryRoute,
+    bulkScanProjectsRoute
 } from "#shared/routes/index.js";
+
+vi.mock("@mantine/notifications", () => ({
+    notifications: {
+        show: vi.fn()
+    }
+}));
 import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { HTTPClientFeature } from "../../../../infrastructure/HttpClient/feature.js";
 import { ProjectsFeature } from "../../../../features/Projects/feature.js";
@@ -85,6 +92,8 @@ describe("ProjectListPresenter", () => {
     let browseItems: { name: string; path: string }[];
     let engineSummaryResult: EnginesGateway.SummaryData;
     let fakeEventBridge: ReturnType<typeof createFakeEventBridge>;
+    let bulkScanResult: { enqueuedCount: number; skippedCount: number };
+    let bulkScanError: Error | null;
 
     function createPresenter(): ProjectListPresenter.Interface {
         const container: Container = createContainer();
@@ -127,6 +136,11 @@ describe("ProjectListPresenter", () => {
                     }
                     case getEngineSummaryRoute:
                         return engineSummaryResult as T;
+                    case bulkScanProjectsRoute:
+                        if (bulkScanError) {
+                            throw bulkScanError;
+                        }
+                        return bulkScanResult as T;
                     default:
                         throw new Error(`Unexpected route ${JSON.stringify(route)}`);
                 }
@@ -164,6 +178,8 @@ describe("ProjectListPresenter", () => {
         cloneJobId = "clone-job-1";
         cloneError = null;
         browseItems = [];
+        bulkScanResult = { enqueuedCount: 0, skippedCount: 0 };
+        bulkScanError = null;
         engineSummaryResult = {
             totalProjects: 0,
             counts: { eol: 0, maintenance: 0, activeLts: 0, current: 0, unknown: 0 },
@@ -194,7 +210,8 @@ describe("ProjectListPresenter", () => {
             scanLoading: false,
             scanSummary: null,
             scanDepth: 1,
-            searchQuery: ""
+            searchQuery: "",
+            selectedProjectIds: []
         });
     });
 
@@ -719,6 +736,124 @@ describe("ProjectListPresenter", () => {
             expect(presenter.vm.projects).toHaveLength(1);
             presenter.setSearchQuery("");
             expect(presenter.vm.projects).toHaveLength(2);
+        });
+    });
+
+    describe("project selection and bulk scan", () => {
+        function makeProject(
+            overrides: Partial<ProjectsGateway.Project> = {}
+        ): ProjectsGateway.Project {
+            return {
+                id: generateId(),
+                name: "my-app",
+                path: "/Projects/my-app",
+                packageManager: "yarn",
+                pmVersion: "4.0.0",
+                lastScannedAt: null,
+                hasNodeModules: false,
+                security: null,
+                teams: [],
+                addedAt: Date.now(),
+                ...overrides
+            };
+        }
+
+        it("toggles a project's selection on and off", async () => {
+            getResult = [makeProject({ id: "p1" }), makeProject({ id: "p2" })];
+            const presenter = createPresenter();
+            await presenter.load();
+
+            presenter.toggleProjectSelection("p1");
+            expect(presenter.vm.selectedProjectIds).toEqual(["p1"]);
+
+            presenter.toggleProjectSelection("p2");
+            expect(presenter.vm.selectedProjectIds).toEqual(["p1", "p2"]);
+
+            presenter.toggleProjectSelection("p1");
+            expect(presenter.vm.selectedProjectIds).toEqual(["p2"]);
+        });
+
+        it("selectAllProjects selects every currently visible project", async () => {
+            getResult = [makeProject({ id: "p1" }), makeProject({ id: "p2" })];
+            const presenter = createPresenter();
+            await presenter.load();
+
+            presenter.selectAllProjects();
+
+            expect(presenter.vm.selectedProjectIds).toEqual(["p1", "p2"]);
+        });
+
+        it("deselectAllProjects clears the selection", async () => {
+            getResult = [makeProject({ id: "p1" }), makeProject({ id: "p2" })];
+            const presenter = createPresenter();
+            await presenter.load();
+            presenter.selectAllProjects();
+
+            presenter.deselectAllProjects();
+
+            expect(presenter.vm.selectedProjectIds).toEqual([]);
+        });
+
+        it("removeProject drops the id from the selection", async () => {
+            getResult = [makeProject({ id: "p1" }), makeProject({ id: "p2" })];
+            const presenter = createPresenter();
+            await presenter.load();
+            presenter.selectAllProjects();
+
+            await presenter.removeProject("p1");
+
+            expect(presenter.vm.selectedProjectIds).toEqual(["p2"]);
+        });
+
+        it("bulkScanSelected calls bulkScanProjectsRoute with the selected ids and clears the selection", async () => {
+            getResult = [makeProject({ id: "p1" }), makeProject({ id: "p2" })];
+            bulkScanResult = { enqueuedCount: 2, skippedCount: 0 };
+            const presenter = createPresenter();
+            await presenter.load();
+            presenter.selectAllProjects();
+            calls = [];
+
+            await presenter.bulkScanSelected();
+
+            expect(calls).toEqual([
+                {
+                    route: bulkScanProjectsRoute,
+                    args: { params: {}, body: { projectIds: ["p1", "p2"], force: undefined } }
+                }
+            ]);
+            expect(presenter.vm.selectedProjectIds).toEqual([]);
+
+            const { notifications } = await import("@mantine/notifications");
+            expect(notifications.show).toHaveBeenCalledWith(
+                expect.objectContaining({ title: "Bulk scan enqueued" })
+            );
+        });
+
+        it("bulkScanSelected does nothing when no projects are selected", async () => {
+            getResult = [makeProject({ id: "p1" })];
+            const presenter = createPresenter();
+            await presenter.load();
+            calls = [];
+
+            await presenter.bulkScanSelected();
+
+            expect(calls.filter(c => c.route === bulkScanProjectsRoute)).toEqual([]);
+        });
+
+        it("shows an error notification and keeps the selection when bulk scan fails", async () => {
+            getResult = [makeProject({ id: "p1" })];
+            bulkScanError = new Error("Server exploded");
+            const presenter = createPresenter();
+            await presenter.load();
+            presenter.selectAllProjects();
+
+            await presenter.bulkScanSelected();
+
+            expect(presenter.vm.selectedProjectIds).toEqual(["p1"]);
+            const { notifications } = await import("@mantine/notifications");
+            expect(notifications.show).toHaveBeenCalledWith(
+                expect.objectContaining({ title: "Bulk scan failed", message: "Server exploded" })
+            );
         });
     });
 });

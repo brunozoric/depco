@@ -8,7 +8,8 @@ import {
     scanProjectAsyncRoute,
     getProjectDependenciesRoute,
     getProjectSecurityRoute,
-    checkProjectSecurityRoute
+    checkProjectSecurityRoute,
+    bulkScanProjectsRoute
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { ProjectsGateway } from "../abstractions/ProjectsGateway.js";
@@ -202,5 +203,35 @@ describe("ProjectsGateway", () => {
             { route: checkProjectSecurityRoute, args: { params: { id: "p1" } } }
         ]);
         expect(result).toEqual(security);
+    });
+
+    it("bulkScan(projectIds) calls bulkScanProjectsRoute with the project ids and no force flag", async () => {
+        const gateway = createGateway();
+        mockResult = { enqueuedCount: 2, skippedCount: 0 };
+
+        const result = await gateway.bulkScan(["p1", "p2"]);
+
+        expect(calls).toEqual([
+            {
+                route: bulkScanProjectsRoute,
+                args: { params: {}, body: { projectIds: ["p1", "p2"], force: undefined } }
+            }
+        ]);
+        expect(result).toEqual({ enqueuedCount: 2, skippedCount: 0 });
+    });
+
+    it("bulkScan(projectIds, true) calls bulkScanProjectsRoute with force=true", async () => {
+        const gateway = createGateway();
+        mockResult = { enqueuedCount: 1, skippedCount: 1 };
+
+        const result = await gateway.bulkScan(["p1"], true);
+
+        expect(calls).toEqual([
+            {
+                route: bulkScanProjectsRoute,
+                args: { params: {}, body: { projectIds: ["p1"], force: true } }
+            }
+        ]);
+        expect(result).toEqual({ enqueuedCount: 1, skippedCount: 1 });
     });
 });

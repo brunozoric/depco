@@ -62,6 +62,11 @@ export interface IChangelogResult {
     resolving: boolean;
 }
 
+export interface IBulkScanResult {
+    enqueuedCount: number;
+    skippedCount: number;
+}
+
 export interface IProjectsGateway {
     list(): Promise<IProject[]>;
     get(id: string): Promise<IProject>;
@@ -76,6 +81,7 @@ export interface IProjectsGateway {
     getInstallOptions(packageManager: string): Promise<IInstallFlagDefinition[]>;
     getChangelogs(packageName: string, from: string, to: string): Promise<IChangelogResult>;
     reResolveChangelogs(packageName: string, from: string, to: string): Promise<IChangelogResult>;
+    bulkScan(projectIds: string[], force?: boolean): Promise<IBulkScanResult>;
 }
 
 export const ProjectsGateway = createAbstraction<IProjectsGateway>("Ui/ProjectsGateway");
@@ -91,4 +97,5 @@ export namespace ProjectsGateway {
     export type InstallFlagDefinition = IInstallFlagDefinition;
     export type ChangelogEntry = IChangelogEntry;
     export type ChangelogResult = IChangelogResult;
+    export type BulkScanResult = IBulkScanResult;
 }

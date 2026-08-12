@@ -4,6 +4,7 @@ import {
     ActionIcon,
     Button,
     Center,
+    Checkbox,
     Group,
     Loader,
     Menu,
@@ -31,6 +32,7 @@ export const ProjectListPage = observer(function ProjectListPage({
     const [installTarget, setInstallTarget] = useState<ProjectListPresenter.ProjectListItem | null>(
         null
     );
+    const [bulkScanning, setBulkScanning] = useState(false);
 
     useEffect(() => {
         presenter.load();
@@ -39,6 +41,21 @@ export const ProjectListPage = observer(function ProjectListPage({
     useEffect(() => {
         return () => presenter.dispose();
     }, [presenter]);
+
+    const selectedCount = vm.selectedProjectIds.length;
+    const allSelected =
+        vm.projects.length > 0 &&
+        vm.projects.every(project => vm.selectedProjectIds.includes(project.id));
+    const someSelected = selectedCount > 0 && !allSelected;
+
+    const handleBulkScan = async (): Promise<void> => {
+        setBulkScanning(true);
+        try {
+            await presenter.bulkScanSelected();
+        } finally {
+            setBulkScanning(false);
+        }
+    };
 
     return (
         <Stack gap="md">
@@ -87,6 +104,23 @@ export const ProjectListPage = observer(function ProjectListPage({
                 value={vm.searchQuery}
                 onChange={event => presenter.setSearchQuery(event.currentTarget.value)}
             />
+            {selectedCount > 0 && (
+                <Group bg="blue.0" p="xs" style={{ borderRadius: 4 }}>
+                    <Text size="sm" fw={500}>
+                        {selectedCount} selected
+                    </Text>
+                    <Button size="xs" loading={bulkScanning} onClick={handleBulkScan}>
+                        Scan selected ({selectedCount})
+                    </Button>
+                    <Button
+                        size="xs"
+                        variant="subtle"
+                        onClick={() => presenter.deselectAllProjects()}
+                    >
+                        Clear
+                    </Button>
+                </Group>
+            )}
             {vm.loading ? (
                 <Center py="xl">
                     <Loader />
@@ -95,6 +129,18 @@ export const ProjectListPage = observer(function ProjectListPage({
                 <Table striped highlightOnHover>
                     <Table.Thead>
                         <Table.Tr>
+                            <Table.Th style={{ width: 40 }}>
+                                <Checkbox
+                                    aria-label="Select all projects"
+                                    checked={allSelected}
+                                    indeterminate={someSelected}
+                                    onChange={() =>
+                                        allSelected
+                                            ? presenter.deselectAllProjects()
+                                            : presenter.selectAllProjects()
+                                    }
+                                />
+                            </Table.Th>
                             <Table.Th>Name</Table.Th>
                             <Table.Th>Path</Table.Th>
                             <Table.Th>Package Manager</Table.Th>
@@ -110,6 +156,8 @@ export const ProjectListPage = observer(function ProjectListPage({
                             <ProjectRow
                                 key={project.id}
                                 project={project}
+                                selected={vm.selectedProjectIds.includes(project.id)}
+                                onToggleSelect={presenter.toggleProjectSelection}
                                 onRemove={presenter.removeProject}
                                 onInstall={setInstallTarget}
                                 onScan={presenter.scanProject}

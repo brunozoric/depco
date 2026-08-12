@@ -56,6 +56,7 @@ export interface IProjectListViewModel {
     scanSummary: IScanSummary | null;
     scanDepth: number;
     searchQuery: string;
+    selectedProjectIds: string[];
 }
 
 export interface IProjectListPresenter {
@@ -78,6 +79,10 @@ export interface IProjectListPresenter {
     setScanDepth: (depth: number) => void;
     setSearchQuery: (value: string) => void;
     scanProject: (id: string) => Promise<void>;
+    toggleProjectSelection: (id: string) => void;
+    selectAllProjects: () => void;
+    deselectAllProjects: () => void;
+    bulkScanSelected: () => Promise<void>;
     dispose: () => void;
 }
 
