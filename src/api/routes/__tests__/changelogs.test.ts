@@ -511,6 +511,91 @@ describe("changelog routes", () => {
         expect(enqueuedJobs).toHaveLength(0);
     });
 
+    it("POST /api/changelogs/re-resolve-all resets all failed changelogs across packages and enqueues jobs", async () => {
+        await insertChangelogFixture(db, {
+            packageName: "react",
+            version: "18.1.0",
+            content: "",
+            source: "none",
+            fetchedAt: Date.now()
+        });
+        await insertChangelogFixture(db, {
+            packageName: "react",
+            version: "18.2.0",
+            content: "",
+            source: "none",
+            fetchedAt: Date.now()
+        });
+        await insertChangelogFixture(db, {
+            packageName: "lodash",
+            version: "4.17.21",
+            content: "",
+            source: "none",
+            fetchedAt: Date.now()
+        });
+
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "POST",
+            url: "/api/changelogs/re-resolve-all"
+        });
+
+        expect(response.statusCode).toBe(200);
+        const json = response.json();
+        expect(json.packageCount).toBe(2);
+
+        expect(enqueuedJobs).toHaveLength(2);
+        const packageNames = enqueuedJobs.map(job => job.referenceId).sort();
+        expect(packageNames).toEqual(["lodash", "react"]);
+
+        const reactJob = enqueuedJobs.find(job => job.referenceId === "react")!;
+        const reactPackages = JSON.parse(reactJob.packages as string);
+        expect(reactPackages.from).toBe("0.0.0");
+        expect(reactPackages.to).toBe("18.2.0");
+    });
+
+    it("POST /api/changelogs/re-resolve-all returns zero when no failed changelogs exist", async () => {
+        await insertChangelogFixture(db, {
+            packageName: "react",
+            version: "18.1.0",
+            content: "## 18.1.0\n\nChanges",
+            source: "github",
+            fetchedAt: Date.now()
+        });
+
+        const response = await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "POST",
+            url: "/api/changelogs/re-resolve-all"
+        });
+
+        expect(response.statusCode).toBe(200);
+        expect(response.json()).toEqual({ packageCount: 0 });
+        expect(enqueuedJobs).toHaveLength(0);
+    });
+
+    it("POST /api/changelogs/re-resolve-all resets source and content to null for failed entries", async () => {
+        await insertChangelogFixture(db, {
+            packageName: "react",
+            version: "18.1.0",
+            content: "",
+            source: "none",
+            fetchedAt: Date.now()
+        });
+
+        await app.inject({
+            headers: { authorization: `Bearer ${token}` },
+            method: "POST",
+            url: "/api/changelogs/re-resolve-all"
+        });
+
+        const rows = await db.select().from(changelogs).all();
+        expect(rows).toHaveLength(1);
+        expect(rows[0]!.content).toBeNull();
+        expect(rows[0]!.source).toBeNull();
+        expect(rows[0]!.fetchedAt).toBeNull();
+    });
+
     it("POST /api/changelogs/:packageName/re-resolve enqueues fresh job when active job has malformed packages", async () => {
         await insertChangelogFixture(db, {
             packageName: "react",

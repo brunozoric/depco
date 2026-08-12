@@ -301,6 +301,84 @@ describe("ChangelogService", () => {
         expect(result[0]?.content).toBe("notes for 1.5.0");
     });
 
+    it("resetAllFailed() resets source='none' rows across all packages and returns affected packages", async () => {
+        const { service, db } = createService();
+
+        await insertChangelogRow(db, {
+            packageName: "react",
+            version: "18.1.0",
+            repoUrl: "https://github.com/facebook/react",
+            content: "",
+            source: "none",
+            fetchedAt: Date.now()
+        });
+        await insertChangelogRow(db, {
+            packageName: "react",
+            version: "18.2.0",
+            repoUrl: "https://github.com/facebook/react",
+            content: "",
+            source: "none",
+            fetchedAt: Date.now()
+        });
+        await insertChangelogRow(db, {
+            packageName: "lodash",
+            version: "4.17.21",
+            content: "",
+            source: "none",
+            fetchedAt: Date.now()
+        });
+        await insertChangelogRow(db, {
+            packageName: "lodash",
+            version: "4.17.20",
+            content: "real content",
+            source: "github",
+            fetchedAt: Date.now()
+        });
+
+        const result = await service.resetAllFailed();
+
+        expect(result).toHaveLength(2);
+        const sorted = result.sort((a, b) => a.packageName.localeCompare(b.packageName));
+        expect(sorted[0]).toEqual({
+            packageName: "lodash",
+            minVersion: "4.17.21",
+            maxVersion: "4.17.21"
+        });
+        expect(sorted[1]).toEqual({
+            packageName: "react",
+            minVersion: "18.1.0",
+            maxVersion: "18.2.0"
+        });
+
+        const reactRows = await queryChangelogRows(db, "react");
+        for (const row of reactRows) {
+            expect(row.content).toBeNull();
+            expect(row.source).toBeNull();
+            expect(row.fetchedAt).toBeNull();
+        }
+
+        const lodashRows = await queryChangelogRows(db, "lodash");
+        const resetRow = lodashRows.find(row => row.version === "4.17.21");
+        expect(resetRow?.content).toBeNull();
+        const keptRow = lodashRows.find(row => row.version === "4.17.20");
+        expect(keptRow?.content).toBe("real content");
+    });
+
+    it("resetAllFailed() returns empty array when no failed changelogs exist", async () => {
+        const { service, db } = createService();
+
+        await insertChangelogRow(db, {
+            packageName: "react",
+            version: "18.1.0",
+            content: "real content",
+            source: "github",
+            fetchedAt: Date.now()
+        });
+
+        const result = await service.resetAllFailed();
+        expect(result).toEqual([]);
+    });
+
     it("getChangelogs() returns an empty array when no rows fall in range", async () => {
         const { service, db } = createService();
 

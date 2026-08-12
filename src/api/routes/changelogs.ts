@@ -3,7 +3,11 @@ import type { Container } from "@webiny/di";
 import { and, eq, inArray } from "drizzle-orm";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
-import { getChangelogsRoute, reResolveChangelogsRoute } from "#shared/routes/index.js";
+import {
+    getChangelogsRoute,
+    reResolveChangelogsRoute,
+    reResolveAllChangelogsRoute
+} from "#shared/routes/index.js";
 import { ChangelogService } from "#api/services/Changelog/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { JobWorker } from "#api/services/JobExecution/index.js";
@@ -84,6 +88,22 @@ export async function changelogRoutes(app: FastifyInstance, options: PluginOptio
     const changelogService = container.resolve(ChangelogService);
     const databaseClient = container.resolve(DatabaseClient);
     const jobWorker = container.resolve(JobWorker);
+
+    registerRoute(
+        app,
+        reResolveAllChangelogsRoute,
+        { preHandler: [requirePermission("full")] },
+        async (_request, reply) => {
+            const resetPackages = await changelogService.resetAllFailed();
+            const deps = { db: databaseClient.db, jobWorker };
+
+            for (const { packageName, maxVersion } of resetPackages) {
+                await enqueueChangelogIfNeeded(deps, packageName, "0.0.0", maxVersion);
+            }
+
+            reply.send({ packageCount: resetPackages.length });
+        }
+    );
 
     registerRoute(app, getChangelogsRoute, {}, async (request, reply) => {
         const { packageName } = request.params;

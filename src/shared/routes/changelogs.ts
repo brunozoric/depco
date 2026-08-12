@@ -36,3 +36,13 @@ export const reResolveChangelogsRoute = defineRoute({
     }),
     response: changelogResponseSchema
 });
+
+export const reResolveAllChangelogsRoute = defineRoute({
+    method: "POST",
+    path: "/api/changelogs/re-resolve-all",
+    description: "Reset all failed changelogs across all packages and re-resolve",
+    params: z.object({}),
+    response: z.object({
+        packageCount: z.number()
+    })
+});

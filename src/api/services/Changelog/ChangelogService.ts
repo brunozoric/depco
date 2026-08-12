@@ -116,6 +116,48 @@ class ChangelogServiceImpl implements Abstraction.Interface {
             .run();
     }
 
+    public async resetAllFailed(): Promise<Abstraction.ResetAllFailedPackage[]> {
+        const failedRows = await this.databaseClient.db
+            .select({
+                packageName: dependencies.name,
+                version: dependencyVersions.version
+            })
+            .from(changelogs)
+            .innerJoin(dependencies, eq(changelogs.dependencyId, dependencies.id))
+            .innerJoin(
+                dependencyVersions,
+                eq(changelogs.dependencyVersionId, dependencyVersions.id)
+            )
+            .where(eq(changelogs.source, "none"))
+            .all();
+
+        if (failedRows.length === 0) {
+            return [];
+        }
+
+        await this.databaseClient.db
+            .update(changelogs)
+            .set({ content: null, source: null, fetchedAt: null })
+            .where(eq(changelogs.source, "none"))
+            .run();
+
+        const byPackage = new Map<string, string[]>();
+        for (const row of failedRows) {
+            const versions = byPackage.get(row.packageName) ?? [];
+            versions.push(row.version);
+            byPackage.set(row.packageName, versions);
+        }
+
+        return Array.from(byPackage.entries()).map(([packageName, versions]) => {
+            versions.sort(compareVersions);
+            return {
+                packageName,
+                minVersion: versions[0]!,
+                maxVersion: versions[versions.length - 1]!
+            };
+        });
+    }
+
     public async getChangelogs(
         packageName: string,
         from: string,
