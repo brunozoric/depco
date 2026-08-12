@@ -83,11 +83,7 @@ export const DashboardPage = observer(function DashboardPage({
                 <SecurityOverviewWidget projects={vm.security} />
                 <VulnerabilitySummaryWidget summary={vm.vulnerabilitySummary} />
                 <LicenseComplianceWidget summary={vm.licenseCompliance} />
-                <EngineOverviewWidget
-                    summary={vm.engineSummary}
-                    showMaintenance={vm.showMaintenance}
-                    onToggleMaintenance={presenter.toggleMaintenance}
-                />
+                <EngineOverviewWidget summary={vm.engineSummary} />
             </SimpleGrid>
 
             {vm.scoreModalProjectId && (

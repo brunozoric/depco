@@ -190,8 +190,7 @@ describe("DashboardPresenter", () => {
             scoreModalProjectId: null,
             scoreDetailLoading: false,
             scoreDetail: null,
-            engineSummary: null,
-            showMaintenance: true
+            engineSummary: null
         });
     });
 
@@ -471,20 +470,6 @@ describe("DashboardPresenter", () => {
         expect(presenter.vm.scoreModalProjectId).toBeNull();
         expect(presenter.vm.scoreDetailLoading).toBe(false);
         expect(presenter.vm.scoreDetail).toBeNull();
-    });
-
-    it("showMaintenance defaults to true and toggleMaintenance flips it", () => {
-        const presenter = createPresenter();
-
-        expect(presenter.vm.showMaintenance).toBe(true);
-
-        presenter.toggleMaintenance();
-
-        expect(presenter.vm.showMaintenance).toBe(false);
-
-        presenter.toggleMaintenance();
-
-        expect(presenter.vm.showMaintenance).toBe(true);
     });
 
     it("dispose unsubscribes WS listeners", () => {

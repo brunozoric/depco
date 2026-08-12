@@ -25,7 +25,6 @@ class DashboardPresenterImpl implements Abstraction.Interface {
     private scoreModalProjectId: string | null = null;
     private scoreDetailLoading = false;
     private scoreDetail: DashboardGateway.ScoreDetailResponse | null = null;
-    private showMaintenanceValue = true;
     private readonly disposeTeamReaction: () => void;
 
     private readonly handleScanComplete = (): void => {
@@ -90,8 +89,7 @@ class DashboardPresenterImpl implements Abstraction.Interface {
             scoreModalProjectId: this.scoreModalProjectId,
             scoreDetailLoading: this.scoreDetailLoading,
             scoreDetail: this.scoreDetail,
-            engineSummary: this.enginesRepository.getSummary(),
-            showMaintenance: this.showMaintenanceValue
+            engineSummary: this.enginesRepository.getSummary()
         };
     }
 
@@ -176,10 +174,6 @@ class DashboardPresenterImpl implements Abstraction.Interface {
         this.scoreModalProjectId = null;
         this.scoreDetail = null;
         this.scoreDetailLoading = false;
-    };
-
-    public toggleMaintenance = (): void => {
-        this.showMaintenanceValue = !this.showMaintenanceValue;
     };
 
     public dispose = (): void => {
