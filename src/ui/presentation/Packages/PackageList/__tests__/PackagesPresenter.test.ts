@@ -8,12 +8,15 @@ import {
     rescanPackageRoute,
     getChangelogsRoute,
     reResolveChangelogsRoute,
-    createUpgradeJobRoute
+    createUpgradeJobRoute,
+    getChangelogStatsRoute
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { ProjectsFeature } from "../../../../features/Projects/feature.js";
 import { PackagesFeature } from "../../../../features/Packages/feature.js";
 import { UpgradesFeature } from "../../../../features/Upgrades/feature.js";
+import { ChangelogsFeature } from "../../../../features/Changelogs/feature.js";
+import type { ChangelogsGateway } from "../../../../features/Changelogs/abstractions/ChangelogsGateway.js";
 import { EventBridge } from "../../../../infrastructure/Events/abstractions/EventBridge.js";
 import "../../../../infrastructure/Events/eventMap.js";
 import { LoadPackagesUseCase as LoadPackagesUseCaseRegistration } from "../../useCases/LoadPackagesUseCase.js";
@@ -112,9 +115,18 @@ const changelogEntries: PackagesGateway.ChangelogEntry[] = [
     { version: "2.0.0", content: "breaking changes", source: "github" }
 ];
 
+const defaultChangelogStats: ChangelogsGateway.Stats = {
+    total: 0,
+    resolved: 0,
+    failed: 0,
+    pending: 0,
+    byResolver: {}
+};
+
 describe("PackagesPresenter", () => {
     let calls: RecordedCall[];
     let fakeEventBridge: ReturnType<typeof createFakeEventBridge>;
+    let changelogStatsResult: ChangelogsGateway.Stats;
 
     function createPresenter(): PackagesPresenter.Interface {
         const container: Container = createContainer();
@@ -149,6 +161,8 @@ describe("PackagesPresenter", () => {
                         } as T;
                     case createUpgradeJobRoute:
                         return { item: { jobId: "job-1" } } as T;
+                    case getChangelogStatsRoute:
+                        return changelogStatsResult as T;
                     default:
                         throw new Error(`Unexpected route ${JSON.stringify(route)}`);
                 }
@@ -163,6 +177,7 @@ describe("PackagesPresenter", () => {
         UpgradesFeature.register(container);
         TeamFilterFeature.register(container);
         UrlFilterFeature.register(container);
+        ChangelogsFeature.register(container);
         container.register(LoadPackagesUseCaseRegistration);
         container.register(LoadProjectsUseCaseRegistration);
         container.register(PackagesPresenterRegistration);
@@ -173,6 +188,7 @@ describe("PackagesPresenter", () => {
     beforeEach(() => {
         setUrlParams({});
         calls = [];
+        changelogStatsResult = { ...defaultChangelogStats };
     });
 
     it("starts with an idle view model", () => {
@@ -195,7 +211,8 @@ describe("PackagesPresenter", () => {
             sortBy: "name",
             sortOrder: "asc",
             expandedPackageName: null,
-            changelogState: null
+            changelogState: null,
+            changelogStats: null
         });
     });
 
@@ -228,6 +245,21 @@ describe("PackagesPresenter", () => {
                 registryResolved: true
             }
         ]);
+    });
+
+    it("populates changelogStats from the gateway after load", async () => {
+        changelogStatsResult = {
+            total: 10,
+            resolved: 6,
+            failed: 2,
+            pending: 2,
+            byResolver: { github: 6 }
+        };
+        const presenter = createPresenter();
+
+        await presenter.load();
+
+        expect(presenter.vm.changelogStats).toEqual(changelogStatsResult);
     });
 
     it("populates projectOptions from loaded projects", async () => {

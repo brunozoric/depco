@@ -14,7 +14,9 @@ import {
     dashboardLicenseTrendRoute,
     dashboardAutoFixTrendRoute,
     dashboardScoreDetailRoute,
-    getEngineSummaryRoute
+    getEngineSummaryRoute,
+    getChangelogStatsRoute,
+    reResolveAllChangelogsRoute
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { HTTPClientFeature } from "../../../../infrastructure/HttpClient/feature.js";
@@ -28,6 +30,8 @@ import type { DashboardGateway } from "../../../../features/Dashboard/abstractio
 import type { EnginesGateway } from "../../../../features/Engines/abstractions/EnginesGateway.js";
 import { EnginesFeature } from "../../../../features/Engines/feature.js";
 import { TeamFilterFeature } from "../../../../features/TeamFilter/feature.js";
+import type { ChangelogsGateway } from "../../../../features/Changelogs/abstractions/ChangelogsGateway.js";
+import { ChangelogsFeature } from "../../../../features/Changelogs/feature.js";
 
 interface RecordedCall {
     route: unknown;
@@ -56,6 +60,8 @@ describe("DashboardPresenter", () => {
     let autoFixTrendResult: DashboardGateway.AutoFixTrendResponse;
     let scoreDetailResult: DashboardGateway.ScoreDetailResponse;
     let engineSummaryResult: EnginesGateway.SummaryData;
+    let changelogStatsResult: ChangelogsGateway.Stats;
+    let reResolveAllResult: ChangelogsGateway.ReResolveAllResult;
     let eventBridgeMock: MockEventBridge;
     let requestError: unknown;
 
@@ -98,6 +104,10 @@ describe("DashboardPresenter", () => {
                         return scoreDetailResult as T;
                     case getEngineSummaryRoute:
                         return engineSummaryResult as T;
+                    case getChangelogStatsRoute:
+                        return changelogStatsResult as T;
+                    case reResolveAllChangelogsRoute:
+                        return reResolveAllResult as T;
                     default:
                         throw new Error(`Unexpected route ${JSON.stringify(route)}`);
                 }
@@ -118,6 +128,7 @@ describe("DashboardPresenter", () => {
         DashboardUseCasesFeature.register(container);
         TeamFilterFeature.register(container);
         EnginesFeature.register(container);
+        ChangelogsFeature.register(container);
         container.register(DashboardPresenterRegistration);
 
         return container.resolve(DashboardPresenterAbstraction);
@@ -164,6 +175,14 @@ describe("DashboardPresenter", () => {
             counts: { eol: 0, maintenance: 0, activeLts: 0, current: 0, unknown: 0 },
             projectSummaries: []
         };
+        changelogStatsResult = {
+            total: 0,
+            resolved: 0,
+            failed: 0,
+            pending: 0,
+            byResolver: {}
+        };
+        reResolveAllResult = { packageCount: 0 };
     });
 
     it("default vm state before load", () => {
@@ -190,7 +209,9 @@ describe("DashboardPresenter", () => {
             scoreModalProjectId: null,
             scoreDetailLoading: false,
             scoreDetail: null,
-            engineSummary: null
+            engineSummary: null,
+            changelogStats: null,
+            reResolvingChangelogs: false
         });
     });
 
@@ -246,7 +267,8 @@ describe("DashboardPresenter", () => {
             dashboardLicenseTrendRoute,
             dashboardAutoFixTrendRoute,
             dashboardVulnerabilityTrendRoute,
-            getEngineSummaryRoute
+            getEngineSummaryRoute,
+            getChangelogStatsRoute
         ]);
     });
 
@@ -470,6 +492,55 @@ describe("DashboardPresenter", () => {
         expect(presenter.vm.scoreModalProjectId).toBeNull();
         expect(presenter.vm.scoreDetailLoading).toBe(false);
         expect(presenter.vm.scoreDetail).toBeNull();
+    });
+
+    it("includes changelogStats from the gateway in vm after load", async () => {
+        changelogStatsResult = {
+            total: 10,
+            resolved: 6,
+            failed: 2,
+            pending: 2,
+            byResolver: { github: 6 }
+        };
+        const presenter = createPresenter();
+
+        await presenter.load();
+
+        expect(presenter.vm.changelogStats).toEqual(changelogStatsResult);
+    });
+
+    it("load leaves changelogStats null when the changelog stats request fails", async () => {
+        requestError = new Error("boom");
+        const presenter = createPresenter();
+
+        await presenter.load();
+
+        expect(presenter.vm.changelogStats).toBeNull();
+    });
+
+    it("reResolveAllChangelogs sets reResolvingChangelogs while in flight, then reloads stats", async () => {
+        const presenter = createPresenter();
+        await presenter.load();
+        calls = [];
+        changelogStatsResult = {
+            total: 5,
+            resolved: 5,
+            failed: 0,
+            pending: 0,
+            byResolver: { github: 5 }
+        };
+
+        const promise = presenter.reResolveAllChangelogs();
+        expect(presenter.vm.reResolvingChangelogs).toBe(true);
+
+        await promise;
+
+        expect(presenter.vm.reResolvingChangelogs).toBe(false);
+        expect(presenter.vm.changelogStats).toEqual(changelogStatsResult);
+        expect(calls.map(c => c.route)).toEqual([
+            reResolveAllChangelogsRoute,
+            getChangelogStatsRoute
+        ]);
     });
 
     it("dispose unsubscribes WS listeners", () => {

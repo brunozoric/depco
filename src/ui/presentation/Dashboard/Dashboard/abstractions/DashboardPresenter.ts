@@ -1,6 +1,7 @@
 import { createAbstraction } from "#shared/index.js";
 import type { DashboardGateway } from "../../../../features/Dashboard/abstractions/DashboardGateway.js";
 import type { EnginesGateway } from "../../../../features/Engines/abstractions/EnginesGateway.js";
+import type { ChangelogsGateway } from "../../../../features/Changelogs/abstractions/ChangelogsGateway.js";
 
 export interface IDashboardViewModel {
     loading: boolean;
@@ -24,6 +25,8 @@ export interface IDashboardViewModel {
     scoreDetailLoading: boolean;
     scoreDetail: DashboardGateway.ScoreDetailResponse | null;
     engineSummary: EnginesGateway.SummaryData | null;
+    changelogStats: ChangelogsGateway.Stats | null;
+    reResolvingChangelogs: boolean;
 }
 
 export interface IDashboardPresenter {
@@ -33,6 +36,7 @@ export interface IDashboardPresenter {
     setVulnerabilityTrendRange: (range: string) => void;
     openScoreModal: (projectId: string) => void;
     closeScoreModal: () => void;
+    reResolveAllChangelogs: () => Promise<void>;
     dispose: () => void;
 }
 

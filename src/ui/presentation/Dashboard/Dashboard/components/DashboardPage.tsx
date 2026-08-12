@@ -18,6 +18,7 @@ import { StalenessSummaryCard } from "./StalenessSummaryCard.js";
 import { LicenseComplianceSummaryCard } from "./LicenseComplianceSummaryCard.js";
 import { AutoFixSummaryCard } from "./AutoFixSummaryCard.js";
 import { EngineOverviewWidget } from "./EngineOverviewWidget.js";
+import { ChangelogResolutionWidget } from "./ChangelogResolutionWidget.js";
 
 interface DashboardPageProps {
     presenter: DashboardPresenter.Interface;
@@ -84,6 +85,11 @@ export const DashboardPage = observer(function DashboardPage({
                 <VulnerabilitySummaryWidget summary={vm.vulnerabilitySummary} />
                 <LicenseComplianceWidget summary={vm.licenseCompliance} />
                 <EngineOverviewWidget summary={vm.engineSummary} />
+                <ChangelogResolutionWidget
+                    stats={vm.changelogStats}
+                    reResolving={vm.reResolvingChangelogs}
+                    onReResolveAll={() => void presenter.reResolveAllChangelogs()}
+                />
             </SimpleGrid>
 
             {vm.scoreModalProjectId && (

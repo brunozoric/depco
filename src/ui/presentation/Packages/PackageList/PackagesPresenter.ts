@@ -6,6 +6,7 @@ import { PackagesRepository } from "../../../features/Packages/abstractions/Pack
 import { PackagesGateway } from "../../../features/Packages/abstractions/PackagesGateway.js";
 import { ProjectsRepository } from "../../../features/Projects/abstractions/ProjectsRepository.js";
 import { UpgradesGateway } from "../../../features/Upgrades/abstractions/UpgradesGateway.js";
+import { ChangelogsGateway } from "../../../features/Changelogs/abstractions/ChangelogsGateway.js";
 import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBridge.js";
 import "../../../infrastructure/Events/eventMap.js";
 import { ChangelogTracker } from "../../Shared/ChangelogTracker.js";
@@ -33,6 +34,7 @@ class PackagesPresenterImpl implements Abstraction.Interface {
     private loading = false;
     private error: string | null = null;
     private expandedPackageName: string | null = null;
+    private changelogStats: ChangelogsGateway.Stats | null = null;
     private readonly changelogTracker: ChangelogTracker;
     private readonly disposeTeamReaction: () => void;
     private readonly disposeUrlListener: () => void;
@@ -47,6 +49,7 @@ class PackagesPresenterImpl implements Abstraction.Interface {
         private readonly projectsRepository: ProjectsRepository.Interface,
         private readonly packagesGateway: PackagesGateway.Interface,
         private readonly upgradesGateway: UpgradesGateway.Interface,
+        private readonly changelogsGateway: ChangelogsGateway.Interface,
         private readonly eventBridge: EventBridge.Interface,
         private readonly teamFilterService: TeamFilterService.Interface,
         private readonly urlFilterService: UrlFilterService.Interface
@@ -132,7 +135,8 @@ class PackagesPresenterImpl implements Abstraction.Interface {
             sortBy: urlFilters.sortBy ?? "name",
             sortOrder: urlFilters.sortOrder ?? "asc",
             expandedPackageName: this.expandedPackageName,
-            changelogState: this.changelogTracker.state
+            changelogState: this.changelogTracker.state,
+            changelogStats: this.changelogStats
         };
     }
 
@@ -142,7 +146,8 @@ class PackagesPresenterImpl implements Abstraction.Interface {
         try {
             await Promise.all([
                 this.loadPackagesUseCase.execute(this.buildFilters()),
-                this.loadProjectsUseCase.execute()
+                this.loadProjectsUseCase.execute(),
+                this.loadChangelogStats()
             ]);
         } catch (error) {
             runInAction(() => {
@@ -152,6 +157,17 @@ class PackagesPresenterImpl implements Abstraction.Interface {
             runInAction(() => {
                 this.loading = false;
             });
+        }
+    };
+
+    private loadChangelogStats = async (): Promise<void> => {
+        try {
+            const stats = await this.changelogsGateway.getStats();
+            runInAction(() => {
+                this.changelogStats = stats;
+            });
+        } catch {
+            // Changelog stats are supplementary — failure should not break the packages page.
         }
     };
 
@@ -281,6 +297,7 @@ export const PackagesPresenter = Abstraction.createImplementation({
         ProjectsRepository,
         PackagesGateway,
         UpgradesGateway,
+        ChangelogsGateway,
         EventBridge,
         TeamFilterService,
         UrlFilterService

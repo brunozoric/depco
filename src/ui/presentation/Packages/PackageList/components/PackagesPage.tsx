@@ -26,6 +26,7 @@ import { ChangelogButton } from "./columns/ChangelogButton.js";
 import { RescanButton } from "./columns/RescanButton.js";
 import { ExpandedDependencies } from "./ExpandedDependencies.js";
 import { PackageFilterToolbar } from "./PackageFilterToolbar.js";
+import { ChangelogStatsBar } from "./ChangelogStatsBar.js";
 
 interface PackagesPageProps {
     presenter: PackagesPresenter.Interface;
@@ -105,6 +106,8 @@ export const PackagesPage = observer(function PackagesPage({
                     </Text>
                 )}
             </Group>
+
+            <ChangelogStatsBar stats={vm.changelogStats} />
 
             <PackageFilterToolbar
                 search={vm.search}

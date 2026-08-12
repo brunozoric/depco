@@ -71,7 +71,9 @@ describe("TeamDetailPresenter", () => {
                     scoreModalProjectId: null,
                     scoreDetailLoading: false,
                     scoreDetail: null,
-                    engineSummary: null
+                    engineSummary: null,
+                    changelogStats: null,
+                    reResolvingChangelogs: false
                 };
             },
             load: vi.fn(),
@@ -79,6 +81,7 @@ describe("TeamDetailPresenter", () => {
             setVulnerabilityTrendRange: vi.fn(),
             openScoreModal: vi.fn(),
             closeScoreModal: vi.fn(),
+            reResolveAllChangelogs: vi.fn(),
             dispose: vi.fn()
         };
     });

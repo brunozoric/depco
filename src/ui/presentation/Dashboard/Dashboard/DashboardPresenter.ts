@@ -9,6 +9,7 @@ import { TeamFilterService } from "../../../features/TeamFilter/abstractions/Tea
 import { DashboardGateway } from "../../../features/Dashboard/abstractions/DashboardGateway.js";
 import { EnginesGateway } from "../../../features/Engines/abstractions/EnginesGateway.js";
 import { EnginesRepository } from "../../../features/Engines/abstractions/EnginesRepository.js";
+import { ChangelogsGateway } from "../../../features/Changelogs/abstractions/ChangelogsGateway.js";
 import { getErrorMessage } from "#shared/errors.js";
 
 type VulnerabilityTrendDays = 7 | 30 | 90 | undefined;
@@ -25,6 +26,8 @@ class DashboardPresenterImpl implements Abstraction.Interface {
     private scoreModalProjectId: string | null = null;
     private scoreDetailLoading = false;
     private scoreDetail: DashboardGateway.ScoreDetailResponse | null = null;
+    private changelogStats: ChangelogsGateway.Stats | null = null;
+    private reResolvingChangelogs = false;
     private readonly disposeTeamReaction: () => void;
 
     private readonly handleScanComplete = (): void => {
@@ -48,7 +51,8 @@ class DashboardPresenterImpl implements Abstraction.Interface {
         private readonly teamFilterService: TeamFilterService.Interface,
         private readonly dashboardGateway: DashboardGateway.Interface,
         private readonly enginesGateway: EnginesGateway.Interface,
-        private readonly enginesRepository: EnginesRepository.Interface
+        private readonly enginesRepository: EnginesRepository.Interface,
+        private readonly changelogsGateway: ChangelogsGateway.Interface
     ) {
         makeAutoObservable(this, { vm: computed });
 
@@ -89,7 +93,9 @@ class DashboardPresenterImpl implements Abstraction.Interface {
             scoreModalProjectId: this.scoreModalProjectId,
             scoreDetailLoading: this.scoreDetailLoading,
             scoreDetail: this.scoreDetail,
-            engineSummary: this.enginesRepository.getSummary()
+            engineSummary: this.enginesRepository.getSummary(),
+            changelogStats: this.changelogStats,
+            reResolvingChangelogs: this.reResolvingChangelogs
         };
     }
 
@@ -104,7 +110,8 @@ class DashboardPresenterImpl implements Abstraction.Interface {
                     ...(teamId ? { teamId } : {})
                 }),
                 this.loadVulnerabilityTrend(),
-                this.loadEngineSummary()
+                this.loadEngineSummary(),
+                this.loadChangelogStats()
             ]);
         } catch (err) {
             runInAction(() => {
@@ -144,6 +151,29 @@ class DashboardPresenterImpl implements Abstraction.Interface {
             });
         } catch {
             // Engine summary is supplementary — failure should not break the dashboard.
+        }
+    };
+
+    private loadChangelogStats = async (): Promise<void> => {
+        try {
+            const stats = await this.changelogsGateway.getStats();
+            runInAction(() => {
+                this.changelogStats = stats;
+            });
+        } catch {
+            // Changelog stats are supplementary — failure should not break the dashboard.
+        }
+    };
+
+    public reResolveAllChangelogs = async (): Promise<void> => {
+        this.reResolvingChangelogs = true;
+        try {
+            await this.changelogsGateway.reResolveAll();
+            await this.loadChangelogStats();
+        } finally {
+            runInAction(() => {
+                this.reResolvingChangelogs = false;
+            });
         }
     };
 
@@ -194,6 +224,7 @@ export const DashboardPresenter = Abstraction.createImplementation({
         TeamFilterService,
         DashboardGateway,
         EnginesGateway,
-        EnginesRepository
+        EnginesRepository,
+        ChangelogsGateway
     ]
 });

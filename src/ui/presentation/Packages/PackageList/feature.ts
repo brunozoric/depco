@@ -7,6 +7,7 @@ import { ProjectsUseCasesFeature } from "../../Projects/useCases/feature.js";
 import { UpgradesFeature } from "../../../features/Upgrades/feature.js";
 import { WebSocketFeature } from "../../../infrastructure/WebSocket/feature.js";
 import { TeamFilterFeature } from "../../../features/TeamFilter/feature.js";
+import { ChangelogsFeature } from "../../../features/Changelogs/feature.js";
 import { PackagesRoute } from "./PackagesRoute.js";
 
 export interface IPackageListFeatureExports {
@@ -21,7 +22,8 @@ export const PackageListFeature = createFeature<void, IPackageListFeatureExports
         ProjectsUseCasesFeature,
         UpgradesFeature,
         WebSocketFeature,
-        TeamFilterFeature
+        TeamFilterFeature,
+        ChangelogsFeature
     ],
     register(container) {
         container.register(PackagesPresenter);

@@ -1,5 +1,6 @@
 import { createAbstraction } from "#shared/index.js";
 import type { PackagesGateway } from "../../../../features/Packages/abstractions/PackagesGateway.js";
+import type { ChangelogsGateway } from "../../../../features/Changelogs/abstractions/ChangelogsGateway.js";
 import type {
     IChangelogTrackingState,
     IStartChangelogTrackingInput
@@ -40,6 +41,7 @@ export interface IPackagesViewModel {
     sortOrder: string;
     expandedPackageName: string | null;
     changelogState: IChangelogTrackingState | null;
+    changelogStats: ChangelogsGateway.Stats | null;
 }
 
 export interface IPackagesPresenter {
