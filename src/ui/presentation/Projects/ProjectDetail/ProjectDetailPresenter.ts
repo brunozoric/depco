@@ -54,6 +54,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
     private packageManagerUpdateVersionValue = "";
     private upgradeFilterValue: UpgradeFilter = "all";
     private projectTeamIdValues: string[] = [];
+    private engineStaleness: EnginesGateway.StalenessData | null = null;
     private showMaintenanceValue = true;
 
     private readonly autoFixManager: AutoFixManager;
@@ -282,18 +283,14 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
                     (ENGINE_STATUS_SORT_PRIORITY[b.status] ?? 99)
             );
 
-        const projectSummary = this.enginesRepository
-            .getSummary()
-            ?.projectSummaries.find(summary => summary.projectId === this.currentProjectId);
-
         return {
             rootStatus: rootCheck.status,
             rootEnginesNode: rootCheck.enginesNode,
             rootEolDate: rootCheck.eolDate,
             findings,
-            lastScannedAt: projectSummary?.lastScannedAt ?? null,
-            engineScanStale: projectSummary?.engineScanStale ?? false,
-            engineScanStaleReason: projectSummary?.engineScanStaleReason ?? null
+            lastScannedAt: this.engineStaleness?.lastScannedAt ?? null,
+            engineScanStale: this.engineStaleness?.engineScanStale ?? false,
+            engineScanStaleReason: this.engineStaleness?.engineScanStaleReason ?? null
         };
     }
 
@@ -358,13 +355,13 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
 
     private loadEngineData = async (projectId: string): Promise<void> => {
         try {
-            const [response, summary] = await Promise.all([
+            const [response, staleness] = await Promise.all([
                 this.enginesGateway.getByProject(projectId),
-                this.enginesGateway.getSummary()
+                this.enginesGateway.getStaleness(projectId)
             ]);
             runInAction(() => {
                 this.enginesRepository.setChecks(response.items, response.total);
-                this.enginesRepository.setSummary(summary);
+                this.engineStaleness = staleness;
             });
         } catch {
             // Engine data is supplementary — its failure should not break the detail page.

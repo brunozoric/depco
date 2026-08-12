@@ -81,6 +81,20 @@ export const getProjectEngineChecksRoute = defineRoute({
     response: z.object({ items: z.array(engineCheckSchema), total: z.number() })
 });
 
+export const getProjectEngineStalenessRoute = defineRoute({
+    method: "GET",
+    path: "/api/engines/:projectId/staleness",
+    description:
+        "Get lightweight engine scan staleness info for a single project, without loading the all-projects summary",
+    params: z.object({ projectId: z.string() }),
+    response: z.object({
+        lastScannedAt: z.number().nullable(),
+        engineScanStale: z.boolean(),
+        engineScanStaleReason: z.enum(["time", "release", "both"]).nullable(),
+        stalenessThresholdMs: z.number()
+    })
+});
+
 export const scanProjectEnginesRoute = defineRoute({
     method: "POST",
     path: "/api/engines/:projectId/scan",

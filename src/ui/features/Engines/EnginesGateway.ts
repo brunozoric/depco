@@ -2,6 +2,7 @@ import { EnginesGateway as Abstraction } from "./abstractions/EnginesGateway.js"
 import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import {
     getProjectEngineChecksRoute,
+    getProjectEngineStalenessRoute,
     getEngineSummaryRoute,
     scanProjectEnginesRoute,
     listNodeReleasesRoute
@@ -19,6 +20,12 @@ class EnginesGatewayImpl implements Abstraction.Interface {
     public async getSummary(): Promise<Abstraction.SummaryData> {
         return this.httpClient.request(getEngineSummaryRoute, {
             params: {}
+        });
+    }
+
+    public async getStaleness(projectId: string): Promise<Abstraction.StalenessData> {
+        return this.httpClient.request(getProjectEngineStalenessRoute, {
+            params: { projectId }
         });
     }
 

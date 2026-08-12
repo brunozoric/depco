@@ -250,6 +250,119 @@ describe("engine routes", () => {
         });
     });
 
+    describe("GET /api/engines/:projectId/staleness", () => {
+        it("returns null staleness data when no checks exist for the project", async () => {
+            await insertTestProject(db, "proj-1", "/tmp/proj-1");
+
+            const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "GET",
+                url: "/api/engines/proj-1/staleness"
+            });
+
+            expect(response.statusCode).toBe(200);
+            expect(response.json().item).toEqual({
+                lastScannedAt: null,
+                engineScanStale: false,
+                engineScanStaleReason: null,
+                stalenessThresholdMs: 604800000
+            });
+        });
+
+        it("returns fresh staleness info for a recently scanned project", async () => {
+            await insertTestProject(db, "proj-1", "/tmp/proj-1");
+            const scannedAt = Date.now();
+            await db
+                .insert(engineChecks)
+                .values({
+                    id: "check-1",
+                    projectId: "proj-1",
+                    packageName: "",
+                    enginesNode: ">=20",
+                    minimumMajor: 20,
+                    status: "active-lts",
+                    eolDate: null,
+                    scannedAt
+                })
+                .run();
+
+            const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "GET",
+                url: "/api/engines/proj-1/staleness"
+            });
+
+            expect(response.statusCode).toBe(200);
+            expect(response.json().item).toEqual({
+                lastScannedAt: scannedAt,
+                engineScanStale: false,
+                engineScanStaleReason: null,
+                stalenessThresholdMs: 604800000
+            });
+        });
+
+        it("flags an old scan as stale", async () => {
+            await insertTestProject(db, "proj-1", "/tmp/proj-1");
+            const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+            await db
+                .insert(engineChecks)
+                .values({
+                    id: "check-stale",
+                    projectId: "proj-1",
+                    packageName: "",
+                    enginesNode: ">=20",
+                    minimumMajor: 20,
+                    status: "active-lts",
+                    eolDate: null,
+                    scannedAt: thirtyDaysAgo
+                })
+                .run();
+
+            const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "GET",
+                url: "/api/engines/proj-1/staleness"
+            });
+
+            expect(response.statusCode).toBe(200);
+            // Stale by both time (>7d threshold) and release (schedule's newest
+            // release date is more recent than the scan), per buildTestSchedule().
+            expect(response.json().item).toEqual({
+                lastScannedAt: thirtyDaysAgo,
+                engineScanStale: true,
+                engineScanStaleReason: "both",
+                stalenessThresholdMs: 604800000
+            });
+        });
+
+        it("only considers checks belonging to the requested project", async () => {
+            await insertTestProject(db, "proj-1", "/tmp/proj-1");
+            await insertTestProject(db, "proj-2", "/tmp/proj-2");
+            await db
+                .insert(engineChecks)
+                .values({
+                    id: "check-other-project",
+                    projectId: "proj-2",
+                    packageName: "",
+                    enginesNode: ">=20",
+                    minimumMajor: 20,
+                    status: "active-lts",
+                    eolDate: null,
+                    scannedAt: Date.now()
+                })
+                .run();
+
+            const response = await app.inject({
+                headers: { authorization: `Bearer ${token}` },
+                method: "GET",
+                url: "/api/engines/proj-1/staleness"
+            });
+
+            expect(response.statusCode).toBe(200);
+            expect(response.json().item.lastScannedAt).toBeNull();
+        });
+    });
+
     describe("POST /api/engines/:projectId/scan", () => {
         it("scans the project and returns the result", async () => {
             const projectPath = createTestDir();

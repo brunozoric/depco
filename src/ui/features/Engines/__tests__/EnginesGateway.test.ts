@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { createContainer } from "#shared/index.js";
 import {
     getProjectEngineChecksRoute,
+    getProjectEngineStalenessRoute,
     getEngineSummaryRoute,
     scanProjectEnginesRoute,
     listNodeReleasesRoute
@@ -60,6 +61,28 @@ describe("EnginesGateway", () => {
         expect(calls[0]!.route).toBe(getEngineSummaryRoute);
         expect(calls[0]!.args).toEqual({ params: {} });
         expect(result).toEqual({ totalProjects: 0, counts: {}, projectSummaries: [] });
+    });
+
+    it("getStaleness calls getProjectEngineStalenessRoute with projectId param", async () => {
+        mockResult = {
+            lastScannedAt: 12345,
+            engineScanStale: true,
+            engineScanStaleReason: "time",
+            stalenessThresholdMs: 604800000
+        };
+        const gateway = createGateway();
+
+        const result = await gateway.getStaleness("project-1");
+
+        expect(calls).toHaveLength(1);
+        expect(calls[0]!.route).toBe(getProjectEngineStalenessRoute);
+        expect(calls[0]!.args).toEqual({ params: { projectId: "project-1" } });
+        expect(result).toEqual({
+            lastScannedAt: 12345,
+            engineScanStale: true,
+            engineScanStaleReason: "time",
+            stalenessThresholdMs: 604800000
+        });
     });
 
     it("scan calls scanProjectEnginesRoute with projectId param", async () => {

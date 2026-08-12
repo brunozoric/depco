@@ -49,9 +49,17 @@ export interface INodeReleaseListResponse {
     total: number;
 }
 
+export interface IEngineStalenessData {
+    lastScannedAt: number | null;
+    engineScanStale: boolean;
+    engineScanStaleReason: "time" | "release" | "both" | null;
+    stalenessThresholdMs: number;
+}
+
 export interface IEnginesGateway {
     getByProject(projectId: string): Promise<IEngineListResponse>;
     getSummary(): Promise<IEngineSummaryData>;
+    getStaleness(projectId: string): Promise<IEngineStalenessData>;
     scan(projectId: string): Promise<IEngineScanResultData>;
     getReleases(): Promise<INodeReleaseListResponse>;
 }
@@ -67,4 +75,5 @@ export namespace EnginesGateway {
     export type ScanResult = IEngineScanResultData;
     export type NodeRelease = INodeRelease;
     export type NodeReleaseListResponse = INodeReleaseListResponse;
+    export type StalenessData = IEngineStalenessData;
 }
