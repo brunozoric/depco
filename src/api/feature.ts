@@ -26,6 +26,7 @@ import { FileConfigFeature } from "./services/FileConfig/index.js";
 import { GitFeature } from "./services/Git/index.js";
 import { JobExecutionFeature } from "./services/JobExecution/index.js";
 import { LicenseFeature } from "./services/License/index.js";
+import { PackageFeature } from "./services/Package/index.js";
 import { PackageJsonFeature } from "./services/PackageJson/index.js";
 import { PackageManagerFeature } from "./services/PackageManager/index.js";
 import { RegistryCacheFeature } from "./services/RegistryCache/index.js";
@@ -65,6 +66,7 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
         AppLogFeature.register(container);
         ErrorReporterFeature.register(container);
         PackageJsonFeature.register(container);
+        PackageFeature.register(container);
         FileConfigFeature.register(container);
         SecurityFeature.register(container);
         StepHookFeature.register(container);
