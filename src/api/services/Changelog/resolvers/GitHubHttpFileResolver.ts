@@ -36,63 +36,67 @@ class GitHubHttpFileResolverImpl implements Abstraction.Interface {
             return new Map();
         }
 
-        const { token } = await readGitHubToken({
-            databaseClient: this.databaseClient,
-            encryptionService: this.encryptionService
-        });
+        try {
+            const { token } = await readGitHubToken({
+                databaseClient: this.databaseClient,
+                encryptionService: this.encryptionService
+            });
 
-        const headers: Record<string, string> = {
-            Accept: "application/vnd.github+json"
-        };
-        if (token) {
-            headers["Authorization"] = `Bearer ${token}`;
-        }
-
-        const versionSet = new Set(versions);
-        const paths: string[] = [];
-
-        if (repoDirectory) {
-            for (const filename of CHANGELOG_FILES) {
-                paths.push(`${repoDirectory}/${filename}`);
+            const headers: Record<string, string> = {
+                Accept: "application/vnd.github+json"
+            };
+            if (token) {
+                headers["Authorization"] = `Bearer ${token}`;
             }
-        }
 
-        paths.push(...CHANGELOG_FILES);
+            const versionSet = new Set(versions);
+            const paths: string[] = [];
 
-        if (packageName.startsWith("@")) {
-            const unscoped = packageName.split("/")[1];
-            if (unscoped) {
+            if (repoDirectory) {
                 for (const filename of CHANGELOG_FILES) {
-                    paths.push(`packages/${unscoped}/${filename}`);
+                    paths.push(`${repoDirectory}/${filename}`);
                 }
             }
-        }
 
-        for (const filePath of paths) {
-            try {
-                const response = await fetch(
-                    `https://api.github.com/repos/${ownerRepo}/contents/${filePath}`,
-                    { headers }
-                );
+            paths.push(...CHANGELOG_FILES);
 
-                if (!response.ok) {
-                    continue;
-                }
-
-                const data = githubContentsSchema.parse(await response.json());
-                if (data.content && data.encoding === "base64") {
-                    const decoded = Buffer.from(data.content, "base64").toString("utf-8");
-                    const found = parseVersionSections(decoded, versionSet);
-                    if (found.size > 0) {
-                        return found;
+            if (packageName.startsWith("@")) {
+                const unscoped = packageName.split("/")[1];
+                if (unscoped) {
+                    for (const filename of CHANGELOG_FILES) {
+                        paths.push(`packages/${unscoped}/${filename}`);
                     }
                 }
-            } catch {
-                continue;
             }
-        }
 
-        return new Map();
+            for (const filePath of paths) {
+                try {
+                    const response = await fetch(
+                        `https://api.github.com/repos/${ownerRepo}/contents/${filePath}`,
+                        { headers }
+                    );
+
+                    if (!response.ok) {
+                        continue;
+                    }
+
+                    const data = githubContentsSchema.parse(await response.json());
+                    if (data.content && data.encoding === "base64") {
+                        const decoded = Buffer.from(data.content, "base64").toString("utf-8");
+                        const found = parseVersionSections(decoded, versionSet);
+                        if (found.size > 0) {
+                            return found;
+                        }
+                    }
+                } catch {
+                    continue;
+                }
+            }
+
+            return new Map();
+        } catch {
+            return new Map();
+        }
     }
 }
 
