@@ -234,6 +234,10 @@ Response:
 - Package names in project detail dependency table also link there
 - Back button on detail page returns to packages list
 
+### Route ordering
+- API: `GET /api/packages` (list) coexists with `GET /api/packages/:packageName` (detail) — Fastify prioritizes static over parameterized. Same pattern as existing `/api/packages/:packageName/rescan`.
+- UI: `/packages` (list) and `/packages/:packageName` (detail) — React Router exact matching handles this correctly.
+
 ### Changelog version range
 For the changelog section, `from` is the minimum `currentVersion` across all projects using this package, `to` is the `latestVersion`. This gives the most useful range — everything between what any project currently has and what's available.
 
