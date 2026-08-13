@@ -20,6 +20,7 @@ import { DependencyGraphFeature } from "./services/DependencyGraph/index.js";
 import { EmailFeature } from "./services/Email/index.js";
 import { EncryptionFeature } from "./services/Encryption/index.js";
 import { EngineFeature } from "./services/Engine/index.js";
+import { EnginesUseCasesFeature } from "./routes/useCases/engines/index.js";
 import { ErrorReporterFeature } from "./services/ErrorReporter/index.js";
 import { EventBusFeature } from "./services/EventBus/index.js";
 import { FileConfigFeature } from "./services/FileConfig/index.js";
@@ -100,5 +101,6 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
         ChangelogsUseCasesFeature.register(container);
         StepHooksUseCasesFeature.register(container);
         UsersUseCasesFeature.register(container);
+        EnginesUseCasesFeature.register(container);
     }
 });
