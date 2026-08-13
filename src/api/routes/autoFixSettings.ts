@@ -1,9 +1,13 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute } from "#shared/routing/index.js";
+import { registerRoute, sendError } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { getAutoFixSettingsRoute, updateAutoFixSettingsRoute } from "#shared/routes/index.js";
-import { AutoFixSettingsService } from "#api/services/AutoFix/index.js";
+import type { AutoFixSettingsService } from "#api/services/AutoFix/index.js";
+import {
+    GetAutoFixSettingsUseCase,
+    UpdateAutoFixSettingsUseCase
+} from "./useCases/autoFix/index.js";
 
 interface PluginOptions extends FastifyPluginOptions {
     container: Container;
@@ -40,12 +44,18 @@ export async function autoFixSettingsRoutes(
     options: PluginOptions
 ): Promise<void> {
     const { container } = options;
-    const autoFixSettingsService = container.resolve(AutoFixSettingsService);
 
     registerRoute(app, getAutoFixSettingsRoute, {}, async (request, reply) => {
-        const { projectId } = request.params;
-        const settings = await autoFixSettingsService.getSettingsOrDefaults(projectId);
-        reply.send(settings);
+        const useCase = container.resolve(GetAutoFixSettingsUseCase);
+        const result = await useCase.execute({ projectId: request.params.projectId });
+
+        result.match({
+            ok: data => {
+                reply.send(data);
+            },
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
     });
 
     registerRoute(
@@ -53,10 +63,19 @@ export async function autoFixSettingsRoutes(
         updateAutoFixSettingsRoute,
         { preHandler: [requirePermission("full")] },
         async (request, reply) => {
-            const { projectId } = request.params;
-            const input = buildUpdateSettingsInput(request.body);
-            const settings = await autoFixSettingsService.updateSettings(projectId, input);
-            reply.send(settings);
+            const useCase = container.resolve(UpdateAutoFixSettingsUseCase);
+            const result = await useCase.execute({
+                projectId: request.params.projectId,
+                input: buildUpdateSettingsInput(request.body)
+            });
+
+            result.match({
+                ok: data => {
+                    reply.send(data);
+                },
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 }
