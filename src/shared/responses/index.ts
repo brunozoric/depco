@@ -20,3 +20,14 @@ export {
     listAppSettingsResponseSchema,
     upsertAppSettingResponseSchema
 } from "./appSettings.js";
+
+export {
+    autoFixSettingsSchema,
+    autoFixPullRequestSchema,
+    getAutoFixSettingsResponseSchema,
+    updateAutoFixSettingsResponseSchema,
+    listAutoFixPullRequestsResponseSchema,
+    getProjectAutoFixPullRequestsResponseSchema,
+    generateAutoFixPrResponseSchema,
+    deleteAutoFixPullRequestResponseSchema
+} from "./autoFix.js";

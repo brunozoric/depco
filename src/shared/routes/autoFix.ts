@@ -1,39 +1,20 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
-
-const autoFixSettingsSchema = z.object({
-    id: z.string(),
-    projectId: z.string(),
-    enabled: z.boolean(),
-    upgradeTypes: z.array(z.string()),
-    groupingStrategy: z.string(),
-    branchPrefix: z.string(),
-    createdAt: z.number(),
-    updatedAt: z.number()
-});
-
-const autoFixPullRequestSchema = z.object({
-    id: z.string(),
-    projectId: z.string(),
-    packageNames: z.array(z.string()),
-    fromVersions: z.record(z.string(), z.string()),
-    toVersions: z.record(z.string(), z.string()),
-    upgradeType: z.string(),
-    branchName: z.string(),
-    prUrl: z.string().nullable(),
-    prNumber: z.number().nullable(),
-    status: z.string(),
-    licenseWarnings: z.array(z.string()),
-    createdAt: z.number(),
-    updatedAt: z.number()
-});
+import {
+    getAutoFixSettingsResponseSchema,
+    updateAutoFixSettingsResponseSchema,
+    listAutoFixPullRequestsResponseSchema,
+    getProjectAutoFixPullRequestsResponseSchema,
+    generateAutoFixPrResponseSchema,
+    deleteAutoFixPullRequestResponseSchema
+} from "../responses/autoFix.js";
 
 export const getAutoFixSettingsRoute = defineRoute({
     method: "GET",
     path: "/api/auto-fix/:projectId/settings",
     description: "Get auto-fix settings for a project, falling back to defaults when unset",
     params: z.object({ projectId: z.string() }),
-    response: autoFixSettingsSchema
+    response: getAutoFixSettingsResponseSchema
 });
 
 export const updateAutoFixSettingsRoute = defineRoute({
@@ -47,7 +28,7 @@ export const updateAutoFixSettingsRoute = defineRoute({
         groupingStrategy: z.string().optional(),
         branchPrefix: z.string().optional()
     }),
-    response: autoFixSettingsSchema
+    response: updateAutoFixSettingsResponseSchema
 });
 
 export const listAutoFixPullRequestsRoute = defineRoute({
@@ -62,7 +43,7 @@ export const listAutoFixPullRequestsRoute = defineRoute({
         page: z.coerce.number().int().positive().optional(),
         pageSize: z.coerce.number().int().positive().max(200).optional()
     }),
-    response: z.object({ items: z.array(autoFixPullRequestSchema), total: z.number() })
+    response: listAutoFixPullRequestsResponseSchema
 });
 
 export const getProjectAutoFixPullRequestsRoute = defineRoute({
@@ -73,7 +54,7 @@ export const getProjectAutoFixPullRequestsRoute = defineRoute({
     querystring: z.object({
         status: z.string().optional()
     }),
-    response: z.object({ items: z.array(autoFixPullRequestSchema), total: z.number() })
+    response: getProjectAutoFixPullRequestsResponseSchema
 });
 
 export const generateAutoFixPrRoute = defineRoute({
@@ -81,7 +62,7 @@ export const generateAutoFixPrRoute = defineRoute({
     path: "/api/auto-fix/:projectId/generate",
     description: "Trigger auto-fix pull request generation for a project",
     params: z.object({ projectId: z.string() }),
-    response: z.object({ jobId: z.string() })
+    response: generateAutoFixPrResponseSchema
 });
 
 export const deleteAutoFixPullRequestRoute = defineRoute({
@@ -89,5 +70,5 @@ export const deleteAutoFixPullRequestRoute = defineRoute({
     path: "/api/auto-fix/pull-requests/:id",
     description: "Delete an auto-fix pull request record",
     params: z.object({ id: z.string() }),
-    response: z.object({ deleted: z.boolean() })
+    response: deleteAutoFixPullRequestResponseSchema
 });
