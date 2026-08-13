@@ -8,6 +8,15 @@ export interface ITeamStats {
     averageHealthScore: number;
 }
 
+export interface ITeamRow {
+    id: string;
+    name: string;
+    color: string;
+    createdAt: number;
+}
+
+export interface ITeamWithStats extends ITeamRow, ITeamStats {}
+
 interface IProjectCountRow {
     teamId: string;
     projectCount: number;
@@ -33,6 +42,10 @@ interface IHealthScoreRow {
 
 export function zeroStats(): ITeamStats {
     return { projectCount: 0, vulnerabilityCount: 0, compliantPercent: 100, averageHealthScore: 0 };
+}
+
+export function toTeamWithStats(team: ITeamRow, stats: ITeamStats): ITeamWithStats {
+    return { ...team, ...stats };
 }
 
 /**
