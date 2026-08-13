@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import { JobWorker as Abstraction } from "./abstractions/JobWorker.js";
 import { JobExecutionContextFactory } from "./abstractions/JobExecutionContextFactory.js";
@@ -10,9 +10,8 @@ import { JobExecutorRegistry } from "./executors/abstractions/JobExecutorRegistr
 import { ErrorReporter } from "../ErrorReporter/index.js";
 import { projects, upgradeJobs } from "#api/db/schema.js";
 import { chainRefreshTransientIfNeeded, chainScanAfterJobIfNeeded } from "./JobChaining.js";
-
-const JOB_WAIT_POLL_INTERVAL_MS = 200;
-const TERMINAL_JOB_STATUSES = new Set<string>(["completed", "failed", "cancelled", "interrupted"]);
+import { JobQueryHelper } from "./JobQueryHelper.js";
+import { JobRecoveryHelper } from "./JobRecoveryHelper.js";
 
 interface IFinishJobInput {
     jobId: string;
@@ -28,6 +27,8 @@ class JobWorkerImpl implements Abstraction.Interface {
     readonly #refreshTransientJobIds = new Set<string>();
     readonly #controllers = new Map<string, AbortController>();
     readonly #inFlight = new Set<Promise<void>>();
+    readonly #queryHelper: JobQueryHelper;
+    readonly #recoveryHelper: JobRecoveryHelper;
 
     public constructor(
         private readonly databaseClient: DatabaseClient.Interface,
@@ -37,7 +38,16 @@ class JobWorkerImpl implements Abstraction.Interface {
         private readonly jobExecutorRegistry: JobExecutorRegistry.Interface,
         private readonly errorReporter: ErrorReporter.Interface,
         private readonly executionContextFactory: JobExecutionContextFactory.Interface
-    ) {}
+    ) {
+        this.#queryHelper = new JobQueryHelper(databaseClient);
+        this.#recoveryHelper = new JobRecoveryHelper({
+            databaseClient,
+            webSocketBroadcaster,
+            jobQueryHelper: this.#queryHelper,
+            controllers: this.#controllers,
+            inFlight: this.#inFlight
+        });
+    }
 
     public async enqueue(input: Abstraction.CreateJobInput): Promise<string> {
         if (input.type === "dependency" || input.type === "transient") {
@@ -84,21 +94,11 @@ class JobWorkerImpl implements Abstraction.Interface {
     }
 
     public async getJob(jobId: string): Promise<Abstraction.Job | null> {
-        const job = await this.databaseClient.db
-            .select()
-            .from(upgradeJobs)
-            .where(eq(upgradeJobs.id, jobId))
-            .get();
-
-        return job ?? null;
+        return this.#queryHelper.getJob(jobId);
     }
 
     public async getJobsForReference(referenceId: string): Promise<Abstraction.Job[]> {
-        return this.databaseClient.db
-            .select()
-            .from(upgradeJobs)
-            .where(eq(upgradeJobs.referenceId, referenceId))
-            .all();
+        return this.#queryHelper.getJobsForReference(referenceId);
     }
 
     public async processNextJob(): Promise<void> {
@@ -282,115 +282,33 @@ class JobWorkerImpl implements Abstraction.Interface {
     }
 
     public async drain(): Promise<void> {
-        await Promise.all([...this.#inFlight]);
+        await this.#recoveryHelper.drain();
     }
 
     public async cancelJob(jobId: string): Promise<void> {
-        const controller = this.#controllers.get(jobId);
-        if (controller) {
-            controller.abort();
-            return;
-        }
-
-        const job = await this.getJob(jobId);
-        if (!job || job.status !== "pending") {
-            return;
-        }
-
-        await this.databaseClient.db
-            .update(upgradeJobs)
-            .set({ status: "cancelled", completedAt: Date.now() })
-            .where(eq(upgradeJobs.id, jobId))
-            .run();
-
-        this.webSocketBroadcaster.broadcast("job:status", {
-            jobId,
-            referenceId: job.referenceId,
-            referenceType: job.referenceType,
-            type: job.type,
-            status: "cancelled"
-        });
+        await this.#recoveryHelper.cancelJob(jobId);
     }
 
     public async listAllJobs(status?: string): Promise<Abstraction.Job[]> {
-        if (status !== undefined) {
-            return this.databaseClient.db
-                .select()
-                .from(upgradeJobs)
-                .where(eq(upgradeJobs.status, status))
-                .all();
-        }
-
-        return this.databaseClient.db.select().from(upgradeJobs).all();
+        return this.#queryHelper.listAllJobs(status);
     }
 
     public async recoverStaleJobs(): Promise<void> {
-        await this.databaseClient.db
-            .update(upgradeJobs)
-            .set({
-                status: "interrupted",
-                completedAt: Date.now(),
-                logs: "Job interrupted by server restart"
-            })
-            .where(inArray(upgradeJobs.status, ["running", "pending"]))
-            .run();
+        await this.#recoveryHelper.recoverStaleJobs();
     }
 
     public async waitForJob(input: Abstraction.WaitForJobInput): Promise<Abstraction.Job> {
-        const { jobId, signal } = input;
-
-        while (true) {
-            if (signal?.aborted) {
-                throw new Error("Job wait aborted");
-            }
-
-            const job = await this.getJob(jobId);
-            if (!job) {
-                throw new Error(`Job not found: ${jobId}`);
-            }
-
-            if (TERMINAL_JOB_STATUSES.has(job.status)) {
-                return job;
-            }
-
-            await new Promise<void>((resolve, reject) => {
-                let onAbort: (() => void) | undefined;
-                const timer = setTimeout(() => {
-                    if (signal && onAbort) {
-                        signal.removeEventListener("abort", onAbort);
-                    }
-                    resolve();
-                }, JOB_WAIT_POLL_INTERVAL_MS);
-                if (signal) {
-                    onAbort = (): void => {
-                        clearTimeout(timer);
-                        reject(new Error("Job wait aborted"));
-                    };
-                    signal.addEventListener("abort", onAbort, { once: true });
-                }
-            });
-        }
+        return this.#queryHelper.waitForJob(input);
     }
 
     public async waitForJobs(input: Abstraction.WaitForJobsInput): Promise<Abstraction.Job[]> {
-        const { jobIds, signal } = input;
-        return Promise.all(jobIds.map(jobId => this.waitForJob({ jobId, signal })));
+        return this.#queryHelper.waitForJobs(input);
     }
 
     public async getRunningJobsForReference(
         input: Abstraction.GetRunningJobsForReferenceInput
     ): Promise<Abstraction.Job[]> {
-        return this.databaseClient.db
-            .select()
-            .from(upgradeJobs)
-            .where(
-                and(
-                    eq(upgradeJobs.referenceId, input.referenceId),
-                    eq(upgradeJobs.type, input.type),
-                    eq(upgradeJobs.status, "running")
-                )
-            )
-            .all();
+        return this.#queryHelper.getRunningJobsForReference(input);
     }
 }
 
