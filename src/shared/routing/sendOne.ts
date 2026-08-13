@@ -1,11 +1,29 @@
-import type { FastifyReply } from "fastify";
+import type { FastifyReply, FastifyRequest } from "fastify";
+import type { Result } from "#shared/index.js";
+import { sendError } from "./sendError.js";
+import type { SendableError } from "./abstractions/index.js";
+import { getRoutingOptions } from "./getRoutingOptions.js";
 
-interface ISendOneInput<T> {
+interface SendOneParams<TResponse> {
     reply: FastifyReply;
-    data: T;
+    request: FastifyRequest;
+    result: Result<TResponse, SendableError>;
     status?: number;
 }
 
-export function sendOne<T>({ reply, data, status = 200 }: ISendOneInput<T>): void {
-    reply.status(status).send({ item: data });
+export function sendOne<TResponse>(params: SendOneParams<TResponse>): FastifyReply {
+    const { reply, request, result, status } = params;
+
+    if (result.isFail()) {
+        const routingOptions = getRoutingOptions(request);
+        return sendError({
+            reply,
+            request,
+            error: result.error,
+            showStackTrace: routingOptions?.showStackTrace,
+            errorLoggerHook: routingOptions?.errorLoggerHook
+        });
+    }
+
+    return reply.status(status ?? 200).send({ item: result.value });
 }

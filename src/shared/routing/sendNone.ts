@@ -1,9 +1,35 @@
-import type { FastifyReply } from "fastify";
+import type { FastifyReply, FastifyRequest } from "fastify";
+import type { Result } from "#shared/index.js";
+import { sendError } from "./sendError.js";
+import type { SendableError } from "./abstractions/index.js";
+import { getRoutingOptions } from "./getRoutingOptions.js";
 
-export function sendNone(reply: FastifyReply, status = 200): void {
-    if (status === 204) {
-        reply.status(204).send();
-        return;
+interface SendNoneParams {
+    reply: FastifyReply;
+    request: FastifyRequest;
+    result: Result<unknown, SendableError>;
+    status?: number;
+}
+
+export function sendNone(params: SendNoneParams): FastifyReply {
+    const { reply, request, result, status } = params;
+
+    if (result.isFail()) {
+        const routingOptions = getRoutingOptions(request);
+        return sendError({
+            reply,
+            request,
+            error: result.error,
+            showStackTrace: routingOptions?.showStackTrace,
+            errorLoggerHook: routingOptions?.errorLoggerHook
+        });
     }
-    reply.status(status).send({ success: true });
+
+    const statusCode = status ?? 200;
+
+    if (statusCode === 204) {
+        return reply.status(204).send();
+    }
+
+    return reply.status(statusCode).send({ success: true });
 }
