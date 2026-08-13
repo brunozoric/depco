@@ -10,7 +10,10 @@ class AddProjectUseCaseImpl implements Abstraction.Interface {
 
     public execute = async (path: string): Promise<void> => {
         const project = await this.projectsGateway.create(path);
-        this.projectsRepository.setProjects([...this.projectsRepository.getProjects(), project]);
+        this.projectsRepository.setProjects(
+            [...this.projectsRepository.getProjects(), project],
+            this.projectsRepository.getProjectsTotal() + 1
+        );
     };
 }
 

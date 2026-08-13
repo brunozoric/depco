@@ -1,4 +1,5 @@
 import type { Container } from "@webiny/di";
+import type { z } from "zod";
 import { createContainer } from "#shared/index.js";
 import {
     listProjectsRoute,
@@ -21,6 +22,7 @@ import { FilesystemFeature } from "../../../../features/Filesystem/feature.js";
 import { EventBridge } from "../../../../infrastructure/Events/abstractions/EventBridge.js";
 import "../../../../infrastructure/Events/eventMap.js";
 import { TeamFilterFeature } from "../../../../features/TeamFilter/feature.js";
+import { UrlFilterService } from "../../../../features/UrlFilter/abstractions/UrlFilterService.js";
 import { EnginesFeature } from "../../../../features/Engines/feature.js";
 import type { EnginesGateway } from "../../../../features/Engines/abstractions/EnginesGateway.js";
 import { LoadProjectsUseCase as LoadProjectsUseCaseRegistration } from "../../useCases/LoadProjectsUseCase.js";
@@ -73,6 +75,59 @@ export function createFakeEventBridge(): IFakeEventBridge {
     }
 
     return { bridge, emit: bridge.emit, listenerCount };
+}
+
+/**
+ * Stateful fake mirroring the real UrlFilterServiceImpl's read/update/onChange
+ * contract, but synchronous (no debounce, no window.location) so tests can
+ * drive it directly. ProjectListPresenter now reads pagination/search state
+ * through this abstraction, so setSearchQuery()/setPage() need a fake that
+ * actually stores state and notifies listeners for the presenter's reload
+ * logic to kick in.
+ */
+function createFakeUrlFilterService(): UrlFilterService.Interface {
+    let store: Record<string, string> = {};
+    const listeners = new Set<() => void>();
+
+    return {
+        read: <TSchema extends z.ZodObject<z.ZodRawShape>>(
+            schema: TSchema
+        ): Partial<z.infer<TSchema>> => {
+            const result = schema.partial().safeParse(store);
+            if (!result.success) {
+                return {};
+            }
+            const parsed = result.data as Record<string, unknown>;
+            const filtered: Record<string, unknown> = {};
+            for (const [key, value] of Object.entries(parsed)) {
+                if (value !== undefined) {
+                    filtered[key] = value;
+                }
+            }
+            return filtered as Partial<z.infer<TSchema>>;
+        },
+        update: <TSchema extends z.ZodObject<z.ZodRawShape>>(
+            _schema: TSchema,
+            params: Partial<Record<keyof z.infer<TSchema>, string | null>>
+        ): void => {
+            for (const [key, value] of Object.entries(params)) {
+                if (value === null || value === undefined) {
+                    delete store[key];
+                } else {
+                    store[key] = value as string;
+                }
+            }
+            for (const listener of listeners) {
+                listener();
+            }
+        },
+        onChange: (callback: () => void): (() => void) => {
+            listeners.add(callback);
+            return () => {
+                listeners.delete(callback);
+            };
+        }
+    };
 }
 
 /**
@@ -136,11 +191,30 @@ export function createProjectListPresenterTestHarness(): IProjectListPresenterTe
                         throw harness.postError;
                     }
                     switch (route) {
-                        case listProjectsRoute:
-                            return {
-                                items: harness.getResult,
-                                total: (harness.getResult as []).length
-                            } as T;
+                        case listProjectsRoute: {
+                            const query = (
+                                args as {
+                                    query?: { search?: string };
+                                }
+                            )?.query;
+                            const search = query?.search?.toLowerCase();
+                            const allProjects = harness.getResult as Array<{
+                                name: string;
+                                path: string;
+                                packageManager?: string | null;
+                            }>;
+                            const filtered = search
+                                ? allProjects.filter(
+                                      project =>
+                                          project.name.toLowerCase().includes(search) ||
+                                          project.path.toLowerCase().includes(search) ||
+                                          (project.packageManager ?? "")
+                                              .toLowerCase()
+                                              .includes(search)
+                                  )
+                                : allProjects;
+                            return { items: filtered, total: filtered.length } as T;
+                        }
                         case getProjectSecurityRoute:
                         case checkProjectSecurityRoute:
                             return { item: { passes: true, checks: {} } } as T;
@@ -190,6 +264,7 @@ export function createProjectListPresenterTestHarness(): IProjectListPresenterTe
             FilesystemFeature.register(container);
             TeamFilterFeature.register(container);
             EnginesFeature.register(container);
+            container.registerInstance(UrlFilterService, createFakeUrlFilterService());
             container.register(LoadProjectsUseCaseRegistration);
             container.register(AddProjectUseCaseRegistration);
             container.register(RemoveProjectUseCaseRegistration);

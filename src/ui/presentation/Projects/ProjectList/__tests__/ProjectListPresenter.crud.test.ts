@@ -47,7 +47,11 @@ describe("ProjectListPresenter - CRUD and load", () => {
             scanDepth: 1,
             searchQuery: "",
             selectedProjectIds: [],
-            scanningAllEngines: false
+            scanningAllEngines: false,
+            page: 1,
+            pageSize: 25,
+            totalPages: 0,
+            totalProjects: 0
         });
     });
 
@@ -92,7 +96,13 @@ describe("ProjectListPresenter - CRUD and load", () => {
         await presenter.load();
 
         expect(harness.calls).toEqual([
-            { route: listProjectsRoute, args: { params: {}, query: {} } },
+            {
+                route: listProjectsRoute,
+                args: {
+                    params: {},
+                    query: { page: 1, pageSize: 25, search: undefined, teamId: undefined }
+                }
+            },
             { route: getEngineSummaryRoute, args: { params: {} } }
         ]);
         expect(presenter.vm.projects).toEqual([
@@ -220,7 +230,13 @@ describe("ProjectListPresenter - CRUD and load", () => {
         await presenter.removeProject("p2");
 
         expect(harness.calls).toEqual([
-            { route: listProjectsRoute, args: { params: {}, query: {} } },
+            {
+                route: listProjectsRoute,
+                args: {
+                    params: {},
+                    query: { page: 1, pageSize: 25, search: undefined, teamId: undefined }
+                }
+            },
             { route: getEngineSummaryRoute, args: { params: {} } },
             { route: deleteProjectRoute, args: { params: { id: "p2" } } }
         ]);

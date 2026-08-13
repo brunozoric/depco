@@ -61,8 +61,20 @@ export interface IBulkScanResult {
     skippedCount: number;
 }
 
+export interface IListProjectsParams {
+    page?: number | undefined;
+    pageSize?: number | undefined;
+    search?: string | undefined;
+    teamId?: string | undefined;
+}
+
+export interface IListProjectsResponse {
+    items: IProject[];
+    total: number;
+}
+
 export interface IProjectsGateway {
-    list(): Promise<IProject[]>;
+    list(params?: IListProjectsParams): Promise<IListProjectsResponse>;
     get(id: string): Promise<IProject>;
     create(path: string): Promise<IProject>;
     remove(id: string): Promise<void>;
@@ -88,4 +100,6 @@ export namespace ProjectsGateway {
     export type ScanJob = IScanJob;
     export type InstallFlagDefinition = IInstallFlagDefinition;
     export type BulkScanResult = IBulkScanResult;
+    export type ListParams = IListProjectsParams;
+    export type ListResponse = IListProjectsResponse;
 }

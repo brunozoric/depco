@@ -11,7 +11,8 @@ class RemoveProjectUseCaseImpl implements Abstraction.Interface {
     public execute = async (id: string): Promise<void> => {
         await this.projectsGateway.remove(id);
         this.projectsRepository.setProjects(
-            this.projectsRepository.getProjects().filter(project => project.id !== id)
+            this.projectsRepository.getProjects().filter(project => project.id !== id),
+            Math.max(0, this.projectsRepository.getProjectsTotal() - 1)
         );
         this.projectsRepository.clear(id);
     };

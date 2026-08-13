@@ -83,12 +83,17 @@ function toDependency(item: {
 class ProjectsGatewayImpl implements Abstraction.Interface {
     public constructor(private readonly httpClient: HTTPClient.Interface) {}
 
-    public async list(): Promise<Abstraction.Project[]> {
+    public async list(params?: Abstraction.ListParams): Promise<Abstraction.ListResponse> {
         const response = await this.httpClient.request(listProjectsRoute, {
             params: {},
-            query: {}
+            query: {
+                page: params?.page,
+                pageSize: params?.pageSize,
+                search: params?.search,
+                teamId: params?.teamId
+            }
         });
-        return response.items.map(toProject);
+        return { items: response.items.map(toProject), total: response.total };
     }
 
     public async get(id: string): Promise<Abstraction.Project> {

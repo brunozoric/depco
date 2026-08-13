@@ -4,6 +4,8 @@ import type { SecurityService } from "#api/services/Security/index.js";
 export interface IListProjectsUseCaseParams {
     page?: number | undefined;
     pageSize?: number | undefined;
+    search?: string | undefined;
+    teamId?: string | undefined;
 }
 
 export interface IProjectTeamBadge {

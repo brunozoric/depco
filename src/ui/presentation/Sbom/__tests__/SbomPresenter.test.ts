@@ -41,6 +41,7 @@ describe("SbomPresenter", () => {
                     lastScannedAt: null,
                     hasNodeModules: false
                 })),
+            getProjectsTotal: () => 0,
             setProjects: () => {},
             getProject: () => undefined,
             getDependencies: () => undefined,
@@ -126,6 +127,7 @@ describe("SbomPresenter", () => {
                     hasNodeModules: false
                 }
             ],
+            getProjectsTotal: () => 0,
             setProjects: () => {},
             getProject: () => undefined,
             getDependencies: () => undefined,

@@ -2,6 +2,7 @@ import { ProjectsRepository as Abstraction } from "./abstractions/ProjectsReposi
 
 class ProjectsRepositoryImpl implements Abstraction.Interface {
     private projects: Abstraction.Project[] = [];
+    private projectsTotal = 0;
     private readonly dependencies = new Map<string, Abstraction.DependenciesResponse>();
     private readonly securityStatuses = new Map<string, Abstraction.SecurityStatus>();
 
@@ -9,8 +10,13 @@ class ProjectsRepositoryImpl implements Abstraction.Interface {
         return this.projects;
     }
 
-    public setProjects(projects: Abstraction.Project[]): void {
+    public getProjectsTotal(): number {
+        return this.projectsTotal;
+    }
+
+    public setProjects(projects: Abstraction.Project[], total: number): void {
         this.projects = projects;
+        this.projectsTotal = total;
     }
 
     public getProject(id: string): Abstraction.Project | undefined {

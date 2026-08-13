@@ -1,6 +1,7 @@
-import { computed, makeAutoObservable, runInAction } from "mobx";
+import { computed, makeAutoObservable, reaction, runInAction } from "mobx";
 import { notifications } from "@mantine/notifications";
 import { getErrorMessage } from "#shared/errors.js";
+import { listProjectsRoute } from "#shared/routes/index.js";
 import { ProjectListPresenter as Abstraction } from "./abstractions/ProjectListPresenter.js";
 import { CloneManagerFactory } from "./abstractions/CloneManagerFactory.js";
 import { DirectoryScanManagerFactory } from "./abstractions/DirectoryScanManagerFactory.js";
@@ -12,9 +13,18 @@ import { ProjectsRepository } from "../../../features/Projects/abstractions/Proj
 import { ProjectsGateway } from "../../../features/Projects/abstractions/ProjectsGateway.js";
 import { FilesystemGateway } from "../../../features/Filesystem/abstractions/FilesystemGateway.js";
 import { TeamFilterService } from "../../../features/TeamFilter/abstractions/TeamFilterService.js";
+import { UrlFilterService } from "../../../features/UrlFilter/abstractions/UrlFilterService.js";
 import { EnginesGateway } from "../../../features/Engines/abstractions/EnginesGateway.js";
 import { EnginesRepository } from "../../../features/Engines/abstractions/EnginesRepository.js";
 import type { EngineStatus } from "#shared/engines/types.js";
+import type { z } from "zod";
+
+const DEFAULT_PAGE_SIZE = 25;
+
+const FILTER_SCHEMA = listProjectsRoute.querystring as NonNullable<
+    typeof listProjectsRoute.querystring
+> &
+    z.ZodObject<z.ZodRawShape>;
 
 class ProjectListPresenterImpl implements Abstraction.Interface {
     private loading = false;
@@ -24,9 +34,10 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
     private browsePath = "";
     private browseItems: Abstraction.BrowseItem[] = [];
     private browseLoading = false;
-    private searchQuery = "";
     private readonly selectedProjectIds = new Set<string>();
     private scanningAllEnginesValue = false;
+    private disposeUrlListener: () => void;
+    private disposeTeamReaction: () => void;
 
     public readonly cloneManager: CloneManagerFactory.Manager;
     public readonly directoryScanManager: DirectoryScanManagerFactory.Manager;
@@ -40,6 +51,7 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
         private readonly projectsGateway: ProjectsGateway.Interface,
         private readonly filesystemGateway: FilesystemGateway.Interface,
         private readonly teamFilterService: TeamFilterService.Interface,
+        private readonly urlFilterService: UrlFilterService.Interface,
         private readonly enginesGateway: EnginesGateway.Interface,
         private readonly enginesRepository: EnginesRepository.Interface,
         cloneManagerFactory: CloneManagerFactory.Interface,
@@ -55,27 +67,25 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
         });
         this.scanStatusManager = scanStatusManagerFactory.create();
 
+        this.disposeUrlListener = this.urlFilterService.onChange(() => {
+            void this.loadProjects();
+        });
+
+        this.disposeTeamReaction = reaction(
+            () => this.teamFilterService.selectedTeamId,
+            () => {
+                this.urlFilterService.update(FILTER_SCHEMA, { page: null });
+            }
+        );
+
         makeAutoObservable(this, { vm: computed });
     }
 
     public get vm(): Abstraction.ViewModel {
-        const allProjects = this.projectsRepository.getProjects();
-        const selectedTeamId = this.teamFilterService.selectedTeamId;
-        const teamFiltered = selectedTeamId
-            ? allProjects.filter(project =>
-                  (project.teams ?? []).some(team => team.id === selectedTeamId)
-              )
-            : allProjects;
-
-        const query = this.searchQuery.toLowerCase();
-        const filteredProjects = query
-            ? teamFiltered.filter(
-                  project =>
-                      project.name.toLowerCase().includes(query) ||
-                      project.path.toLowerCase().includes(query) ||
-                      (project.packageManager ?? "").toLowerCase().includes(query)
-              )
-            : teamFiltered;
+        const projects = this.projectsRepository.getProjects();
+        const total = this.projectsRepository.getProjectsTotal();
+        const urlFilters = this.urlFilterService.read(FILTER_SCHEMA);
+        const pageSize = urlFilters.pageSize ?? DEFAULT_PAGE_SIZE;
 
         const engineSummary = this.enginesRepository.getSummary();
         const engineStatusByProjectId = new Map<string, EngineStatus>();
@@ -86,7 +96,7 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
         return {
             loading: this.loading,
             bulkActionRunning: this.scanStatusManager.isBulkRunning,
-            projects: filteredProjects.map((project): Abstraction.ProjectListItem => ({
+            projects: projects.map((project): Abstraction.ProjectListItem => ({
                 id: project.id,
                 name: project.name,
                 path: project.path,
@@ -118,23 +128,38 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
             scanLoading: this.directoryScanManager.loading,
             scanSummary: this.directoryScanManager.summary,
             scanDepth: this.directoryScanManager.depth,
-            searchQuery: this.searchQuery,
-            selectedProjectIds: allProjects
+            searchQuery: urlFilters.search ?? "",
+            selectedProjectIds: projects
                 .map(project => project.id)
                 .filter(id => this.selectedProjectIds.has(id)),
-            scanningAllEngines: this.scanningAllEnginesValue
+            scanningAllEngines: this.scanningAllEnginesValue,
+            page: urlFilters.page ?? 1,
+            pageSize,
+            totalPages: Math.ceil(total / pageSize),
+            totalProjects: total
         };
     }
 
     public load = async (): Promise<void> => {
         this.loading = true;
         try {
-            await Promise.all([this.loadProjectsUseCase.execute(), this.loadEngineSummary()]);
+            await Promise.all([this.loadProjects(), this.loadEngineSummary()]);
         } finally {
             runInAction(() => {
                 this.loading = false;
             });
         }
+    };
+
+    private loadProjects = async (): Promise<void> => {
+        const urlFilters = this.urlFilterService.read(FILTER_SCHEMA);
+        const teamId = this.teamFilterService.selectedTeamId;
+        await this.loadProjectsUseCase.execute({
+            page: urlFilters.page ?? 1,
+            pageSize: urlFilters.pageSize ?? DEFAULT_PAGE_SIZE,
+            search: urlFilters.search ?? undefined,
+            teamId: teamId ?? undefined
+        });
     };
 
     private loadEngineSummary = async (): Promise<void> => {
@@ -288,7 +313,16 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
     };
 
     public setSearchQuery = (value: string): void => {
-        this.searchQuery = value;
+        this.urlFilterService.update(FILTER_SCHEMA, {
+            search: value || null,
+            page: null
+        });
+    };
+
+    public setPage = (page: number): void => {
+        this.urlFilterService.update(FILTER_SCHEMA, {
+            page: page > 1 ? String(page) : null
+        });
     };
 
     public scanProject = async (id: string): Promise<void> => {
@@ -343,6 +377,8 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
 
     public dispose = (): void => {
         this.scanStatusManager.dispose();
+        this.disposeUrlListener();
+        this.disposeTeamReaction();
     };
 
     public cloneProject = async (): Promise<void> => {
@@ -360,6 +396,7 @@ export const ProjectListPresenter = Abstraction.createImplementation({
         ProjectsGateway,
         FilesystemGateway,
         TeamFilterService,
+        UrlFilterService,
         EnginesGateway,
         EnginesRepository,
         CloneManagerFactory,

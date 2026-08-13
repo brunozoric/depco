@@ -37,7 +37,9 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
         const useCase = container.resolve(ListProjectsUseCase);
         const result = await useCase.execute({
             page: request.query.page,
-            pageSize: request.query.pageSize
+            pageSize: request.query.pageSize,
+            search: request.query.search,
+            teamId: request.query.teamId
         });
 
         return sendList({

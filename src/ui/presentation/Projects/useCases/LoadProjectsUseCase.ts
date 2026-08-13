@@ -8,9 +8,9 @@ class LoadProjectsUseCaseImpl implements Abstraction.Interface {
         private readonly projectsRepository: ProjectsRepository.Interface
     ) {}
 
-    public execute = async (): Promise<void> => {
-        const projects = await this.projectsGateway.list();
-        this.projectsRepository.setProjects(projects);
+    public execute = async (params?: ProjectsGateway.ListParams): Promise<void> => {
+        const response = await this.projectsGateway.list(params);
+        this.projectsRepository.setProjects(response.items, response.total);
     };
 }
 

@@ -59,8 +59,21 @@ describe("ProjectsGateway", () => {
 
         const result = await gateway.list();
 
-        expect(calls).toEqual([{ route: listProjectsRoute, args: { params: {}, query: {} } }]);
-        expect(result).toEqual([{ ...project, teams: [] }]);
+        expect(calls).toEqual([
+            {
+                route: listProjectsRoute,
+                args: {
+                    params: {},
+                    query: {
+                        page: undefined,
+                        pageSize: undefined,
+                        search: undefined,
+                        teamId: undefined
+                    }
+                }
+            }
+        ]);
+        expect(result).toEqual({ items: [{ ...project, teams: [] }], total: 1 });
     });
 
     it("get(id) calls getProjectRoute and returns the unwrapped item", async () => {

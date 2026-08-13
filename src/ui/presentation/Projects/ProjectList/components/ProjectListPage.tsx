@@ -8,6 +8,7 @@ import {
     Group,
     Loader,
     Menu,
+    Pagination,
     Stack,
     Table,
     Text,
@@ -173,6 +174,13 @@ export const ProjectListPage = observer(function ProjectListPage({
                         ))}
                     </Table.Tbody>
                 </Table>
+            )}
+            {vm.totalPages > 1 && (
+                <Pagination
+                    total={vm.totalPages}
+                    value={vm.page}
+                    onChange={page => presenter.setPage(page)}
+                />
             )}
             <AddProjectModal
                 presenter={presenter}

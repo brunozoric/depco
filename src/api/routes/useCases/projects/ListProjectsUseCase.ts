@@ -1,6 +1,7 @@
 import { existsSync } from "fs";
 import { join } from "path";
-import { eq, sql, inArray } from "drizzle-orm";
+import { eq, sql, inArray, like, or } from "drizzle-orm";
+import type { SQL } from "drizzle-orm";
 import { Result } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { SecurityService } from "#api/services/Security/index.js";
@@ -22,18 +23,42 @@ class ListProjectsUseCaseImpl implements Abstraction.Interface {
             const pageSize = params.pageSize ?? 50;
             const offset = (page - 1) * pageSize;
 
-            const countResult = await db
-                .select({ count: sql<number>`count(*)` })
-                .from(projects)
-                .get();
+            const conditions: SQL[] = [];
+
+            if (params.search) {
+                const pattern = `%${params.search}%`;
+                conditions.push(or(like(projects.name, pattern), like(projects.path, pattern))!);
+            }
+
+            let filteredProjectIds: string[] | null = null;
+            if (params.teamId) {
+                const teamProjectRows = await db
+                    .select({ projectId: teamProjects.projectId })
+                    .from(teamProjects)
+                    .where(eq(teamProjects.teamId, params.teamId))
+                    .all();
+                filteredProjectIds = teamProjectRows.map(row => row.projectId);
+                if (filteredProjectIds.length === 0) {
+                    return Result.ok({ items: [], total: 0 });
+                }
+                conditions.push(inArray(projects.id, filteredProjectIds));
+            }
+
+            const whereClause =
+                conditions.length > 0 ? sql.join(conditions, sql` AND `) : undefined;
+
+            const countQuery = db.select({ count: sql<number>`count(*)` }).from(projects);
+            if (whereClause) {
+                countQuery.where(whereClause);
+            }
+            const countResult = await countQuery.get();
             const total = countResult?.count ?? 0;
 
-            const pagedProjects = await db
-                .select()
-                .from(projects)
-                .limit(pageSize)
-                .offset(offset)
-                .all();
+            const listQuery = db.select().from(projects);
+            if (whereClause) {
+                listQuery.where(whereClause);
+            }
+            const pagedProjects = await listQuery.limit(pageSize).offset(offset).all();
 
             const projectIds = pagedProjects.map(p => p.id);
             const teamRows =

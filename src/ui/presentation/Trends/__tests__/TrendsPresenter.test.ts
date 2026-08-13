@@ -68,6 +68,7 @@ function createFakeProjectsRepository(
                 lastScannedAt: null,
                 hasNodeModules: false
             })),
+        getProjectsTotal: () => 0,
         setProjects: () => {},
         getProject: () => undefined,
         getDependencies: () => undefined,

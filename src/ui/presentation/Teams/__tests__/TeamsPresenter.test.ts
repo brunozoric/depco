@@ -124,7 +124,7 @@ describe("TeamsPresenter", () => {
         container.register(LoadTeamsUseCaseRegistration);
         container.register(ManageTeamUseCaseRegistration);
         container.registerInstance(ProjectsGatewayAbstraction, {
-            list: async () => [],
+            list: async () => ({ items: [], total: 0 }),
             get: async () => ({}) as never,
             create: async () => ({}) as never,
             remove: async () => {},

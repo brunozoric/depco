@@ -33,7 +33,9 @@ export const listProjectsRoute = defineRoute({
     params: z.object({}),
     querystring: z.object({
         page: z.coerce.number().int().positive().optional(),
-        pageSize: z.coerce.number().int().positive().max(200).optional()
+        pageSize: z.coerce.number().int().positive().max(200).optional(),
+        search: z.string().optional(),
+        teamId: z.string().optional()
     }),
     response: listProjectsResponseSchema
 });

@@ -3,7 +3,8 @@ import { ProjectsGateway } from "./ProjectsGateway.js";
 
 export interface IProjectsRepository {
     getProjects(): ProjectsGateway.Project[];
-    setProjects(projects: ProjectsGateway.Project[]): void;
+    getProjectsTotal(): number;
+    setProjects(projects: ProjectsGateway.Project[], total: number): void;
     getProject(id: string): ProjectsGateway.Project | undefined;
     getDependencies(projectId: string): ProjectsGateway.DependenciesResponse | undefined;
     setDependencies(projectId: string, dependencies: ProjectsGateway.DependenciesResponse): void;

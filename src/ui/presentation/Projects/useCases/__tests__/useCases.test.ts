@@ -114,7 +114,7 @@ describe("project use cases", () => {
                 lastScannedAt: null,
                 hasNodeModules: false
             };
-            context.projectsRepository.setProjects([existingProject]);
+            context.projectsRepository.setProjects([existingProject], 1);
 
             const created = {
                 id: "p2",
@@ -166,7 +166,7 @@ describe("project use cases", () => {
                 lastScannedAt: null,
                 hasNodeModules: false
             };
-            context.projectsRepository.setProjects([remainingProject, removedProject]);
+            context.projectsRepository.setProjects([remainingProject, removedProject], 2);
             context.projectsRepository.setSecurityStatus("p2", {
                 passes: true,
                 checks: {

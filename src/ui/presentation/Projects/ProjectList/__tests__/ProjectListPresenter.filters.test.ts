@@ -99,7 +99,13 @@ describe("ProjectListPresenter - clone, browse, search, and selection", () => {
                         }
                     }
                 },
-                { route: listProjectsRoute, args: { params: {}, query: {} } },
+                {
+                    route: listProjectsRoute,
+                    args: {
+                        params: {},
+                        query: { page: 1, pageSize: 25, search: undefined, teamId: undefined }
+                    }
+                },
                 { route: getEngineSummaryRoute, args: { params: {} } }
             ]);
             expect(presenter.vm.cloneUrl).toBe("");
@@ -159,7 +165,7 @@ describe("ProjectListPresenter - clone, browse, search, and selection", () => {
             const presenter = harness.createPresenter();
             await presenter.load();
             presenter.setSearchQuery("frontend");
-            expect(presenter.vm.projects).toHaveLength(1);
+            await vi.waitFor(() => expect(presenter.vm.projects).toHaveLength(1));
             expect(presenter.vm.projects[0]!.name).toBe("frontend-app");
         });
 
@@ -171,7 +177,7 @@ describe("ProjectListPresenter - clone, browse, search, and selection", () => {
             const presenter = harness.createPresenter();
             await presenter.load();
             presenter.setSearchQuery("/web");
-            expect(presenter.vm.projects).toHaveLength(1);
+            await vi.waitFor(() => expect(presenter.vm.projects).toHaveLength(1));
             expect(presenter.vm.projects[0]!.name).toBe("app");
         });
 
@@ -183,7 +189,7 @@ describe("ProjectListPresenter - clone, browse, search, and selection", () => {
             const presenter = harness.createPresenter();
             await presenter.load();
             presenter.setSearchQuery("pnpm");
-            expect(presenter.vm.projects).toHaveLength(1);
+            await vi.waitFor(() => expect(presenter.vm.projects).toHaveLength(1));
             expect(presenter.vm.projects[0]!.name).toBe("app-b");
         });
 
@@ -195,7 +201,7 @@ describe("ProjectListPresenter - clone, browse, search, and selection", () => {
             const presenter = harness.createPresenter();
             await presenter.load();
             presenter.setSearchQuery("FRONTEND");
-            expect(presenter.vm.projects).toHaveLength(1);
+            await vi.waitFor(() => expect(presenter.vm.projects).toHaveLength(1));
             expect(presenter.vm.projects[0]!.name).toBe("Frontend-App");
         });
 
@@ -207,9 +213,9 @@ describe("ProjectListPresenter - clone, browse, search, and selection", () => {
             const presenter = harness.createPresenter();
             await presenter.load();
             presenter.setSearchQuery("frontend");
-            expect(presenter.vm.projects).toHaveLength(1);
+            await vi.waitFor(() => expect(presenter.vm.projects).toHaveLength(1));
             presenter.setSearchQuery("");
-            expect(presenter.vm.projects).toHaveLength(2);
+            await vi.waitFor(() => expect(presenter.vm.projects).toHaveLength(2));
         });
     });
 
