@@ -31,3 +31,17 @@ export {
     generateAutoFixPrResponseSchema,
     deleteAutoFixPullRequestResponseSchema
 } from "./autoFix.js";
+
+export {
+    backupAppSettingSchema,
+    backupSecuritySettingSchema,
+    backupProjectSchema,
+    backupChangelogSchema,
+    backupVersionSchema,
+    backupDependencySchema,
+    backupRegistryCacheSchema,
+    backupPayloadSchema,
+    importSectionResultSchema,
+    importProjectsResultSchema,
+    importResultSchema
+} from "./backup.js";
