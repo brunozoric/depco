@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
-import { userResponseSchema } from "#shared/users/index.js";
+import {
+    verifyCodeResponseSchema,
+    verifyMagicLinkResponseSchema,
+    getMeResponseSchema
+} from "../responses/auth.js";
 
 export const loginRoute = defineRoute({
     method: "POST",
@@ -22,7 +26,7 @@ export const verifyCodeRoute = defineRoute({
         email: z.string().email(),
         code: z.string().length(6)
     }),
-    response: z.object({ item: z.object({ token: z.string(), user: userResponseSchema }) })
+    response: verifyCodeResponseSchema
 });
 
 export const magicLinkRoute = defineRoute({
@@ -44,7 +48,7 @@ export const verifyMagicLinkRoute = defineRoute({
         token: z.string(),
         email: z.string().email()
     }),
-    response: z.object({ item: z.object({ token: z.string(), user: userResponseSchema }) })
+    response: verifyMagicLinkResponseSchema
 });
 
 export const getMeRoute = defineRoute({
@@ -52,7 +56,7 @@ export const getMeRoute = defineRoute({
     path: "/api/auth/me",
     description: "Get current authenticated user",
     params: z.object({}),
-    response: z.object({ item: userResponseSchema })
+    response: getMeResponseSchema
 });
 
 export const logoutRoute = defineRoute({
