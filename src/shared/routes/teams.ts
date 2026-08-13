@@ -1,16 +1,13 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
-
-const teamWithStatsSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    color: z.string(),
-    createdAt: z.number(),
-    projectCount: z.number(),
-    vulnerabilityCount: z.number(),
-    compliantPercent: z.number(),
-    averageHealthScore: z.number()
-});
+import {
+    teamWithStatsSchema,
+    teamDetailSchema,
+    listTeamsResponseSchema,
+    createTeamResponseSchema,
+    getTeamDetailResponseSchema,
+    updateTeamResponseSchema
+} from "../responses/teams.js";
 
 export const listTeamsRoute = defineRoute({
     method: "GET",
@@ -21,7 +18,7 @@ export const listTeamsRoute = defineRoute({
         page: z.coerce.number().int().positive().optional(),
         pageSize: z.coerce.number().int().positive().max(200).optional()
     }),
-    response: z.object({ items: z.array(teamWithStatsSchema), total: z.number() })
+    response: listTeamsResponseSchema
 });
 
 export const createTeamRoute = defineRoute({
@@ -30,7 +27,7 @@ export const createTeamRoute = defineRoute({
     description: "Create a new team",
     params: z.object({}),
     body: z.object({ name: z.string(), color: z.string() }),
-    response: z.object({ item: teamWithStatsSchema })
+    response: createTeamResponseSchema
 });
 
 export const getTeamDetailRoute = defineRoute({
@@ -38,21 +35,7 @@ export const getTeamDetailRoute = defineRoute({
     path: "/api/teams/:id",
     description: "Get team detail with projects",
     params: z.object({ id: z.string() }),
-    response: z.object({
-        item: z.object({
-            id: z.string(),
-            name: z.string(),
-            color: z.string(),
-            createdAt: z.number(),
-            projects: z.array(
-                z.object({
-                    id: z.string(),
-                    name: z.string(),
-                    path: z.string()
-                })
-            )
-        })
-    })
+    response: getTeamDetailResponseSchema
 });
 
 export const updateTeamRoute = defineRoute({
@@ -61,7 +44,7 @@ export const updateTeamRoute = defineRoute({
     description: "Update a team",
     params: z.object({ id: z.string() }),
     body: z.object({ name: z.string().optional(), color: z.string().optional() }),
-    response: z.object({ item: teamWithStatsSchema })
+    response: updateTeamResponseSchema
 });
 
 export const setTeamProjectsRoute = defineRoute({
