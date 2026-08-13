@@ -1,8 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { eq } from "drizzle-orm";
-import { generateId } from "@webiny/stdlib";
-import { registerRoute, sendOne, sendNone } from "#shared/routing/index.js";
+import { registerRoute, sendOne, sendNone, sendError } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listScanSchedulesRoute,
@@ -11,11 +9,13 @@ import {
     getScanScheduleDefaultRoute,
     upsertScanScheduleDefaultRoute
 } from "#shared/routes/index.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { ScanSchedulerService } from "#api/services/ScanScheduler/index.js";
-import { projects, scanSchedules, appSettings } from "#api/db/schema.js";
-
-const SCAN_SCHEDULE_DEFAULT_KEY = "scan_schedule_default";
+import {
+    ListScanSchedulesUseCase,
+    UpsertScanScheduleUseCase,
+    DeleteScanScheduleUseCase,
+    GetScanScheduleDefaultUseCase,
+    UpsertScanScheduleDefaultUseCase
+} from "./useCases/scanSchedules/index.js";
 
 interface PluginOptions extends FastifyPluginOptions {
     container: Container;
@@ -26,35 +26,18 @@ export async function scanScheduleRoutes(
     options: PluginOptions
 ): Promise<void> {
     const { container } = options;
-    const databaseClient = container.resolve(DatabaseClient);
-    const scheduler = container.resolve(ScanSchedulerService);
-    const { db } = databaseClient;
 
     registerRoute(app, listScanSchedulesRoute, {}, async (_request, reply) => {
-        const allProjects = await db.select().from(projects).all();
-        const overrides = await db.select().from(scanSchedules).all();
-        const overrideMap = new Map(overrides.map(override => [override.projectId, override]));
+        const useCase = container.resolve(ListScanSchedulesUseCase);
+        const result = await useCase.execute({});
 
-        const globalRow = await db
-            .select()
-            .from(appSettings)
-            .where(eq(appSettings.key, SCAN_SCHEDULE_DEFAULT_KEY))
-            .get();
-        const globalDefault = globalRow?.value ?? "disabled";
-
-        const items = allProjects.map(project => {
-            const override = overrideMap.get(project.id);
-            return {
-                projectId: project.id,
-                projectName: project.name,
-                interval: override?.interval ?? globalDefault,
-                source: override ? ("project" as const) : ("default" as const),
-                lastRunAt: override?.lastRunAt ?? null,
-                nextRunAt: override?.nextRunAt ?? null
-            };
+        result.match({
+            ok: data => {
+                reply.send(data);
+            },
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
         });
-
-        reply.send({ items, globalDefault });
     });
 
     registerRoute(
@@ -62,52 +45,17 @@ export async function scanScheduleRoutes(
         upsertScanScheduleRoute,
         { preHandler: [requirePermission("full")] },
         async (request, reply) => {
-            const { projectId } = request.params;
-            const { interval } = request.body;
-            const now = Date.now();
+            const useCase = container.resolve(UpsertScanScheduleUseCase);
+            const result = await useCase.execute({
+                projectId: request.params.projectId,
+                interval: request.body.interval
+            });
 
-            const existing = await db
-                .select()
-                .from(scanSchedules)
-                .where(eq(scanSchedules.projectId, projectId))
-                .get();
-
-            if (existing) {
-                await db
-                    .update(scanSchedules)
-                    .set({ interval, updatedAt: now })
-                    .where(eq(scanSchedules.projectId, projectId))
-                    .run();
-
-                await scheduler.scheduleProject(projectId);
-
-                sendOne({
-                    reply: reply,
-                    data: {
-                        ...existing,
-                        interval,
-                        updatedAt: now,
-                        enabled: existing.enabled === 1
-                    }
-                });
-            } else {
-                const id = generateId();
-                const row = {
-                    id,
-                    projectId,
-                    interval,
-                    lastRunAt: null,
-                    nextRunAt: null,
-                    enabled: 1,
-                    createdAt: now,
-                    updatedAt: now
-                };
-
-                await db.insert(scanSchedules).values(row).run();
-                await scheduler.scheduleProject(projectId);
-
-                sendOne({ reply: reply, data: { ...row, enabled: true } });
-            }
+            result.match({
+                ok: data => sendOne({ reply, data }),
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 
@@ -116,23 +64,26 @@ export async function scanScheduleRoutes(
         deleteScanScheduleRoute,
         { preHandler: [requirePermission("full")] },
         async (request, reply) => {
-            const { projectId } = request.params;
+            const useCase = container.resolve(DeleteScanScheduleUseCase);
+            const result = await useCase.execute({ projectId: request.params.projectId });
 
-            await db.delete(scanSchedules).where(eq(scanSchedules.projectId, projectId)).run();
-
-            await scheduler.scheduleProject(projectId);
-            sendNone(reply, 204);
+            result.match({
+                ok: () => sendNone(reply, 204),
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 
     registerRoute(app, getScanScheduleDefaultRoute, {}, async (_request, reply) => {
-        const row = await db
-            .select()
-            .from(appSettings)
-            .where(eq(appSettings.key, SCAN_SCHEDULE_DEFAULT_KEY))
-            .get();
+        const useCase = container.resolve(GetScanScheduleDefaultUseCase);
+        const result = await useCase.execute({});
 
-        sendOne({ reply: reply, data: { interval: row?.value ?? "disabled" } });
+        result.match({
+            ok: data => sendOne({ reply, data }),
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
     });
 
     registerRoute(
@@ -140,19 +91,14 @@ export async function scanScheduleRoutes(
         upsertScanScheduleDefaultRoute,
         { preHandler: [requirePermission("full")] },
         async (request, reply) => {
-            const { interval } = request.body;
+            const useCase = container.resolve(UpsertScanScheduleDefaultUseCase);
+            const result = await useCase.execute({ interval: request.body.interval });
 
-            await db
-                .insert(appSettings)
-                .values({ key: SCAN_SCHEDULE_DEFAULT_KEY, value: interval })
-                .onConflictDoUpdate({
-                    target: appSettings.key,
-                    set: { value: interval }
-                })
-                .run();
-
-            await scheduler.onGlobalDefaultChanged();
-            sendOne({ reply: reply, data: { interval } });
+            result.match({
+                ok: data => sendOne({ reply, data }),
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 }
