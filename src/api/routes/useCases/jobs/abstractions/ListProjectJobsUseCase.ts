@@ -15,8 +15,14 @@ export interface IProjectNotFoundError {
     message: string;
 }
 
+export interface IUnexpectedError {
+    statusCode: number;
+    message: string;
+}
+
 export interface IListProjectJobsUseCaseErrors {
     projectNotFound: IProjectNotFoundError;
+    unexpected: IUnexpectedError;
 }
 
 type ListProjectJobsUseCaseError =

@@ -11,8 +11,14 @@ export interface IJobNotFoundError {
     message: string;
 }
 
+export interface IUnexpectedError {
+    statusCode: number;
+    message: string;
+}
+
 export interface IGetJobUseCaseErrors {
     jobNotFound: IJobNotFoundError;
+    unexpected: IUnexpectedError;
 }
 
 type GetJobUseCaseError = IGetJobUseCaseErrors[keyof IGetJobUseCaseErrors];

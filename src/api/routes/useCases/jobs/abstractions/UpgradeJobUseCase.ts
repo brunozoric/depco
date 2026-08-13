@@ -25,9 +25,15 @@ export interface IEnqueueFailedError {
     message: string;
 }
 
+export interface IUnexpectedError {
+    statusCode: number;
+    message: string;
+}
+
 export interface IUpgradeJobUseCaseErrors {
     projectNotFound: IProjectNotFoundError;
     enqueueFailed: IEnqueueFailedError;
+    unexpected: IUnexpectedError;
 }
 
 type UpgradeJobUseCaseError = IUpgradeJobUseCaseErrors[keyof IUpgradeJobUseCaseErrors];

@@ -12,8 +12,15 @@ export interface IListAllJobsUseCaseData {
     total: number;
 }
 
+export interface IListAllJobsUseCaseError {
+    statusCode: number;
+    message: string;
+}
+
 export interface IListAllJobsUseCase {
-    execute(params: IListAllJobsUseCaseParams): Promise<Result<IListAllJobsUseCaseData, never>>;
+    execute(
+        params: IListAllJobsUseCaseParams
+    ): Promise<Result<IListAllJobsUseCaseData, IListAllJobsUseCaseError>>;
 }
 
 export const ListAllJobsUseCase = createAbstraction<IListAllJobsUseCase>("Api/ListAllJobsUseCase");
@@ -22,5 +29,5 @@ export namespace ListAllJobsUseCase {
     export type Interface = IListAllJobsUseCase;
     export type Params = IListAllJobsUseCaseParams;
     export type Data = IListAllJobsUseCaseData;
-    export type Error = never;
+    export type Error = IListAllJobsUseCaseError;
 }

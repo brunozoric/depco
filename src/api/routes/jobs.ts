@@ -104,7 +104,8 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
 
         result.match({
             ok: data => sendList({ reply, items: data.items, total: data.total }),
-            fail: () => undefined
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
         });
     });
 
@@ -138,7 +139,8 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
                 ok: data => {
                     reply.send(data);
                 },
-                fail: () => undefined
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
             });
         }
     );

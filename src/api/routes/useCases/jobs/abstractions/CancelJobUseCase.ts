@@ -9,8 +9,14 @@ export interface IJobNotFoundError {
     message: string;
 }
 
+export interface IUnexpectedError {
+    statusCode: number;
+    message: string;
+}
+
 export interface ICancelJobUseCaseErrors {
     jobNotFound: IJobNotFoundError;
+    unexpected: IUnexpectedError;
 }
 
 type CancelJobUseCaseError = ICancelJobUseCaseErrors[keyof ICancelJobUseCaseErrors];

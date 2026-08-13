@@ -18,9 +18,15 @@ export interface IEnqueueFailedError {
     message: string;
 }
 
+export interface IUnexpectedError {
+    statusCode: number;
+    message: string;
+}
+
 export interface ICreateTransientJobUseCaseErrors {
     projectNotFound: IProjectNotFoundError;
     enqueueFailed: IEnqueueFailedError;
+    unexpected: IUnexpectedError;
 }
 
 type CreateTransientJobUseCaseError =

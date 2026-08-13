@@ -11,24 +11,28 @@ class DeleteJobsUseCaseImpl implements Abstraction.Interface {
     public async execute(
         params: Abstraction.Params
     ): Promise<Result<Abstraction.Data, Abstraction.Error>> {
-        const { db } = this.databaseClient;
-        const where = buildJobConditions(params);
+        try {
+            const { db } = this.databaseClient;
+            const where = buildJobConditions(params);
 
-        const countResult = (await db
-            .select({ count: sql<number>`COUNT(*)` })
-            .from(upgradeJobs)
-            .where(where)
-            .get()) as ICountRow | undefined;
+            const countResult = (await db
+                .select({ count: sql<number>`COUNT(*)` })
+                .from(upgradeJobs)
+                .where(where)
+                .get()) as ICountRow | undefined;
 
-        const deleted = countResult?.count ?? 0;
+            const deleted = countResult?.count ?? 0;
 
-        if (where) {
-            await db.delete(upgradeJobs).where(where).run();
-        } else {
-            await db.delete(upgradeJobs).run();
+            if (where) {
+                await db.delete(upgradeJobs).where(where).run();
+            } else {
+                await db.delete(upgradeJobs).run();
+            }
+
+            return Result.ok({ deleted });
+        } catch (error) {
+            return Result.fail({ statusCode: 500, message: (error as Error).message });
         }
-
-        return Result.ok({ deleted });
     }
 }
 

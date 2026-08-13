@@ -8,12 +8,16 @@ class GetJobUseCaseImpl implements Abstraction.Interface {
     public async execute(
         params: Abstraction.Params
     ): Promise<Result<Abstraction.Data, Abstraction.Error>> {
-        const job = await this.jobWorker.getJob(params.jobId);
-        if (!job || job.referenceId !== params.projectId) {
-            return Result.fail({ statusCode: 404, message: "Job not found" });
-        }
+        try {
+            const job = await this.jobWorker.getJob(params.jobId);
+            if (!job || job.referenceId !== params.projectId) {
+                return Result.fail({ statusCode: 404, message: "Job not found" });
+            }
 
-        return Result.ok(job);
+            return Result.ok(job);
+        } catch (error) {
+            return Result.fail({ statusCode: 500, message: (error as Error).message });
+        }
     }
 }
 
