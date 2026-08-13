@@ -108,7 +108,9 @@ export async function createServer(): Promise<FastifyInstance> {
     });
 
     await app.register(fastifyCompress);
-    await app.register(fastifyRateLimit, { max: 100, timeWindow: "1 minute" });
+    await app.register(fastifyRateLimit, {
+        global: false
+    });
 
     // Global auth hook: requires a valid session `Authorization: Bearer`
     // token on every `/api/*` route except the login/verification endpoints.
