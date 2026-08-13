@@ -1,21 +1,13 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
-
-const jobSchema = z.object({
-    id: z.string(),
-    referenceId: z.string(),
-    referenceType: z.string(),
-    type: z.string(),
-    status: z.string(),
-    packages: z.string().nullable(),
-    logs: z.string().nullable(),
-    startedAt: z.number().nullable(),
-    completedAt: z.number().nullable(),
-    warning: z.string().nullable().optional(),
-    progress: z.number().nullable(),
-    progressLabel: z.string().nullable(),
-    parentJobId: z.string().nullable().optional()
-});
+import {
+    createUpgradeJobResponseSchema,
+    listJobsResponseSchema,
+    getJobResponseSchema,
+    createTransientJobResponseSchema,
+    cancelJobResponseSchema,
+    deleteJobsResponseSchema
+} from "../responses/jobs.js";
 
 const upgradePackageInputSchema = z.object({
     name: z.string(),
@@ -31,7 +23,7 @@ export const createUpgradeJobRoute = defineRoute({
         packages: z.array(upgradePackageInputSchema),
         refreshTransient: z.boolean().optional()
     }),
-    response: z.object({ item: z.object({ jobId: z.string() }) })
+    response: createUpgradeJobResponseSchema
 });
 
 export const listJobsRoute = defineRoute({
@@ -39,7 +31,7 @@ export const listJobsRoute = defineRoute({
     path: "/api/projects/:id/jobs",
     description: "List all jobs for a project",
     params: z.object({ id: z.string() }),
-    response: z.object({ items: z.array(jobSchema), total: z.number() })
+    response: listJobsResponseSchema
 });
 
 export const getJobRoute = defineRoute({
@@ -47,7 +39,7 @@ export const getJobRoute = defineRoute({
     path: "/api/projects/:id/jobs/:jobId",
     description: "Get a single job's status and logs",
     params: z.object({ id: z.string(), jobId: z.string() }),
-    response: z.object({ item: jobSchema })
+    response: getJobResponseSchema
 });
 
 export const createTransientJobRoute = defineRoute({
@@ -55,7 +47,7 @@ export const createTransientJobRoute = defineRoute({
     path: "/api/projects/:id/jobs/transient",
     description: "Enqueue a standalone transient dependency refresh job",
     params: z.object({ id: z.string() }),
-    response: z.object({ item: z.object({ jobId: z.string() }) })
+    response: createTransientJobResponseSchema
 });
 
 export const listAllJobsRoute = defineRoute({
@@ -72,7 +64,7 @@ export const listAllJobsRoute = defineRoute({
         limit: z.string().optional(),
         offset: z.string().optional()
     }),
-    response: z.object({ items: z.array(jobSchema), total: z.number() })
+    response: listJobsResponseSchema
 });
 
 export const cancelJobRoute = defineRoute({
@@ -80,7 +72,7 @@ export const cancelJobRoute = defineRoute({
     path: "/api/jobs/:jobId/cancel",
     description: "Cancel or kill a job",
     params: z.object({ jobId: z.string() }),
-    response: z.object({ success: z.boolean() })
+    response: cancelJobResponseSchema
 });
 
 export const deleteJobsRoute = defineRoute({
@@ -95,5 +87,5 @@ export const deleteJobsRoute = defineRoute({
         from: z.string().optional(),
         to: z.string().optional()
     }),
-    response: z.object({ deleted: z.number() })
+    response: deleteJobsResponseSchema
 });

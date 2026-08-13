@@ -1,15 +1,6 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
-
-const appLogSchema = z.object({
-    id: z.string(),
-    level: z.string(),
-    source: z.string(),
-    projectId: z.string().nullable(),
-    message: z.string(),
-    details: z.string().nullable(),
-    createdAt: z.number()
-});
+import { listLogsResponseSchema, deleteLogsResponseSchema } from "../responses/logs.js";
 
 export const listLogsRoute = defineRoute({
     method: "GET",
@@ -25,10 +16,7 @@ export const listLogsRoute = defineRoute({
         limit: z.string().optional(),
         offset: z.string().optional()
     }),
-    response: z.object({
-        items: z.array(appLogSchema),
-        total: z.number()
-    })
+    response: listLogsResponseSchema
 });
 
 export const deleteLogsRoute = defineRoute({
@@ -43,7 +31,5 @@ export const deleteLogsRoute = defineRoute({
         from: z.string().optional(),
         to: z.string().optional()
     }),
-    response: z.object({
-        deleted: z.number()
-    })
+    response: deleteLogsResponseSchema
 });

@@ -1,17 +1,10 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
-
-const changelogEntrySchema = z.object({
-    version: z.string(),
-    content: z.string().nullable(),
-    source: z.string().nullable()
-});
-
-const changelogResponseSchema = z.object({
-    items: z.array(changelogEntrySchema),
-    total: z.number(),
-    resolving: z.boolean()
-});
+import {
+    getChangelogsResponseSchema,
+    reResolveAllChangelogsResponseSchema,
+    changelogStatsSchema
+} from "../responses/changelogs.js";
 
 export const getChangelogsRoute = defineRoute({
     method: "GET",
@@ -22,7 +15,7 @@ export const getChangelogsRoute = defineRoute({
         from: z.string(),
         to: z.string()
     }),
-    response: changelogResponseSchema
+    response: getChangelogsResponseSchema
 });
 
 export const reResolveChangelogsRoute = defineRoute({
@@ -34,7 +27,7 @@ export const reResolveChangelogsRoute = defineRoute({
         from: z.string(),
         to: z.string()
     }),
-    response: changelogResponseSchema
+    response: getChangelogsResponseSchema
 });
 
 export const reResolveAllChangelogsRoute = defineRoute({
@@ -42,17 +35,7 @@ export const reResolveAllChangelogsRoute = defineRoute({
     path: "/api/changelogs/re-resolve-all",
     description: "Reset all failed changelogs across all packages and re-resolve",
     params: z.object({}),
-    response: z.object({
-        packageCount: z.number()
-    })
-});
-
-const changelogStatsSchema = z.object({
-    total: z.number(),
-    resolved: z.number(),
-    failed: z.number(),
-    pending: z.number(),
-    byResolver: z.record(z.string(), z.number())
+    response: reResolveAllChangelogsResponseSchema
 });
 
 export const getChangelogStatsRoute = defineRoute({

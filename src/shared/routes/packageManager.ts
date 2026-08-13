@@ -1,12 +1,16 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
+import {
+    getPackageManagerResponseSchema,
+    updatePackageManagerResponseSchema
+} from "../responses/packageManager.js";
 
 export const getPackageManagerRoute = defineRoute({
     method: "GET",
     path: "/api/projects/:id/package-manager",
     description: "Get the project's current package manager version",
     params: z.object({ id: z.string() }),
-    response: z.object({ item: z.object({ version: z.string() }) })
+    response: getPackageManagerResponseSchema
 });
 
 export const updatePackageManagerRoute = defineRoute({
@@ -15,5 +19,5 @@ export const updatePackageManagerRoute = defineRoute({
     description: "Enqueue a package manager version update job",
     params: z.object({ id: z.string() }),
     body: z.object({ version: z.string().min(1) }),
-    response: z.object({ item: z.object({ jobId: z.string() }) })
+    response: updatePackageManagerResponseSchema
 });

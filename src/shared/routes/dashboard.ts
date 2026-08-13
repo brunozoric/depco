@@ -1,39 +1,18 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
-
-const healthProjectSchema = z.object({
-    projectId: z.string(),
-    projectName: z.string(),
-    score: z.number(),
-    scoreDelta: z.number().nullable(),
-    totalPackages: z.number(),
-    upToDate: z.number(),
-    patchOutdated: z.number(),
-    minorOutdated: z.number(),
-    majorOutdated: z.number(),
-    lastScannedAt: z.number().nullable(),
-    vulnerabilityCritical: z.number(),
-    vulnerabilityHigh: z.number(),
-    vulnerabilityModerate: z.number(),
-    vulnerabilityLow: z.number()
-});
-
-const worstProjectSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    score: z.number(),
-    totalPackages: z.number(),
-    upToDate: z.number(),
-    patchOutdated: z.number(),
-    minorOutdated: z.number(),
-    majorOutdated: z.number()
-});
-
-const healthSummarySchema = z.object({
-    totalProjects: z.number(),
-    averageScore: z.number(),
-    worstProject: worstProjectSchema.nullable()
-});
+import {
+    dashboardHealthResponseSchema,
+    dashboardTrendResponseSchema,
+    dashboardActivityResponseSchema,
+    dashboardStalenessResponseSchema,
+    dashboardSecurityResponseSchema,
+    dashboardVulnerabilityTrendResponseSchema,
+    dashboardStalenessTrendResponseSchema,
+    dashboardLicenseTrendResponseSchema,
+    dashboardAutoFixTrendResponseSchema,
+    dashboardDependencyChangesResponseSchema,
+    dashboardScoreDetailResponseSchema
+} from "../responses/dashboard.js";
 
 export const dashboardHealthRoute = defineRoute({
     method: "GET",
@@ -43,21 +22,7 @@ export const dashboardHealthRoute = defineRoute({
     querystring: z.object({
         teamId: z.string().optional()
     }),
-    response: z.object({
-        summary: healthSummarySchema,
-        projects: z.array(healthProjectSchema)
-    })
-});
-
-const trendSnapshotSchema = z.object({
-    date: z.string(),
-    score: z.number()
-});
-
-const trendProjectSchema = z.object({
-    projectId: z.string(),
-    projectName: z.string(),
-    snapshots: z.array(trendSnapshotSchema)
+    response: dashboardHealthResponseSchema
 });
 
 export const dashboardTrendRoute = defineRoute({
@@ -69,19 +34,7 @@ export const dashboardTrendRoute = defineRoute({
         range: z.enum(["7d", "30d", "90d", "all"]).optional(),
         teamId: z.string().optional()
     }),
-    response: z.object({
-        items: z.array(trendProjectSchema)
-    })
-});
-
-const activityJobSchema = z.object({
-    id: z.string(),
-    type: z.string(),
-    referenceId: z.string(),
-    referenceType: z.string(),
-    status: z.string(),
-    startedAt: z.number().nullable(),
-    completedAt: z.number().nullable()
+    response: dashboardTrendResponseSchema
 });
 
 export const dashboardActivityRoute = defineRoute({
@@ -92,15 +45,7 @@ export const dashboardActivityRoute = defineRoute({
     querystring: z.object({
         teamId: z.string().optional()
     }),
-    response: z.object({
-        items: z.array(activityJobSchema)
-    })
-});
-
-const stalenessProjectSchema = z.object({
-    projectId: z.string(),
-    projectName: z.string(),
-    lastScannedAt: z.number().nullable()
+    response: dashboardActivityResponseSchema
 });
 
 export const dashboardStalenessRoute = defineRoute({
@@ -111,16 +56,7 @@ export const dashboardStalenessRoute = defineRoute({
     querystring: z.object({
         teamId: z.string().optional()
     }),
-    response: z.object({
-        items: z.array(stalenessProjectSchema)
-    })
-});
-
-const securityProjectSchema = z.object({
-    projectId: z.string(),
-    projectName: z.string(),
-    totalChecks: z.number(),
-    passingChecks: z.number()
+    response: dashboardStalenessResponseSchema
 });
 
 export const dashboardSecurityRoute = defineRoute({
@@ -131,9 +67,7 @@ export const dashboardSecurityRoute = defineRoute({
     querystring: z.object({
         teamId: z.string().optional()
     }),
-    response: z.object({
-        items: z.array(securityProjectSchema)
-    })
+    response: dashboardSecurityResponseSchema
 });
 
 export const dashboardVulnerabilityTrendRoute = defineRoute({
@@ -145,17 +79,7 @@ export const dashboardVulnerabilityTrendRoute = defineRoute({
         days: z.enum(["7", "30", "90"]).optional(),
         teamId: z.string().optional()
     }),
-    response: z.object({
-        points: z.array(
-            z.object({
-                date: z.string(),
-                critical: z.number(),
-                high: z.number(),
-                moderate: z.number(),
-                low: z.number()
-            })
-        )
-    })
+    response: dashboardVulnerabilityTrendResponseSchema
 });
 
 export const dashboardStalenessTrendRoute = defineRoute({
@@ -167,17 +91,7 @@ export const dashboardStalenessTrendRoute = defineRoute({
         days: z.enum(["7", "30", "90"]).optional(),
         teamId: z.string().optional()
     }),
-    response: z.object({
-        points: z.array(
-            z.object({
-                date: z.string(),
-                patchOutdated: z.number(),
-                minorOutdated: z.number(),
-                majorOutdated: z.number(),
-                totalPackages: z.number()
-            })
-        )
-    })
+    response: dashboardStalenessTrendResponseSchema
 });
 
 export const dashboardLicenseTrendRoute = defineRoute({
@@ -189,17 +103,7 @@ export const dashboardLicenseTrendRoute = defineRoute({
         days: z.enum(["7", "30", "90"]).optional(),
         teamId: z.string().optional()
     }),
-    response: z.object({
-        points: z.array(
-            z.object({
-                date: z.string(),
-                compliantCount: z.number(),
-                deniedCount: z.number(),
-                warnedCount: z.number(),
-                totalPackages: z.number()
-            })
-        )
-    })
+    response: dashboardLicenseTrendResponseSchema
 });
 
 export const dashboardAutoFixTrendRoute = defineRoute({
@@ -211,18 +115,7 @@ export const dashboardAutoFixTrendRoute = defineRoute({
         days: z.enum(["7", "30", "90"]).optional(),
         teamId: z.string().optional()
     }),
-    response: z.object({
-        points: z.array(
-            z.object({
-                date: z.string(),
-                pending: z.number(),
-                created: z.number(),
-                merged: z.number(),
-                closed: z.number(),
-                failed: z.number()
-            })
-        )
-    })
+    response: dashboardAutoFixTrendResponseSchema
 });
 
 export const dashboardDependencyChangesRoute = defineRoute({
@@ -235,36 +128,7 @@ export const dashboardDependencyChangesRoute = defineRoute({
         limit: z.coerce.number().min(1).max(200).default(50),
         teamId: z.string().optional()
     }),
-    response: z.object({
-        items: z.array(
-            z.object({
-                id: z.string(),
-                projectId: z.string(),
-                projectName: z.string(),
-                packageName: z.string(),
-                changeType: z.enum(["added", "removed", "version-changed"]),
-                previousVersion: z.string().nullable(),
-                newVersion: z.string().nullable(),
-                detectedAt: z.number()
-            })
-        ),
-        total: z.number()
-    })
-});
-
-const scoreDetailOutdatedPackageSchema = z.object({
-    name: z.string(),
-    currentVersion: z.string(),
-    latestVersion: z.string(),
-    upgradeType: z.enum(["major", "minor", "patch"])
-});
-
-const scoreDetailVulnerabilitySchema = z.object({
-    packageName: z.string(),
-    severity: z.enum(["critical", "high", "moderate", "low"]),
-    title: z.string(),
-    fixVersion: z.string().nullable(),
-    penalty: z.number()
+    response: dashboardDependencyChangesResponseSchema
 });
 
 export const dashboardScoreDetailRoute = defineRoute({
@@ -275,8 +139,5 @@ export const dashboardScoreDetailRoute = defineRoute({
         projectId: z.string()
     }),
     querystring: z.object({}),
-    response: z.object({
-        outdatedPackages: z.array(scoreDetailOutdatedPackageSchema),
-        vulnerabilities: z.array(scoreDetailVulnerabilitySchema)
-    })
+    response: dashboardScoreDetailResponseSchema
 });

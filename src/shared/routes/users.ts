@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
-import { userResponseSchema, userPermissionSchema } from "#shared/users/index.js";
+import { userPermissionSchema } from "#shared/users/index.js";
+import {
+    listUsersResponseSchema,
+    getUserResponseSchema,
+    createUserResponseSchema,
+    updateUserResponseSchema
+} from "../responses/users.js";
 
 export const listUsersRoute = defineRoute({
     method: "GET",
@@ -15,7 +21,7 @@ export const listUsersRoute = defineRoute({
         sortBy: z.enum(["email", "displayName", "createdAt"]).optional().default("createdAt"),
         sortOrder: z.enum(["asc", "desc"]).optional().default("desc")
     }),
-    response: z.object({ items: z.array(userResponseSchema), total: z.number() })
+    response: listUsersResponseSchema
 });
 
 export const getUserRoute = defineRoute({
@@ -23,7 +29,7 @@ export const getUserRoute = defineRoute({
     path: "/api/users/:id",
     description: "Get a user",
     params: z.object({ id: z.string() }),
-    response: z.object({ item: userResponseSchema })
+    response: getUserResponseSchema
 });
 
 export const createUserRoute = defineRoute({
@@ -37,7 +43,7 @@ export const createUserRoute = defineRoute({
         password: z.string().min(8),
         permission: userPermissionSchema
     }),
-    response: z.object({ item: userResponseSchema })
+    response: createUserResponseSchema
 });
 
 export const updateUserRoute = defineRoute({
@@ -51,7 +57,7 @@ export const updateUserRoute = defineRoute({
         permission: userPermissionSchema.optional(),
         isActive: z.boolean().optional()
     }),
-    response: z.object({ item: userResponseSchema })
+    response: updateUserResponseSchema
 });
 
 export const deleteUserRoute = defineRoute({

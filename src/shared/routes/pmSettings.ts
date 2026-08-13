@@ -1,44 +1,16 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
-
-const installFlagItemSchema = z.object({
-    flag: z.string(),
-    label: z.string(),
-    description: z.string(),
-    enabled: z.boolean(),
-    defaultEnabled: z.boolean(),
-    isFileManaged: z.boolean()
-});
-
-const pmGeneralSettingsSchema = z.object({
-    registryUrl: z.string().nullable(),
-    upgradeStrategy: z.string().nullable()
-});
-
-const pmConfigItemSchema = z.object({
-    packageManager: z.string(),
-    installFlags: z.array(installFlagItemSchema),
-    general: pmGeneralSettingsSchema
-});
-
-const configErrorSchema = z
-    .object({
-        type: z.enum(["json", "schema"]),
-        message: z.string()
-    })
-    .optional();
+import {
+    listPmSettingsResponseSchema,
+    updatePmConfigResponseSchema
+} from "../responses/pmSettings.js";
 
 export const listPmSettingsRoute = defineRoute({
     method: "GET",
     path: "/api/settings/pm",
     description: "List per-PM install flags and general settings",
     params: z.object({}),
-    response: z.object({
-        items: z.array(pmConfigItemSchema),
-        configSource: z.enum(["db", "file", "error"]),
-        fileManagedPms: z.array(z.string()),
-        configError: configErrorSchema
-    })
+    response: listPmSettingsResponseSchema
 });
 
 const updatePmConfigBodySchema = z.object({
@@ -57,7 +29,5 @@ export const updatePmConfigRoute = defineRoute({
         pm: z.enum(["yarn", "npm", "pnpm", "bun"])
     }),
     body: updatePmConfigBodySchema,
-    response: z.object({
-        item: pmConfigItemSchema
-    })
+    response: updatePmConfigResponseSchema
 });

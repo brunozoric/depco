@@ -1,25 +1,11 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
-
-const discoveredScriptSchema = z.object({
-    name: z.string(),
-    command: z.string()
-});
-
-const stepHookSchema = z.object({
-    id: z.string(),
-    projectId: z.string(),
-    position: z.string(),
-    name: z.string(),
-    command: z.string(),
-    type: z.enum(["command", "script", "package-script"]),
-    required: z.boolean(),
-    enabled: z.boolean(),
-    sortOrder: z.number(),
-    source: z.enum(["db", "file", "package-json"]),
-    createdAt: z.number(),
-    updatedAt: z.number()
-});
+import {
+    listStepHooksResponseSchema,
+    createStepHookResponseSchema,
+    updateStepHookResponseSchema,
+    deleteStepHookResponseSchema
+} from "../responses/stepHooks.js";
 
 export const listStepHooksRoute = defineRoute({
     method: "GET",
@@ -27,11 +13,7 @@ export const listStepHooksRoute = defineRoute({
     description: "List step hooks for a project",
     params: z.object({ id: z.string() }),
     querystring: z.object({}),
-    response: z.object({
-        items: z.array(stepHookSchema),
-        configSource: z.enum(["db", "file"]),
-        discoveredScripts: z.array(discoveredScriptSchema)
-    })
+    response: listStepHooksResponseSchema
 });
 
 export const createStepHookRoute = defineRoute({
@@ -46,7 +28,7 @@ export const createStepHookRoute = defineRoute({
         type: z.enum(["command", "script", "package-script"]),
         required: z.boolean().default(false)
     }),
-    response: z.object({ item: stepHookSchema })
+    response: createStepHookResponseSchema
 });
 
 export const updateStepHookRoute = defineRoute({
@@ -62,7 +44,7 @@ export const updateStepHookRoute = defineRoute({
         enabled: z.boolean().optional(),
         sortOrder: z.number().optional()
     }),
-    response: z.object({ item: stepHookSchema })
+    response: updateStepHookResponseSchema
 });
 
 export const deleteStepHookRoute = defineRoute({
@@ -71,5 +53,5 @@ export const deleteStepHookRoute = defineRoute({
     description: "Delete a step hook",
     params: z.object({ id: z.string(), hookId: z.string() }),
     body: z.object({}),
-    response: z.object({ deleted: z.boolean() })
+    response: deleteStepHookResponseSchema
 });

@@ -1,36 +1,19 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
 import { SCAN_INTERVALS } from "#shared/schedules/types.js";
-
-const scanScheduleSchema = z.object({
-    id: z.string(),
-    projectId: z.string(),
-    interval: z.string(),
-    lastRunAt: z.number().nullable(),
-    nextRunAt: z.number().nullable(),
-    enabled: z.boolean(),
-    createdAt: z.number(),
-    updatedAt: z.number()
-});
-
-const resolvedScheduleSchema = z.object({
-    projectId: z.string(),
-    projectName: z.string(),
-    interval: z.string(),
-    source: z.enum(["project", "default"]),
-    lastRunAt: z.number().nullable(),
-    nextRunAt: z.number().nullable()
-});
+import {
+    listScanSchedulesResponseSchema,
+    upsertScanScheduleResponseSchema,
+    getScanScheduleDefaultResponseSchema,
+    upsertScanScheduleDefaultResponseSchema
+} from "../responses/scanSchedules.js";
 
 export const listScanSchedulesRoute = defineRoute({
     method: "GET",
     path: "/api/scan-schedules",
     description: "List resolved scan schedules for all projects",
     params: z.object({}),
-    response: z.object({
-        items: z.array(resolvedScheduleSchema),
-        globalDefault: z.string()
-    })
+    response: listScanSchedulesResponseSchema
 });
 
 export const upsertScanScheduleRoute = defineRoute({
@@ -39,7 +22,7 @@ export const upsertScanScheduleRoute = defineRoute({
     description: "Set per-project scan schedule override",
     params: z.object({ projectId: z.string() }),
     body: z.object({ interval: z.enum(SCAN_INTERVALS) }),
-    response: z.object({ item: scanScheduleSchema })
+    response: upsertScanScheduleResponseSchema
 });
 
 export const deleteScanScheduleRoute = defineRoute({
@@ -54,7 +37,7 @@ export const getScanScheduleDefaultRoute = defineRoute({
     path: "/api/settings/scan-schedule-default",
     description: "Get global default scan interval",
     params: z.object({}),
-    response: z.object({ item: z.object({ interval: z.string() }) })
+    response: getScanScheduleDefaultResponseSchema
 });
 
 export const upsertScanScheduleDefaultRoute = defineRoute({
@@ -63,5 +46,5 @@ export const upsertScanScheduleDefaultRoute = defineRoute({
     description: "Set global default scan interval",
     params: z.object({}),
     body: z.object({ interval: z.enum(SCAN_INTERVALS) }),
-    response: z.object({ item: z.object({ interval: z.string() }) })
+    response: upsertScanScheduleDefaultResponseSchema
 });

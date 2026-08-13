@@ -47,3 +47,24 @@ export {
     importProjectsResultSchema,
     importResultSchema
 } from "./backup.js";
+
+export * from "./changelogs.js";
+export * from "./dashboard.js";
+export * from "./dependencyGraph.js";
+export * from "./engines.js";
+export * from "./filesystem.js";
+export * from "./install.js";
+export * from "./jobs.js";
+export * from "./licenses.js";
+export * from "./logs.js";
+export * from "./packageManager.js";
+export * from "./packages.js";
+export * from "./pmSettings.js";
+export * from "./projects.js";
+export * from "./sbom.js";
+export * from "./scanSchedules.js";
+export * from "./settings.js";
+export * from "./stepHooks.js";
+export * from "./upgradeSessions.js";
+export * from "./users.js";
+export * from "./vulnerabilities.js";

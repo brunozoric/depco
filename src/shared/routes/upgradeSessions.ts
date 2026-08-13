@@ -1,23 +1,12 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
-
-const stepStateSchema = z.object({
-    type: z.string(),
-    status: z.enum(["pending", "active", "completed", "skipped"]),
-    input: z.record(z.string(), z.unknown()),
-    result: z.record(z.string(), z.unknown())
-});
-
-const sessionSchema = z.object({
-    id: z.string(),
-    projectId: z.string(),
-    status: z.string(),
-    currentStep: z.string(),
-    steps: z.array(stepStateSchema),
-    stepOrder: z.array(z.string()),
-    createdAt: z.number(),
-    updatedAt: z.number()
-});
+import {
+    createUpgradeSessionResponseSchema,
+    getUpgradeSessionResponseSchema,
+    executeUpgradeStepResponseSchema,
+    skipUpgradeStepResponseSchema,
+    abortUpgradeSessionResponseSchema
+} from "../responses/upgradeSessions.js";
 
 export const createUpgradeSessionRoute = defineRoute({
     method: "POST",
@@ -25,7 +14,7 @@ export const createUpgradeSessionRoute = defineRoute({
     description: "Create a new upgrade session for a project",
     params: z.object({ id: z.string() }),
     body: z.object({}),
-    response: z.object({ item: sessionSchema })
+    response: createUpgradeSessionResponseSchema
 });
 
 export const getUpgradeSessionRoute = defineRoute({
@@ -34,7 +23,7 @@ export const getUpgradeSessionRoute = defineRoute({
     description: "Get an upgrade session by id",
     params: z.object({ id: z.string(), sessionId: z.string() }),
     querystring: z.object({}),
-    response: z.object({ item: sessionSchema })
+    response: getUpgradeSessionResponseSchema
 });
 
 export const executeUpgradeStepRoute = defineRoute({
@@ -43,7 +32,7 @@ export const executeUpgradeStepRoute = defineRoute({
     description: "Execute the current step of an upgrade session",
     params: z.object({ id: z.string(), sessionId: z.string(), stepType: z.string() }),
     body: z.record(z.string(), z.unknown()),
-    response: z.object({ item: sessionSchema })
+    response: executeUpgradeStepResponseSchema
 });
 
 export const skipUpgradeStepRoute = defineRoute({
@@ -52,7 +41,7 @@ export const skipUpgradeStepRoute = defineRoute({
     description: "Skip the current step of an upgrade session",
     params: z.object({ id: z.string(), sessionId: z.string(), stepType: z.string() }),
     body: z.object({}),
-    response: z.object({ item: sessionSchema })
+    response: skipUpgradeStepResponseSchema
 });
 
 export const abortUpgradeSessionRoute = defineRoute({
@@ -61,5 +50,5 @@ export const abortUpgradeSessionRoute = defineRoute({
     description: "Abort an upgrade session",
     params: z.object({ id: z.string(), sessionId: z.string() }),
     body: z.object({}),
-    response: z.object({ item: sessionSchema })
+    response: abortUpgradeSessionResponseSchema
 });

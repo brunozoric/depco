@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
+import {
+    installProjectResponseSchema,
+    getInstallOptionsResponseSchema
+} from "../responses/install.js";
 
 export const installProjectRoute = defineRoute({
     method: "POST",
@@ -7,7 +11,7 @@ export const installProjectRoute = defineRoute({
     description: "Run package manager install for a project",
     params: z.object({ id: z.string() }),
     body: z.object({ flags: z.array(z.string()).optional().default([]) }),
-    response: z.object({ item: z.object({ jobId: z.string() }) })
+    response: installProjectResponseSchema
 });
 
 export const getInstallOptionsRoute = defineRoute({
@@ -15,16 +19,5 @@ export const getInstallOptionsRoute = defineRoute({
     path: "/api/install-options/:packageManager",
     description: "Get available install flags for a package manager",
     params: z.object({ packageManager: z.string() }),
-    response: z.object({
-        items: z.array(
-            z.object({
-                flag: z.string(),
-                label: z.string(),
-                description: z.string(),
-                exclusive: z.string().optional(),
-                defaultEnabled: z.boolean()
-            })
-        ),
-        total: z.number()
-    })
+    response: getInstallOptionsResponseSchema
 });

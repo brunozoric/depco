@@ -1,40 +1,21 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
-
-const securityStatusSchema = z.object({
-    passes: z.boolean(),
-    checks: z.record(z.string(), z.boolean())
-});
-
-const projectTeamBadgeSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    color: z.string()
-});
-
-const projectSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    path: z.string(),
-    packageManager: z.string().nullable(),
-    pmVersion: z.string().nullable(),
-    addedAt: z.number(),
-    lastScannedAt: z.number().nullable(),
-    security: securityStatusSchema.nullable().optional(),
-    hasNodeModules: z.boolean(),
-    teams: z.array(projectTeamBadgeSchema).optional()
-});
-
-const dependencySchema = z.object({
-    name: z.string(),
-    currentVersion: z.string(),
-    latestVersion: z.string().nullable(),
-    latestInRange: z.string().nullable(),
-    type: z.string(),
-    upgradeType: z.string().nullable(),
-    dependencyKind: z.string(),
-    registryResolved: z.boolean()
-});
+import {
+    createProjectResponseSchema,
+    listProjectsResponseSchema,
+    getProjectResponseSchema,
+    scanProjectAsyncResponseSchema,
+    getProjectDependenciesResponseSchema,
+    getTransitiveResolveStatusResponseSchema,
+    getProjectSecurityResponseSchema,
+    checkProjectSecurityResponseSchema,
+    exportProjectSchema,
+    exportProjectsResponseSchema,
+    importProjectsResponseSchema,
+    getProjectTeamsResponseSchema,
+    cloneProjectResponseSchema,
+    bulkScanProjectsResponseSchema
+} from "../responses/projects.js";
 
 export const createProjectRoute = defineRoute({
     method: "POST",
@@ -42,7 +23,7 @@ export const createProjectRoute = defineRoute({
     description: "Create a new project",
     params: z.object({}),
     body: z.object({ path: z.string().min(1) }),
-    response: z.object({ item: projectSchema })
+    response: createProjectResponseSchema
 });
 
 export const listProjectsRoute = defineRoute({
@@ -54,7 +35,7 @@ export const listProjectsRoute = defineRoute({
         page: z.coerce.number().int().positive().optional(),
         pageSize: z.coerce.number().int().positive().max(200).optional()
     }),
-    response: z.object({ items: z.array(projectSchema), total: z.number() })
+    response: listProjectsResponseSchema
 });
 
 export const getProjectRoute = defineRoute({
@@ -62,7 +43,7 @@ export const getProjectRoute = defineRoute({
     path: "/api/projects/:id",
     description: "Get a single project",
     params: z.object({ id: z.string() }),
-    response: z.object({ item: projectSchema })
+    response: getProjectResponseSchema
 });
 
 export const deleteProjectRoute = defineRoute({
@@ -78,7 +59,7 @@ export const scanProjectAsyncRoute = defineRoute({
     description: "Scan a project's dependencies asynchronously, returning a job id",
     params: z.object({ id: z.string() }),
     querystring: z.object({ force: z.string().optional() }),
-    response: z.object({ item: z.object({ jobId: z.string() }) })
+    response: scanProjectAsyncResponseSchema
 });
 
 export const getProjectDependenciesRoute = defineRoute({
@@ -102,7 +83,7 @@ export const getProjectDependenciesRoute = defineRoute({
         page: z.coerce.number().optional(),
         pageSize: z.coerce.number().optional()
     }),
-    response: z.object({ items: z.array(dependencySchema), total: z.number() })
+    response: getProjectDependenciesResponseSchema
 });
 
 export const getTransitiveResolveStatusRoute = defineRoute({
@@ -110,11 +91,7 @@ export const getTransitiveResolveStatusRoute = defineRoute({
     path: "/api/projects/:id/transitive-resolve-status",
     description: "Get transitive dependency resolution status for a project",
     params: z.object({ id: z.string() }),
-    response: z.object({
-        total: z.number(),
-        resolved: z.number(),
-        pending: z.number()
-    })
+    response: getTransitiveResolveStatusResponseSchema
 });
 
 export const getProjectSecurityRoute = defineRoute({
@@ -122,7 +99,7 @@ export const getProjectSecurityRoute = defineRoute({
     path: "/api/projects/:id/security",
     description: "Get the latest persisted security status for a project",
     params: z.object({ id: z.string() }),
-    response: z.object({ item: securityStatusSchema })
+    response: getProjectSecurityResponseSchema
 });
 
 export const checkProjectSecurityRoute = defineRoute({
@@ -130,23 +107,15 @@ export const checkProjectSecurityRoute = defineRoute({
     path: "/api/projects/:id/security",
     description: "Run a fresh security check for a project",
     params: z.object({ id: z.string() }),
-    response: z.object({ item: securityStatusSchema })
+    response: checkProjectSecurityResponseSchema
 });
-
-const exportProjectSchema = z.object({ path: z.string() });
 
 export const exportProjectsRoute = defineRoute({
     method: "GET",
     path: "/api/projects/export",
     description: "Export all project paths as JSON",
     params: z.object({}),
-    response: z.object({ items: z.array(exportProjectSchema) })
-});
-
-const importResultSchema = z.object({
-    path: z.string(),
-    status: z.enum(["added", "skipped", "failed"]),
-    error: z.string().optional()
+    response: exportProjectsResponseSchema
 });
 
 export const importProjectsRoute = defineRoute({
@@ -155,13 +124,7 @@ export const importProjectsRoute = defineRoute({
     description: "Import projects from a list of paths",
     params: z.object({}),
     body: z.object({ items: z.array(exportProjectSchema) }),
-    response: z.object({ items: z.array(importResultSchema) })
-});
-
-const projectTeamSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    color: z.string()
+    response: importProjectsResponseSchema
 });
 
 export const getProjectTeamsRoute = defineRoute({
@@ -169,10 +132,7 @@ export const getProjectTeamsRoute = defineRoute({
     path: "/api/projects/:id/teams",
     description: "Get teams for a project",
     params: z.object({ id: z.string() }),
-    response: z.object({
-        items: z.array(projectTeamSchema),
-        total: z.number()
-    })
+    response: getProjectTeamsResponseSchema
 });
 
 export const setProjectTeamsRoute = defineRoute({
@@ -193,7 +153,7 @@ export const cloneProjectRoute = defineRoute({
         destination: z.string().min(1),
         folderName: z.string().optional()
     }),
-    response: z.object({ item: z.object({ jobId: z.string() }) })
+    response: cloneProjectResponseSchema
 });
 
 export const bulkScanProjectsRoute = defineRoute({
@@ -205,8 +165,5 @@ export const bulkScanProjectsRoute = defineRoute({
         projectIds: z.array(z.string()).min(1),
         force: z.boolean().optional()
     }),
-    response: z.object({
-        enqueuedCount: z.number(),
-        skippedCount: z.number()
-    })
+    response: bulkScanProjectsResponseSchema
 });

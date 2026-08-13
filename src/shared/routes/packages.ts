@@ -1,23 +1,10 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
-
-const packageProjectSchema = z.object({
-    projectId: z.string(),
-    projectName: z.string(),
-    currentVersion: z.string(),
-    latestVersion: z.string(),
-    upgradeType: z.string()
-});
-
-const packageListItemSchema = z.object({
-    name: z.string(),
-    projects: z.array(packageProjectSchema),
-    resolvedChangelogCount: z.number(),
-    totalChangelogCount: z.number(),
-    lastPublishedAt: z.number().nullable(),
-    dependencyKind: z.string(),
-    registryResolved: z.boolean()
-});
+import {
+    listPackagesResponseSchema,
+    rescanPackageResponseSchema,
+    getPackageDetailResponseSchema
+} from "../responses/packages.js";
 
 export const listPackagesRoute = defineRoute({
     method: "GET",
@@ -45,10 +32,7 @@ export const listPackagesRoute = defineRoute({
         sortOrder: z.enum(["asc", "desc"]).optional(),
         teamId: z.string().optional()
     }),
-    response: z.object({
-        items: z.array(packageListItemSchema),
-        total: z.number()
-    })
+    response: listPackagesResponseSchema
 });
 
 export const rescanPackageRoute = defineRoute({
@@ -57,27 +41,7 @@ export const rescanPackageRoute = defineRoute({
     description: "Re-scan a single package from the registry",
     params: z.object({ packageName: z.string() }),
     querystring: z.object({}),
-    response: z.object({
-        item: z.object({ updated: z.number() })
-    })
-});
-
-const packageDetailProjectSchema = z.object({
-    projectId: z.string(),
-    projectName: z.string(),
-    currentVersion: z.string(),
-    latestVersion: z.string(),
-    upgradeType: z.string(),
-    dependencyKind: z.string()
-});
-
-const packageDetailSchema = z.object({
-    name: z.string(),
-    repoUrl: z.string().nullable(),
-    projects: z.array(packageDetailProjectSchema),
-    latestVersion: z.string().nullable(),
-    lastPublishedAt: z.number().nullable(),
-    registryResolved: z.boolean()
+    response: rescanPackageResponseSchema
 });
 
 export const getPackageDetailRoute = defineRoute({
@@ -85,5 +49,5 @@ export const getPackageDetailRoute = defineRoute({
     path: "/api/packages/:packageName",
     description: "Get detail for a single package across all projects",
     params: z.object({ packageName: z.string() }),
-    response: z.object({ item: packageDetailSchema })
+    response: getPackageDetailResponseSchema
 });

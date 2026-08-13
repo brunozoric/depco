@@ -1,40 +1,16 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
-import { RISK_TIER_VALUES, LICENSE_POLICY_ACTIONS } from "#shared/licenses/types.js";
-
-const licenseSchema = z.object({
-    id: z.string(),
-    projectId: z.string(),
-    packageName: z.string(),
-    licenseName: z.string(),
-    spdxId: z.string().nullable(),
-    source: z.enum(["registry", "license-checker"]),
-    riskTier: z.enum(RISK_TIER_VALUES),
-    licenseUrl: z.string().nullable(),
-    scannedAt: z.number()
-});
-
-const policyRuleSchema = z.object({
-    id: z.string(),
-    action: z.enum(LICENSE_POLICY_ACTIONS),
-    licensePattern: z.string().nullable(),
-    packagePattern: z.string().nullable(),
-    projectId: z.string().nullable(),
-    priority: z.number(),
-    reason: z.string().nullable(),
-    createdAt: z.number(),
-    updatedAt: z.number()
-});
-
-const violationSchema = z.object({
-    id: z.string(),
-    licenseId: z.string(),
-    ruleId: z.string(),
-    projectId: z.string(),
-    packageName: z.string(),
-    action: z.enum(["warn", "deny"]),
-    scannedAt: z.number()
-});
+import { LICENSE_POLICY_ACTIONS } from "#shared/licenses/types.js";
+import {
+    listLicensesResponseSchema,
+    getLicenseSummaryResponseSchema,
+    scanProjectLicensesResponseSchema,
+    policyRuleSchema,
+    listLicensePoliciesResponseSchema,
+    deleteLicensePolicyResponseSchema,
+    listLicenseViolationsResponseSchema,
+    getLicenseViolationsSummaryResponseSchema
+} from "../responses/licenses.js";
 
 export const listLicensesRoute = defineRoute({
     method: "GET",
@@ -53,7 +29,7 @@ export const listLicensesRoute = defineRoute({
         sortBy: z.enum(["packageName", "licenseName", "riskTier", "projectName"]).optional(),
         sortOrder: z.enum(["asc", "desc"]).optional()
     }),
-    response: z.object({ items: z.array(licenseSchema), total: z.number() })
+    response: listLicensesResponseSchema
 });
 
 export const getLicenseSummaryRoute = defineRoute({
@@ -65,30 +41,7 @@ export const getLicenseSummaryRoute = defineRoute({
         projectId: z.string().optional(),
         teamId: z.string().optional()
     }),
-    response: z.object({
-        totalPackages: z.number(),
-        compliantPercent: z.number(),
-        riskTierCounts: z.object({
-            permissive: z.number(),
-            "weak-copyleft": z.number(),
-            copyleft: z.number(),
-            proprietary: z.number(),
-            unknown: z.number()
-        }),
-        violationCounts: z.object({
-            warn: z.number(),
-            deny: z.number()
-        }),
-        projectSummaries: z.array(
-            z.object({
-                projectId: z.string(),
-                projectName: z.string(),
-                total: z.number(),
-                denied: z.number(),
-                warned: z.number()
-            })
-        )
-    })
+    response: getLicenseSummaryResponseSchema
 });
 
 export const getProjectLicensesRoute = defineRoute({
@@ -101,7 +54,7 @@ export const getProjectLicensesRoute = defineRoute({
         packageName: z.string().optional(),
         teamId: z.string().optional()
     }),
-    response: z.object({ items: z.array(licenseSchema), total: z.number() })
+    response: listLicensesResponseSchema
 });
 
 export const scanProjectLicensesRoute = defineRoute({
@@ -109,7 +62,7 @@ export const scanProjectLicensesRoute = defineRoute({
     path: "/api/licenses/:projectId/scan",
     description: "Trigger license scan for a project",
     params: z.object({ projectId: z.string() }),
-    response: z.object({ jobId: z.string() })
+    response: scanProjectLicensesResponseSchema
 });
 
 export const listLicensePoliciesRoute = defineRoute({
@@ -120,7 +73,7 @@ export const listLicensePoliciesRoute = defineRoute({
     querystring: z.object({
         projectId: z.string().optional()
     }),
-    response: z.object({ items: z.array(policyRuleSchema) })
+    response: listLicensePoliciesResponseSchema
 });
 
 export const createLicensePolicyRoute = defineRoute({
@@ -160,7 +113,7 @@ export const deleteLicensePolicyRoute = defineRoute({
     path: "/api/license-policies/:id",
     description: "Delete a license policy rule",
     params: z.object({ id: z.string() }),
-    response: z.object({ deleted: z.boolean() })
+    response: deleteLicensePolicyResponseSchema
 });
 
 export const listLicenseViolationsRoute = defineRoute({
@@ -176,7 +129,7 @@ export const listLicenseViolationsRoute = defineRoute({
         page: z.coerce.number().int().positive().optional(),
         pageSize: z.coerce.number().int().positive().max(200).optional()
     }),
-    response: z.object({ items: z.array(violationSchema), total: z.number() })
+    response: listLicenseViolationsResponseSchema
 });
 
 export const getLicenseViolationsSummaryRoute = defineRoute({
@@ -187,17 +140,5 @@ export const getLicenseViolationsSummaryRoute = defineRoute({
     querystring: z.object({
         teamId: z.string().optional()
     }),
-    response: z.object({
-        total: z.number(),
-        warnCount: z.number(),
-        denyCount: z.number(),
-        byProject: z.array(
-            z.object({
-                projectId: z.string(),
-                projectName: z.string(),
-                warnCount: z.number(),
-                denyCount: z.number()
-            })
-        )
-    })
+    response: getLicenseViolationsSummaryResponseSchema
 });

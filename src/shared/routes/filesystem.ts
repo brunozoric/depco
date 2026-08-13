@@ -1,11 +1,9 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
-
-const directoryEntrySchema = z.object({
-    name: z.string(),
-    path: z.string(),
-    type: z.literal("directory")
-});
+import {
+    browseFilesystemResponseSchema,
+    scanFilesystemResponseSchema
+} from "../responses/filesystem.js";
 
 export const browseFilesystemRoute = defineRoute({
     method: "GET",
@@ -16,16 +14,7 @@ export const browseFilesystemRoute = defineRoute({
         path: z.string().optional(),
         showHidden: z.string().optional()
     }),
-    response: z.object({
-        items: z.array(directoryEntrySchema),
-        total: z.number(),
-        currentPath: z.string()
-    })
-});
-
-const scanItemSchema = z.object({
-    name: z.string(),
-    path: z.string()
+    response: browseFilesystemResponseSchema
 });
 
 export const scanFilesystemRoute = defineRoute({
@@ -37,12 +26,5 @@ export const scanFilesystemRoute = defineRoute({
         path: z.string(),
         depth: z.coerce.number().int().min(1).max(5).optional().default(1)
     }),
-    response: z.object({
-        items: z.array(scanItemSchema),
-        total: z.number(),
-        scannedPath: z.string(),
-        scannedCount: z.number(),
-        filteredCount: z.number(),
-        mode: z.enum(["workspaces", "depth"])
-    })
+    response: scanFilesystemResponseSchema
 });

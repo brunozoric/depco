@@ -1,24 +1,11 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
-
-const edgeSchema = z.object({
-    parentPackage: z.string().nullable(),
-    parentVersion: z.string().nullable(),
-    childPackage: z.string(),
-    childVersion: z.string(),
-    dependencyType: z.string(),
-    depth: z.number()
-});
-
-const pathNodeSchema = z.object({
-    packageName: z.string(),
-    version: z.string()
-});
-
-const pathSchema = z.object({
-    target: z.string(),
-    chain: z.array(pathNodeSchema)
-});
+import {
+    getDependencyGraphResponseSchema,
+    refreshDependencyGraphResponseSchema,
+    getDependencyGraphStatsResponseSchema,
+    searchDependencyPackagesResponseSchema
+} from "../responses/dependencyGraph.js";
 
 export const getDependencyGraphRoute = defineRoute({
     method: "GET",
@@ -28,18 +15,7 @@ export const getDependencyGraphRoute = defineRoute({
     querystring: z.object({
         package: z.string().optional()
     }),
-    response: z.union([
-        z.object({
-            edges: z.array(edgeSchema),
-            rootPackages: z.array(z.string()),
-            totalPackages: z.number(),
-            maxDepth: z.number(),
-            edgeCount: z.number()
-        }),
-        z.object({
-            paths: z.array(pathSchema)
-        })
-    ])
+    response: getDependencyGraphResponseSchema
 });
 
 export const refreshDependencyGraphRoute = defineRoute({
@@ -47,7 +23,7 @@ export const refreshDependencyGraphRoute = defineRoute({
     path: "/api/dependency-graph/:projectId/refresh",
     description: "Trigger lockfile re-parse without full scan",
     params: z.object({ projectId: z.string() }),
-    response: z.object({ edgeCount: z.number() })
+    response: refreshDependencyGraphResponseSchema
 });
 
 export const getDependencyGraphStatsRoute = defineRoute({
@@ -55,12 +31,7 @@ export const getDependencyGraphStatsRoute = defineRoute({
     path: "/api/dependency-graph/:projectId/stats",
     description: "Get dependency graph summary stats",
     params: z.object({ projectId: z.string() }),
-    response: z.object({
-        totalPackages: z.number(),
-        maxDepth: z.number(),
-        rootCount: z.number(),
-        edgeCount: z.number()
-    })
+    response: getDependencyGraphStatsResponseSchema
 });
 
 export const searchDependencyPackagesRoute = defineRoute({
@@ -72,7 +43,5 @@ export const searchDependencyPackagesRoute = defineRoute({
         query: z.string().default(""),
         limit: z.coerce.number().optional()
     }),
-    response: z.object({
-        packages: z.array(z.string())
-    })
+    response: searchDependencyPackagesResponseSchema
 });

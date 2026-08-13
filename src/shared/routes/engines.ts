@@ -1,61 +1,13 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
-
-const engineStatusSchema = z.enum(["current", "active-lts", "maintenance", "eol", "unknown"]);
-
-const engineStatusCountsSchema = z.object({
-    eol: z.number(),
-    maintenance: z.number(),
-    activeLts: z.number(),
-    current: z.number(),
-    unknown: z.number()
-});
-
-const engineCheckSchema = z.object({
-    id: z.string(),
-    projectId: z.string(),
-    packageName: z.string(),
-    enginesNode: z.string().nullable(),
-    minimumMajor: z.number().nullable(),
-    status: engineStatusSchema,
-    eolDate: z.number().nullable(),
-    scannedAt: z.number()
-});
-
-const projectEngineSummarySchema = z.object({
-    projectId: z.string(),
-    projectName: z.string(),
-    rootStatus: engineStatusSchema,
-    rootEnginesNode: z.string().nullable(),
-    dependencyCounts: engineStatusCountsSchema,
-    lastScannedAt: z.number().nullable(),
-    engineScanStale: z.boolean(),
-    engineScanStaleReason: z.enum(["time", "release", "both"]).nullable()
-});
-
-const engineSummarySchema = z.object({
-    totalProjects: z.number(),
-    counts: engineStatusCountsSchema,
-    projectSummaries: z.array(projectEngineSummarySchema),
-    staleProjectCount: z.number(),
-    stalenessThresholdMs: z.number()
-});
-
-const nodeReleaseSchema = z.object({
-    version: z.number(),
-    codename: z.string().nullable(),
-    releaseDate: z.number(),
-    ltsStart: z.number().nullable(),
-    maintenanceStart: z.number().nullable(),
-    eolDate: z.number()
-});
-
-const engineScanResultSchema = z.object({
-    rootStatus: engineStatusSchema,
-    rootEnginesNode: z.string().nullable(),
-    findings: z.array(engineCheckSchema),
-    summary: engineSummarySchema
-});
+import {
+    engineSummarySchema,
+    engineScanResultSchema,
+    listNodeReleasesResponseSchema,
+    getProjectEngineChecksResponseSchema,
+    getProjectEngineStalenessResponseSchema,
+    bulkScanEnginesResponseSchema
+} from "../responses/engines.js";
 
 export const getEngineSummaryRoute = defineRoute({
     method: "GET",
@@ -70,7 +22,7 @@ export const listNodeReleasesRoute = defineRoute({
     path: "/api/engines/releases",
     description: "List the cached Node.js release schedule",
     params: z.object({}),
-    response: z.object({ items: z.array(nodeReleaseSchema), total: z.number() })
+    response: listNodeReleasesResponseSchema
 });
 
 export const getProjectEngineChecksRoute = defineRoute({
@@ -78,7 +30,7 @@ export const getProjectEngineChecksRoute = defineRoute({
     path: "/api/engines/:projectId",
     description: "List engine checks for a specific project",
     params: z.object({ projectId: z.string() }),
-    response: z.object({ items: z.array(engineCheckSchema), total: z.number() })
+    response: getProjectEngineChecksResponseSchema
 });
 
 export const getProjectEngineStalenessRoute = defineRoute({
@@ -87,12 +39,7 @@ export const getProjectEngineStalenessRoute = defineRoute({
     description:
         "Get lightweight engine scan staleness info for a single project, without loading the all-projects summary",
     params: z.object({ projectId: z.string() }),
-    response: z.object({
-        lastScannedAt: z.number().nullable(),
-        engineScanStale: z.boolean(),
-        engineScanStaleReason: z.enum(["time", "release", "both"]).nullable(),
-        stalenessThresholdMs: z.number()
-    })
+    response: getProjectEngineStalenessResponseSchema
 });
 
 export const scanProjectEnginesRoute = defineRoute({
@@ -115,5 +62,5 @@ export const bulkScanEnginesRoute = defineRoute({
     description: "Trigger an engine scan for multiple projects",
     params: z.object({}),
     body: z.object({ projectIds: z.array(z.string()).min(1) }),
-    response: z.object({ scannedCount: z.number() })
+    response: bulkScanEnginesResponseSchema
 });
