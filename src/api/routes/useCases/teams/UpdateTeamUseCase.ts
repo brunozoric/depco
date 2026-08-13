@@ -21,7 +21,11 @@ class UpdateTeamUseCaseImpl implements Abstraction.Interface {
 
             const existing = await db.select().from(teams).where(eq(teams.id, params.id)).get();
             if (!existing) {
-                return Result.fail({ statusCode: 404, message: "Team not found" });
+                return Result.fail({
+                    code: "TEAM_NOT_FOUND",
+                    statusCode: 404,
+                    message: "Team not found"
+                });
             }
 
             if (params.name !== undefined && params.name !== existing.name) {
@@ -32,6 +36,7 @@ class UpdateTeamUseCaseImpl implements Abstraction.Interface {
                     .get();
                 if (nameConflict) {
                     return Result.fail({
+                        code: "TEAM_NAME_CONFLICT",
                         statusCode: 409,
                         message: `A team named "${params.name}" already exists`
                     });
@@ -52,7 +57,11 @@ class UpdateTeamUseCaseImpl implements Abstraction.Interface {
                 toTeamWithStats(updatedTeam, statsByTeam.get(params.id) ?? zeroStats())
             );
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

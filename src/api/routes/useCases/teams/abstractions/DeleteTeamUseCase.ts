@@ -5,11 +5,13 @@ export interface IDeleteTeamUseCaseParams {
 }
 
 export interface ITeamNotFoundError {
+    code: "TEAM_NOT_FOUND";
     statusCode: 404;
     message: string;
 }
 
 export interface IUnexpectedError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

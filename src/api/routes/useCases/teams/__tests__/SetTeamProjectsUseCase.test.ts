@@ -78,6 +78,7 @@ describe("SetTeamProjectsUseCase", () => {
         if (!result.isFail()) {
             return;
         }
+        expect(result.error.code).toBe("TEAM_NOT_FOUND");
         expect(result.error.statusCode).toBe(404);
     });
 });

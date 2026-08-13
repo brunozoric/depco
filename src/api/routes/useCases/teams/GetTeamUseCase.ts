@@ -15,7 +15,11 @@ class GetTeamUseCaseImpl implements Abstraction.Interface {
 
             const team = await db.select().from(teams).where(eq(teams.id, params.id)).get();
             if (!team) {
-                return Result.fail({ statusCode: 404, message: "Team not found" });
+                return Result.fail({
+                    code: "TEAM_NOT_FOUND",
+                    statusCode: 404,
+                    message: "Team not found"
+                });
             }
 
             const projectRows = await db
@@ -30,7 +34,11 @@ class GetTeamUseCaseImpl implements Abstraction.Interface {
                 projects: projectRows.map(row => ({ id: row.id, name: row.name, path: row.path }))
             });
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

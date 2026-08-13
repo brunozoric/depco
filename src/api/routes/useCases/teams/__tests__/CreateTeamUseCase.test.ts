@@ -38,6 +38,7 @@ describe("CreateTeamUseCase", () => {
         if (!result.isFail()) {
             return;
         }
+        expect(result.error.code).toBe("TEAM_NAME_CONFLICT");
         expect(result.error.statusCode).toBe(409);
         expect(result.error.message).toContain("Platform");
     });

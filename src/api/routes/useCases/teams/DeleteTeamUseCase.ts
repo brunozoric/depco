@@ -13,14 +13,22 @@ class DeleteTeamUseCaseImpl implements Abstraction.Interface {
 
             const existing = await db.select().from(teams).where(eq(teams.id, params.id)).get();
             if (!existing) {
-                return Result.fail({ statusCode: 404, message: "Team not found" });
+                return Result.fail({
+                    code: "TEAM_NOT_FOUND",
+                    statusCode: 404,
+                    message: "Team not found"
+                });
             }
 
             await db.delete(teams).where(eq(teams.id, params.id)).run();
 
             return Result.ok();
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

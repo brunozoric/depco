@@ -12,6 +12,7 @@ export interface IListTeamsUseCaseData {
 }
 
 export interface IListTeamsUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

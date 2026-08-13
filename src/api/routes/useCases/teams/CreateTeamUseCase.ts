@@ -18,6 +18,7 @@ class CreateTeamUseCaseImpl implements Abstraction.Interface {
             const existing = await db.select().from(teams).where(eq(teams.name, params.name)).get();
             if (existing) {
                 return Result.fail({
+                    code: "TEAM_NAME_CONFLICT",
                     statusCode: 409,
                     message: `A team named "${params.name}" already exists`
                 });
@@ -34,7 +35,11 @@ class CreateTeamUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok(toTeamWithStats(team, zeroStats()));
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }
