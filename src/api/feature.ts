@@ -29,6 +29,7 @@ import { FileConfigFeature } from "./services/FileConfig/index.js";
 import { GitFeature } from "./services/Git/index.js";
 import { JobExecutionFeature } from "./services/JobExecution/index.js";
 import { AuthUseCasesFeature } from "./routes/useCases/auth/index.js";
+import { BackupUseCasesFeature } from "./routes/useCases/backup/index.js";
 import { ChangelogsUseCasesFeature } from "./routes/useCases/changelogs/index.js";
 import { DashboardUseCasesFeature } from "./routes/useCases/dashboard/index.js";
 import { DependencyGraphUseCasesFeature } from "./routes/useCases/dependencyGraph/index.js";
@@ -115,6 +116,7 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
         UpgradeSessionFeature.register(container);
         AuthFeature.register(container);
         AuthUseCasesFeature.register(container);
+        BackupUseCasesFeature.register(container);
         JobExecutionFeature.register(container);
         JobsUseCasesFeature.register(container);
         LogsUseCasesFeature.register(container);

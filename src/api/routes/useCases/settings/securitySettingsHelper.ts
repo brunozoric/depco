@@ -1,6 +1,6 @@
-import { pmSecuritySettings } from "#api/db/schema.js";
+import type { pmSecuritySettings } from "#api/db/schema.js";
 
-export interface SecuritySettingResponse {
+export interface ISecuritySettingResponse {
     id: string;
     packageManager: string;
     configFile: string;
@@ -11,7 +11,7 @@ export interface SecuritySettingResponse {
 
 export function toSecuritySettingResponse(
     row: typeof pmSecuritySettings.$inferSelect
-): SecuritySettingResponse {
+): ISecuritySettingResponse {
     return {
         id: row.id,
         packageManager: row.packageManager,
