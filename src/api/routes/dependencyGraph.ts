@@ -1,6 +1,5 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { eq } from "drizzle-orm";
 import { registerRoute, sendError } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
@@ -9,9 +8,12 @@ import {
     getDependencyGraphStatsRoute,
     searchDependencyPackagesRoute
 } from "#shared/routes/index.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { DependencyGraphService } from "#api/services/DependencyGraph/index.js";
-import { projects } from "#api/db/schema.js";
+import {
+    GetDependencyGraphUseCase,
+    SearchDependencyPackagesUseCase,
+    RefreshDependencyGraphUseCase,
+    GetDependencyGraphStatsUseCase
+} from "./useCases/dependencyGraph/index.js";
 
 interface PluginOptions extends FastifyPluginOptions {
     container: Container;
@@ -22,33 +24,38 @@ export async function dependencyGraphRoutes(
     options: PluginOptions
 ): Promise<void> {
     const { container } = options;
-    const databaseClient = container.resolve(DatabaseClient);
-    const dependencyGraphService = container.resolve(DependencyGraphService);
-    const { db } = databaseClient;
 
     registerRoute(app, getDependencyGraphRoute, {}, async (request, reply) => {
-        const { projectId } = request.params;
-        const { package: packageName } = request.query;
+        const useCase = container.resolve(GetDependencyGraphUseCase);
+        const result = await useCase.execute({
+            projectId: request.params.projectId,
+            packageName: request.query.package
+        });
 
-        if (packageName) {
-            const paths = await dependencyGraphService.findPaths({ projectId, packageName });
-            reply.send({ paths });
-            return;
-        }
-
-        const graph = await dependencyGraphService.getGraph(projectId);
-        reply.send(graph);
+        result.match({
+            ok: data => {
+                reply.send(data);
+            },
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
     });
 
     registerRoute(app, searchDependencyPackagesRoute, {}, async (request, reply) => {
-        const { projectId } = request.params;
-        const { query, limit } = request.query;
-        const packages = await dependencyGraphService.searchPackages({
-            projectId,
-            query,
-            ...(limit === undefined ? {} : { limit })
+        const useCase = container.resolve(SearchDependencyPackagesUseCase);
+        const result = await useCase.execute({
+            projectId: request.params.projectId,
+            query: request.query.query,
+            limit: request.query.limit
         });
-        reply.send({ packages });
+
+        result.match({
+            ok: data => {
+                reply.send(data);
+            },
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
     });
 
     registerRoute(
@@ -56,43 +63,29 @@ export async function dependencyGraphRoutes(
         refreshDependencyGraphRoute,
         { preHandler: [requirePermission("full")] },
         async (request, reply) => {
-            const { projectId } = request.params;
+            const useCase = container.resolve(RefreshDependencyGraphUseCase);
+            const result = await useCase.execute({ projectId: request.params.projectId });
 
-            const project = await db
-                .select()
-                .from(projects)
-                .where(eq(projects.id, projectId))
-                .get();
-            if (!project) {
-                sendError({ reply: reply, statusCode: 404, message: "Project not found" });
-                return;
-            }
-            if (!project.packageManager) {
-                sendError({
-                    reply: reply,
-                    statusCode: 400,
-                    message: "Project has no detected package manager"
-                });
-                return;
-            }
-
-            const edgeCount = await dependencyGraphService.refreshGraph(
-                projectId,
-                project.path,
-                project.packageManager
-            );
-            reply.send({ edgeCount });
+            result.match({
+                ok: data => {
+                    reply.send(data);
+                },
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 
     registerRoute(app, getDependencyGraphStatsRoute, {}, async (request, reply) => {
-        const { projectId } = request.params;
-        const graph = await dependencyGraphService.getGraph(projectId);
-        reply.send({
-            totalPackages: graph.totalPackages,
-            maxDepth: graph.maxDepth,
-            rootCount: graph.rootPackages.length,
-            edgeCount: graph.edgeCount
+        const useCase = container.resolve(GetDependencyGraphStatsUseCase);
+        const result = await useCase.execute({ projectId: request.params.projectId });
+
+        result.match({
+            ok: data => {
+                reply.send(data);
+            },
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
         });
     });
 }

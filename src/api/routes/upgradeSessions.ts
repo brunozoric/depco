@@ -9,29 +9,16 @@ import {
     skipUpgradeStepRoute,
     abortUpgradeSessionRoute
 } from "#shared/routes/index.js";
-import { UpgradeSessionService } from "#api/services/UpgradeSession/index.js";
+import {
+    CreateUpgradeSessionUseCase,
+    GetUpgradeSessionUseCase,
+    ExecuteUpgradeStepUseCase,
+    SkipUpgradeStepUseCase,
+    AbortUpgradeSessionUseCase
+} from "./useCases/upgradeSessions/index.js";
 
 interface PluginOptions extends FastifyPluginOptions {
     container: Container;
-}
-
-function mapErrorStatus(message: string): number {
-    if (message.includes("not found")) {
-        return 404;
-    }
-    if (message.includes("not active")) {
-        return 409;
-    }
-    if (
-        message.includes("not the current step") ||
-        message.includes("required") ||
-        message.includes("non-empty array") ||
-        message.includes("is required") ||
-        message.includes("No packages")
-    ) {
-        return 400;
-    }
-    return 500;
 }
 
 export async function upgradeSessionRoutes(
@@ -39,39 +26,35 @@ export async function upgradeSessionRoutes(
     options: PluginOptions
 ): Promise<void> {
     const { container } = options;
-    const upgradeSessionService = container.resolve(UpgradeSessionService);
 
     registerRoute(
         app,
         createUpgradeSessionRoute,
         { preHandler: [requirePermission("full")] },
         async (request, reply) => {
-            const { id } = request.params;
+            const useCase = container.resolve(CreateUpgradeSessionUseCase);
+            const result = await useCase.execute({ projectId: request.params.id });
 
-            try {
-                const session = await upgradeSessionService.createSession(id);
-                sendOne({ reply: reply, data: session });
-            } catch (error) {
-                const message = (error as Error).message;
-                sendError({ reply: reply, statusCode: mapErrorStatus(message), message: message });
-            }
+            result.match({
+                ok: data => sendOne({ reply, data }),
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 
     registerRoute(app, getUpgradeSessionRoute, {}, async (request, reply) => {
-        const { id, sessionId } = request.params;
+        const useCase = container.resolve(GetUpgradeSessionUseCase);
+        const result = await useCase.execute({
+            projectId: request.params.id,
+            sessionId: request.params.sessionId
+        });
 
-        try {
-            const session = await upgradeSessionService.getSession(sessionId, id);
-            if (!session) {
-                sendError({ reply: reply, statusCode: 404, message: "Session not found" });
-                return;
-            }
-            sendOne({ reply: reply, data: session });
-        } catch (error) {
-            const message = (error as Error).message;
-            sendError({ reply: reply, statusCode: mapErrorStatus(message), message: message });
-        }
+        result.match({
+            ok: data => sendOne({ reply, data }),
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
     });
 
     registerRoute(
@@ -79,20 +62,19 @@ export async function upgradeSessionRoutes(
         executeUpgradeStepRoute,
         { preHandler: [requirePermission("full")] },
         async (request, reply) => {
-            const { id, sessionId, stepType } = request.params;
+            const useCase = container.resolve(ExecuteUpgradeStepUseCase);
+            const result = await useCase.execute({
+                projectId: request.params.id,
+                sessionId: request.params.sessionId,
+                stepType: request.params.stepType,
+                input: request.body
+            });
 
-            try {
-                const session = await upgradeSessionService.executeStep(
-                    sessionId,
-                    id,
-                    stepType,
-                    request.body
-                );
-                sendOne({ reply: reply, data: session });
-            } catch (error) {
-                const message = (error as Error).message;
-                sendError({ reply: reply, statusCode: mapErrorStatus(message), message: message });
-            }
+            result.match({
+                ok: data => sendOne({ reply, data }),
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 
@@ -101,15 +83,18 @@ export async function upgradeSessionRoutes(
         skipUpgradeStepRoute,
         { preHandler: [requirePermission("full")] },
         async (request, reply) => {
-            const { id, sessionId, stepType } = request.params;
+            const useCase = container.resolve(SkipUpgradeStepUseCase);
+            const result = await useCase.execute({
+                projectId: request.params.id,
+                sessionId: request.params.sessionId,
+                stepType: request.params.stepType
+            });
 
-            try {
-                const session = await upgradeSessionService.skipStep(sessionId, id, stepType);
-                sendOne({ reply: reply, data: session });
-            } catch (error) {
-                const message = (error as Error).message;
-                sendError({ reply: reply, statusCode: mapErrorStatus(message), message: message });
-            }
+            result.match({
+                ok: data => sendOne({ reply, data }),
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 
@@ -118,15 +103,17 @@ export async function upgradeSessionRoutes(
         abortUpgradeSessionRoute,
         { preHandler: [requirePermission("full")] },
         async (request, reply) => {
-            const { id, sessionId } = request.params;
+            const useCase = container.resolve(AbortUpgradeSessionUseCase);
+            const result = await useCase.execute({
+                projectId: request.params.id,
+                sessionId: request.params.sessionId
+            });
 
-            try {
-                const session = await upgradeSessionService.abortSession(sessionId, id);
-                sendOne({ reply: reply, data: session });
-            } catch (error) {
-                const message = (error as Error).message;
-                sendError({ reply: reply, statusCode: mapErrorStatus(message), message: message });
-            }
+            result.match({
+                ok: data => sendOne({ reply, data }),
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 }

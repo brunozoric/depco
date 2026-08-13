@@ -26,8 +26,10 @@ describe("filesystem routes", () => {
         mkdirSync(join(testDir, "beta"));
         mkdirSync(join(testDir, ".hidden"));
 
+        const { container } = createTestApiContainer();
+
         app = Fastify();
-        await app.register(filesystemRoutes);
+        await app.register(filesystemRoutes, { container });
         await app.ready();
     });
 

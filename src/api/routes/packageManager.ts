@@ -1,13 +1,12 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { eq } from "drizzle-orm";
 import { registerRoute, sendOne, sendError } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { getPackageManagerRoute, updatePackageManagerRoute } from "#shared/routes/index.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { JobWorker } from "../services/JobExecution/index.js";
-import { PackageManagerService } from "../services/PackageManager/index.js";
-import { projects } from "#api/db/schema.js";
+import {
+    GetPackageManagerUseCase,
+    UpdatePackageManagerUseCase
+} from "./useCases/packageManager/index.js";
 
 interface PluginOptions extends FastifyPluginOptions {
     container: Container;
@@ -18,25 +17,17 @@ export async function packageManagerRoutes(
     options: PluginOptions
 ): Promise<void> {
     const { container } = options;
-    const databaseClient = container.resolve(DatabaseClient);
-    const jobWorker = container.resolve(JobWorker);
-    const packageManagerService = container.resolve(PackageManagerService);
-    const { db } = databaseClient;
 
     // GET /api/projects/:id/package-manager — current package manager version.
     registerRoute(app, getPackageManagerRoute, {}, async (request, reply) => {
-        const { id } = request.params;
+        const useCase = container.resolve(GetPackageManagerUseCase);
+        const result = await useCase.execute({ id: request.params.id });
 
-        const project = await db.select().from(projects).where(eq(projects.id, id)).get();
-        if (!project) {
-            sendError({ reply: reply, statusCode: 404, message: "Project not found" });
-            return;
-        }
-
-        const packageManager =
-            project.packageManager ?? (await packageManagerService.detect(project.path));
-        const version = await packageManagerService.getVersion(project.path, packageManager);
-        sendOne({ reply: reply, data: { version } });
+        result.match({
+            ok: data => sendOne({ reply, data }),
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
     });
 
     // POST /api/projects/:id/package-manager/update — enqueue a package
@@ -46,40 +37,17 @@ export async function packageManagerRoutes(
         updatePackageManagerRoute,
         { preHandler: [requirePermission("full")] },
         async (request, reply) => {
-            const { id } = request.params;
-            const body = request.body;
+            const useCase = container.resolve(UpdatePackageManagerUseCase);
+            const result = await useCase.execute({
+                id: request.params.id,
+                version: request.body.version
+            });
 
-            const project = await db.select().from(projects).where(eq(projects.id, id)).get();
-            if (!project) {
-                sendError({ reply: reply, statusCode: 404, message: "Project not found" });
-                return;
-            }
-
-            const packageManager =
-                project.packageManager ?? (await packageManagerService.detect(project.path));
-
-            let currentVersion: string;
-            try {
-                currentVersion = await packageManagerService.getVersion(
-                    project.path,
-                    packageManager
-                );
-            } catch {
-                currentVersion = project.pmVersion ?? "unknown";
-            }
-
-            try {
-                const jobId = await jobWorker.enqueue({
-                    referenceId: id,
-                    referenceType: "project",
-                    type: "packageManager",
-                    packages: { from: currentVersion, to: body.version }
-                });
-
-                sendOne({ reply: reply, data: { jobId } });
-            } catch (error) {
-                sendError({ reply: reply, statusCode: 403, message: (error as Error).message });
-            }
+            result.match({
+                ok: data => sendOne({ reply, data }),
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 }
