@@ -7,7 +7,6 @@ import {
     refreshOsvCacheResponseSchema,
     bulkVulnerabilitiesResponseSchema,
     bulkRescanVulnerabilitiesResponseSchema,
-    exportVulnerabilitiesResponseSchema,
     getExpiredSnoozesResponseSchema,
     getVulnerabilityDetailResponseSchema
 } from "../responses/vulnerabilities.js";
@@ -136,8 +135,7 @@ export const exportVulnerabilitiesRoute = defineRoute({
         dependencyType: z.enum(["all", "direct", "transitive"]).optional(),
         sortBy: z.enum(["severity", "packageName", "projectName"]).optional(),
         sortOrder: z.enum(["asc", "desc"]).optional()
-    }),
-    response: exportVulnerabilitiesResponseSchema
+    })
 });
 
 export const getExpiredSnoozesRoute = defineRoute({

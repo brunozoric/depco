@@ -67,8 +67,6 @@ export const bulkVulnerabilitiesResponseSchema = z.object({ updatedCount: z.numb
 
 export const bulkRescanVulnerabilitiesResponseSchema = z.object({ projectsQueued: z.number() });
 
-export const exportVulnerabilitiesResponseSchema = z.any();
-
 export const getExpiredSnoozesResponseSchema = z.object({
     count: z.number(),
     packageNames: z.array(z.string())

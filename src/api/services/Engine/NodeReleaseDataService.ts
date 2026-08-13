@@ -14,7 +14,7 @@ const nodeReleaseApiEntrySchema = z.object({
     releaseDate: z.string(),
     lts: z.union([z.literal(false), z.string()]),
     maintenance: z.string().optional(),
-    eol: z.string(),
+    eol: z.union([z.literal(false), z.string()]),
     codename: z.string().optional()
 });
 
@@ -53,7 +53,7 @@ function byVersionAscending(a: INodeRelease, b: INodeRelease): number {
  * used throughout the rest of the engines feature.
  */
 function transformApiEntry(entry: INodeReleaseApiEntry): INodeRelease | null {
-    if (!/^\d+$/.test(entry.cycle)) {
+    if (!/^\d+$/.test(entry.cycle) || entry.eol === false) {
         return null;
     }
 
@@ -116,10 +116,14 @@ class NodeReleaseDataServiceImpl implements Abstraction.Interface {
         }
 
         const json: unknown = await response.json();
-        const parsed = nodeReleaseApiResponseSchema.parse(json);
+        const result = nodeReleaseApiResponseSchema.safeParse(json);
+
+        if (!result.success) {
+            throw new Error(JSON.stringify(result.error.issues));
+        }
 
         const releases: INodeRelease[] = [];
-        for (const entry of parsed) {
+        for (const entry of result.data) {
             const release = transformApiEntry(entry);
             if (release) {
                 releases.push(release);

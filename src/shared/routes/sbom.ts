@@ -8,8 +8,7 @@ export const exportAllSbomRoute = defineRoute({
     params: z.object({}),
     querystring: z.object({
         format: z.enum(["cyclonedx", "spdx"]).default("cyclonedx")
-    }),
-    response: z.any()
+    })
 });
 
 export const exportProjectSbomRoute = defineRoute({
@@ -19,6 +18,5 @@ export const exportProjectSbomRoute = defineRoute({
     params: z.object({ projectId: z.string() }),
     querystring: z.object({
         format: z.enum(["cyclonedx", "spdx"]).default("cyclonedx")
-    }),
-    response: z.any()
+    })
 });

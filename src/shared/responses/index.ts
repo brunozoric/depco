@@ -61,7 +61,6 @@ export * from "./packageManager.js";
 export * from "./packages.js";
 export * from "./pmSettings.js";
 export * from "./projects.js";
-export * from "./sbom.js";
 export * from "./scanSchedules.js";
 export * from "./settings.js";
 export * from "./stepHooks.js";
