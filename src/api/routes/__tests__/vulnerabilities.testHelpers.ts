@@ -169,6 +169,38 @@ export async function createTestContext(): Promise<IRouteTestContext> {
     return { app, db, token };
 }
 
+export interface IMockedRouteContext {
+    app: FastifyInstance;
+    db: TestDb;
+    vulnerabilityService: VulnerabilityService.Interface;
+    osvCacheService: OsvCacheService.Interface;
+    token: string;
+}
+
+/**
+ * Wires the vulnerability routes with a mocked VulnerabilityService and
+ * OsvCacheService (via createMockVulnerabilityService/createMockOsvCacheService)
+ * against a real in-memory test container — used by route tests that assert
+ * on request/response shape and delegation to the service layer, rather than
+ * exercising real filtering/dismiss logic (see createTestContext() for that).
+ */
+export async function createMockedRouteContext(): Promise<IMockedRouteContext> {
+    const { container, db } = createTestApiContainer();
+    const vulnerabilityService = createMockVulnerabilityService();
+    const osvCacheService = createMockOsvCacheService();
+    container.registerInstance(VulnerabilityService, vulnerabilityService);
+    container.registerInstance(OsvCacheService, osvCacheService);
+
+    const app = Fastify();
+    app.addHook("onRequest", createAuthHook(container));
+    await app.register(vulnerabilityRoutes, { container });
+    await app.ready();
+
+    const { token } = await createTestSession({ db });
+
+    return { app, db, vulnerabilityService, osvCacheService, token };
+}
+
 export async function insertTestProject(db: TestDb, id: string): Promise<void> {
     const existing = await db.select().from(projects).where(eq(projects.id, id)).all();
     if (existing.length > 0) {
