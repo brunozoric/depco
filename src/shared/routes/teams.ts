@@ -1,8 +1,6 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
 import {
-    teamWithStatsSchema,
-    teamDetailSchema,
     listTeamsResponseSchema,
     createTeamResponseSchema,
     getTeamDetailResponseSchema,
