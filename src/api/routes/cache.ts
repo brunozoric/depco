@@ -1,9 +1,9 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendNone } from "#shared/routing/index.js";
+import { registerRoute, sendError } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { clearCacheRoute, clearPackageCacheRoute } from "#shared/routes/index.js";
-import { RegistryCacheService } from "../services/RegistryCache/index.js";
+import { ClearCacheUseCase, ClearPackageCacheUseCase } from "./useCases/cache/index.js";
 
 interface PluginOptions extends FastifyPluginOptions {
     container: Container;
@@ -11,7 +11,6 @@ interface PluginOptions extends FastifyPluginOptions {
 
 export async function cacheRoutes(app: FastifyInstance, options: PluginOptions): Promise<void> {
     const { container } = options;
-    const registryCacheService = container.resolve(RegistryCacheService);
 
     // DELETE /api/cache — clear the entire registry cache.
     registerRoute(
@@ -19,8 +18,16 @@ export async function cacheRoutes(app: FastifyInstance, options: PluginOptions):
         clearCacheRoute,
         { preHandler: [requirePermission("full")] },
         async (_request, reply) => {
-            await registryCacheService.clearAll();
-            sendNone(reply);
+            const useCase = container.resolve(ClearCacheUseCase);
+            const result = await useCase.execute({});
+
+            result.match({
+                ok: data => {
+                    reply.send(data);
+                },
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 
@@ -30,8 +37,16 @@ export async function cacheRoutes(app: FastifyInstance, options: PluginOptions):
         clearPackageCacheRoute,
         { preHandler: [requirePermission("full")] },
         async (request, reply) => {
-            await registryCacheService.clearPackage(request.params.packageName);
-            sendNone(reply);
+            const useCase = container.resolve(ClearPackageCacheUseCase);
+            const result = await useCase.execute({ packageName: request.params.packageName });
+
+            result.match({
+                ok: data => {
+                    reply.send(data);
+                },
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 }
