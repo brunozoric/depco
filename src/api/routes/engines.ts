@@ -6,14 +6,16 @@ import {
     listNodeReleasesRoute,
     getProjectEngineChecksRoute,
     getProjectEngineStalenessRoute,
-    scanProjectEnginesRoute
+    scanProjectEnginesRoute,
+    bulkScanEnginesRoute
 } from "#shared/routes/index.js";
 import {
     GetEngineSummaryUseCase,
     ListNodeReleasesUseCase,
     GetProjectEngineChecksUseCase,
     GetProjectEngineStalenessUseCase,
-    ScanProjectEnginesUseCase
+    ScanProjectEnginesUseCase,
+    BulkScanEnginesUseCase
 } from "./useCases/engines/index.js";
 
 interface PluginOptions extends FastifyPluginOptions {
@@ -40,6 +42,19 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
 
         result.match({
             ok: data => sendList({ reply, items: data.items, total: data.total }),
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
+    });
+
+    registerRoute(app, bulkScanEnginesRoute, {}, async (request, reply) => {
+        const useCase = container.resolve(BulkScanEnginesUseCase);
+        const result = await useCase.execute({ projectIds: request.body.projectIds });
+
+        result.match({
+            ok: data => {
+                reply.send(data);
+            },
             fail: error =>
                 sendError({ reply, statusCode: error.statusCode, message: error.message })
         });

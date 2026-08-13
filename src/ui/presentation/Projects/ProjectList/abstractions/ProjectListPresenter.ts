@@ -57,6 +57,7 @@ export interface IProjectListViewModel {
     scanDepth: number;
     searchQuery: string;
     selectedProjectIds: string[];
+    scanningAllEngines: boolean;
 }
 
 export interface IProjectListPresenter {
@@ -67,6 +68,7 @@ export interface IProjectListPresenter {
     addProjects: (paths: string[]) => Promise<void>;
     removeProject: (id: string) => Promise<void>;
     scanAll: () => Promise<void>;
+    scanAllEngines: () => Promise<void>;
     refreshAllSecurity: () => Promise<void>;
     setCloneUrl: (url: string) => void;
     setCloneFolderName: (name: string) => void;

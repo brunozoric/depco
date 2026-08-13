@@ -48,7 +48,8 @@ describe("ProjectDetailPresenter - load and scan", () => {
             availableTeams: [],
             changelogState: null,
             engineData: null,
-            showMaintenance: true
+            showMaintenance: true,
+            engineScanning: false
         });
     });
 

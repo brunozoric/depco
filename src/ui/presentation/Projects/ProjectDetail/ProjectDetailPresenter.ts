@@ -255,7 +255,8 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
             availableTeams: this.teamsManager.availableTeams,
             changelogState: this.changelogManager.trackingState,
             engineData: this.engineManager.getViewModel(this.currentProjectId),
-            showMaintenance: this.engineManager.showMaintenance
+            showMaintenance: this.engineManager.showMaintenance,
+            engineScanning: this.engineManager.scanning
         };
     }
 
@@ -401,6 +402,13 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
 
     public toggleMaintenance = (): void => {
         this.engineManager.toggleMaintenance();
+    };
+
+    public scanEngines = async (): Promise<void> => {
+        if (!this.currentProjectId) {
+            return;
+        }
+        await this.engineManager.scan(this.currentProjectId);
     };
 
     public dispose = (): void => {

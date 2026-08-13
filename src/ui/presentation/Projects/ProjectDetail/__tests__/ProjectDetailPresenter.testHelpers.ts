@@ -21,7 +21,9 @@ import {
     listTeamsRoute,
     getProjectTeamsRoute,
     setProjectTeamsRoute,
-    getProjectEngineChecksRoute
+    getProjectEngineChecksRoute,
+    getProjectEngineStalenessRoute,
+    scanProjectEnginesRoute
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { HTTPClientFeature } from "../../../../infrastructure/HttpClient/feature.js";
@@ -101,6 +103,9 @@ export interface ProjectDetailTestContext {
     teamsListResult: unknown[];
     projectTeamsResult: Team[];
     engineChecksResult: unknown[];
+    engineStalenessResult: unknown;
+    engineScanResult: unknown;
+    engineScanError: Error | null;
     createPresenter: () => ProjectDetailPresenter.Interface;
     loadAndFlush: (presenter: ProjectDetailPresenter.Interface, projectId: string) => Promise<void>;
 }
@@ -242,6 +247,13 @@ function createPresenterForContext(
                         items: ctx.engineChecksResult,
                         total: ctx.engineChecksResult.length
                     } as T;
+                case getProjectEngineStalenessRoute:
+                    return ctx.engineStalenessResult as T;
+                case scanProjectEnginesRoute:
+                    if (ctx.engineScanError) {
+                        throw ctx.engineScanError;
+                    }
+                    return ctx.engineScanResult as T;
                 case setProjectTeamsRoute: {
                     const setTeamsArgs = args as { body: { teamIds: string[] } };
                     ctx.projectTeamsResult = setTeamsArgs.body.teamIds.map(
@@ -346,6 +358,25 @@ export function createProjectDetailTestContext(): ProjectDetailTestContext {
         teamsListResult: [],
         projectTeamsResult: [],
         engineChecksResult: [],
+        engineStalenessResult: {
+            lastScannedAt: null,
+            engineScanStale: false,
+            engineScanStaleReason: null,
+            stalenessThresholdMs: 604_800_000
+        },
+        engineScanResult: {
+            rootStatus: "current",
+            rootEnginesNode: ">=20",
+            findings: [],
+            summary: {
+                totalProjects: 1,
+                counts: { eol: 0, maintenance: 0, activeLts: 0, current: 1, unknown: 0 },
+                projectSummaries: [],
+                staleProjectCount: 0,
+                stalenessThresholdMs: 604_800_000
+            }
+        },
+        engineScanError: null,
         createPresenter: () => createPresenterForContext(ctx),
         loadAndFlush: async (presenter, projectId) => {
             await presenter.load(projectId);

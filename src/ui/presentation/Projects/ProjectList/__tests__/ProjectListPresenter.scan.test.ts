@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { scanProjectAsyncRoute } from "#shared/routes/index.js";
+import { scanProjectAsyncRoute, bulkScanEnginesRoute } from "#shared/routes/index.js";
 import {
     createProjectListPresenterTestHarness,
     type IProjectListPresenterTestHarness
@@ -157,5 +157,79 @@ describe("ProjectListPresenter - scanAll", () => {
         expect(harness.fakeEventBridge.listenerCount("scan:failed")).toBe(0);
         expect(harness.fakeEventBridge.listenerCount("install:complete")).toBe(0);
         expect(harness.fakeEventBridge.listenerCount("job:status")).toBe(0);
+    });
+});
+
+describe("ProjectListPresenter - scanAllEngines", () => {
+    let harness: IProjectListPresenterTestHarness;
+
+    beforeEach(() => {
+        harness = createProjectListPresenterTestHarness();
+    });
+
+    const sampleProjects = [
+        {
+            id: "p1",
+            name: "one",
+            path: "/tmp/one",
+            pmVersion: "4.1.0",
+            packageManager: "yarn",
+            addedAt: 1000,
+            lastScannedAt: null,
+            hasNodeModules: false
+        },
+        {
+            id: "p2",
+            name: "two",
+            path: "/tmp/two",
+            pmVersion: "4.1.0",
+            packageManager: "yarn",
+            addedAt: 1500,
+            lastScannedAt: null,
+            hasNodeModules: false
+        }
+    ];
+
+    it("calls the bulk-scan endpoint with every visible project id and reloads the list", async () => {
+        harness.getResult = sampleProjects;
+        harness.bulkScanEnginesResult = { scannedCount: 2 };
+        const presenter = harness.createPresenter();
+        await presenter.load();
+        harness.calls = [];
+
+        const pending = presenter.scanAllEngines();
+        expect(presenter.vm.scanningAllEngines).toBe(true);
+
+        await pending;
+
+        expect(presenter.vm.scanningAllEngines).toBe(false);
+        const bulkScanCalls = harness.calls.filter(call => call.route === bulkScanEnginesRoute);
+        expect(bulkScanCalls).toHaveLength(1);
+        expect(bulkScanCalls[0]!.args).toEqual({
+            params: {},
+            body: { projectIds: ["p1", "p2"] }
+        });
+    });
+
+    it("does nothing when there are no projects", async () => {
+        harness.getResult = [];
+        const presenter = harness.createPresenter();
+        await presenter.load();
+        harness.calls = [];
+
+        await presenter.scanAllEngines();
+
+        expect(harness.calls.some(call => call.route === bulkScanEnginesRoute)).toBe(false);
+    });
+
+    it("resets scanningAllEngines even when the bulk-scan request fails", async () => {
+        harness.getResult = sampleProjects;
+        harness.bulkScanEnginesError = new Error("bulk scan failed");
+        const presenter = harness.createPresenter();
+        await presenter.load();
+
+        await presenter.scanAllEngines();
+
+        expect(presenter.vm.scanningAllEngines).toBe(false);
     });
 });

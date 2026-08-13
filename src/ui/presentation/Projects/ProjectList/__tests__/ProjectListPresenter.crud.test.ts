@@ -46,7 +46,8 @@ describe("ProjectListPresenter - CRUD and load", () => {
             scanSummary: null,
             scanDepth: 1,
             searchQuery: "",
-            selectedProjectIds: []
+            selectedProjectIds: [],
+            scanningAllEngines: false
         });
     });
 

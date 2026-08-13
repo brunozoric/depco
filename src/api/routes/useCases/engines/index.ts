@@ -3,4 +3,5 @@ export { ListNodeReleasesUseCase } from "./abstractions/ListNodeReleasesUseCase.
 export { GetProjectEngineChecksUseCase } from "./abstractions/GetProjectEngineChecksUseCase.js";
 export { GetProjectEngineStalenessUseCase } from "./abstractions/GetProjectEngineStalenessUseCase.js";
 export { ScanProjectEnginesUseCase } from "./abstractions/ScanProjectEnginesUseCase.js";
+export { BulkScanEnginesUseCase } from "./abstractions/BulkScanEnginesUseCase.js";
 export { EnginesUseCasesFeature } from "./feature.js";

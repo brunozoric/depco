@@ -108,3 +108,12 @@ export const scanProjectEnginesRoute = defineRoute({
     }),
     response: engineScanResultSchema
 });
+
+export const bulkScanEnginesRoute = defineRoute({
+    method: "POST",
+    path: "/api/engines/bulk-scan",
+    description: "Trigger an engine scan for multiple projects",
+    params: z.object({}),
+    body: z.object({ projectIds: z.array(z.string()).min(1) }),
+    response: z.object({ scannedCount: z.number() })
+});

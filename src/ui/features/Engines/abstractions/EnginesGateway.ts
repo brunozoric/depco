@@ -56,11 +56,16 @@ export interface IEngineStalenessData {
     stalenessThresholdMs: number;
 }
 
+export interface IBulkScanEnginesResult {
+    scannedCount: number;
+}
+
 export interface IEnginesGateway {
     getByProject(projectId: string): Promise<IEngineListResponse>;
     getSummary(): Promise<IEngineSummaryData>;
     getStaleness(projectId: string): Promise<IEngineStalenessData>;
     scan(projectId: string): Promise<IEngineScanResultData>;
+    bulkScanEngines(projectIds: string[]): Promise<IBulkScanEnginesResult>;
     getReleases(): Promise<INodeReleaseListResponse>;
 }
 
@@ -76,4 +81,5 @@ export namespace EnginesGateway {
     export type NodeRelease = INodeRelease;
     export type NodeReleaseListResponse = INodeReleaseListResponse;
     export type StalenessData = IEngineStalenessData;
+    export type BulkScanResult = IBulkScanEnginesResult;
 }

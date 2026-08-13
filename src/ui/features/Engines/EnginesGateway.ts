@@ -5,6 +5,7 @@ import {
     getProjectEngineStalenessRoute,
     getEngineSummaryRoute,
     scanProjectEnginesRoute,
+    bulkScanEnginesRoute,
     listNodeReleasesRoute
 } from "#shared/routes/index.js";
 
@@ -33,6 +34,13 @@ class EnginesGatewayImpl implements Abstraction.Interface {
         return this.httpClient.request(scanProjectEnginesRoute, {
             params: { projectId },
             query: {}
+        });
+    }
+
+    public async bulkScanEngines(projectIds: string[]): Promise<Abstraction.BulkScanResult> {
+        return this.httpClient.request(bulkScanEnginesRoute, {
+            params: {},
+            body: { projectIds }
         });
     }
 

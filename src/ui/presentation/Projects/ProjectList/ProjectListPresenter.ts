@@ -26,6 +26,7 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
     private browseLoading = false;
     private searchQuery = "";
     private readonly selectedProjectIds = new Set<string>();
+    private scanningAllEnginesValue = false;
 
     public readonly cloneManager: CloneManagerFactory.Manager;
     public readonly directoryScanManager: DirectoryScanManagerFactory.Manager;
@@ -120,7 +121,8 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
             searchQuery: this.searchQuery,
             selectedProjectIds: allProjects
                 .map(project => project.id)
-                .filter(id => this.selectedProjectIds.has(id))
+                .filter(id => this.selectedProjectIds.has(id)),
+            scanningAllEngines: this.scanningAllEnginesValue
         };
     }
 
@@ -199,6 +201,35 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
 
     public scanAll = async (): Promise<void> => {
         await this.scanStatusManager.scanAll();
+    };
+
+    public scanAllEngines = async (): Promise<void> => {
+        const projectIds = this.vm.projects.map(project => project.id);
+        if (projectIds.length === 0) {
+            return;
+        }
+        this.scanningAllEnginesValue = true;
+        try {
+            const result = await this.enginesGateway.bulkScanEngines(projectIds);
+            notifications.show({
+                color: "green",
+                title: "Engine scan complete",
+                message: `Scanned engines for ${result.scannedCount} project${
+                    result.scannedCount === 1 ? "" : "s"
+                }`
+            });
+            await this.load();
+        } catch (error) {
+            notifications.show({
+                color: "red",
+                title: "Engine scan failed",
+                message: getErrorMessage(error, "Failed to scan engines")
+            });
+        } finally {
+            runInAction(() => {
+                this.scanningAllEnginesValue = false;
+            });
+        }
     };
 
     public refreshAllSecurity = async (): Promise<void> => {

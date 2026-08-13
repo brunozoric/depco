@@ -4,6 +4,7 @@ import { ListNodeReleasesUseCase } from "./ListNodeReleasesUseCase.js";
 import { GetProjectEngineChecksUseCase } from "./GetProjectEngineChecksUseCase.js";
 import { GetProjectEngineStalenessUseCase } from "./GetProjectEngineStalenessUseCase.js";
 import { ScanProjectEnginesUseCase } from "./ScanProjectEnginesUseCase.js";
+import { BulkScanEnginesUseCase } from "./BulkScanEnginesUseCase.js";
 
 export const EnginesUseCasesFeature = createFeature({
     name: "Api/EnginesUseCasesFeature",
@@ -13,5 +14,6 @@ export const EnginesUseCasesFeature = createFeature({
         container.register(GetProjectEngineChecksUseCase);
         container.register(GetProjectEngineStalenessUseCase);
         container.register(ScanProjectEnginesUseCase);
+        container.register(BulkScanEnginesUseCase);
     }
 });

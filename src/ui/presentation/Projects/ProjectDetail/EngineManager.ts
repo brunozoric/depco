@@ -1,4 +1,6 @@
 import { makeAutoObservable, runInAction } from "mobx";
+import { notifications } from "@mantine/notifications";
+import { getErrorMessage } from "#shared/errors.js";
 import type { ProjectDetailPresenter } from "./abstractions/ProjectDetailPresenter.js";
 import type { EnginesGateway } from "../../../features/Engines/abstractions/EnginesGateway.js";
 import type { EnginesRepository } from "../../../features/Engines/abstractions/EnginesRepository.js";
@@ -21,6 +23,7 @@ interface IEngineManagerDependencies {
 
 export class EngineManager {
     public showMaintenance = true;
+    public scanning = false;
     private staleness: EnginesGateway.StalenessData | null = null;
 
     private readonly handleEngineScanComplete: EventBridge.Callback<"engine-scan:complete">;
@@ -54,6 +57,24 @@ export class EngineManager {
 
     public toggleMaintenance = (): void => {
         this.showMaintenance = !this.showMaintenance;
+    };
+
+    public scan = async (projectId: string): Promise<void> => {
+        this.scanning = true;
+        try {
+            await this.dependencies.enginesGateway.scan(projectId);
+            await this.load(projectId);
+        } catch (error) {
+            notifications.show({
+                color: "red",
+                title: "Engine scan failed",
+                message: getErrorMessage(error, "Failed to scan engines")
+            });
+        } finally {
+            runInAction(() => {
+                this.scanning = false;
+            });
+        }
     };
 
     public getViewModel(

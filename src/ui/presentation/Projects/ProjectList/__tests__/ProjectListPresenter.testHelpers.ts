@@ -10,7 +10,8 @@ import {
     cloneProjectRoute,
     browseFilesystemRoute,
     getEngineSummaryRoute,
-    bulkScanProjectsRoute
+    bulkScanProjectsRoute,
+    bulkScanEnginesRoute
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { HTTPClientFeature } from "../../../../infrastructure/HttpClient/feature.js";
@@ -94,6 +95,8 @@ export interface IProjectListPresenterTestHarness {
     fakeEventBridge: IFakeEventBridge;
     bulkScanResult: { enqueuedCount: number; skippedCount: number };
     bulkScanError: Error | null;
+    bulkScanEnginesResult: { scannedCount: number };
+    bulkScanEnginesError: Error | null;
     createPresenter: () => ProjectListPresenter.Interface;
 }
 
@@ -109,6 +112,8 @@ export function createProjectListPresenterTestHarness(): IProjectListPresenterTe
         browseItems: [],
         bulkScanResult: { enqueuedCount: 0, skippedCount: 0 },
         bulkScanError: null,
+        bulkScanEnginesResult: { scannedCount: 0 },
+        bulkScanEnginesError: null,
         engineSummaryResult: {
             totalProjects: 0,
             counts: { eol: 0, maintenance: 0, activeLts: 0, current: 0, unknown: 0 },
@@ -166,6 +171,11 @@ export function createProjectListPresenterTestHarness(): IProjectListPresenterTe
                                 throw harness.bulkScanError;
                             }
                             return harness.bulkScanResult as T;
+                        case bulkScanEnginesRoute:
+                            if (harness.bulkScanEnginesError) {
+                                throw harness.bulkScanEnginesError;
+                            }
+                            return harness.bulkScanEnginesResult as T;
                         default:
                             throw new Error(`Unexpected route ${JSON.stringify(route)}`);
                     }

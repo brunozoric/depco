@@ -96,6 +96,14 @@ export const ProjectListPage = observer(function ProjectListPage({
                             </Menu.Item>
                         </Menu.Dropdown>
                     </Menu>
+                    <Button
+                        variant="light"
+                        loading={vm.scanningAllEngines}
+                        disabled={vm.projects.length === 0}
+                        onClick={() => presenter.scanAllEngines()}
+                    >
+                        Check all engines
+                    </Button>
                     <Button onClick={() => setAddModalOpened(true)}>Add Project</Button>
                 </Group>
             </Group>

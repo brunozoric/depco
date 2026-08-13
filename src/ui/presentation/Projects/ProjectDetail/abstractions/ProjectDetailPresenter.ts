@@ -134,6 +134,7 @@ export interface IProjectDetailViewModel {
     changelogState: IChangelogTrackingState | null;
     engineData: IProjectDetailEngineDataViewModel | null;
     showMaintenance: boolean;
+    engineScanning: boolean;
 }
 
 export interface IProjectDetailPresenter {
@@ -170,6 +171,7 @@ export interface IProjectDetailPresenter {
     startChangelogTracking: (input: IStartChangelogTrackingInput) => void;
     stopChangelogTracking: () => void;
     toggleMaintenance: () => void;
+    scanEngines: () => Promise<void>;
     dispose: () => void;
 }
 

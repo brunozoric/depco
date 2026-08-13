@@ -5,6 +5,7 @@ import {
     getProjectEngineStalenessRoute,
     getEngineSummaryRoute,
     scanProjectEnginesRoute,
+    bulkScanEnginesRoute,
     listNodeReleasesRoute
 } from "#shared/routes/index.js";
 import { HTTPClient } from "../../../infrastructure/HttpClient/abstractions/HTTPClient.js";
@@ -100,6 +101,21 @@ describe("EnginesGateway", () => {
         expect(calls[0]!.route).toBe(scanProjectEnginesRoute);
         expect(calls[0]!.args).toEqual({ params: { projectId: "project-1" }, query: {} });
         expect(result.rootStatus).toBe("current");
+    });
+
+    it("bulkScanEngines calls bulkScanEnginesRoute with projectIds in body", async () => {
+        mockResult = { scannedCount: 2 };
+        const gateway = createGateway();
+
+        const result = await gateway.bulkScanEngines(["project-1", "project-2"]);
+
+        expect(calls).toHaveLength(1);
+        expect(calls[0]!.route).toBe(bulkScanEnginesRoute);
+        expect(calls[0]!.args).toEqual({
+            params: {},
+            body: { projectIds: ["project-1", "project-2"] }
+        });
+        expect(result).toEqual({ scannedCount: 2 });
     });
 
     it("getReleases calls listNodeReleasesRoute with empty params", async () => {
