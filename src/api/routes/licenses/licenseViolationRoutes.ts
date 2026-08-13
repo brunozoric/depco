@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendList, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendList } from "#shared/routing/index.js";
 import {
     listLicenseViolationsRoute,
     getLicenseViolationsSummaryRoute
@@ -15,10 +15,10 @@ export function registerLicenseViolationRoutes(app: FastifyInstance, container: 
         const useCase = container.resolve(ListLicenseViolationsUseCase);
         const result = await useCase.execute(request.query);
 
-        result.match({
-            ok: data => sendList({ reply, items: data.items, total: data.total }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -26,12 +26,10 @@ export function registerLicenseViolationRoutes(app: FastifyInstance, container: 
         const useCase = container.resolve(GetLicenseViolationsSummaryUseCase);
         const result = await useCase.execute(request.query);
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 }

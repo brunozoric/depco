@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendOne } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     createUpgradeSessionRoute,
@@ -35,10 +35,10 @@ export async function upgradeSessionRoutes(
             const useCase = container.resolve(CreateUpgradeSessionUseCase);
             const result = await useCase.execute({ projectId: request.params.id });
 
-            result.match({
-                ok: data => sendOne({ reply, data }),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendOne({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -50,10 +50,10 @@ export async function upgradeSessionRoutes(
             sessionId: request.params.sessionId
         });
 
-        result.match({
-            ok: data => sendOne({ reply, data }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendOne({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -70,10 +70,10 @@ export async function upgradeSessionRoutes(
                 input: request.body
             });
 
-            result.match({
-                ok: data => sendOne({ reply, data }),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendOne({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -90,10 +90,10 @@ export async function upgradeSessionRoutes(
                 stepType: request.params.stepType
             });
 
-            result.match({
-                ok: data => sendOne({ reply, data }),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendOne({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -109,10 +109,10 @@ export async function upgradeSessionRoutes(
                 sessionId: request.params.sessionId
             });
 
-            result.match({
-                ok: data => sendOne({ reply, data }),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendOne({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );

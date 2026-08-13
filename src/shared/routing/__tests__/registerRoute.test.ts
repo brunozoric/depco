@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
 import Fastify from "fastify";
+import { Result } from "#shared/index.js";
 import { defineRoute } from "../defineRoute.js";
 import { registerRoute } from "../registerRoute.js";
 import { sendOne } from "../sendOne.js";
@@ -17,7 +18,7 @@ describe("registerRoute", () => {
         });
 
         registerRoute(app, route, {}, async (request, reply) => {
-            sendOne({ reply, data: { id: request.params.id } });
+            return sendOne({ reply, request, result: Result.ok({ id: request.params.id }) });
         });
 
         const response = await app.inject({ method: "GET", url: "/api/projects/p1" });
@@ -37,7 +38,7 @@ describe("registerRoute", () => {
         });
 
         registerRoute(app, route, {}, async (request, reply) => {
-            sendOne({ reply, data: { path: request.body.path } });
+            return sendOne({ reply, request, result: Result.ok({ path: request.body.path }) });
         });
 
         const response = await app.inject({
@@ -60,8 +61,8 @@ describe("registerRoute", () => {
             response: z.object({ item: z.object({ id: z.string() }) })
         });
 
-        registerRoute(app, route, {}, async (_request, reply) => {
-            sendOne({ reply, data: { id: "new" } });
+        registerRoute(app, route, {}, async (request, reply) => {
+            return sendOne({ reply, request, result: Result.ok({ id: "new" }) });
         });
 
         const response = await app.inject({
@@ -83,7 +84,7 @@ describe("registerRoute", () => {
         });
 
         registerRoute(app, route, {}, async (request, reply) => {
-            sendOne({ reply, data: { id: request.params.id } });
+            return sendOne({ reply, request, result: Result.ok({ id: request.params.id }) });
         });
 
         const response = await app.inject({ method: "GET", url: "/api/projects/not-a-number" });
@@ -101,8 +102,8 @@ describe("registerRoute", () => {
             response: z.object({ item: z.object({ id: z.string() }) })
         });
 
-        registerRoute(app, route, {}, async (_request, reply) => {
-            sendOne({ reply, data: { id: "p1" } });
+        registerRoute(app, route, {}, async (request, reply) => {
+            return sendOne({ reply, request, result: Result.ok({ id: "p1" }) });
         });
 
         const response = await app.inject({
@@ -124,7 +125,11 @@ describe("registerRoute", () => {
         });
 
         registerRoute(app, route, {}, async (request, reply) => {
-            sendOne({ reply, data: { status: request.query.status } });
+            return sendOne({
+                reply,
+                request,
+                result: Result.ok({ status: request.query.status })
+            });
         });
 
         const response = await app.inject({

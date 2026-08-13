@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendList, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendOne, sendList } from "#shared/routing/index.js";
 import {
     getEngineSummaryRoute,
     listNodeReleasesRoute,
@@ -25,25 +25,25 @@ interface PluginOptions extends FastifyPluginOptions {
 export async function engineRoutes(app: FastifyInstance, options: PluginOptions): Promise<void> {
     const { container } = options;
     // Registered before "/:projectId" so they aren't shadowed by that param route.
-    registerRoute(app, getEngineSummaryRoute, {}, async (_request, reply) => {
+    registerRoute(app, getEngineSummaryRoute, {}, async (request, reply) => {
         const useCase = container.resolve(GetEngineSummaryUseCase);
         const result = await useCase.execute({});
 
-        result.match({
-            ok: data => sendOne({ reply, data }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendOne({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
-    registerRoute(app, listNodeReleasesRoute, {}, async (_request, reply) => {
+    registerRoute(app, listNodeReleasesRoute, {}, async (request, reply) => {
         const useCase = container.resolve(ListNodeReleasesUseCase);
         const result = await useCase.execute({});
 
-        result.match({
-            ok: data => sendList({ reply, items: data.items, total: data.total }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -51,12 +51,10 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         const useCase = container.resolve(BulkScanEnginesUseCase);
         const result = await useCase.execute({ projectIds: request.body.projectIds });
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -64,10 +62,10 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         const useCase = container.resolve(GetProjectEngineChecksUseCase);
         const result = await useCase.execute({ projectId: request.params.projectId });
 
-        result.match({
-            ok: data => sendList({ reply, items: data.items, total: data.total }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -75,10 +73,10 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         const useCase = container.resolve(GetProjectEngineStalenessUseCase);
         const result = await useCase.execute({ projectId: request.params.projectId });
 
-        result.match({
-            ok: data => sendOne({ reply, data }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendOne({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -91,10 +89,10 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
             })
         });
 
-        result.match({
-            ok: data => sendOne({ reply, data }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendOne({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 }

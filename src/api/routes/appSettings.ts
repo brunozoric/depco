@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendOne, sendList } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { listAppSettingsRoute, upsertAppSettingRoute } from "#shared/routes/index.js";
 import { ListAppSettingsUseCase, UpsertAppSettingUseCase } from "./useCases/settings/index.js";
@@ -15,16 +15,14 @@ export async function appSettingsRoutes(
 ): Promise<void> {
     const { container } = options;
 
-    registerRoute(app, listAppSettingsRoute, {}, async (_request, reply) => {
+    registerRoute(app, listAppSettingsRoute, {}, async (request, reply) => {
         const useCase = container.resolve(ListAppSettingsUseCase);
         const result = await useCase.execute({});
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -39,10 +37,10 @@ export async function appSettingsRoutes(
                 value: request.body.value
             });
 
-            result.match({
-                ok: data => sendOne({ reply, data }),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendOne({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );

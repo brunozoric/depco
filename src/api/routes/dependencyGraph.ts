@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendList } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     getDependencyGraphRoute,
@@ -32,12 +32,10 @@ export async function dependencyGraphRoutes(
             packageName: request.query.package
         });
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -49,12 +47,10 @@ export async function dependencyGraphRoutes(
             limit: request.query.limit
         });
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -66,12 +62,10 @@ export async function dependencyGraphRoutes(
             const useCase = container.resolve(RefreshDependencyGraphUseCase);
             const result = await useCase.execute({ projectId: request.params.projectId });
 
-            result.match({
-                ok: data => {
-                    reply.send(data);
-                },
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendList({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -80,12 +74,10 @@ export async function dependencyGraphRoutes(
         const useCase = container.resolve(GetDependencyGraphStatsUseCase);
         const result = await useCase.execute({ projectId: request.params.projectId });
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 }

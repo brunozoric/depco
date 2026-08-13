@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendList, sendNone, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendOne, sendList, sendNone } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     createProjectRoute,
@@ -24,10 +24,11 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
             const useCase = container.resolve(CreateProjectUseCase);
             const result = await useCase.execute({ projectPath: request.body.path });
 
-            result.match({
-                ok: data => sendOne({ reply, data, status: 201 }),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendOne({
+                reply,
+                request,
+                status: 201,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -39,10 +40,10 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
             pageSize: request.query.pageSize
         });
 
-        result.match({
-            ok: data => sendList({ reply, items: data.items, total: data.total }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -50,10 +51,10 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
         const useCase = container.resolve(GetProjectUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
-        result.match({
-            ok: data => sendOne({ reply, data }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendOne({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -65,10 +66,11 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
             const useCase = container.resolve(DeleteProjectUseCase);
             const result = await useCase.execute({ id: request.params.id });
 
-            result.match({
-                ok: () => sendNone(reply, 204),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendNone({
+                reply,
+                request,
+                status: 204,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );

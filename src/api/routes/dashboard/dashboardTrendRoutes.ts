@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendList } from "#shared/routing/index.js";
 import {
     dashboardTrendRoute,
     dashboardVulnerabilityTrendRoute,
@@ -24,12 +24,10 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
             teamId: request.query.teamId
         });
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -40,12 +38,10 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
             teamId: request.query.teamId
         });
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -56,12 +52,10 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
             teamId: request.query.teamId
         });
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -72,12 +66,10 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
             teamId: request.query.teamId
         });
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -88,12 +80,10 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
             teamId: request.query.teamId
         });
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 }

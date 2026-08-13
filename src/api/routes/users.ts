@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendList, sendNone, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendOne, sendList, sendNone } from "#shared/routing/index.js";
 import {
     listUsersRoute,
     getUserRoute,
@@ -33,10 +33,10 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
         const useCase = container.resolve(ListUsersUseCase);
         const result = await useCase.execute(request.query);
 
-        result.match({
-            ok: data => sendList({ reply, items: data.items, total: data.total }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -44,10 +44,10 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
         const useCase = container.resolve(GetUserUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
-        result.match({
-            ok: data => sendOne({ reply, data }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendOne({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -59,10 +59,11 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
             const useCase = container.resolve(CreateUserUseCase);
             const result = await useCase.execute(request.body);
 
-            result.match({
-                ok: data => sendOne({ reply, data, status: 201 }),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendOne({
+                reply,
+                request,
+                status: 201,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -80,10 +81,10 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
             isActive: request.body.isActive
         });
 
-        result.match({
-            ok: data => sendOne({ reply, data }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendOne({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -99,10 +100,10 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
                 sessionUserId: sessionUser.id
             });
 
-            result.match({
-                ok: () => sendNone(reply),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendNone({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -119,10 +120,10 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
                 sessionUserId: sessionUser.id
             });
 
-            result.match({
-                ok: () => sendNone(reply),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendNone({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );

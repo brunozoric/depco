@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendList } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { clearCacheRoute, clearPackageCacheRoute } from "#shared/routes/index.js";
 import { ClearCacheUseCase, ClearPackageCacheUseCase } from "./useCases/cache/index.js";
@@ -17,16 +17,14 @@ export async function cacheRoutes(app: FastifyInstance, options: PluginOptions):
         app,
         clearCacheRoute,
         { preHandler: [requirePermission("full")] },
-        async (_request, reply) => {
+        async (request, reply) => {
             const useCase = container.resolve(ClearCacheUseCase);
             const result = await useCase.execute({});
 
-            result.match({
-                ok: data => {
-                    reply.send(data);
-                },
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendList({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -40,12 +38,10 @@ export async function cacheRoutes(app: FastifyInstance, options: PluginOptions):
             const useCase = container.resolve(ClearPackageCacheUseCase);
             const result = await useCase.execute({ packageName: request.params.packageName });
 
-            result.match({
-                ok: data => {
-                    reply.send(data);
-                },
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendList({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );

@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendList } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     getChangelogsRoute,
@@ -26,30 +26,26 @@ export async function changelogRoutes(app: FastifyInstance, options: PluginOptio
         app,
         reResolveAllChangelogsRoute,
         { preHandler: [requirePermission("full")] },
-        async (_request, reply) => {
+        async (request, reply) => {
             const useCase = container.resolve(ReResolveAllChangelogsUseCase);
             const result = await useCase.execute({});
 
-            result.match({
-                ok: data => {
-                    reply.send(data);
-                },
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendList({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
 
-    registerRoute(app, getChangelogStatsRoute, {}, async (_request, reply) => {
+    registerRoute(app, getChangelogStatsRoute, {}, async (request, reply) => {
         const useCase = container.resolve(GetChangelogStatsUseCase);
         const result = await useCase.execute({});
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -60,12 +56,10 @@ export async function changelogRoutes(app: FastifyInstance, options: PluginOptio
         const useCase = container.resolve(GetChangelogsUseCase);
         const result = await useCase.execute({ packageName, from, to });
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -80,12 +74,10 @@ export async function changelogRoutes(app: FastifyInstance, options: PluginOptio
             const useCase = container.resolve(ReResolveChangelogsUseCase);
             const result = await useCase.execute({ packageName, from, to });
 
-            result.match({
-                ok: data => {
-                    reply.send(data);
-                },
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendList({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );

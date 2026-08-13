@@ -9,7 +9,7 @@ export function registerBackupExportRoutes(app: FastifyInstance, container: Cont
     app.get(
         "/api/projects/backup",
         { preHandler: [requirePermission("full")] },
-        async (_request, reply) => {
+        async (request, reply) => {
             const useCase = container.resolve(ExportBackupUseCase);
             const result = await useCase.execute();
 
@@ -25,7 +25,11 @@ export function registerBackupExportRoutes(app: FastifyInstance, container: Cont
                         .send(buffer);
                 },
                 fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+                    sendError({
+                        reply,
+                        request,
+                        error: { ...error, code: "UNKNOWN" }
+                    })
             });
         }
     );

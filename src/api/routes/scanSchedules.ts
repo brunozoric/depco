@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendNone, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendOne, sendList, sendNone } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listScanSchedulesRoute,
@@ -27,16 +27,14 @@ export async function scanScheduleRoutes(
 ): Promise<void> {
     const { container } = options;
 
-    registerRoute(app, listScanSchedulesRoute, {}, async (_request, reply) => {
+    registerRoute(app, listScanSchedulesRoute, {}, async (request, reply) => {
         const useCase = container.resolve(ListScanSchedulesUseCase);
         const result = await useCase.execute({});
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -51,10 +49,10 @@ export async function scanScheduleRoutes(
                 interval: request.body.interval
             });
 
-            result.match({
-                ok: data => sendOne({ reply, data }),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendOne({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -67,22 +65,23 @@ export async function scanScheduleRoutes(
             const useCase = container.resolve(DeleteScanScheduleUseCase);
             const result = await useCase.execute({ projectId: request.params.projectId });
 
-            result.match({
-                ok: () => sendNone(reply, 204),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendNone({
+                reply,
+                request,
+                status: 204,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
 
-    registerRoute(app, getScanScheduleDefaultRoute, {}, async (_request, reply) => {
+    registerRoute(app, getScanScheduleDefaultRoute, {}, async (request, reply) => {
         const useCase = container.resolve(GetScanScheduleDefaultUseCase);
         const result = await useCase.execute({});
 
-        result.match({
-            ok: data => sendOne({ reply, data }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendOne({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -94,10 +93,10 @@ export async function scanScheduleRoutes(
             const useCase = container.resolve(UpsertScanScheduleDefaultUseCase);
             const result = await useCase.execute({ interval: request.body.interval });
 
-            result.match({
-                ok: data => sendOne({ reply, data }),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendOne({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );

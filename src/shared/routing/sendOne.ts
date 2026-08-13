@@ -20,8 +20,12 @@ export function sendOne<TResponse>(params: SendOneParams<TResponse>): FastifyRep
             reply,
             request,
             error: result.error,
-            showStackTrace: routingOptions?.showStackTrace,
-            errorLoggerHook: routingOptions?.errorLoggerHook
+            ...(routingOptions?.showStackTrace !== undefined && {
+                showStackTrace: routingOptions.showStackTrace
+            }),
+            ...(routingOptions?.errorLoggerHook !== undefined && {
+                errorLoggerHook: routingOptions.errorLoggerHook
+            })
         });
     }
 

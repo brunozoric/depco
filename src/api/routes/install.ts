@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendList, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendOne, sendList } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { installProjectRoute, getInstallOptionsRoute } from "#shared/routes/index.js";
 import { InstallProjectUseCase, GetInstallOptionsUseCase } from "./useCases/install/index.js";
@@ -23,10 +23,10 @@ export async function installRoutes(app: FastifyInstance, options: PluginOptions
                 flags: request.body.flags
             });
 
-            result.match({
-                ok: data => sendOne({ reply, data }),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendOne({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -36,10 +36,10 @@ export async function installRoutes(app: FastifyInstance, options: PluginOptions
         const useCase = container.resolve(GetInstallOptionsUseCase);
         const result = await useCase.execute({ packageManager: request.params.packageManager });
 
-        result.match({
-            ok: data => sendList({ reply, items: data.items, total: data.total }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 }

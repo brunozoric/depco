@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendList, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendList } from "#shared/routing/index.js";
 import {
     dashboardActivityRoute,
     dashboardStalenessRoute,
@@ -19,12 +19,10 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
         const useCase = container.resolve(GetDashboardActivityUseCase);
         const result = await useCase.execute({ teamId: request.query.teamId });
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -32,12 +30,10 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
         const useCase = container.resolve(GetDashboardStalenessUseCase);
         const result = await useCase.execute({ teamId: request.query.teamId });
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -45,12 +41,10 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
         const useCase = container.resolve(GetDashboardSecurityUseCase);
         const result = await useCase.execute({ teamId: request.query.teamId });
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -62,10 +56,10 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
             teamId: request.query.teamId
         });
 
-        result.match({
-            ok: data => sendList({ reply, items: data.items, total: data.total }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 }

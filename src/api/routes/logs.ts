@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendList, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendList } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { listLogsRoute, deleteLogsRoute } from "#shared/routes/index.js";
 import { ListLogsUseCase, DeleteLogsUseCase } from "./useCases/logs/index.js";
@@ -16,10 +16,10 @@ export async function logsRoutes(app: FastifyInstance, options: PluginOptions): 
         const useCase = container.resolve(ListLogsUseCase);
         const result = await useCase.execute(request.query);
 
-        result.match({
-            ok: data => sendList({ reply, items: data.items, total: data.total }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -31,12 +31,10 @@ export async function logsRoutes(app: FastifyInstance, options: PluginOptions): 
             const useCase = container.resolve(DeleteLogsUseCase);
             const result = await useCase.execute(request.body);
 
-            result.match({
-                ok: data => {
-                    reply.send(data);
-                },
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendList({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );

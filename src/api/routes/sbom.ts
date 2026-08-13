@@ -24,7 +24,11 @@ export async function sbomRoutes(app: FastifyInstance, options: PluginOptions): 
                     mediaType: data.mediaType
                 }),
             fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+                sendError({
+                    reply,
+                    request,
+                    error: { ...error, code: "UNKNOWN" }
+                })
         });
     });
 
@@ -44,7 +48,11 @@ export async function sbomRoutes(app: FastifyInstance, options: PluginOptions): 
                     mediaType: data.mediaType
                 }),
             fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+                sendError({
+                    reply,
+                    request,
+                    error: { ...error, code: "UNKNOWN" }
+                })
         });
     });
 }

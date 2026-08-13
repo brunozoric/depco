@@ -1,21 +1,19 @@
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendOne, sendList } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { listPmSettingsRoute, updatePmConfigRoute } from "#shared/routes/index.js";
 import { ListPmSettingsUseCase, UpdatePmConfigUseCase } from "../useCases/settings/index.js";
 
 export function registerPmConfigRoutes(app: FastifyInstance, container: Container): void {
-    registerRoute(app, listPmSettingsRoute, {}, async (_request, reply) => {
+    registerRoute(app, listPmSettingsRoute, {}, async (request, reply) => {
         const useCase = container.resolve(ListPmSettingsUseCase);
         const result = await useCase.execute({});
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -32,10 +30,10 @@ export function registerPmConfigRoutes(app: FastifyInstance, container: Containe
                 upgradeStrategy: request.body.upgradeStrategy
             });
 
-            result.match({
-                ok: data => sendOne({ reply, data }),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendOne({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );

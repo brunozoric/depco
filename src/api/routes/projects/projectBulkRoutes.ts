@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendList, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendOne, sendList } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     exportProjectsRoute,
@@ -16,14 +16,14 @@ import {
 } from "../useCases/projects/index.js";
 
 export function registerProjectBulkRoutes(app: FastifyInstance, container: Container): void {
-    registerRoute(app, exportProjectsRoute, {}, async (_request, reply) => {
+    registerRoute(app, exportProjectsRoute, {}, async (request, reply) => {
         const useCase = container.resolve(ExportProjectsUseCase);
         const result = await useCase.execute({});
 
-        result.match({
-            ok: data => sendList({ reply, items: data.items, total: data.total }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -35,10 +35,10 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
             const useCase = container.resolve(ImportProjectsUseCase);
             const result = await useCase.execute({ items: request.body.items });
 
-            result.match({
-                ok: data => sendList({ reply, items: data.items, total: data.total }),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendList({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -55,10 +55,10 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
                 folderName: request.body.folderName
             });
 
-            result.match({
-                ok: data => sendOne({ reply, data }),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendOne({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -74,12 +74,10 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
                 force: request.body.force
             });
 
-            result.match({
-                ok: data => {
-                    reply.send(data);
-                },
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendList({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );

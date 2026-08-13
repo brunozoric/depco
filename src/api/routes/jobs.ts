@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendList, sendNone, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendOne, sendList, sendNone } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     createUpgradeJobRoute,
@@ -44,10 +44,10 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
                 refreshTransient: request.body.refreshTransient
             });
 
-            result.match({
-                ok: data => sendOne({ reply, data }),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendOne({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -62,10 +62,10 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
             const useCase = container.resolve(CreateTransientJobUseCase);
             const result = await useCase.execute({ projectId: request.params.id });
 
-            result.match({
-                ok: data => sendOne({ reply, data }),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendOne({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -78,10 +78,10 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
             jobId: request.params.jobId
         });
 
-        result.match({
-            ok: data => sendOne({ reply, data }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendOne({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -90,10 +90,10 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
         const useCase = container.resolve(ListProjectJobsUseCase);
         const result = await useCase.execute({ projectId: request.params.id });
 
-        result.match({
-            ok: data => sendList({ reply, items: data.items, total: data.total }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -102,10 +102,10 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
         const useCase = container.resolve(ListAllJobsUseCase);
         const result = await useCase.execute(request.query);
 
-        result.match({
-            ok: data => sendList({ reply, items: data.items, total: data.total }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -118,10 +118,10 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
             const useCase = container.resolve(CancelJobUseCase);
             const result = await useCase.execute({ jobId: request.params.jobId });
 
-            result.match({
-                ok: () => sendNone(reply),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendNone({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -135,12 +135,10 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
             const useCase = container.resolve(DeleteJobsUseCase);
             const result = await useCase.execute(request.body);
 
-            result.match({
-                ok: data => {
-                    reply.send(data);
-                },
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendList({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );

@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendList } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listLicensePoliciesRoute,
@@ -29,12 +29,10 @@ export async function licensePolicyRoutes(
         const useCase = container.resolve(ListLicensePoliciesUseCase);
         const result = await useCase.execute(request.query);
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -46,12 +44,11 @@ export async function licensePolicyRoutes(
             const useCase = container.resolve(CreateLicensePolicyUseCase);
             const result = await useCase.execute(request.body);
 
-            result.match({
-                ok: data => {
-                    reply.status(201).send(data);
-                },
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendList({
+                reply,
+                request,
+                status: 201,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -64,12 +61,10 @@ export async function licensePolicyRoutes(
             const useCase = container.resolve(UpdateLicensePolicyUseCase);
             const result = await useCase.execute({ id: request.params.id, ...request.body });
 
-            result.match({
-                ok: data => {
-                    reply.send(data);
-                },
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendList({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -82,12 +77,10 @@ export async function licensePolicyRoutes(
             const useCase = container.resolve(DeleteLicensePolicyUseCase);
             const result = await useCase.execute({ id: request.params.id });
 
-            result.match({
-                ok: data => {
-                    reply.send(data);
-                },
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendList({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );

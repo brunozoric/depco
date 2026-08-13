@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendNone, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendOne, sendNone } from "#shared/routing/index.js";
 import {
     loginRoute,
     verifyCodeRoute,
@@ -36,10 +36,10 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
             const useCase = container.resolve(LoginUseCase);
             const result = await useCase.execute(request.body);
 
-            result.match({
-                ok: () => sendNone(reply),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendNone({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -54,10 +54,11 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
             const useCase = container.resolve(VerifyCodeUseCase);
             const result = await useCase.execute(request.body);
 
-            result.match({
-                ok: data => sendOne({ reply, data, status: 200 }),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendOne({
+                reply,
+                request,
+                status: 200,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -71,8 +72,17 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
         async (request, reply) => {
             const baseUrl = `${request.protocol}://${request.hostname}`;
             const useCase = container.resolve(RequestMagicLinkUseCase);
-            await useCase.execute({ ...request.body, baseUrl });
-            sendNone(reply);
+            const result = await useCase.execute({ ...request.body, baseUrl });
+
+            return sendNone({
+                reply,
+                request,
+                result: result.mapError(() => ({
+                    code: "UNKNOWN",
+                    statusCode: 500,
+                    message: "Unknown error"
+                }))
+            });
         }
     );
 
@@ -86,10 +96,11 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
             const useCase = container.resolve(VerifyMagicLinkUseCase);
             const result = await useCase.execute(request.body);
 
-            result.match({
-                ok: data => sendOne({ reply, data, status: 200 }),
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendOne({
+                reply,
+                request,
+                status: 200,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -99,16 +110,28 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
         const useCase = container.resolve(GetMeUseCase);
         const result = await useCase.execute({ userId: user.id });
 
-        result.match({
-            ok: data => sendOne({ reply, data, status: 200 }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendOne({
+            reply,
+            request,
+            status: 200,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
     registerRoute(app, logoutRoute, {}, async (request, reply) => {
         const useCase = container.resolve(LogoutUseCase);
-        await useCase.execute({ authorizationHeader: request.headers.authorization });
-        sendNone(reply);
+        const result = await useCase.execute({
+            authorizationHeader: request.headers.authorization
+        });
+
+        return sendNone({
+            reply,
+            request,
+            result: result.mapError(() => ({
+                code: "UNKNOWN",
+                statusCode: 500,
+                message: "Unknown error"
+            }))
+        });
     });
 }

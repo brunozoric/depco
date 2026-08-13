@@ -72,7 +72,9 @@ describe("vulnerability routes - single vulnerability detail", () => {
             });
 
             expect(response.statusCode).toBe(404);
-            expect(response.json()).toEqual({ error: "Vulnerability not found" });
+            expect(response.json()).toEqual({
+                error: { code: "UNKNOWN", message: "Vulnerability not found" }
+            });
         });
 
         it("is not shadowed by the /:projectId route", async () => {

@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendList, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendList } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listLicensesRoute,
@@ -20,10 +20,10 @@ export function registerLicenseQueryRoutes(app: FastifyInstance, container: Cont
         const useCase = container.resolve(ListLicensesUseCase);
         const result = await useCase.execute(request.query);
 
-        result.match({
-            ok: data => sendList({ reply, items: data.items, total: data.total }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -31,12 +31,10 @@ export function registerLicenseQueryRoutes(app: FastifyInstance, container: Cont
         const useCase = container.resolve(GetLicenseSummaryUseCase);
         const result = await useCase.execute(request.query);
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -47,10 +45,10 @@ export function registerLicenseQueryRoutes(app: FastifyInstance, container: Cont
             ...request.query
         });
 
-        result.match({
-            ok: data => sendList({ reply, items: data.items, total: data.total }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -62,12 +60,10 @@ export function registerLicenseQueryRoutes(app: FastifyInstance, container: Cont
             const useCase = container.resolve(ScanProjectLicensesUseCase);
             const result = await useCase.execute({ projectId: request.params.projectId });
 
-            result.match({
-                ok: data => {
-                    reply.send(data);
-                },
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendList({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );

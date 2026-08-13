@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendList } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { getAutoFixSettingsRoute, updateAutoFixSettingsRoute } from "#shared/routes/index.js";
 import type { AutoFixSettingsService } from "#api/services/AutoFix/index.js";
@@ -49,12 +49,10 @@ export async function autoFixSettingsRoutes(
         const useCase = container.resolve(GetAutoFixSettingsUseCase);
         const result = await useCase.execute({ projectId: request.params.projectId });
 
-        result.match({
-            ok: data => {
-                reply.send(data);
-            },
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -69,12 +67,10 @@ export async function autoFixSettingsRoutes(
                 input: buildUpdateSettingsInput(request.body)
             });
 
-            result.match({
-                ok: data => {
-                    reply.send(data);
-                },
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendList({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );

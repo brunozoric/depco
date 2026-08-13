@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendList, sendError } from "#shared/routing/index.js";
+import { registerRoute, sendList } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listAutoFixPullRequestsRoute,
@@ -28,10 +28,10 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
         const useCase = container.resolve(ListAutoFixPullRequestsUseCase);
         const result = await useCase.execute(request.query);
 
-        result.match({
-            ok: data => sendList({ reply, items: data.items, total: data.total }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -47,12 +47,10 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
             const useCase = container.resolve(DeleteAutoFixPullRequestUseCase);
             const result = await useCase.execute({ id: request.params.id });
 
-            result.match({
-                ok: data => {
-                    reply.send(data);
-                },
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendList({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );
@@ -64,10 +62,10 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
             status: request.query.status
         });
 
-        result.match({
-            ok: data => sendList({ reply, items: data.items, total: data.total }),
-            fail: error =>
-                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        return sendList({
+            reply,
+            request,
+            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
         });
     });
 
@@ -79,12 +77,10 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
             const useCase = container.resolve(GenerateAutoFixPrUseCase);
             const result = await useCase.execute({ projectId: request.params.projectId });
 
-            result.match({
-                ok: data => {
-                    reply.send(data);
-                },
-                fail: error =>
-                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            return sendList({
+                reply,
+                request,
+                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
             });
         }
     );

@@ -20,8 +20,12 @@ export function sendList<TResponse>(params: SendListParams<TResponse>): FastifyR
             reply,
             request,
             error: result.error,
-            showStackTrace: routingOptions?.showStackTrace,
-            errorLoggerHook: routingOptions?.errorLoggerHook
+            ...(routingOptions?.showStackTrace !== undefined && {
+                showStackTrace: routingOptions.showStackTrace
+            }),
+            ...(routingOptions?.errorLoggerHook !== undefined && {
+                errorLoggerHook: routingOptions.errorLoggerHook
+            })
         });
     }
 
