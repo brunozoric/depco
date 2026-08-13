@@ -10,7 +10,6 @@ import { ProjectsRepository } from "../../../features/Projects/abstractions/Proj
 import { ChangelogsGateway } from "../../../features/Changelogs/abstractions/ChangelogsGateway.js";
 import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBridge.js";
 import "../../../infrastructure/Events/eventMap.js";
-import { ChangelogTracker } from "../../Shared/ChangelogTracker.js";
 import type { IStartChangelogTrackingInput } from "../../Shared/ChangelogTracker.js";
 import { ScanSchedulesRepository } from "../../../features/ScanSchedules/abstractions/ScanSchedulesRepository.js";
 import { LoadScanSchedulesUseCase } from "../../ScanSchedules/useCases/abstractions/LoadScanSchedulesUseCase.js";
@@ -47,9 +46,7 @@ const DEPENDENCY_FILTER_SCHEMA = getProjectDependenciesRoute.querystring as NonN
 class ProjectDetailPresenterImpl implements Abstraction.Interface {
     private loading = false;
     private currentProjectId: string | null = null;
-    private packageManagerUpdateVersionValue = "";
     private upgradeFilterValue: UpgradeFilter = "all";
-    private projectTeamIdValues: string[] = [];
 
     private readonly autoFixManager: AutoFixManager;
     private readonly sbomExportManager: SbomExportManager;
@@ -57,8 +54,10 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
     private readonly scanManager: ScanManager;
     private readonly engineManager: EngineManager;
     private readonly overlayLoader: PackageOverlayLoader;
+    private readonly changelogManager: ChangelogManager;
+    private readonly packageManagerManager: PackageManagerManager;
+    private readonly teamsManager: TeamsManager;
 
-    private readonly changelogTracker: ChangelogTracker;
     private readonly disposeUrlListener: () => void;
 
     private readonly handleInstallComplete: EventBridge.Callback<"install:complete">;
@@ -68,7 +67,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         private readonly loadProjectsUseCase: LoadProjectsUseCase.Interface,
         scanProjectUseCase: ScanProjectUseCase.Interface,
         private readonly refreshTransientUseCase: RefreshTransientUseCase.Interface,
-        private readonly updatePackageManagerUseCase: UpdatePackageManagerUseCase.Interface,
+        updatePackageManagerUseCase: UpdatePackageManagerUseCase.Interface,
         private readonly projectsGateway: ProjectsGateway.Interface,
         private readonly projectsRepository: ProjectsRepository.Interface,
         private readonly eventBridge: EventBridge.Interface,
@@ -80,12 +79,12 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         licensesGateway: LicensesGateway.Interface,
         autoFixGateway: AutoFixGateway.Interface,
         sbomGateway: SbomGateway.Interface,
-        private readonly teamsGateway: TeamsGateway.Interface,
-        private readonly teamListService: TeamListService.Interface,
+        teamsGateway: TeamsGateway.Interface,
+        teamListService: TeamListService.Interface,
         private readonly urlFilterService: UrlFilterService.Interface,
         enginesGateway: EnginesGateway.Interface,
         enginesRepository: EnginesRepository.Interface,
-        private readonly changelogsGateway: ChangelogsGateway.Interface
+        changelogsGateway: ChangelogsGateway.Interface
     ) {
         const getProjectId = (): string | null => this.currentProjectId;
 
@@ -110,9 +109,18 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
             getProjectId
         });
         this.overlayLoader = new PackageOverlayLoader({ vulnerabilitiesGateway, licensesGateway });
+        this.changelogManager = new ChangelogManager({
+            changelogsGateway,
+            eventBridge: this.eventBridge
+        });
+        this.packageManagerManager = new PackageManagerManager({
+            projectsGateway: this.projectsGateway,
+            updatePackageManagerUseCase,
+            getProjectId
+        });
+        this.teamsManager = new TeamsManager({ teamsGateway, teamListService, getProjectId });
 
         makeAutoObservable(this, { vm: computed });
-        this.changelogTracker = new ChangelogTracker(this.eventBridge);
 
         this.handleInstallComplete = data => {
             if (data.projectId === this.currentProjectId) {
@@ -210,7 +218,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
             totalPages: Math.ceil(totalCount / pageSize),
             canUpgrade: this.selectionManager.selectedNames.size > 0,
             selectedCount: this.selectionManager.selectedNames.size,
-            packageManagerUpdateVersion: this.packageManagerUpdateVersionValue,
+            packageManagerUpdateVersion: this.packageManagerManager.updateVersion,
             schedule: schedule
                 ? {
                       interval: schedule.interval,
@@ -243,9 +251,9 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
             autoFixRunning: this.autoFixManager.running,
             exportingSbom: this.sbomExportManager.exporting,
             sbomExportError: this.sbomExportManager.error,
-            projectTeamIds: this.projectTeamIdValues,
-            availableTeams: this.teamListService.getTeams(),
-            changelogState: this.changelogTracker.state,
+            projectTeamIds: this.teamsManager.projectTeamIds,
+            availableTeams: this.teamsManager.availableTeams,
+            changelogState: this.changelogManager.trackingState,
             engineData: this.engineManager.getViewModel(this.currentProjectId),
             showMaintenance: this.engineManager.showMaintenance
         };
@@ -264,8 +272,8 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
                 this.overlayLoader.loadLicenses(projectId),
                 this.autoFixManager.loadSettings(projectId),
                 this.autoFixManager.loadPullRequests(projectId),
-                this.loadProjectTeams(projectId),
-                this.loadAvailableTeams(),
+                this.teamsManager.loadProjectTeams(projectId),
+                this.teamsManager.loadAvailableTeams(),
                 this.engineManager.load(projectId)
             ]);
         } finally {
@@ -291,23 +299,6 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
     private loadSecurity = async (projectId: string): Promise<void> => {
         const status = await this.projectsGateway.getSecurity(projectId);
         this.projectsRepository.setSecurityStatus(projectId, status);
-    };
-
-    private loadProjectTeams = async (projectId: string): Promise<void> => {
-        try {
-            const response = await this.teamsGateway.getProjectTeams(projectId);
-            runInAction(() => {
-                this.projectTeamIdValues = response.items.map(team => team.id);
-            });
-        } catch {
-            // Project teams fetch failure should not break the page
-        }
-    };
-
-    private loadAvailableTeams = async (): Promise<void> => {
-        if (this.teamListService.getTeams().length === 0) {
-            await this.teamListService.loadTeams();
-        }
     };
 
     public togglePackage = (name: string): void => this.selectionManager.toggle(name);
@@ -339,30 +330,21 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
     };
 
     public updatePackageManager = async (): Promise<void> => {
-        if (!this.currentProjectId) {
-            return;
-        }
-        await this.updatePackageManagerUseCase.execute(
-            this.currentProjectId,
-            this.packageManagerUpdateVersionValue
-        );
+        await this.packageManagerManager.update();
     };
 
     public setPackageManagerUpdateVersion = (version: string): void => {
-        this.packageManagerUpdateVersionValue = version;
+        this.packageManagerManager.setUpdateVersion(version);
     };
 
     public install = async (flags: string[] = []): Promise<void> => {
-        if (!this.currentProjectId) {
-            return;
-        }
-        await this.projectsGateway.install(this.currentProjectId, flags);
+        await this.packageManagerManager.install(flags);
     };
 
     public getInstallOptions = async (
         packageManager: string
     ): Promise<Abstraction.InstallFlagDefinition[]> => {
-        return this.projectsGateway.getInstallOptions(packageManager);
+        return this.packageManagerManager.getInstallOptions(packageManager);
     };
 
     public getChangelogs = async (
@@ -370,7 +352,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         from: string,
         to: string
     ): Promise<Abstraction.ChangelogResult> => {
-        return this.changelogsGateway.getChangelogs(packageName, from, to);
+        return this.changelogManager.getChangelogs(packageName, from, to);
     };
 
     public reResolveChangelogs = async (
@@ -378,7 +360,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
         from: string,
         to: string
     ): Promise<Abstraction.ChangelogResult> => {
-        return this.changelogsGateway.reResolveChangelogs(packageName, from, to);
+        return this.changelogManager.reResolveChangelogs(packageName, from, to);
     };
 
     public updateSchedule = async (interval: string): Promise<void> => {
@@ -406,20 +388,15 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
     };
 
     public setProjectTeams = async (teamIds: string[]): Promise<void> => {
-        if (!this.currentProjectId) {
-            return;
-        }
-        const projectId = this.currentProjectId;
-        await this.teamsGateway.setProjectTeams(projectId, teamIds);
-        await this.loadProjectTeams(projectId);
+        await this.teamsManager.setProjectTeams(teamIds);
     };
 
     public startChangelogTracking = (input: IStartChangelogTrackingInput): void => {
-        this.changelogTracker.startTracking(input);
+        this.changelogManager.startTracking(input);
     };
 
     public stopChangelogTracking = (): void => {
-        this.changelogTracker.stopTracking();
+        this.changelogManager.stopTracking();
     };
 
     public toggleMaintenance = (): void => {
@@ -427,7 +404,7 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
     };
 
     public dispose = (): void => {
-        this.changelogTracker.dispose();
+        this.changelogManager.dispose();
         this.scanManager.dispose();
         this.engineManager.dispose();
         this.disposeUrlListener();
