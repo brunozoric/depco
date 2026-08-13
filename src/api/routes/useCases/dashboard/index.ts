@@ -1,0 +1,12 @@
+export { GetDashboardHealthUseCase } from "./abstractions/GetDashboardHealthUseCase.js";
+export { GetDashboardScoreDetailUseCase } from "./abstractions/GetDashboardScoreDetailUseCase.js";
+export { GetDashboardActivityUseCase } from "./abstractions/GetDashboardActivityUseCase.js";
+export { GetDashboardStalenessUseCase } from "./abstractions/GetDashboardStalenessUseCase.js";
+export { GetDashboardSecurityUseCase } from "./abstractions/GetDashboardSecurityUseCase.js";
+export { GetDashboardDependencyChangesUseCase } from "./abstractions/GetDashboardDependencyChangesUseCase.js";
+export { GetDashboardTrendUseCase } from "./abstractions/GetDashboardTrendUseCase.js";
+export { GetDashboardVulnerabilityTrendUseCase } from "./abstractions/GetDashboardVulnerabilityTrendUseCase.js";
+export { GetDashboardStalenessTrendUseCase } from "./abstractions/GetDashboardStalenessTrendUseCase.js";
+export { GetDashboardLicenseTrendUseCase } from "./abstractions/GetDashboardLicenseTrendUseCase.js";
+export { GetDashboardAutoFixTrendUseCase } from "./abstractions/GetDashboardAutoFixTrendUseCase.js";
+export { DashboardUseCasesFeature } from "./feature.js";
