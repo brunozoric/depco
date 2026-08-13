@@ -22,13 +22,13 @@ import { LoginPage } from "./presentation/Auth/LoginPage/LoginPage.js";
 import { SbomExportDialog } from "./presentation/Sbom/SbomPage/components/SbomExportDialog.js";
 import { SbomPresenter } from "./presentation/Sbom/SbomPage/abstractions/SbomPresenter.js";
 
+interface AuthGateProps {
+    children: React.ReactNode;
+}
+
 // Gates the app shell behind authentication. Renders the login page when the
 // user is not authenticated, otherwise renders its children.
-export const AuthGate = observer(function AuthGate({
-    children
-}: {
-    children: React.ReactNode;
-}): React.ReactNode {
+export const AuthGate = observer(function AuthGate({ children }: AuthGateProps): React.ReactNode {
     const container = useContainer();
     const authRepository = container.resolve(AuthRepository);
     const { presenter } = useFeature(LoginPageFeature);
@@ -110,13 +110,15 @@ const UserMenu = observer(function UserMenu(): React.ReactNode {
     );
 });
 
+interface SbomDialogContainerProps {
+    opened: boolean;
+    onClose: () => void;
+}
+
 export function SbomDialogContainer({
     opened,
     onClose
-}: {
-    opened: boolean;
-    onClose: () => void;
-}): React.ReactNode {
+}: SbomDialogContainerProps): React.ReactNode {
     const container = useContainer();
     const presenter = container.resolve(SbomPresenter);
 

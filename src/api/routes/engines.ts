@@ -1,4 +1,4 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendList, sendError } from "#shared/routing/index.js";
 import {
@@ -16,10 +16,12 @@ import {
     ScanProjectEnginesUseCase
 } from "./useCases/engines/index.js";
 
-export async function engineRoutes(
-    app: FastifyInstance,
-    { container }: { container: Container }
-): Promise<void> {
+interface PluginOptions extends FastifyPluginOptions {
+    container: Container;
+}
+
+export async function engineRoutes(app: FastifyInstance, options: PluginOptions): Promise<void> {
+    const { container } = options;
     // Registered before "/:projectId" so they aren't shadowed by that param route.
     registerRoute(app, getEngineSummaryRoute, {}, async (_request, reply) => {
         const useCase = container.resolve(GetEngineSummaryUseCase);

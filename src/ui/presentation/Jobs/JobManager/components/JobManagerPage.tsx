@@ -115,13 +115,12 @@ export const JobManagerPage = observer(function JobManagerPage({
     );
 });
 
-function DeleteJobsButton({
-    presenter,
-    total
-}: {
+interface DeleteJobsButtonProps {
     presenter: JobManagerPresenter.Interface;
     total: number;
-}): React.ReactNode {
+}
+
+function DeleteJobsButton({ presenter, total }: DeleteJobsButtonProps): React.ReactNode {
     const [confirmOpen, setConfirmOpen] = useState(false);
 
     return (

@@ -45,15 +45,13 @@ interface IUpgradeTarget {
     latestVersion: string;
 }
 
-function UpgradeDialog({
-    target,
-    onClose,
-    onUpgrade
-}: {
+interface UpgradeDialogProps {
     target: IUpgradeTarget;
     onClose: () => void;
     onUpgrade: (projectId: string, packageName: string, targetVersion: string) => void;
-}): React.ReactNode {
+}
+
+function UpgradeDialog({ target, onClose, onUpgrade }: UpgradeDialogProps): React.ReactNode {
     return (
         <Modal opened={true} onClose={onClose} title={`Upgrade ${target.packageName}`} size="sm">
             <Stack gap="md">

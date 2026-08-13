@@ -49,7 +49,11 @@ function formatFieldName(key: string): string {
         .join(" ");
 }
 
-function SecurityTooltipContent({ checks }: { checks: Record<string, boolean> }): React.ReactNode {
+interface SecurityTooltipContentProps {
+    checks: Record<string, boolean>;
+}
+
+function SecurityTooltipContent({ checks }: SecurityTooltipContentProps): React.ReactNode {
     return (
         <Stack gap={4}>
             {Object.entries(checks).map(([key, passed]) => (

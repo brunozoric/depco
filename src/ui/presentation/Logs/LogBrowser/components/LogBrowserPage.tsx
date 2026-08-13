@@ -164,13 +164,12 @@ export const LogBrowserPage = observer(function LogBrowserPage({
     );
 });
 
-function DeleteLogsButton({
-    presenter,
-    total
-}: {
+interface DeleteLogsButtonProps {
     presenter: LogBrowserPresenter.Interface;
     total: number;
-}): React.ReactNode {
+}
+
+function DeleteLogsButton({ presenter, total }: DeleteLogsButtonProps): React.ReactNode {
     const [confirmOpen, setConfirmOpen] = useState(false);
 
     return (

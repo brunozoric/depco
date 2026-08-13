@@ -33,6 +33,9 @@ import { DependencySelectionManager } from "./DependencySelectionManager.js";
 import { ScanManager } from "./ScanManager.js";
 import { EngineManager } from "./EngineManager.js";
 import { PackageOverlayLoader } from "./PackageOverlayLoader.js";
+import { ChangelogManager } from "./ChangelogManager.js";
+import { PackageManagerManager } from "./PackageManagerManager.js";
+import { TeamsManager } from "./TeamsManager.js";
 
 const DEFAULT_PAGE_SIZE = 25;
 
