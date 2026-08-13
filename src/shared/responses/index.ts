@@ -7,6 +7,8 @@ export {
     updateTeamResponseSchema
 } from "./teams.js";
 
+export { successResponseSchema } from "./cache.js";
+
 export {
     authSessionSchema,
     verifyCodeResponseSchema,

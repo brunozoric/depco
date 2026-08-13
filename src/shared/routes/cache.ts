@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
-
-const successResponseSchema = z.object({ success: z.literal(true) });
+import { successResponseSchema } from "../responses/cache.js";
 
 export const clearCacheRoute = defineRoute({
     method: "DELETE",
