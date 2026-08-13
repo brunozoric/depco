@@ -152,8 +152,7 @@ export function createProjectListPresenterTestHarness(): IProjectListPresenterTe
                             return { item: { jobId: harness.cloneJobId } } as T;
                         case browseFilesystemRoute: {
                             const browsePath =
-                                (args as { query?: { path?: string } })?.query?.path ??
-                                "/mock/cwd";
+                                (args as { query?: { path?: string } })?.query?.path ?? "/mock/cwd";
                             return {
                                 items: harness.browseItems,
                                 total: harness.browseItems.length,
