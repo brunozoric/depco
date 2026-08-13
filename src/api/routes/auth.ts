@@ -1,4 +1,3 @@
-import { createHash } from "crypto";
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendNone, sendError } from "#shared/routing/index.js";
@@ -10,28 +9,22 @@ import {
     getMeRoute,
     logoutRoute
 } from "#shared/routes/index.js";
-import { AuthService } from "#api/services/Auth/index.js";
-import { UserService } from "#api/services/Auth/index.js";
 import type { IAuthenticatedRequest } from "#api/middleware/authHook.js";
+import {
+    LoginUseCase,
+    VerifyCodeUseCase,
+    RequestMagicLinkUseCase,
+    VerifyMagicLinkUseCase,
+    GetMeUseCase,
+    LogoutUseCase
+} from "./useCases/auth/index.js";
 
 interface PluginOptions extends FastifyPluginOptions {
     container: Container;
 }
 
-interface IServiceError {
-    statusCode?: number;
-    message?: string;
-}
-
-function toStatusAndMessage(error: unknown, fallbackMessage: string): [number, string] {
-    const { statusCode, message } = error as IServiceError;
-    return [statusCode ?? 500, message ?? fallbackMessage];
-}
-
 export async function authRoutes(app: FastifyInstance, options: PluginOptions): Promise<void> {
     const { container } = options;
-    const authService = container.resolve(AuthService);
-    const userService = container.resolve(UserService);
 
     registerRoute(
         app,
@@ -40,13 +33,14 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
             config: { rateLimit: { max: 10, timeWindow: "15 minutes" } }
         },
         async (request, reply) => {
-            try {
-                await authService.login(request.body);
-                sendNone(reply);
-            } catch (error) {
-                const [statusCode, message] = toStatusAndMessage(error, "Login failed");
-                sendError({ reply: reply, statusCode: statusCode, message: message });
-            }
+            const useCase = container.resolve(LoginUseCase);
+            const result = await useCase.execute(request.body);
+
+            result.match({
+                ok: () => sendNone(reply),
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 
@@ -57,13 +51,14 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
             config: { rateLimit: { max: 5, timeWindow: "15 minutes" } }
         },
         async (request, reply) => {
-            try {
-                const result = await authService.verifyCode(request.body);
-                sendOne({ reply: reply, data: result, status: 200 });
-            } catch (error) {
-                const [statusCode, message] = toStatusAndMessage(error, "Verification failed");
-                sendError({ reply: reply, statusCode: statusCode, message: message });
-            }
+            const useCase = container.resolve(VerifyCodeUseCase);
+            const result = await useCase.execute(request.body);
+
+            result.match({
+                ok: data => sendOne({ reply, data, status: 200 }),
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 
@@ -75,13 +70,8 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
         },
         async (request, reply) => {
             const baseUrl = `${request.protocol}://${request.hostname}`;
-            try {
-                await authService.requestMagicLink({ ...request.body, baseUrl });
-            } catch {
-                // Silently swallow all errors — the spec requires always
-                // returning success to prevent user enumeration. Errors are
-                // logged inside AuthService.
-            }
+            const useCase = container.resolve(RequestMagicLinkUseCase);
+            await useCase.execute({ ...request.body, baseUrl });
             sendNone(reply);
         }
     );
@@ -93,32 +83,32 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
             config: { rateLimit: { max: 10, timeWindow: "15 minutes" } }
         },
         async (request, reply) => {
-            try {
-                const result = await authService.verifyMagicLink(request.body);
-                sendOne({ reply: reply, data: result, status: 200 });
-            } catch (error) {
-                const [statusCode, message] = toStatusAndMessage(error, "Verification failed");
-                sendError({ reply: reply, statusCode: statusCode, message: message });
-            }
+            const useCase = container.resolve(VerifyMagicLinkUseCase);
+            const result = await useCase.execute(request.body);
+
+            result.match({
+                ok: data => sendOne({ reply, data, status: 200 }),
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 
     registerRoute(app, getMeRoute, {}, async (request, reply) => {
         const { user } = request as IAuthenticatedRequest;
-        const fullUser = await userService.getById(user.id);
-        if (!fullUser) {
-            sendError({ reply: reply, statusCode: 401, message: "Session expired" });
-            return;
-        }
-        sendOne({ reply: reply, data: fullUser, status: 200 });
+        const useCase = container.resolve(GetMeUseCase);
+        const result = await useCase.execute({ userId: user.id });
+
+        result.match({
+            ok: data => sendOne({ reply, data, status: 200 }),
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
     });
 
     registerRoute(app, logoutRoute, {}, async (request, reply) => {
-        const authHeader = request.headers.authorization;
-        if (authHeader?.startsWith("Bearer ")) {
-            const tokenHash = createHash("sha256").update(authHeader.slice(7)).digest("hex");
-            await authService.logout(tokenHash);
-        }
+        const useCase = container.resolve(LogoutUseCase);
+        await useCase.execute({ authorizationHeader: request.headers.authorization });
         sendNone(reply);
     });
 }
