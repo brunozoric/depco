@@ -27,9 +27,11 @@ class ChangelogJobExecutorImpl implements JobExecutor.Interface {
     }
 
     public async execute(context: JobExecutor.ExecutionContext): Promise<void> {
-        const { packageName, from, to } = changelogPackagesSchema.parse(
-            JSON.parse(context.packagesJson ?? "{}")
-        );
+        const parsed = changelogPackagesSchema.safeParse(JSON.parse(context.packagesJson ?? "{}"));
+        if (!parsed.success) {
+            throw new Error(JSON.stringify(parsed.error.issues));
+        }
+        const { packageName, from, to } = parsed.data;
 
         context.appendLog(`Resolving changelogs for ${packageName} (${from} → ${to})`);
 

@@ -100,7 +100,11 @@ class OsvQueryServiceImpl implements Abstraction.Interface {
             );
         }
 
-        const data = osvBatchResponseSchema.parse(await response.json());
+        const parsed = osvBatchResponseSchema.safeParse(await response.json());
+        if (!parsed.success) {
+            throw new Error(JSON.stringify(parsed.error.issues));
+        }
+        const data = parsed.data;
         return packages.map((_pkg, index) => data.results[index]?.vulns ?? []);
     }
 
@@ -130,10 +134,13 @@ class OsvQueryServiceImpl implements Abstraction.Interface {
                 async id => {
                     const response = await fetch(`${OSV_VULNERABILITY_URL}/${id}`);
                     if (response.ok) {
-                        detailById.set(
-                            id,
-                            osvVulnerabilityDetailSchema.parse(await response.json())
+                        const parsed = osvVulnerabilityDetailSchema.safeParse(
+                            await response.json()
                         );
+                        if (!parsed.success) {
+                            throw new Error(JSON.stringify(parsed.error.issues));
+                        }
+                        detailById.set(id, parsed.data);
                     }
                 }
             );

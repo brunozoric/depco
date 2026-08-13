@@ -46,20 +46,28 @@ export function parsePnpmLockfile(
 ): IDependencyEdge[] {
     let lockfile: IPnpmLockFile;
     try {
-        const parsed = parseYaml(lockfileContent);
-        if (!parsed) {
+        const parsedYaml = parseYaml(lockfileContent);
+        if (!parsedYaml) {
             return [];
         }
-        lockfile = pnpmLockFileSchema.parse(parsed);
+        const parsedLockfile = pnpmLockFileSchema.safeParse(parsedYaml);
+        if (!parsedLockfile.success) {
+            throw new Error(JSON.stringify(parsedLockfile.error.issues));
+        }
+        lockfile = parsedLockfile.data;
     } catch {
         return [];
     }
 
     let rootPackageJson: IRootPackageJson;
     try {
-        rootPackageJson = rootPackageJsonSchema.parse(
+        const parsedRootPackageJson = rootPackageJsonSchema.safeParse(
             JSON.parse(rootPackageJsonContent)
-        ) as IRootPackageJson;
+        );
+        if (!parsedRootPackageJson.success) {
+            throw new Error(JSON.stringify(parsedRootPackageJson.error.issues));
+        }
+        rootPackageJson = parsedRootPackageJson.data as IRootPackageJson;
     } catch {
         rootPackageJson = {};
     }

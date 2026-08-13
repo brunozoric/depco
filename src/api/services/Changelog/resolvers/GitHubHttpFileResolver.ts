@@ -80,7 +80,11 @@ class GitHubHttpFileResolverImpl implements Abstraction.Interface {
                         continue;
                     }
 
-                    const data = githubContentsSchema.parse(await response.json());
+                    const parsedContents = githubContentsSchema.safeParse(await response.json());
+                    if (!parsedContents.success) {
+                        throw new Error(JSON.stringify(parsedContents.error.issues));
+                    }
+                    const data = parsedContents.data;
                     if (data.content && data.encoding === "base64") {
                         const decoded = Buffer.from(data.content, "base64").toString("utf-8");
                         const found = parseVersionSections(decoded, versionSet);

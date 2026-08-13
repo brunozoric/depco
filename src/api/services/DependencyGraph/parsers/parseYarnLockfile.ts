@@ -126,9 +126,13 @@ export function parseYarnLockfile(
 
     let rootPackageJson: IRootPackageJson;
     try {
-        rootPackageJson = rootPackageJsonSchema.parse(
+        const parsedRootPackageJson = rootPackageJsonSchema.safeParse(
             JSON.parse(rootPackageJsonContent)
-        ) as IRootPackageJson;
+        );
+        if (!parsedRootPackageJson.success) {
+            throw new Error(JSON.stringify(parsedRootPackageJson.error.issues));
+        }
+        rootPackageJson = parsedRootPackageJson.data as IRootPackageJson;
     } catch {
         rootPackageJson = {};
     }

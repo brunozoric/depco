@@ -37,10 +37,16 @@ class PnpmDriverImpl implements Abstraction.Interface {
 
         let entries: IPnpmListEntry[];
         try {
-            const parsed: unknown = JSON.parse(stdout);
-            entries = Array.isArray(parsed)
-                ? (z.array(pnpmListEntrySchema).parse(parsed) as IPnpmListEntry[])
-                : [];
+            const parsedStdout: unknown = JSON.parse(stdout);
+            if (Array.isArray(parsedStdout)) {
+                const parsedEntries = z.array(pnpmListEntrySchema).safeParse(parsedStdout);
+                if (!parsedEntries.success) {
+                    throw new Error(JSON.stringify(parsedEntries.error.issues));
+                }
+                entries = parsedEntries.data as IPnpmListEntry[];
+            } else {
+                entries = [];
+            }
         } catch {
             return versions;
         }

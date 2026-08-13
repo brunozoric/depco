@@ -70,7 +70,13 @@ class HTTPClientImpl implements Abstraction.Interface {
         }
 
         const json = await response.json();
-        return route.response.parse(json);
+        const parsed = route.response.safeParse(json);
+        if (!parsed.success) {
+            throw new Error(
+                `Response validation failed for ${route.method} ${route.path}: ${JSON.stringify(parsed.error.issues)}`
+            );
+        }
+        return parsed.data;
     }
 }
 

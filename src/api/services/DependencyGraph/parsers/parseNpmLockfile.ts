@@ -44,16 +44,24 @@ export function parseNpmLockfile(
 ): IDependencyEdge[] {
     let lockfile: INpmPackageLockFile;
     try {
-        lockfile = npmPackageLockSchema.parse(JSON.parse(lockfileContent)) as INpmPackageLockFile;
+        const parsedLockfile = npmPackageLockSchema.safeParse(JSON.parse(lockfileContent));
+        if (!parsedLockfile.success) {
+            throw new Error(JSON.stringify(parsedLockfile.error.issues));
+        }
+        lockfile = parsedLockfile.data as INpmPackageLockFile;
     } catch {
         return [];
     }
 
     let rootPackageJson: IRootPackageJson;
     try {
-        rootPackageJson = rootPackageJsonSchema.parse(
+        const parsedRootPackageJson = rootPackageJsonSchema.safeParse(
             JSON.parse(rootPackageJsonContent)
-        ) as IRootPackageJson;
+        );
+        if (!parsedRootPackageJson.success) {
+            throw new Error(JSON.stringify(parsedRootPackageJson.error.issues));
+        }
+        rootPackageJson = parsedRootPackageJson.data as IRootPackageJson;
     } catch {
         rootPackageJson = {};
     }

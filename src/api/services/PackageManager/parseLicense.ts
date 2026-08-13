@@ -13,5 +13,9 @@ const licenseSchema = z
     });
 
 export function parseLicense(value: unknown): string | null {
-    return licenseSchema.parse(value);
+    const parsed = licenseSchema.safeParse(value);
+    if (!parsed.success) {
+        throw new Error(JSON.stringify(parsed.error.issues));
+    }
+    return parsed.data;
 }

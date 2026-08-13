@@ -27,7 +27,11 @@ class LoadConfigStepImpl implements Abstraction.Interface {
                 unknown
             >;
             const raw = module["default"];
-            const config = depcoConfigSchema.parse(raw);
+            const parsed = depcoConfigSchema.safeParse(raw);
+            if (!parsed.success) {
+                throw new Error(JSON.stringify(parsed.error.issues));
+            }
+            const config = parsed.data;
             context.results.set("config", config);
             return { success: true, message: "loaded depco.config.ts" };
         } catch (error) {

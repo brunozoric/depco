@@ -14,9 +14,13 @@ class PackageManagerJobExecutorImpl implements JobExecutor.Interface {
     public constructor(private readonly packageManagerService: PackageManagerService.Interface) {}
 
     public async execute(context: JobExecutor.ExecutionContext): Promise<void> {
-        const packages = packageManagerPackageSchema.parse(
+        const parsed = packageManagerPackageSchema.safeParse(
             JSON.parse(context.packagesJson ?? "{}")
         );
+        if (!parsed.success) {
+            throw new Error(JSON.stringify(parsed.error.issues));
+        }
+        const packages = parsed.data;
 
         await this.packageManagerService.updateVersion(
             context.projectPath,

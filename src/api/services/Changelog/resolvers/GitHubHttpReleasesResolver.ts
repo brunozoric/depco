@@ -57,7 +57,11 @@ class GitHubHttpReleasesResolverImpl implements Abstraction.Interface {
                 return new Map();
             }
 
-            const releases = githubReleasesSchema.parse(await response.json());
+            const parsedReleases = githubReleasesSchema.safeParse(await response.json());
+            if (!parsedReleases.success) {
+                throw new Error(JSON.stringify(parsedReleases.error.issues));
+            }
+            const releases = parsedReleases.data;
             const versionSet = new Set(versions);
             const found = new Map<string, string>();
 

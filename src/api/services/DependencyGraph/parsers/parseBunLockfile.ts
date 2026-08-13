@@ -66,18 +66,26 @@ export function parseBunLockfile(
 ): IDependencyEdge[] {
     let lockfile: IBunLockFile;
     try {
-        lockfile = bunLockFileSchema.parse(
+        const parsedLockfile = bunLockFileSchema.safeParse(
             JSON.parse(stripJsonComments(lockfileContent))
-        ) as IBunLockFile;
+        );
+        if (!parsedLockfile.success) {
+            throw new Error(JSON.stringify(parsedLockfile.error.issues));
+        }
+        lockfile = parsedLockfile.data as IBunLockFile;
     } catch {
         return [];
     }
 
     let rootPackageJson: IRootPackageJson;
     try {
-        rootPackageJson = rootPackageJsonSchema.parse(
+        const parsedRootPackageJson = rootPackageJsonSchema.safeParse(
             JSON.parse(rootPackageJsonContent)
-        ) as IRootPackageJson;
+        );
+        if (!parsedRootPackageJson.success) {
+            throw new Error(JSON.stringify(parsedRootPackageJson.error.issues));
+        }
+        rootPackageJson = parsedRootPackageJson.data as IRootPackageJson;
     } catch {
         rootPackageJson = {};
     }
