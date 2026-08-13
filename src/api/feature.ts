@@ -28,7 +28,9 @@ import { JobExecutionFeature } from "./services/JobExecution/index.js";
 import { ChangelogsUseCasesFeature } from "./routes/useCases/changelogs/index.js";
 import { JobsUseCasesFeature } from "./routes/useCases/jobs/index.js";
 import { ProjectsUseCasesFeature } from "./routes/useCases/projects/index.js";
+import { StepHooksUseCasesFeature } from "./routes/useCases/stepHooks/index.js";
 import { TeamsUseCasesFeature } from "./routes/useCases/teams/index.js";
+import { UsersUseCasesFeature } from "./routes/useCases/users/index.js";
 import { LicenseFeature } from "./services/License/index.js";
 import { PackageFeature } from "./services/Package/index.js";
 import { PackageJsonFeature } from "./services/PackageJson/index.js";
@@ -96,5 +98,7 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
         TeamsUseCasesFeature.register(container);
         ProjectsUseCasesFeature.register(container);
         ChangelogsUseCasesFeature.register(container);
+        StepHooksUseCasesFeature.register(container);
+        UsersUseCasesFeature.register(container);
     }
 });

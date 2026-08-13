@@ -9,11 +9,16 @@ import {
     deleteUserRoute,
     forceLogoutUserRoute
 } from "#shared/routes/index.js";
-import { UserService } from "#api/services/Auth/index.js";
-import { AuthService } from "#api/services/Auth/index.js";
-import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import type { IAuthenticatedRequest } from "#api/middleware/authHook.js";
+import {
+    ListUsersUseCase,
+    GetUserUseCase,
+    CreateUserUseCase,
+    UpdateUserUseCase,
+    DeleteUserUseCase,
+    ForceLogoutUserUseCase
+} from "./useCases/users/index.js";
 
 interface PluginOptions extends FastifyPluginOptions {
     container: Container;
@@ -23,38 +28,27 @@ const FULL_PERMISSION = "full";
 
 export async function userRoutes(app: FastifyInstance, options: PluginOptions): Promise<void> {
     const { container } = options;
-    const userService = container.resolve(UserService);
-    const authService = container.resolve(AuthService);
-    const broadcaster = container.resolve(WebSocketBroadcaster);
 
     registerRoute(app, listUsersRoute, {}, async (request, reply) => {
-        const { search, isActive, page, pageSize, sortBy, sortOrder } = request.query;
+        const useCase = container.resolve(ListUsersUseCase);
+        const result = await useCase.execute(request.query);
 
-        // Built up conditionally (rather than a single object literal with
-        // `search: search ?? undefined`) because exactOptionalPropertyTypes
-        // treats an explicit `undefined` value differently from an absent key.
-        const listParams: UserService.ListParams = { page, pageSize, sortBy, sortOrder };
-        if (search !== undefined) {
-            listParams.search = search;
-        }
-        if (isActive !== undefined) {
-            listParams.isActive = isActive;
-        }
-
-        const result = await userService.list(listParams);
-        sendList({ reply: reply, items: result.items, total: result.total });
+        result.match({
+            ok: data => sendList({ reply, items: data.items, total: data.total }),
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
     });
 
     registerRoute(app, getUserRoute, {}, async (request, reply) => {
-        const { id } = request.params;
+        const useCase = container.resolve(GetUserUseCase);
+        const result = await useCase.execute({ id: request.params.id });
 
-        const user = await userService.getById(id);
-        if (!user) {
-            sendError({ reply: reply, statusCode: 404, message: "User not found" });
-            return;
-        }
-
-        sendOne({ reply: reply, data: user });
+        result.match({
+            ok: data => sendOne({ reply, data }),
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
     });
 
     registerRoute(
@@ -62,53 +56,35 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
         createUserRoute,
         { preHandler: requirePermission(FULL_PERMISSION) },
         async (request, reply) => {
-            const user = await userService.create(request.body);
-            sendOne({ reply: reply, data: user, status: 201 });
+            const useCase = container.resolve(CreateUserUseCase);
+            const result = await useCase.execute(request.body);
+
+            result.match({
+                ok: data => sendOne({ reply, data, status: 201 }),
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 
     registerRoute(app, updateUserRoute, {}, async (request, reply) => {
-        const { id } = request.params;
         const { user: sessionUser } = request as IAuthenticatedRequest;
-        const { displayName, password, permission, isActive } = request.body;
+        const useCase = container.resolve(UpdateUserUseCase);
+        const result = await useCase.execute({
+            id: request.params.id,
+            sessionUserId: sessionUser.id,
+            sessionUserPermission: sessionUser.permission,
+            displayName: request.body.displayName,
+            password: request.body.password,
+            permission: request.body.permission,
+            isActive: request.body.isActive
+        });
 
-        const existing = await userService.getById(id);
-        if (!existing) {
-            sendError({ reply: reply, statusCode: 404, message: "User not found" });
-            return;
-        }
-
-        const isSelf = id === sessionUser.id;
-        if (!isSelf && sessionUser.permission !== FULL_PERMISSION) {
-            sendError({ reply: reply, statusCode: 403, message: "Insufficient permission" });
-            return;
-        }
-
-        // Self-service updates are restricted to displayName + password —
-        // only a full-permission user acting on someone else's account may
-        // change permission or active status.
-        const data: UserService.UpdateData = {};
-        if (displayName !== undefined) {
-            data.displayName = displayName;
-        }
-        if (password !== undefined) {
-            data.password = password;
-        }
-        if (!isSelf) {
-            if (permission !== undefined) {
-                data.permission = permission;
-            }
-            if (isActive !== undefined) {
-                data.isActive = isActive;
-            }
-        }
-
-        const updated = await userService.update({ id, data });
-        if (!updated) {
-            sendError({ reply: reply, statusCode: 404, message: "User not found" });
-            return;
-        }
-        sendOne({ reply: reply, data: updated });
+        result.match({
+            ok: data => sendOne({ reply, data }),
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
     });
 
     registerRoute(
@@ -116,29 +92,18 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
         deleteUserRoute,
         { preHandler: requirePermission(FULL_PERMISSION) },
         async (request, reply) => {
-            const { id } = request.params;
             const { user: sessionUser } = request as IAuthenticatedRequest;
+            const useCase = container.resolve(DeleteUserUseCase);
+            const result = await useCase.execute({
+                id: request.params.id,
+                sessionUserId: sessionUser.id
+            });
 
-            if (id === sessionUser.id) {
-                sendError({
-                    reply: reply,
-                    statusCode: 400,
-                    message: "Cannot delete your own account"
-                });
-                return;
-            }
-
-            const existing = await userService.getById(id);
-            if (!existing) {
-                sendError({ reply: reply, statusCode: 404, message: "User not found" });
-                return;
-            }
-
-            await userService.deactivate(id);
-            await authService.forceLogout(id);
-            broadcaster.closeConnectionsForUser(id);
-
-            sendNone(reply);
+            result.match({
+                ok: () => sendNone(reply),
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 
@@ -147,28 +112,18 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
         forceLogoutUserRoute,
         { preHandler: requirePermission(FULL_PERMISSION) },
         async (request, reply) => {
-            const { id } = request.params;
             const { user: sessionUser } = request as IAuthenticatedRequest;
+            const useCase = container.resolve(ForceLogoutUserUseCase);
+            const result = await useCase.execute({
+                id: request.params.id,
+                sessionUserId: sessionUser.id
+            });
 
-            if (id === sessionUser.id) {
-                sendError({
-                    reply: reply,
-                    statusCode: 400,
-                    message: "Cannot force-logout your own account"
-                });
-                return;
-            }
-
-            const existing = await userService.getById(id);
-            if (!existing) {
-                sendError({ reply: reply, statusCode: 404, message: "User not found" });
-                return;
-            }
-
-            await authService.forceLogout(id);
-            broadcaster.closeConnectionsForUser(id);
-
-            sendNone(reply);
+            result.match({
+                ok: () => sendNone(reply),
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 }
