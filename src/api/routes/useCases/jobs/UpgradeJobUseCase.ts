@@ -14,25 +14,32 @@ class UpgradeJobUseCaseImpl implements Abstraction.Interface {
     public async execute(
         params: Abstraction.Params
     ): Promise<Result<Abstraction.Data, Abstraction.Error>> {
-        try {
-            const { db } = this.databaseClient;
+        const { db } = this.databaseClient;
 
-            const project = await db
+        let project;
+        let packagesWithFrom;
+        try {
+            project = await db
                 .select()
                 .from(projects)
                 .where(eq(projects.id, params.projectId))
                 .get();
-            if (!project) {
-                return Result.fail({ statusCode: 404, message: "Project not found" });
-            }
+        } catch (error) {
+            return Result.fail({ statusCode: 500, message: (error as Error).message });
+        }
 
+        if (!project) {
+            return Result.fail({ statusCode: 404, message: "Project not found" });
+        }
+
+        try {
             const scanned = await db
                 .select()
                 .from(scanResults)
                 .where(eq(scanResults.projectId, params.projectId))
                 .all();
 
-            const packagesWithFrom = params.packages.map(pkg => {
+            packagesWithFrom = params.packages.map(pkg => {
                 const found = scanned.find(dep => dep.name === pkg.name);
                 return {
                     name: pkg.name,
@@ -40,22 +47,22 @@ class UpgradeJobUseCaseImpl implements Abstraction.Interface {
                     to: pkg.targetVersion
                 };
             });
-
-            try {
-                const jobId = await this.jobWorker.enqueue({
-                    referenceId: params.projectId,
-                    referenceType: "project",
-                    type: "dependency",
-                    packages: packagesWithFrom,
-                    refreshTransient: params.refreshTransient === true
-                });
-
-                return Result.ok({ jobId });
-            } catch (error) {
-                return Result.fail({ statusCode: 403, message: (error as Error).message });
-            }
         } catch (error) {
             return Result.fail({ statusCode: 500, message: (error as Error).message });
+        }
+
+        try {
+            const jobId = await this.jobWorker.enqueue({
+                referenceId: params.projectId,
+                referenceType: "project",
+                type: "dependency",
+                packages: packagesWithFrom,
+                refreshTransient: params.refreshTransient === true
+            });
+
+            return Result.ok({ jobId });
+        } catch (error) {
+            return Result.fail({ statusCode: 403, message: (error as Error).message });
         }
     }
 }
