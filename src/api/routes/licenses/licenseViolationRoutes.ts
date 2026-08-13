@@ -1,22 +1,37 @@
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendList } from "#shared/routing/index.js";
+import { registerRoute, sendList, sendError } from "#shared/routing/index.js";
 import {
     listLicenseViolationsRoute,
     getLicenseViolationsSummaryRoute
 } from "#shared/routes/index.js";
-import { LicenseQueryService } from "#api/services/License/index.js";
+import {
+    ListLicenseViolationsUseCase,
+    GetLicenseViolationsSummaryUseCase
+} from "../useCases/licenses/index.js";
 
 export function registerLicenseViolationRoutes(app: FastifyInstance, container: Container): void {
-    const licenseQueryService = container.resolve(LicenseQueryService);
-
     registerRoute(app, listLicenseViolationsRoute, {}, async (request, reply) => {
-        const { items, total } = await licenseQueryService.listViolations(request.query);
-        sendList({ reply, items, total });
+        const useCase = container.resolve(ListLicenseViolationsUseCase);
+        const result = await useCase.execute(request.query);
+
+        result.match({
+            ok: data => sendList({ reply, items: data.items, total: data.total }),
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
     });
 
     registerRoute(app, getLicenseViolationsSummaryRoute, {}, async (request, reply) => {
-        const summary = await licenseQueryService.getViolationsSummary(request.query);
-        reply.send(summary);
+        const useCase = container.resolve(GetLicenseViolationsSummaryUseCase);
+        const result = await useCase.execute(request.query);
+
+        result.match({
+            ok: data => {
+                reply.send(data);
+            },
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
     });
 }

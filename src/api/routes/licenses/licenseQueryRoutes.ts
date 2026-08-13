@@ -1,4 +1,3 @@
-import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendList, sendError } from "#shared/routing/index.js";
@@ -9,34 +8,50 @@ import {
     getProjectLicensesRoute,
     scanProjectLicensesRoute
 } from "#shared/routes/index.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { LicenseQueryService } from "#api/services/License/index.js";
-import { JobWorker } from "#api/services/JobExecution/index.js";
-import { projects } from "#api/db/schema.js";
+import {
+    ListLicensesUseCase,
+    GetLicenseSummaryUseCase,
+    GetProjectLicensesUseCase,
+    ScanProjectLicensesUseCase
+} from "../useCases/licenses/index.js";
 
 export function registerLicenseQueryRoutes(app: FastifyInstance, container: Container): void {
-    const databaseClient = container.resolve(DatabaseClient);
-    const jobWorker = container.resolve(JobWorker);
-    const licenseQueryService = container.resolve(LicenseQueryService);
-    const { db } = databaseClient;
-
     registerRoute(app, listLicensesRoute, {}, async (request, reply) => {
-        const { items, total } = await licenseQueryService.listLicenses(request.query);
-        sendList({ reply: reply, items: items, total: total });
+        const useCase = container.resolve(ListLicensesUseCase);
+        const result = await useCase.execute(request.query);
+
+        result.match({
+            ok: data => sendList({ reply, items: data.items, total: data.total }),
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
     });
 
     registerRoute(app, getLicenseSummaryRoute, {}, async (request, reply) => {
-        const summary = await licenseQueryService.getLicenseSummary(request.query);
-        reply.send(summary);
+        const useCase = container.resolve(GetLicenseSummaryUseCase);
+        const result = await useCase.execute(request.query);
+
+        result.match({
+            ok: data => {
+                reply.send(data);
+            },
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
     });
 
     registerRoute(app, getProjectLicensesRoute, {}, async (request, reply) => {
-        const { projectId } = request.params;
-        const { items, total } = await licenseQueryService.listProjectLicenses({
-            projectId,
+        const useCase = container.resolve(GetProjectLicensesUseCase);
+        const result = await useCase.execute({
+            projectId: request.params.projectId,
             ...request.query
         });
-        sendList({ reply: reply, items: items, total: total });
+
+        result.match({
+            ok: data => sendList({ reply, items: data.items, total: data.total }),
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
     });
 
     registerRoute(
@@ -44,24 +59,16 @@ export function registerLicenseQueryRoutes(app: FastifyInstance, container: Cont
         scanProjectLicensesRoute,
         { preHandler: [requirePermission("full")] },
         async (request, reply) => {
-            const { projectId } = request.params;
+            const useCase = container.resolve(ScanProjectLicensesUseCase);
+            const result = await useCase.execute({ projectId: request.params.projectId });
 
-            const project = await db
-                .select()
-                .from(projects)
-                .where(eq(projects.id, projectId))
-                .get();
-            if (!project) {
-                sendError({ reply: reply, statusCode: 404, message: "Project not found" });
-                return;
-            }
-
-            const jobId = await jobWorker.enqueue({
-                referenceId: projectId,
-                referenceType: "project",
-                type: "scan"
+            result.match({
+                ok: data => {
+                    reply.send(data);
+                },
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
             });
-            reply.send({ jobId });
         }
     );
 }
