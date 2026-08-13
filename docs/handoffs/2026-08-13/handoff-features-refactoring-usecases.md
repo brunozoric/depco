@@ -3,6 +3,7 @@
 ## What was done
 
 **Features (11 commits):**
+
 - Engines maintenance toggle — client-side Switch on project detail EngineStatusSection filtering dependency findings (root never filtered)
 - Changelog resolution stats — GET /api/changelogs/stats + ChangelogsGateway + dashboard ChangelogResolutionWidget + packages page ChangelogStatsBar
 - Stale engine scan detection — time-based (7d) + release-based detection in engines summary API, UI badges on dashboard and project detail
@@ -13,6 +14,7 @@
 - Bulk changelog re-resolve route
 
 **Optimizations (9 commits):**
+
 - SQL aggregation for ChangelogService.getStats() (was loading all rows into memory)
 - Fixed hardcoded registryResolved in package detail endpoint
 - Consolidated changelog methods into ChangelogsGateway (DRY)
@@ -21,6 +23,7 @@
 - Split 12 test files over 700 lines into focused files by concern
 
 **UseCase architecture (~17 commits):**
+
 - Extracted ~130 use cases across 24 route domains
 - Result<Data, Error> pattern from @webiny/stdlib
 - Every route handler is now thin: resolve UseCase, execute(), match result
@@ -28,17 +31,21 @@
 - Sequential try/catch (no nesting), every execute() body wrapped
 
 **Use case unit tests (4 commits, +435 tests):**
+
 - Unit tests for all ~130 use cases across 24 domains
 
 **Service decomposition (3 commits):**
+
 - JobWorker 409→327 lines (JobQueryHelper, JobRecoveryHelper)
 - ScanService 359→99 lines (WorkspaceScanner, DependencyResolver)
 - AuthService 312→157 lines (SessionManager, LoginCodeManager, tokenHash)
 
 **Presenter decomposition (2 commits):**
+
 - ProjectDetailPresenter 526→445 lines (EngineManager, ChangelogManager, PackageManagerManager, TeamsManager — 9 sub-managers total)
 
 **Other (2 commits):**
+
 - Replaced all inline structural types with named interfaces (9 instances)
 - Updated AGENTS.md
 
