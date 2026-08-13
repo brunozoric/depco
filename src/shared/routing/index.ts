@@ -8,3 +8,6 @@ export { sendList } from "./sendList.js";
 export { sendNone } from "./sendNone.js";
 export { sendError } from "./sendError.js";
 export { sendBlob } from "./sendBlob.js";
+export type { SendableError, RoutingOptions } from "./abstractions/index.js";
+export { ErrorLoggerHook } from "./abstractions/index.js";
+export { getRoutingOptions } from "./getRoutingOptions.js";
