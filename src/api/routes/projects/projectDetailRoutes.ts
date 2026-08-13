@@ -1,5 +1,3 @@
-import { eq, and, sql, like, type SQL } from "drizzle-orm";
-import { generateId } from "@webiny/stdlib";
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendList, sendNone, sendError } from "#shared/routing/index.js";
@@ -13,147 +11,76 @@ import {
     getProjectTeamsRoute,
     setProjectTeamsRoute
 } from "#shared/routes/index.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { SecurityService } from "../../services/Security/index.js";
-import { JobWorker } from "../../services/JobExecution/index.js";
-import { projects, scanResults, teams, teamProjects } from "#api/db/schema.js";
+import {
+    ScanProjectUseCase,
+    GetProjectDependenciesUseCase,
+    GetTransitiveResolveStatusUseCase,
+    GetProjectSecurityUseCase,
+    CheckProjectSecurityUseCase,
+    GetProjectTeamsUseCase,
+    SetProjectTeamsUseCase
+} from "../useCases/projects/index.js";
 
 export function registerProjectDetailRoutes(app: FastifyInstance, container: Container): void {
-    const databaseClient = container.resolve(DatabaseClient);
-    const securityService = container.resolve(SecurityService);
-    const jobWorker = container.resolve(JobWorker);
-    const { db } = databaseClient;
-
     registerRoute(
         app,
         scanProjectAsyncRoute,
         { preHandler: [requirePermission("full")] },
         async (request, reply) => {
-            const project = await db
-                .select()
-                .from(projects)
-                .where(eq(projects.id, request.params.id))
-                .get();
-            if (!project) {
-                sendError({ reply, statusCode: 404, message: "Project not found" });
-                return;
-            }
-
-            const force = request.query.force === "true";
-            const jobId = await jobWorker.enqueue({
-                referenceId: project.id,
-                referenceType: "project",
-                type: "scan",
-                packages: JSON.stringify({ force })
+            const useCase = container.resolve(ScanProjectUseCase);
+            const result = await useCase.execute({
+                id: request.params.id,
+                force: request.query.force
             });
 
-            sendOne({ reply, data: { jobId } });
+            result.match({
+                ok: data => sendOne({ reply, data }),
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 
     registerRoute(app, getProjectDependenciesRoute, {}, async (request, reply) => {
-        const project = await db
-            .select()
-            .from(projects)
-            .where(eq(projects.id, request.params.id))
-            .get();
-        if (!project) {
-            sendError({ reply, statusCode: 404, message: "Project not found" });
-            return;
-        }
+        const useCase = container.resolve(GetProjectDependenciesUseCase);
+        const result = await useCase.execute({
+            id: request.params.id,
+            dependencyKind: request.query.dependencyKind,
+            registryResolved: request.query.registryResolved,
+            search: request.query.search,
+            page: request.query.page,
+            pageSize: request.query.pageSize
+        });
 
-        const { dependencyKind, registryResolved, search, page, pageSize } = request.query;
-        const resolvedPageSize = pageSize ?? 25;
-        const resolvedPage = page ?? 1;
-        const offset = (resolvedPage - 1) * resolvedPageSize;
-
-        const conditions: SQL[] = [eq(scanResults.projectId, project.id)];
-        if (dependencyKind && dependencyKind !== "all") {
-            conditions.push(eq(scanResults.dependencyKind, dependencyKind));
-        }
-        if (registryResolved && registryResolved !== "all") {
-            conditions.push(eq(scanResults.registryResolved, registryResolved === "true" ? 1 : 0));
-        }
-        if (search) {
-            conditions.push(like(scanResults.name, `%${search}%`));
-        }
-
-        const where = and(...conditions);
-
-        const countRow = db
-            .select({ count: sql<number>`COUNT(*)` })
-            .from(scanResults)
-            .where(where)
-            .get();
-        const total = countRow?.count ?? 0;
-
-        const rows = db
-            .select()
-            .from(scanResults)
-            .where(where)
-            .orderBy(scanResults.name)
-            .limit(resolvedPageSize)
-            .offset(offset)
-            .all();
-
-        const dependencies = rows.map(row => ({
-            name: row.name,
-            currentVersion: row.currentVersion,
-            latestVersion: row.latestVersion,
-            latestInRange: row.latestInRange,
-            type: row.type,
-            upgradeType: row.upgradeType,
-            dependencyKind: row.dependencyKind,
-            registryResolved: row.registryResolved === 1
-        }));
-
-        sendList({ reply, items: dependencies, total });
+        result.match({
+            ok: data => sendList({ reply, items: data.items, total: data.total }),
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
     });
 
     registerRoute(app, getTransitiveResolveStatusRoute, {}, async (request, reply) => {
-        const project = await db
-            .select()
-            .from(projects)
-            .where(eq(projects.id, request.params.id))
-            .get();
-        if (!project) {
-            sendError({ reply, statusCode: 404, message: "Project not found" });
-            return;
-        }
+        const useCase = container.resolve(GetTransitiveResolveStatusUseCase);
+        const result = await useCase.execute({ id: request.params.id });
 
-        const countRow = await db
-            .select({
-                total: sql<number>`COUNT(*)`,
-                resolved: sql<number>`SUM(CASE WHEN ${scanResults.registryResolved} = 1 THEN 1 ELSE 0 END)`
-            })
-            .from(scanResults)
-            .where(
-                and(
-                    eq(scanResults.projectId, project.id),
-                    eq(scanResults.dependencyKind, "transitive")
-                )
-            )
-            .get();
-
-        const total = countRow?.total ?? 0;
-        const resolved = countRow?.resolved ?? 0;
-
-        reply.send({ total, resolved, pending: total - resolved });
+        result.match({
+            ok: data => {
+                reply.send(data);
+            },
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
     });
 
     registerRoute(app, getProjectSecurityRoute, {}, async (request, reply) => {
-        const project = await db
-            .select()
-            .from(projects)
-            .where(eq(projects.id, request.params.id))
-            .get();
-        if (!project) {
-            sendError({ reply, statusCode: 404, message: "Project not found" });
-            return;
-        }
+        const useCase = container.resolve(GetProjectSecurityUseCase);
+        const result = await useCase.execute({ id: request.params.id });
 
-        const result = await securityService.getLatest(project.id);
-        sendOne({ reply, data: result });
+        result.match({
+            ok: data => sendOne({ reply, data }),
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
     });
 
     registerRoute(
@@ -161,32 +88,26 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
         checkProjectSecurityRoute,
         { preHandler: [requirePermission("full")] },
         async (request, reply) => {
-            const project = await db
-                .select()
-                .from(projects)
-                .where(eq(projects.id, request.params.id))
-                .get();
-            if (!project) {
-                sendError({ reply, statusCode: 404, message: "Project not found" });
-                return;
-            }
+            const useCase = container.resolve(CheckProjectSecurityUseCase);
+            const result = await useCase.execute({ id: request.params.id });
 
-            const result = await securityService.check(project.id, project.path);
-            sendOne({ reply, data: result });
+            result.match({
+                ok: data => sendOne({ reply, data }),
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 
     registerRoute(app, getProjectTeamsRoute, {}, async (request, reply) => {
-        const { id } = request.params;
+        const useCase = container.resolve(GetProjectTeamsUseCase);
+        const result = await useCase.execute({ id: request.params.id });
 
-        const rows = await db
-            .select({ id: teams.id, name: teams.name, color: teams.color })
-            .from(teamProjects)
-            .innerJoin(teams, eq(teamProjects.teamId, teams.id))
-            .where(eq(teamProjects.projectId, id))
-            .all();
-
-        sendList({ reply, items: rows, total: rows.length });
+        result.match({
+            ok: data => sendList({ reply, items: data.items, total: data.total }),
+            fail: error =>
+                sendError({ reply, statusCode: error.statusCode, message: error.message })
+        });
     });
 
     registerRoute(
@@ -194,34 +115,17 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
         setProjectTeamsRoute,
         { preHandler: [requirePermission("full")] },
         async (request, reply) => {
-            const { id } = request.params;
-            const { teamIds } = request.body;
-
-            const project = await db.select().from(projects).where(eq(projects.id, id)).get();
-            if (!project) {
-                sendError({ reply, statusCode: 404, message: "Project not found" });
-                return;
-            }
-
-            const uniqueTeamIds = [...new Set(teamIds)];
-
-            db.transaction(tx => {
-                tx.delete(teamProjects).where(eq(teamProjects.projectId, id)).run();
-
-                if (uniqueTeamIds.length > 0) {
-                    tx.insert(teamProjects)
-                        .values(
-                            uniqueTeamIds.map(teamId => ({
-                                id: generateId(),
-                                teamId,
-                                projectId: id
-                            }))
-                        )
-                        .run();
-                }
+            const useCase = container.resolve(SetProjectTeamsUseCase);
+            const result = await useCase.execute({
+                id: request.params.id,
+                teamIds: request.body.teamIds
             });
 
-            sendNone(reply);
+            result.match({
+                ok: () => sendNone(reply),
+                fail: error =>
+                    sendError({ reply, statusCode: error.statusCode, message: error.message })
+            });
         }
     );
 }
