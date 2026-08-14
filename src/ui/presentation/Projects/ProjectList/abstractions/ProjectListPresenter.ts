@@ -23,6 +23,7 @@ export interface IProjectListItem {
     hasNodeModules: boolean;
     teams: IProjectTeamBadge[];
     engineStatus: EngineStatus | null;
+    engineVersion: string | null;
 }
 
 export interface IBrowseItem {

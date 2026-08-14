@@ -33,9 +33,9 @@ function jsonResponse(body: unknown, ok = true, status = 200): Response {
 interface IApiEntryOverrides {
     cycle?: string;
     releaseDate?: string;
-    lts?: string | false;
+    lts?: string | boolean;
     maintenance?: string;
-    eol?: string;
+    eol?: string | boolean;
     codename?: string;
 }
 
@@ -224,6 +224,24 @@ describe("NodeReleaseDataService", () => {
 
             expect(result[0]?.ltsStart).toBeNull();
             expect(result[0]?.codename).toBeNull();
+        });
+
+        it("skips entries where eol is true (no known EOL date)", async () => {
+            const { service } = createService();
+            vi.stubGlobal(
+                "fetch",
+                vi.fn(async () =>
+                    jsonResponse([
+                        buildApiEntry({ cycle: "10", eol: true }),
+                        buildApiEntry({ cycle: "22" })
+                    ])
+                )
+            );
+
+            const result = await service.getSchedule();
+
+            expect(result).toHaveLength(1);
+            expect(result[0]?.version).toBe(22);
         });
 
         it("logs an error and still returns fresh API data when the DB upsert fails", async () => {

@@ -130,7 +130,10 @@ export const ProjectRow = observer(function ProjectRow({
             </Table.Td>
             <Table.Td>
                 {project.engineStatus ? (
-                    <EngineStatusBadge status={project.engineStatus} />
+                    <EngineStatusBadge
+                        status={project.engineStatus}
+                        engineVersion={project.engineVersion}
+                    />
                 ) : (
                     <Text size="xs" c="dimmed">
                         —

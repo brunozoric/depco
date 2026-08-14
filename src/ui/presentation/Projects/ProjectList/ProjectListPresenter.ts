@@ -88,9 +88,17 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
         const pageSize = urlFilters.pageSize ?? DEFAULT_PAGE_SIZE;
 
         const engineSummary = this.enginesRepository.getSummary();
-        const engineStatusByProjectId = new Map<string, EngineStatus>();
+        interface IEngineInfo {
+            status: EngineStatus;
+            enginesNode: string | null;
+        }
+
+        const engineInfoByProjectId = new Map<string, IEngineInfo>();
         for (const projectSummary of engineSummary?.projectSummaries ?? []) {
-            engineStatusByProjectId.set(projectSummary.projectId, projectSummary.rootStatus);
+            engineInfoByProjectId.set(projectSummary.projectId, {
+                status: projectSummary.rootStatus,
+                enginesNode: projectSummary.rootEnginesNode
+            });
         }
 
         return {
@@ -112,7 +120,8 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
                     name: team.name,
                     color: team.color
                 })),
-                engineStatus: engineStatusByProjectId.get(project.id) ?? null
+                engineStatus: engineInfoByProjectId.get(project.id)?.status ?? null,
+                engineVersion: engineInfoByProjectId.get(project.id)?.enginesNode ?? null
             })),
             addProjectPath: this.addProjectPathValue,
             addProjectLoading: this.addProjectLoading,

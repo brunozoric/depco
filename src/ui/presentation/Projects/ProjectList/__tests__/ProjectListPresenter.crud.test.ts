@@ -118,7 +118,8 @@ describe("ProjectListPresenter - CRUD and load", () => {
                 scanStatus: "idle",
                 hasNodeModules: false,
                 teams: [],
-                engineStatus: null
+                engineStatus: null,
+                engineVersion: null
             },
             {
                 id: "p2",
@@ -132,7 +133,8 @@ describe("ProjectListPresenter - CRUD and load", () => {
                 scanStatus: "idle",
                 hasNodeModules: false,
                 teams: [],
-                engineStatus: null
+                engineStatus: null,
+                engineVersion: null
             }
         ]);
     });
@@ -184,7 +186,8 @@ describe("ProjectListPresenter - CRUD and load", () => {
                 scanStatus: "idle",
                 hasNodeModules: false,
                 teams: [],
-                engineStatus: null
+                engineStatus: null,
+                engineVersion: null
             }
         ]);
     });

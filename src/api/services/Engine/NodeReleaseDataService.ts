@@ -12,9 +12,9 @@ const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const nodeReleaseApiEntrySchema = z.object({
     cycle: z.string(),
     releaseDate: z.string(),
-    lts: z.union([z.literal(false), z.string()]),
+    lts: z.union([z.literal(false), z.literal(true), z.string()]),
     maintenance: z.string().optional(),
-    eol: z.union([z.literal(false), z.string()]),
+    eol: z.union([z.literal(false), z.literal(true), z.string()]),
     codename: z.string().optional()
 });
 
@@ -53,7 +53,7 @@ function byVersionAscending(a: INodeRelease, b: INodeRelease): number {
  * used throughout the rest of the engines feature.
  */
 function transformApiEntry(entry: INodeReleaseApiEntry): INodeRelease | null {
-    if (!/^\d+$/.test(entry.cycle) || entry.eol === false) {
+    if (!/^\d+$/.test(entry.cycle) || typeof entry.eol === "boolean") {
         return null;
     }
 
@@ -61,7 +61,7 @@ function transformApiEntry(entry: INodeReleaseApiEntry): INodeRelease | null {
         version: Number(entry.cycle),
         codename: entry.codename ? entry.codename : null,
         releaseDate: Date.parse(entry.releaseDate),
-        ltsStart: entry.lts === false ? null : Date.parse(entry.lts),
+        ltsStart: typeof entry.lts === "string" ? Date.parse(entry.lts) : null,
         maintenanceStart: entry.maintenance ? Date.parse(entry.maintenance) : null,
         eolDate: Date.parse(entry.eol)
     };
