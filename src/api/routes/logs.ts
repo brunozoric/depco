@@ -19,7 +19,8 @@ export async function logsRoutes(app: FastifyInstance, options: PluginOptions): 
         return sendList({
             reply,
             request,
-            result
+            result,
+            route: listLogsRoute
         });
     });
 
@@ -34,7 +35,8 @@ export async function logsRoutes(app: FastifyInstance, options: PluginOptions): 
             return sendList({
                 reply,
                 request,
-                result
+                result,
+                route: deleteLogsRoute
             });
         }
     );

@@ -34,7 +34,8 @@ export async function scanScheduleRoutes(
         return sendList({
             reply,
             request,
-            result
+            result,
+            route: listScanSchedulesRoute
         });
     });
 
@@ -52,7 +53,8 @@ export async function scanScheduleRoutes(
             return sendOne({
                 reply,
                 request,
-                result
+                result,
+                route: upsertScanScheduleRoute
             });
         }
     );
@@ -81,7 +83,8 @@ export async function scanScheduleRoutes(
         return sendOne({
             reply,
             request,
-            result
+            result,
+            route: getScanScheduleDefaultRoute
         });
     });
 
@@ -96,7 +99,8 @@ export async function scanScheduleRoutes(
             return sendOne({
                 reply,
                 request,
-                result
+                result,
+                route: upsertScanScheduleDefaultRoute
             });
         }
     );

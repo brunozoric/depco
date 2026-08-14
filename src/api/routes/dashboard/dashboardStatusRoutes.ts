@@ -22,7 +22,8 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
         return sendList({
             reply,
             request,
-            result
+            result,
+            route: dashboardActivityRoute
         });
     });
 
@@ -33,7 +34,8 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
         return sendList({
             reply,
             request,
-            result
+            result,
+            route: dashboardStalenessRoute
         });
     });
 
@@ -44,7 +46,8 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
         return sendList({
             reply,
             request,
-            result
+            result,
+            route: dashboardSecurityRoute
         });
     });
 
@@ -59,7 +62,8 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
         return sendList({
             reply,
             request,
-            result
+            result,
+            route: dashboardDependencyChangesRoute
         });
     });
 }

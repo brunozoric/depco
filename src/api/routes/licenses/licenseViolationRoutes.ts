@@ -18,7 +18,8 @@ export function registerLicenseViolationRoutes(app: FastifyInstance, container: 
         return sendList({
             reply,
             request,
-            result
+            result,
+            route: listLicenseViolationsRoute
         });
     });
 
@@ -29,7 +30,8 @@ export function registerLicenseViolationRoutes(app: FastifyInstance, container: 
         return sendList({
             reply,
             request,
-            result
+            result,
+            route: getLicenseViolationsSummaryRoute
         });
     });
 }

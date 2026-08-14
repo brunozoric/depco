@@ -23,7 +23,8 @@ export function registerLicenseQueryRoutes(app: FastifyInstance, container: Cont
         return sendList({
             reply,
             request,
-            result
+            result,
+            route: listLicensesRoute
         });
     });
 
@@ -34,7 +35,8 @@ export function registerLicenseQueryRoutes(app: FastifyInstance, container: Cont
         return sendList({
             reply,
             request,
-            result
+            result,
+            route: getLicenseSummaryRoute
         });
     });
 
@@ -48,7 +50,8 @@ export function registerLicenseQueryRoutes(app: FastifyInstance, container: Cont
         return sendList({
             reply,
             request,
-            result
+            result,
+            route: getProjectLicensesRoute
         });
     });
 
@@ -63,7 +66,8 @@ export function registerLicenseQueryRoutes(app: FastifyInstance, container: Cont
             return sendList({
                 reply,
                 request,
-                result
+                result,
+                route: scanProjectLicensesRoute
             });
         }
     );

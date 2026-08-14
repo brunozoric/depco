@@ -13,7 +13,8 @@ export function registerPmConfigRoutes(app: FastifyInstance, container: Containe
         return sendList({
             reply,
             request,
-            result
+            result,
+            route: listPmSettingsRoute
         });
     });
 
@@ -33,7 +34,8 @@ export function registerPmConfigRoutes(app: FastifyInstance, container: Containe
             return sendOne({
                 reply,
                 request,
-                result
+                result,
+                route: updatePmConfigRoute
             });
         }
     );

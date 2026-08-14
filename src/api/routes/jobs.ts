@@ -47,7 +47,8 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
             return sendOne({
                 reply,
                 request,
-                result
+                result,
+                route: createUpgradeJobRoute
             });
         }
     );
@@ -65,7 +66,8 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
             return sendOne({
                 reply,
                 request,
-                result
+                result,
+                route: createTransientJobRoute
             });
         }
     );
@@ -81,7 +83,8 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
         return sendOne({
             reply,
             request,
-            result
+            result,
+            route: getJobRoute
         });
     });
 
@@ -93,7 +96,8 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
         return sendList({
             reply,
             request,
-            result
+            result,
+            route: listJobsRoute
         });
     });
 
@@ -105,7 +109,8 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
         return sendList({
             reply,
             request,
-            result
+            result,
+            route: listAllJobsRoute
         });
     });
 
@@ -138,7 +143,8 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
             return sendList({
                 reply,
                 request,
-                result
+                result,
+                route: deleteJobsRoute
             });
         }
     );

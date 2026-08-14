@@ -26,7 +26,8 @@ export async function packageManagerRoutes(
         return sendOne({
             reply,
             request,
-            result
+            result,
+            route: getPackageManagerRoute
         });
     });
 
@@ -46,7 +47,8 @@ export async function packageManagerRoutes(
             return sendOne({
                 reply,
                 request,
-                result
+                result,
+                route: updatePackageManagerRoute
             });
         }
     );

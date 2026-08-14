@@ -29,7 +29,8 @@ export async function stepHooksRoutes(app: FastifyInstance, options: PluginOptio
         return sendList({
             reply,
             request,
-            result
+            result,
+            route: listStepHooksRoute
         });
     });
 
@@ -51,7 +52,8 @@ export async function stepHooksRoutes(app: FastifyInstance, options: PluginOptio
             return sendOne({
                 reply,
                 request,
-                result
+                result,
+                route: createStepHookRoute
             });
         }
     );
@@ -76,7 +78,8 @@ export async function stepHooksRoutes(app: FastifyInstance, options: PluginOptio
             return sendOne({
                 reply,
                 request,
-                result
+                result,
+                route: updateStepHookRoute
             });
         }
     );
@@ -95,7 +98,8 @@ export async function stepHooksRoutes(app: FastifyInstance, options: PluginOptio
             return sendList({
                 reply,
                 request,
-                result
+                result,
+                route: deleteStepHookRoute
             });
         }
     );

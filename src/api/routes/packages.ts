@@ -27,7 +27,8 @@ export async function packagesRoutes(app: FastifyInstance, options: PluginOption
         return sendList({
             reply,
             request,
-            result
+            result,
+            route: listPackagesRoute
         });
     });
 
@@ -38,7 +39,8 @@ export async function packagesRoutes(app: FastifyInstance, options: PluginOption
         return sendOne({
             reply,
             request,
-            result
+            result,
+            route: getPackageDetailRoute
         });
     });
 
@@ -53,7 +55,8 @@ export async function packagesRoutes(app: FastifyInstance, options: PluginOption
             return sendOne({
                 reply,
                 request,
-                result
+                result,
+                route: rescanPackageRoute
             });
         }
     );
