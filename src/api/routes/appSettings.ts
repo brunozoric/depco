@@ -1,6 +1,10 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendList } from "#shared/routing/index.js";
+import type {
+    ListAppSettingsResponse,
+    UpsertAppSettingResponse
+} from "#shared/responses/appSettings.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { listAppSettingsRoute, upsertAppSettingRoute } from "#shared/routes/index.js";
 import { ListAppSettingsUseCase, UpsertAppSettingUseCase } from "./useCases/settings/index.js";
@@ -19,7 +23,7 @@ export async function appSettingsRoutes(
         const useCase = container.resolve(ListAppSettingsUseCase);
         const result = await useCase.execute({});
 
-        return sendList({
+        return sendList<ListAppSettingsResponse>({
             reply,
             request,
             result
@@ -37,7 +41,7 @@ export async function appSettingsRoutes(
                 value: request.body.value
             });
 
-            return sendOne({
+            return sendOne<UpsertAppSettingResponse>({
                 reply,
                 request,
                 result

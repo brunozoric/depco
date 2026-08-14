@@ -173,3 +173,19 @@ export const dashboardScoreDetailResponseSchema = z.object({
     outdatedPackages: z.array(scoreDetailOutdatedPackageSchema),
     vulnerabilities: z.array(scoreDetailVulnerabilitySchema)
 });
+
+export type DashboardHealthResponse = z.infer<typeof dashboardHealthResponseSchema>;
+export type DashboardTrendResponse = z.infer<typeof dashboardTrendResponseSchema>;
+export type DashboardActivityResponse = z.infer<typeof dashboardActivityResponseSchema>;
+export type DashboardStalenessResponse = z.infer<typeof dashboardStalenessResponseSchema>;
+export type DashboardSecurityResponse = z.infer<typeof dashboardSecurityResponseSchema>;
+export type DashboardVulnerabilityTrendResponse = z.infer<
+    typeof dashboardVulnerabilityTrendResponseSchema
+>;
+export type DashboardStalenessTrendResponse = z.infer<typeof dashboardStalenessTrendResponseSchema>;
+export type DashboardLicenseTrendResponse = z.infer<typeof dashboardLicenseTrendResponseSchema>;
+export type DashboardAutoFixTrendResponse = z.infer<typeof dashboardAutoFixTrendResponseSchema>;
+export type DashboardDependencyChangesResponse = z.infer<
+    typeof dashboardDependencyChangesResponseSchema
+>;
+export type DashboardScoreDetailResponse = z.infer<typeof dashboardScoreDetailResponseSchema>;

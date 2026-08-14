@@ -1,7 +1,12 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
-import type { z } from "zod";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendList, sendNone } from "#shared/routing/index.js";
+import type {
+    ListTeamsResponse,
+    CreateTeamResponse,
+    GetTeamDetailResponse,
+    UpdateTeamResponse
+} from "#shared/responses/teams.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listTeamsRoute,
@@ -34,7 +39,7 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
             pageSize: request.query.pageSize
         });
 
-        return sendList({ reply, request, result });
+        return sendList<ListTeamsResponse>({ reply, request, result });
     });
 
     registerRoute(
@@ -45,7 +50,7 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
             const useCase = container.resolve(CreateTeamUseCase);
             const result = await useCase.execute(request.body);
 
-            return sendOne<z.infer<typeof createTeamRoute.response>>({
+            return sendOne<CreateTeamResponse>({
                 reply,
                 request,
                 result,
@@ -58,7 +63,7 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
         const useCase = container.resolve(GetTeamUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
-        return sendOne({ reply, request, result });
+        return sendOne<GetTeamDetailResponse>({ reply, request, result });
     });
 
     registerRoute(
@@ -73,7 +78,7 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
                 color: request.body.color
             });
 
-            return sendOne({ reply, request, result });
+            return sendOne<UpdateTeamResponse>({ reply, request, result });
         }
     );
 

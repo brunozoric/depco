@@ -5,8 +5,8 @@ export interface IPackageProject {
     projectId: string;
     projectName: string;
     currentVersion: string;
-    latestVersion: string;
-    upgradeType: string;
+    latestVersion: string | null;
+    upgradeType: string | null;
 }
 
 export interface IPackageListItem {

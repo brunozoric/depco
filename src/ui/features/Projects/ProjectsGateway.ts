@@ -149,7 +149,7 @@ class ProjectsGatewayImpl implements Abstraction.Interface {
         };
     }
 
-    public async getSecurity(id: string): Promise<Abstraction.SecurityStatus> {
+    public async getSecurity(id: string): Promise<Abstraction.SecurityStatus | null> {
         const response = await this.httpClient.request(getProjectSecurityRoute, { params: { id } });
         return response.item;
     }

@@ -299,7 +299,9 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
 
     private loadSecurity = async (projectId: string): Promise<void> => {
         const status = await this.projectsGateway.getSecurity(projectId);
-        this.projectsRepository.setSecurityStatus(projectId, status);
+        if (status) {
+            this.projectsRepository.setSecurityStatus(projectId, status);
+        }
     };
 
     public togglePackage = (name: string): void => this.selectionManager.toggle(name);

@@ -18,3 +18,6 @@ export const listLogsResponseSchema = z.object({
 export const deleteLogsResponseSchema = z.object({
     deleted: z.number()
 });
+
+export type ListLogsResponse = z.infer<typeof listLogsResponseSchema>;
+export type DeleteLogsResponse = z.infer<typeof deleteLogsResponseSchema>;

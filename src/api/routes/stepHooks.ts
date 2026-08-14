@@ -1,6 +1,12 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendList } from "#shared/routing/index.js";
+import type {
+    ListStepHooksResponse,
+    CreateStepHookResponse,
+    UpdateStepHookResponse,
+    DeleteStepHookResponse
+} from "#shared/responses/stepHooks.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listStepHooksRoute,
@@ -26,7 +32,7 @@ export async function stepHooksRoutes(app: FastifyInstance, options: PluginOptio
         const useCase = container.resolve(ListStepHooksUseCase);
         const result = await useCase.execute({ projectId: request.params.id });
 
-        return sendList({
+        return sendList<ListStepHooksResponse>({
             reply,
             request,
             result
@@ -48,7 +54,7 @@ export async function stepHooksRoutes(app: FastifyInstance, options: PluginOptio
                 required: request.body.required
             });
 
-            return sendOne({
+            return sendOne<CreateStepHookResponse>({
                 reply,
                 request,
                 result
@@ -73,7 +79,7 @@ export async function stepHooksRoutes(app: FastifyInstance, options: PluginOptio
                 sortOrder: request.body.sortOrder
             });
 
-            return sendOne({
+            return sendOne<UpdateStepHookResponse>({
                 reply,
                 request,
                 result
@@ -92,7 +98,7 @@ export async function stepHooksRoutes(app: FastifyInstance, options: PluginOptio
                 hookId: request.params.hookId
             });
 
-            return sendList({
+            return sendList<DeleteStepHookResponse>({
                 reply,
                 request,
                 result

@@ -34,3 +34,10 @@ export const getScanScheduleDefaultResponseSchema = z.object({
 export const upsertScanScheduleDefaultResponseSchema = z.object({
     item: z.object({ interval: z.string() })
 });
+
+export type ListScanSchedulesResponse = z.infer<typeof listScanSchedulesResponseSchema>;
+export type UpsertScanScheduleResponse = z.infer<typeof upsertScanScheduleResponseSchema>;
+export type GetScanScheduleDefaultResponse = z.infer<typeof getScanScheduleDefaultResponseSchema>;
+export type UpsertScanScheduleDefaultResponse = z.infer<
+    typeof upsertScanScheduleDefaultResponseSchema
+>;

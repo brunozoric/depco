@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendList } from "#shared/routing/index.js";
+import type { SuccessResponse } from "#shared/responses/cache.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { clearCacheRoute, clearPackageCacheRoute } from "#shared/routes/index.js";
 import { ClearCacheUseCase, ClearPackageCacheUseCase } from "./useCases/cache/index.js";
@@ -21,7 +22,7 @@ export async function cacheRoutes(app: FastifyInstance, options: PluginOptions):
             const useCase = container.resolve(ClearCacheUseCase);
             const result = await useCase.execute({});
 
-            return sendList({
+            return sendList<SuccessResponse>({
                 reply,
                 request,
                 result
@@ -38,7 +39,7 @@ export async function cacheRoutes(app: FastifyInstance, options: PluginOptions):
             const useCase = container.resolve(ClearPackageCacheUseCase);
             const result = await useCase.execute({ packageName: request.params.packageName });
 
-            return sendList({
+            return sendList<SuccessResponse>({
                 reply,
                 request,
                 result

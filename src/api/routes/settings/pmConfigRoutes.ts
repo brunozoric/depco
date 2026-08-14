@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendList } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
+import type { ListPmSettingsResponse, UpdatePmConfigResponse } from "#shared/responses/index.js";
 import { listPmSettingsRoute, updatePmConfigRoute } from "#shared/routes/index.js";
 import { ListPmSettingsUseCase, UpdatePmConfigUseCase } from "../useCases/settings/index.js";
 
@@ -10,7 +11,7 @@ export function registerPmConfigRoutes(app: FastifyInstance, container: Containe
         const useCase = container.resolve(ListPmSettingsUseCase);
         const result = await useCase.execute({});
 
-        return sendList({
+        return sendList<ListPmSettingsResponse>({
             reply,
             request,
             result
@@ -30,7 +31,7 @@ export function registerPmConfigRoutes(app: FastifyInstance, container: Containe
                 upgradeStrategy: request.body.upgradeStrategy
             });
 
-            return sendOne({
+            return sendOne<UpdatePmConfigResponse>({
                 reply,
                 request,
                 result

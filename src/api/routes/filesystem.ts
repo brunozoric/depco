@@ -1,6 +1,10 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendList } from "#shared/routing/index.js";
+import type {
+    BrowseFilesystemResponse,
+    ScanFilesystemResponse
+} from "#shared/responses/filesystem.js";
 import { browseFilesystemRoute, scanFilesystemRoute } from "#shared/routes/index.js";
 import { BrowseFilesystemUseCase, ScanFilesystemUseCase } from "./useCases/filesystem/index.js";
 
@@ -23,7 +27,7 @@ export async function filesystemRoutes(
             showHidden: request.query.showHidden
         });
 
-        return sendList({
+        return sendList<BrowseFilesystemResponse>({
             reply,
             request,
             result
@@ -41,7 +45,7 @@ export async function filesystemRoutes(
             depth: request.query.depth
         });
 
-        return sendList({
+        return sendList<ScanFilesystemResponse>({
             reply,
             request,
             result

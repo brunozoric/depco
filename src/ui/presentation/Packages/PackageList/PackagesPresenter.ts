@@ -89,10 +89,9 @@ class PackagesPresenterImpl implements Abstraction.Interface {
             .map((pkg): Abstraction.PackageListItem => {
                 const highest = pkg.projects.reduce(
                     (best, project) => {
-                        const priority = UPGRADE_TYPE_PRIORITY[project.upgradeType] ?? 0;
-                        return priority > best.priority
-                            ? { type: project.upgradeType, priority }
-                            : best;
+                        const upgradeType = project.upgradeType ?? "none";
+                        const priority = UPGRADE_TYPE_PRIORITY[upgradeType] ?? 0;
+                        return priority > best.priority ? { type: upgradeType, priority } : best;
                     },
                     { type: "none", priority: 0 }
                 );

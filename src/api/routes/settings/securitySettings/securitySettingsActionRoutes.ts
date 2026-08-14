@@ -2,6 +2,12 @@ import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendList } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
+import type {
+    CreateSecuritySettingResponse,
+    UpdateSecuritySettingResponse,
+    ToggleSecuritySettingResponse,
+    ResetSecuritySettingsResponse
+} from "#shared/responses/index.js";
 import {
     createSecuritySettingRoute,
     updateSecuritySettingRoute,
@@ -27,7 +33,7 @@ export function registerSecuritySettingsActionRoutes(
             const useCase = container.resolve(CreateSecuritySettingUseCase);
             const result = await useCase.execute(request.body);
 
-            return sendOne({
+            return sendOne<CreateSecuritySettingResponse>({
                 reply,
                 request,
                 status: 201,
@@ -47,7 +53,7 @@ export function registerSecuritySettingsActionRoutes(
                 expectedValue: request.body.expectedValue
             });
 
-            return sendOne({
+            return sendOne<UpdateSecuritySettingResponse>({
                 reply,
                 request,
                 result
@@ -63,7 +69,7 @@ export function registerSecuritySettingsActionRoutes(
             const useCase = container.resolve(ToggleSecuritySettingUseCase);
             const result = await useCase.execute({ id: request.params.id });
 
-            return sendOne({
+            return sendOne<ToggleSecuritySettingResponse>({
                 reply,
                 request,
                 result
@@ -79,7 +85,7 @@ export function registerSecuritySettingsActionRoutes(
             const useCase = container.resolve(ResetSecuritySettingsUseCase);
             const result = await useCase.execute({ packageManager: request.body.packageManager });
 
-            return sendList({
+            return sendList<ResetSecuritySettingsResponse>({
                 reply,
                 request,
                 result

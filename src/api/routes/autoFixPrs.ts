@@ -1,6 +1,12 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendList } from "#shared/routing/index.js";
+import type {
+    ListAutoFixPullRequestsResponse,
+    GetProjectAutoFixPullRequestsResponse,
+    GenerateAutoFixPrResponse,
+    DeleteAutoFixPullRequestResponse
+} from "#shared/responses/autoFix.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listAutoFixPullRequestsRoute,
@@ -28,7 +34,7 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
         const useCase = container.resolve(ListAutoFixPullRequestsUseCase);
         const result = await useCase.execute(request.query);
 
-        return sendList({
+        return sendList<ListAutoFixPullRequestsResponse>({
             reply,
             request,
             result
@@ -47,7 +53,7 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
             const useCase = container.resolve(DeleteAutoFixPullRequestUseCase);
             const result = await useCase.execute({ id: request.params.id });
 
-            return sendList({
+            return sendList<DeleteAutoFixPullRequestResponse>({
                 reply,
                 request,
                 result
@@ -62,7 +68,7 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
             status: request.query.status
         });
 
-        return sendList({
+        return sendList<GetProjectAutoFixPullRequestsResponse>({
             reply,
             request,
             result
@@ -77,7 +83,7 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
             const useCase = container.resolve(GenerateAutoFixPrUseCase);
             const result = await useCase.execute({ projectId: request.params.projectId });
 
-            return sendList({
+            return sendList<GenerateAutoFixPrResponse>({
                 reply,
                 request,
                 result

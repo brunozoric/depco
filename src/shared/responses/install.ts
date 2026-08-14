@@ -16,3 +16,6 @@ export const getInstallOptionsResponseSchema = z.object({
     ),
     total: z.number()
 });
+
+export type InstallProjectResponse = z.infer<typeof installProjectResponseSchema>;
+export type GetInstallOptionsResponse = z.infer<typeof getInstallOptionsResponseSchema>;

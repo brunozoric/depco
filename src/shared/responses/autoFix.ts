@@ -48,3 +48,14 @@ export const generateAutoFixPrResponseSchema = z.object({
 export const deleteAutoFixPullRequestResponseSchema = z.object({
     deleted: z.boolean()
 });
+
+export type GetAutoFixSettingsResponse = z.infer<typeof getAutoFixSettingsResponseSchema>;
+export type UpdateAutoFixSettingsResponse = z.infer<typeof updateAutoFixSettingsResponseSchema>;
+export type ListAutoFixPullRequestsResponse = z.infer<typeof listAutoFixPullRequestsResponseSchema>;
+export type GetProjectAutoFixPullRequestsResponse = z.infer<
+    typeof getProjectAutoFixPullRequestsResponseSchema
+>;
+export type GenerateAutoFixPrResponse = z.infer<typeof generateAutoFixPrResponseSchema>;
+export type DeleteAutoFixPullRequestResponse = z.infer<
+    typeof deleteAutoFixPullRequestResponseSchema
+>;

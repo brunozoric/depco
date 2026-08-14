@@ -1,6 +1,11 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendNone } from "#shared/routing/index.js";
+import type {
+    VerifyCodeResponse,
+    VerifyMagicLinkResponse,
+    GetMeResponse
+} from "#shared/responses/auth.js";
 import {
     loginRoute,
     verifyCodeRoute,
@@ -54,7 +59,7 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
             const useCase = container.resolve(VerifyCodeUseCase);
             const result = await useCase.execute(request.body);
 
-            return sendOne({
+            return sendOne<VerifyCodeResponse>({
                 reply,
                 request,
                 status: 200,
@@ -92,7 +97,7 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
             const useCase = container.resolve(VerifyMagicLinkUseCase);
             const result = await useCase.execute(request.body);
 
-            return sendOne({
+            return sendOne<VerifyMagicLinkResponse>({
                 reply,
                 request,
                 status: 200,
@@ -106,7 +111,7 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
         const useCase = container.resolve(GetMeUseCase);
         const result = await useCase.execute({ userId: user.id });
 
-        return sendOne({
+        return sendOne<GetMeResponse>({
             reply,
             request,
             status: 200,

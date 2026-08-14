@@ -202,7 +202,7 @@ class LicensesPresenterImpl implements Abstraction.Interface {
     };
 
     private buildRows(): Abstraction.LicenseRow[] {
-        const violationActionsByLicenseId = new Map<string, Set<"warn" | "deny">>();
+        const violationActionsByLicenseId = new Map<string, Set<string>>();
         for (const violation of this.repository.getViolations()) {
             const actions = violationActionsByLicenseId.get(violation.licenseId) ?? new Set();
             actions.add(violation.action);

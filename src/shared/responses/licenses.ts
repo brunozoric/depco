@@ -31,7 +31,7 @@ export const violationSchema = z.object({
     ruleId: z.string(),
     projectId: z.string(),
     packageName: z.string(),
-    action: z.enum(["warn", "deny"]),
+    action: z.string(),
     scannedAt: z.number()
 });
 
@@ -91,3 +91,14 @@ export const getLicenseViolationsSummaryResponseSchema = z.object({
         })
     )
 });
+
+export type ListLicensesResponse = z.infer<typeof listLicensesResponseSchema>;
+export type GetLicenseSummaryResponse = z.infer<typeof getLicenseSummaryResponseSchema>;
+export type ScanProjectLicensesResponse = z.infer<typeof scanProjectLicensesResponseSchema>;
+export type PolicyRuleResponse = z.infer<typeof policyRuleSchema>;
+export type ListLicensePoliciesResponse = z.infer<typeof listLicensePoliciesResponseSchema>;
+export type DeleteLicensePolicyResponse = z.infer<typeof deleteLicensePolicyResponseSchema>;
+export type ListLicenseViolationsResponse = z.infer<typeof listLicenseViolationsResponseSchema>;
+export type GetLicenseViolationsSummaryResponse = z.infer<
+    typeof getLicenseViolationsSummaryResponseSchema
+>;

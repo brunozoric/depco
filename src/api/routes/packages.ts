@@ -1,6 +1,11 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendList } from "#shared/routing/index.js";
+import type {
+    ListPackagesResponse,
+    GetPackageDetailResponse,
+    RescanPackageResponse
+} from "#shared/responses/packages.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listPackagesRoute,
@@ -24,7 +29,7 @@ export async function packagesRoutes(app: FastifyInstance, options: PluginOption
         const useCase = container.resolve(ListPackagesUseCase);
         const result = await useCase.execute(request.query);
 
-        return sendList({
+        return sendList<ListPackagesResponse>({
             reply,
             request,
             result
@@ -35,7 +40,7 @@ export async function packagesRoutes(app: FastifyInstance, options: PluginOption
         const useCase = container.resolve(GetPackageDetailUseCase);
         const result = await useCase.execute({ packageName: request.params.packageName });
 
-        return sendOne({
+        return sendOne<GetPackageDetailResponse>({
             reply,
             request,
             result
@@ -50,7 +55,7 @@ export async function packagesRoutes(app: FastifyInstance, options: PluginOption
             const useCase = container.resolve(RescanPackageUseCase);
             const result = await useCase.execute({ packageName: request.params.packageName });
 
-            return sendOne({
+            return sendOne<RescanPackageResponse>({
                 reply,
                 request,
                 result

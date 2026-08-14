@@ -1,6 +1,12 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendList } from "#shared/routing/index.js";
+import type {
+    GetDependencyGraphResponse,
+    SearchDependencyPackagesResponse,
+    RefreshDependencyGraphResponse,
+    GetDependencyGraphStatsResponse
+} from "#shared/responses/dependencyGraph.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     getDependencyGraphRoute,
@@ -32,7 +38,7 @@ export async function dependencyGraphRoutes(
             packageName: request.query.package
         });
 
-        return sendList({
+        return sendList<GetDependencyGraphResponse>({
             reply,
             request,
             result
@@ -47,7 +53,7 @@ export async function dependencyGraphRoutes(
             limit: request.query.limit
         });
 
-        return sendList({
+        return sendList<SearchDependencyPackagesResponse>({
             reply,
             request,
             result
@@ -62,7 +68,7 @@ export async function dependencyGraphRoutes(
             const useCase = container.resolve(RefreshDependencyGraphUseCase);
             const result = await useCase.execute({ projectId: request.params.projectId });
 
-            return sendList({
+            return sendList<RefreshDependencyGraphResponse>({
                 reply,
                 request,
                 result
@@ -74,7 +80,7 @@ export async function dependencyGraphRoutes(
         const useCase = container.resolve(GetDependencyGraphStatsUseCase);
         const result = await useCase.execute({ projectId: request.params.projectId });
 
-        return sendList({
+        return sendList<GetDependencyGraphStatsResponse>({
             reply,
             request,
             result

@@ -1,6 +1,13 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne } from "#shared/routing/index.js";
+import type {
+    CreateUpgradeSessionResponse,
+    GetUpgradeSessionResponse,
+    ExecuteUpgradeStepResponse,
+    SkipUpgradeStepResponse,
+    AbortUpgradeSessionResponse
+} from "#shared/responses/upgradeSessions.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     createUpgradeSessionRoute,
@@ -35,7 +42,7 @@ export async function upgradeSessionRoutes(
             const useCase = container.resolve(CreateUpgradeSessionUseCase);
             const result = await useCase.execute({ projectId: request.params.id });
 
-            return sendOne({
+            return sendOne<CreateUpgradeSessionResponse>({
                 reply,
                 request,
                 result
@@ -50,7 +57,7 @@ export async function upgradeSessionRoutes(
             sessionId: request.params.sessionId
         });
 
-        return sendOne({
+        return sendOne<GetUpgradeSessionResponse>({
             reply,
             request,
             result
@@ -70,7 +77,7 @@ export async function upgradeSessionRoutes(
                 input: request.body
             });
 
-            return sendOne({
+            return sendOne<ExecuteUpgradeStepResponse>({
                 reply,
                 request,
                 result
@@ -90,7 +97,7 @@ export async function upgradeSessionRoutes(
                 stepType: request.params.stepType
             });
 
-            return sendOne({
+            return sendOne<SkipUpgradeStepResponse>({
                 reply,
                 request,
                 result
@@ -109,7 +116,7 @@ export async function upgradeSessionRoutes(
                 sessionId: request.params.sessionId
             });
 
-            return sendOne({
+            return sendOne<AbortUpgradeSessionResponse>({
                 reply,
                 request,
                 result

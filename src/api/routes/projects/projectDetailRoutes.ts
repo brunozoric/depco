@@ -2,6 +2,14 @@ import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendList, sendNone } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
+import type {
+    ScanProjectAsyncResponse,
+    GetProjectDependenciesResponse,
+    GetTransitiveResolveStatusResponse,
+    GetProjectSecurityResponse,
+    CheckProjectSecurityResponse,
+    GetProjectTeamsResponse
+} from "#shared/responses/index.js";
 import {
     scanProjectAsyncRoute,
     getProjectDependenciesRoute,
@@ -33,7 +41,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
                 force: request.query.force
             });
 
-            return sendOne({
+            return sendOne<ScanProjectAsyncResponse>({
                 reply,
                 request,
                 result
@@ -52,7 +60,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
             pageSize: request.query.pageSize
         });
 
-        return sendList({
+        return sendList<GetProjectDependenciesResponse>({
             reply,
             request,
             result
@@ -63,7 +71,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
         const useCase = container.resolve(GetTransitiveResolveStatusUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
-        return sendList({
+        return sendList<GetTransitiveResolveStatusResponse>({
             reply,
             request,
             result
@@ -74,7 +82,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
         const useCase = container.resolve(GetProjectSecurityUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
-        return sendOne({
+        return sendOne<GetProjectSecurityResponse>({
             reply,
             request,
             result
@@ -89,7 +97,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
             const useCase = container.resolve(CheckProjectSecurityUseCase);
             const result = await useCase.execute({ id: request.params.id });
 
-            return sendOne({
+            return sendOne<CheckProjectSecurityResponse>({
                 reply,
                 request,
                 result
@@ -101,7 +109,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
         const useCase = container.resolve(GetProjectTeamsUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
-        return sendList({
+        return sendList<GetProjectTeamsResponse>({
             reply,
             request,
             result

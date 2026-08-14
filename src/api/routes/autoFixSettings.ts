@@ -1,6 +1,10 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendList } from "#shared/routing/index.js";
+import type {
+    GetAutoFixSettingsResponse,
+    UpdateAutoFixSettingsResponse
+} from "#shared/responses/autoFix.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { getAutoFixSettingsRoute, updateAutoFixSettingsRoute } from "#shared/routes/index.js";
 import type { AutoFixSettingsService } from "#api/services/AutoFix/index.js";
@@ -49,7 +53,7 @@ export async function autoFixSettingsRoutes(
         const useCase = container.resolve(GetAutoFixSettingsUseCase);
         const result = await useCase.execute({ projectId: request.params.projectId });
 
-        return sendList({
+        return sendList<GetAutoFixSettingsResponse>({
             reply,
             request,
             result
@@ -67,7 +71,7 @@ export async function autoFixSettingsRoutes(
                 input: buildUpdateSettingsInput(request.body)
             });
 
-            return sendList({
+            return sendList<UpdateAutoFixSettingsResponse>({
                 reply,
                 request,
                 result

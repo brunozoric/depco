@@ -31,7 +31,7 @@ export interface ILicenseViolation {
     ruleId: string;
     projectId: string;
     packageName: string;
-    action: "warn" | "deny";
+    action: string;
     scannedAt: number;
 }
 

@@ -4,6 +4,7 @@ import type { Container } from "@webiny/di";
 import { unzipSync, strFromU8 } from "fflate";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { sendError, sendList } from "#shared/routing/index.js";
+import type { ImportResult } from "#shared/responses/backup.js";
 import { ImportBackupUseCase } from "../useCases/backup/index.js";
 
 const backupChangelogEntrySchema = z.object({
@@ -94,7 +95,7 @@ export function registerBackupImportRoutes(app: FastifyInstance, container: Cont
             const useCase = container.resolve(ImportBackupUseCase);
             const result = await useCase.execute({ payload: parseResult.data });
 
-            return sendList({
+            return sendList<ImportResult>({
                 reply,
                 request,
                 result

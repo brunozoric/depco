@@ -1,6 +1,13 @@
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendList } from "#shared/routing/index.js";
+import type {
+    DashboardTrendResponse,
+    DashboardVulnerabilityTrendResponse,
+    DashboardStalenessTrendResponse,
+    DashboardLicenseTrendResponse,
+    DashboardAutoFixTrendResponse
+} from "#shared/responses/index.js";
 import {
     dashboardTrendRoute,
     dashboardVulnerabilityTrendRoute,
@@ -24,7 +31,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
             teamId: request.query.teamId
         });
 
-        return sendList({
+        return sendList<DashboardTrendResponse>({
             reply,
             request,
             result
@@ -38,7 +45,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
             teamId: request.query.teamId
         });
 
-        return sendList({
+        return sendList<DashboardVulnerabilityTrendResponse>({
             reply,
             request,
             result
@@ -52,7 +59,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
             teamId: request.query.teamId
         });
 
-        return sendList({
+        return sendList<DashboardStalenessTrendResponse>({
             reply,
             request,
             result
@@ -66,7 +73,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
             teamId: request.query.teamId
         });
 
-        return sendList({
+        return sendList<DashboardLicenseTrendResponse>({
             reply,
             request,
             result
@@ -80,7 +87,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
             teamId: request.query.teamId
         });
 
-        return sendList({
+        return sendList<DashboardAutoFixTrendResponse>({
             reply,
             request,
             result

@@ -80,7 +80,7 @@ export interface IProjectsGateway {
     remove(id: string): Promise<void>;
     scan(id: string, force?: boolean): Promise<IScanJob>;
     getDependencies(id: string, filters?: IDependencyFilters): Promise<IDependenciesResponse>;
-    getSecurity(id: string): Promise<ISecurityStatus>;
+    getSecurity(id: string): Promise<ISecurityStatus | null>;
     checkSecurity(id: string): Promise<ISecurityStatus>;
     clone(url: string, destination: string, folderName?: string): Promise<IScanJob>;
     install(id: string, flags?: string[]): Promise<IScanJob>;

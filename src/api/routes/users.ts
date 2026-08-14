@@ -1,6 +1,12 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendList, sendNone } from "#shared/routing/index.js";
+import type {
+    ListUsersResponse,
+    GetUserResponse,
+    CreateUserResponse,
+    UpdateUserResponse
+} from "#shared/responses/users.js";
 import {
     listUsersRoute,
     getUserRoute,
@@ -33,7 +39,7 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
         const useCase = container.resolve(ListUsersUseCase);
         const result = await useCase.execute(request.query);
 
-        return sendList({
+        return sendList<ListUsersResponse>({
             reply,
             request,
             result
@@ -44,7 +50,7 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
         const useCase = container.resolve(GetUserUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
-        return sendOne({
+        return sendOne<GetUserResponse>({
             reply,
             request,
             result
@@ -59,7 +65,7 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
             const useCase = container.resolve(CreateUserUseCase);
             const result = await useCase.execute(request.body);
 
-            return sendOne({
+            return sendOne<CreateUserResponse>({
                 reply,
                 request,
                 status: 201,
@@ -81,7 +87,7 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
             isActive: request.body.isActive
         });
 
-        return sendOne({
+        return sendOne<UpdateUserResponse>({
             reply,
             request,
             result

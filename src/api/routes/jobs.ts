@@ -1,6 +1,11 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendList, sendNone } from "#shared/routing/index.js";
+import type {
+    CreateUpgradeJobResponse,
+    CreateTransientJobResponse,
+    DeleteJobsResponse
+} from "#shared/responses/jobs.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     createUpgradeJobRoute,
@@ -44,7 +49,7 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
                 refreshTransient: request.body.refreshTransient
             });
 
-            return sendOne({
+            return sendOne<CreateUpgradeJobResponse>({
                 reply,
                 request,
                 result
@@ -62,7 +67,7 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
             const useCase = container.resolve(CreateTransientJobUseCase);
             const result = await useCase.execute({ projectId: request.params.id });
 
-            return sendOne({
+            return sendOne<CreateTransientJobResponse>({
                 reply,
                 request,
                 result
@@ -135,7 +140,7 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
             const useCase = container.resolve(DeleteJobsUseCase);
             const result = await useCase.execute(request.body);
 
-            return sendList({
+            return sendList<DeleteJobsResponse>({
                 reply,
                 request,
                 result

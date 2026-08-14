@@ -1,6 +1,10 @@
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendList } from "#shared/routing/index.js";
+import type {
+    GetLicenseSummaryResponse,
+    ScanProjectLicensesResponse
+} from "#shared/responses/licenses.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listLicensesRoute,
@@ -31,7 +35,7 @@ export function registerLicenseQueryRoutes(app: FastifyInstance, container: Cont
         const useCase = container.resolve(GetLicenseSummaryUseCase);
         const result = await useCase.execute(request.query);
 
-        return sendList({
+        return sendList<GetLicenseSummaryResponse>({
             reply,
             request,
             result
@@ -60,7 +64,7 @@ export function registerLicenseQueryRoutes(app: FastifyInstance, container: Cont
             const useCase = container.resolve(ScanProjectLicensesUseCase);
             const result = await useCase.execute({ projectId: request.params.projectId });
 
-            return sendList({
+            return sendList<ScanProjectLicensesResponse>({
                 reply,
                 request,
                 result

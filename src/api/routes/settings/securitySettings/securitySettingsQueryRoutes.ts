@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendList } from "#shared/routing/index.js";
+import type { ListSecuritySettingsResponse } from "#shared/responses/index.js";
 import { listSecuritySettingsRoute } from "#shared/routes/index.js";
 import { ListSecuritySettingsUseCase } from "../../useCases/settings/index.js";
 
@@ -12,7 +13,7 @@ export function registerSecuritySettingsQueryRoutes(
         const useCase = container.resolve(ListSecuritySettingsUseCase);
         const result = await useCase.execute({});
 
-        return sendList({
+        return sendList<ListSecuritySettingsResponse>({
             reply,
             request,
             result

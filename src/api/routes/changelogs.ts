@@ -1,6 +1,11 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendList } from "#shared/routing/index.js";
+import type {
+    ReResolveAllChangelogsResponse,
+    ChangelogStats,
+    GetChangelogsResponse
+} from "#shared/responses/changelogs.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     getChangelogsRoute,
@@ -30,7 +35,7 @@ export async function changelogRoutes(app: FastifyInstance, options: PluginOptio
             const useCase = container.resolve(ReResolveAllChangelogsUseCase);
             const result = await useCase.execute({});
 
-            return sendList({
+            return sendList<ReResolveAllChangelogsResponse>({
                 reply,
                 request,
                 result
@@ -42,7 +47,7 @@ export async function changelogRoutes(app: FastifyInstance, options: PluginOptio
         const useCase = container.resolve(GetChangelogStatsUseCase);
         const result = await useCase.execute({});
 
-        return sendList({
+        return sendList<ChangelogStats>({
             reply,
             request,
             result
@@ -56,7 +61,7 @@ export async function changelogRoutes(app: FastifyInstance, options: PluginOptio
         const useCase = container.resolve(GetChangelogsUseCase);
         const result = await useCase.execute({ packageName, from, to });
 
-        return sendList({
+        return sendList<GetChangelogsResponse>({
             reply,
             request,
             result
@@ -74,7 +79,7 @@ export async function changelogRoutes(app: FastifyInstance, options: PluginOptio
             const useCase = container.resolve(ReResolveChangelogsUseCase);
             const result = await useCase.execute({ packageName, from, to });
 
-            return sendList({
+            return sendList<GetChangelogsResponse>({
                 reply,
                 request,
                 result

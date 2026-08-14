@@ -23,3 +23,6 @@ export const listAppSettingsResponseSchema = z.object({
 export const upsertAppSettingResponseSchema = z.object({
     item: appSettingSchema
 });
+
+export type ListAppSettingsResponse = z.infer<typeof listAppSettingsResponseSchema>;
+export type UpsertAppSettingResponse = z.infer<typeof upsertAppSettingResponseSchema>;

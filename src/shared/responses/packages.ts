@@ -4,8 +4,8 @@ export const packageProjectSchema = z.object({
     projectId: z.string(),
     projectName: z.string(),
     currentVersion: z.string(),
-    latestVersion: z.string(),
-    upgradeType: z.string()
+    latestVersion: z.string().nullable(),
+    upgradeType: z.string().nullable()
 });
 
 export const packageListItemSchema = z.object({
@@ -46,3 +46,7 @@ export const packageDetailSchema = z.object({
 });
 
 export const getPackageDetailResponseSchema = z.object({ item: packageDetailSchema });
+
+export type ListPackagesResponse = z.infer<typeof listPackagesResponseSchema>;
+export type RescanPackageResponse = z.infer<typeof rescanPackageResponseSchema>;
+export type GetPackageDetailResponse = z.infer<typeof getPackageDetailResponseSchema>;

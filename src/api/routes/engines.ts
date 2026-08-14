@@ -1,6 +1,14 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendList } from "#shared/routing/index.js";
+import type {
+    EngineSummary,
+    EngineScanResult,
+    ListNodeReleasesResponse,
+    GetProjectEngineChecksResponse,
+    GetProjectEngineStalenessResponse,
+    BulkScanEnginesResponse
+} from "#shared/responses/engines.js";
 import {
     getEngineSummaryRoute,
     listNodeReleasesRoute,
@@ -29,7 +37,7 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         const useCase = container.resolve(GetEngineSummaryUseCase);
         const result = await useCase.execute({});
 
-        return sendOne({
+        return sendOne<EngineSummary>({
             reply,
             request,
             result
@@ -40,7 +48,7 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         const useCase = container.resolve(ListNodeReleasesUseCase);
         const result = await useCase.execute({});
 
-        return sendList({
+        return sendList<ListNodeReleasesResponse>({
             reply,
             request,
             result
@@ -51,7 +59,7 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         const useCase = container.resolve(BulkScanEnginesUseCase);
         const result = await useCase.execute({ projectIds: request.body.projectIds });
 
-        return sendList({
+        return sendList<BulkScanEnginesResponse>({
             reply,
             request,
             result
@@ -62,7 +70,7 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         const useCase = container.resolve(GetProjectEngineChecksUseCase);
         const result = await useCase.execute({ projectId: request.params.projectId });
 
-        return sendList({
+        return sendList<GetProjectEngineChecksResponse>({
             reply,
             request,
             result
@@ -73,7 +81,7 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         const useCase = container.resolve(GetProjectEngineStalenessUseCase);
         const result = await useCase.execute({ projectId: request.params.projectId });
 
-        return sendOne({
+        return sendOne<GetProjectEngineStalenessResponse>({
             reply,
             request,
             result
@@ -89,7 +97,7 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
             })
         });
 
-        return sendOne({
+        return sendOne<EngineScanResult>({
             reply,
             request,
             result

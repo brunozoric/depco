@@ -23,3 +23,7 @@ export const changelogStatsSchema = z.object({
     pending: z.number(),
     byResolver: z.record(z.string(), z.number())
 });
+
+export type GetChangelogsResponse = z.infer<typeof getChangelogsResponseSchema>;
+export type ReResolveAllChangelogsResponse = z.infer<typeof reResolveAllChangelogsResponseSchema>;
+export type ChangelogStats = z.infer<typeof changelogStatsSchema>;

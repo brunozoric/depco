@@ -2,6 +2,11 @@ import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendList, sendNone } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
+import type {
+    CreateProjectResponse,
+    ListProjectsResponse,
+    GetProjectResponse
+} from "#shared/responses/index.js";
 import {
     createProjectRoute,
     listProjectsRoute,
@@ -24,7 +29,7 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
             const useCase = container.resolve(CreateProjectUseCase);
             const result = await useCase.execute({ projectPath: request.body.path });
 
-            return sendOne({
+            return sendOne<CreateProjectResponse>({
                 reply,
                 request,
                 status: 201,
@@ -42,7 +47,7 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
             teamId: request.query.teamId
         });
 
-        return sendList({
+        return sendList<ListProjectsResponse>({
             reply,
             request,
             result
@@ -53,7 +58,7 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
         const useCase = container.resolve(GetProjectUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
-        return sendOne({
+        return sendOne<GetProjectResponse>({
             reply,
             request,
             result

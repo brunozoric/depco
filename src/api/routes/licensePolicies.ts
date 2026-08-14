@@ -1,6 +1,11 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendList } from "#shared/routing/index.js";
+import type {
+    ListLicensePoliciesResponse,
+    PolicyRuleResponse,
+    DeleteLicensePolicyResponse
+} from "#shared/responses/licenses.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listLicensePoliciesRoute,
@@ -29,7 +34,7 @@ export async function licensePolicyRoutes(
         const useCase = container.resolve(ListLicensePoliciesUseCase);
         const result = await useCase.execute(request.query);
 
-        return sendList({
+        return sendList<ListLicensePoliciesResponse>({
             reply,
             request,
             result
@@ -44,7 +49,7 @@ export async function licensePolicyRoutes(
             const useCase = container.resolve(CreateLicensePolicyUseCase);
             const result = await useCase.execute(request.body);
 
-            return sendList({
+            return sendList<PolicyRuleResponse>({
                 reply,
                 request,
                 status: 201,
@@ -61,7 +66,7 @@ export async function licensePolicyRoutes(
             const useCase = container.resolve(UpdateLicensePolicyUseCase);
             const result = await useCase.execute({ id: request.params.id, ...request.body });
 
-            return sendList({
+            return sendList<PolicyRuleResponse>({
                 reply,
                 request,
                 result
@@ -77,7 +82,7 @@ export async function licensePolicyRoutes(
             const useCase = container.resolve(DeleteLicensePolicyUseCase);
             const result = await useCase.execute({ id: request.params.id });
 
-            return sendList({
+            return sendList<DeleteLicensePolicyResponse>({
                 reply,
                 request,
                 result

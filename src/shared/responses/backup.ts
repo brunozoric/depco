@@ -69,3 +69,6 @@ export const importResultSchema = z.object({
     dependencies: importSectionResultSchema,
     registryCache: importSectionResultSchema
 });
+
+export type BackupPayload = z.infer<typeof backupPayloadSchema>;
+export type ImportResult = z.infer<typeof importResultSchema>;

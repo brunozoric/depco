@@ -1,6 +1,12 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendList, sendNone } from "#shared/routing/index.js";
+import type {
+    ListScanSchedulesResponse,
+    UpsertScanScheduleResponse,
+    GetScanScheduleDefaultResponse,
+    UpsertScanScheduleDefaultResponse
+} from "#shared/responses/scanSchedules.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listScanSchedulesRoute,
@@ -31,7 +37,7 @@ export async function scanScheduleRoutes(
         const useCase = container.resolve(ListScanSchedulesUseCase);
         const result = await useCase.execute({});
 
-        return sendList({
+        return sendList<ListScanSchedulesResponse>({
             reply,
             request,
             result
@@ -49,7 +55,7 @@ export async function scanScheduleRoutes(
                 interval: request.body.interval
             });
 
-            return sendOne({
+            return sendOne<UpsertScanScheduleResponse>({
                 reply,
                 request,
                 result
@@ -78,7 +84,7 @@ export async function scanScheduleRoutes(
         const useCase = container.resolve(GetScanScheduleDefaultUseCase);
         const result = await useCase.execute({});
 
-        return sendOne({
+        return sendOne<GetScanScheduleDefaultResponse>({
             reply,
             request,
             result
@@ -93,7 +99,7 @@ export async function scanScheduleRoutes(
             const useCase = container.resolve(UpsertScanScheduleDefaultUseCase);
             const result = await useCase.execute({ interval: request.body.interval });
 
-            return sendOne({
+            return sendOne<UpsertScanScheduleDefaultResponse>({
                 reply,
                 request,
                 result

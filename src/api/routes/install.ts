@@ -1,6 +1,10 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendList } from "#shared/routing/index.js";
+import type {
+    InstallProjectResponse,
+    GetInstallOptionsResponse
+} from "#shared/responses/install.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { installProjectRoute, getInstallOptionsRoute } from "#shared/routes/index.js";
 import { InstallProjectUseCase, GetInstallOptionsUseCase } from "./useCases/install/index.js";
@@ -23,7 +27,7 @@ export async function installRoutes(app: FastifyInstance, options: PluginOptions
                 flags: request.body.flags
             });
 
-            return sendOne({
+            return sendOne<InstallProjectResponse>({
                 reply,
                 request,
                 result
@@ -36,7 +40,7 @@ export async function installRoutes(app: FastifyInstance, options: PluginOptions
         const useCase = container.resolve(GetInstallOptionsUseCase);
         const result = await useCase.execute({ packageManager: request.params.packageManager });
 
-        return sendList({
+        return sendList<GetInstallOptionsResponse>({
             reply,
             request,
             result

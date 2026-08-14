@@ -1,6 +1,10 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne } from "#shared/routing/index.js";
+import type {
+    GetPackageManagerResponse,
+    UpdatePackageManagerResponse
+} from "#shared/responses/packageManager.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { getPackageManagerRoute, updatePackageManagerRoute } from "#shared/routes/index.js";
 import {
@@ -23,7 +27,7 @@ export async function packageManagerRoutes(
         const useCase = container.resolve(GetPackageManagerUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
-        return sendOne({
+        return sendOne<GetPackageManagerResponse>({
             reply,
             request,
             result
@@ -43,7 +47,7 @@ export async function packageManagerRoutes(
                 version: request.body.version
             });
 
-            return sendOne({
+            return sendOne<UpdatePackageManagerResponse>({
                 reply,
                 request,
                 result

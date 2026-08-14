@@ -76,7 +76,9 @@ export function ExpandedDependencies({
                                         <Badge
                                             size="xs"
                                             color={
-                                                UPGRADE_BADGE_COLOR[project.upgradeType] ?? "gray"
+                                                UPGRADE_BADGE_COLOR[
+                                                    project.upgradeType ?? "none"
+                                                ] ?? "gray"
                                             }
                                         >
                                             {project.upgradeType}
@@ -92,7 +94,7 @@ export function ExpandedDependencies({
                                                         projectId: project.projectId,
                                                         projectName: project.projectName,
                                                         packageName,
-                                                        latestVersion: project.latestVersion
+                                                        latestVersion: project.latestVersion ?? ""
                                                     })
                                                 }
                                             >

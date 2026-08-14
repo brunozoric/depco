@@ -2,6 +2,12 @@ import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendList } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
+import type {
+    ExportProjectsResponse,
+    ImportProjectsResponse,
+    CloneProjectResponse,
+    BulkScanProjectsResponse
+} from "#shared/responses/index.js";
 import {
     exportProjectsRoute,
     importProjectsRoute,
@@ -20,7 +26,7 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
         const useCase = container.resolve(ExportProjectsUseCase);
         const result = await useCase.execute({});
 
-        return sendList({
+        return sendList<ExportProjectsResponse>({
             reply,
             request,
             result
@@ -35,7 +41,7 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
             const useCase = container.resolve(ImportProjectsUseCase);
             const result = await useCase.execute({ items: request.body.items });
 
-            return sendList({
+            return sendList<ImportProjectsResponse>({
                 reply,
                 request,
                 result
@@ -55,7 +61,7 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
                 folderName: request.body.folderName
             });
 
-            return sendOne({
+            return sendOne<CloneProjectResponse>({
                 reply,
                 request,
                 result
@@ -74,7 +80,7 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
                 force: request.body.force
             });
 
-            return sendList({
+            return sendList<BulkScanProjectsResponse>({
                 reply,
                 request,
                 result

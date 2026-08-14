@@ -1,6 +1,12 @@
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendList } from "#shared/routing/index.js";
+import type {
+    DashboardActivityResponse,
+    DashboardStalenessResponse,
+    DashboardSecurityResponse,
+    DashboardDependencyChangesResponse
+} from "#shared/responses/index.js";
 import {
     dashboardActivityRoute,
     dashboardStalenessRoute,
@@ -19,7 +25,7 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
         const useCase = container.resolve(GetDashboardActivityUseCase);
         const result = await useCase.execute({ teamId: request.query.teamId });
 
-        return sendList({
+        return sendList<DashboardActivityResponse>({
             reply,
             request,
             result
@@ -30,7 +36,7 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
         const useCase = container.resolve(GetDashboardStalenessUseCase);
         const result = await useCase.execute({ teamId: request.query.teamId });
 
-        return sendList({
+        return sendList<DashboardStalenessResponse>({
             reply,
             request,
             result
@@ -41,7 +47,7 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
         const useCase = container.resolve(GetDashboardSecurityUseCase);
         const result = await useCase.execute({ teamId: request.query.teamId });
 
-        return sendList({
+        return sendList<DashboardSecurityResponse>({
             reply,
             request,
             result
@@ -56,7 +62,7 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
             teamId: request.query.teamId
         });
 
-        return sendList({
+        return sendList<DashboardDependencyChangesResponse>({
             reply,
             request,
             result
