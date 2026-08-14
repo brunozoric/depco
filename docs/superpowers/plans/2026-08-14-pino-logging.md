@@ -50,6 +50,7 @@ import { createAbstraction } from "#shared/index.js";
 
 export interface ILoggerService {
     logger: Logger;
+    initFileDestination(directory: string): Promise<void>;
 }
 
 export const LoggerService = createAbstraction<ILoggerService>("Api/LoggerService");
@@ -247,14 +248,21 @@ Create `src/api/services/Logger/destinations/createConsoleDestination.ts`:
 import type { StreamEntry } from "pino";
 import pinoPretty from "pino-pretty";
 
-export function createConsoleDestination(): StreamEntry {
+interface IConsoleDestinationOptions {
+    threshold?: string;
+}
+
+export function createConsoleDestination(options?: IConsoleDestinationOptions): StreamEntry {
     const stream = pinoPretty({
         colorize: true,
         translateTime: "SYS:HH:MM:ss.l",
         ignore: "pid,hostname"
     });
 
-    return { stream };
+    return {
+        stream,
+        level: (options?.threshold ?? "info") as StreamEntry["level"]
+    };
 }
 ```
 
@@ -268,6 +276,7 @@ import { roll } from "pino-roll";
 
 interface IFileDestinationOptions {
     directory: string;
+    threshold?: string;
 }
 
 export async function createFileDestination(options: IFileDestinationOptions): Promise<StreamEntry> {
@@ -278,7 +287,10 @@ export async function createFileDestination(options: IFileDestinationOptions): P
         size: "10m"
     });
 
-    return { stream };
+    return {
+        stream,
+        level: (options.threshold ?? "debug") as StreamEntry["level"]
+    };
 }
 ```
 
@@ -458,49 +470,69 @@ Expected: FAIL — cannot resolve LoggerService
 Create `src/api/services/Logger/LoggerService.ts`:
 
 ```typescript
+import { eq } from "drizzle-orm";
 import pino from "pino";
 import { LoggerService as Abstraction } from "./abstractions/LoggerService.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
-import { FileConfigService } from "../FileConfig/index.js";
+import { appSettings } from "#api/db/schema.js";
 import { createConsoleDestination } from "./destinations/createConsoleDestination.js";
 import { createDatabaseDestination } from "./destinations/createDatabaseDestination.js";
 
 class LoggerServiceImpl implements Abstraction.Interface {
     public readonly logger: pino.Logger;
+    private readonly multistream: pino.MultiStreamRes;
 
     public constructor(
         databaseClient: DatabaseClient.Interface,
-        webSocketBroadcaster: WebSocketBroadcaster.Interface,
-        fileConfigService: FileConfigService.Interface
+        webSocketBroadcaster: WebSocketBroadcaster.Interface
     ) {
+        const logLevel = this.readLogLevel(databaseClient);
+
         const dbDestination = createDatabaseDestination({
             db: databaseClient.db,
             broadcaster: webSocketBroadcaster,
-            threshold: "warn"
+            threshold: logLevel
         });
 
-        const consoleDestination = createConsoleDestination();
+        const consoleDestination = createConsoleDestination({ threshold: "info" });
 
         const streams: pino.StreamEntry[] = [
             consoleDestination,
-            { stream: dbDestination }
+            { stream: dbDestination, level: logLevel as pino.StreamEntry["level"] }
         ];
 
+        this.multistream = pino.multistream(streams);
         this.logger = pino(
             { level: "trace", timestamp: pino.stdTimeFunctions.epochTime },
-            pino.multistream(streams)
+            this.multistream
         );
+    }
+
+    public async initFileDestination(directory: string): Promise<void> {
+        const { createFileDestination } = await import("./destinations/createFileDestination.js");
+        const fileEntry = await createFileDestination({ directory, threshold: "debug" });
+        this.multistream.add(fileEntry);
+    }
+
+    private readLogLevel(databaseClient: DatabaseClient.Interface): string {
+        const row = databaseClient.db
+            .select()
+            .from(appSettings)
+            .where(eq(appSettings.key, "log_level"))
+            .get();
+
+        return row?.value ?? "warn";
     }
 }
 
 export const LoggerService = Abstraction.createImplementation({
     implementation: LoggerServiceImpl,
-    dependencies: [DatabaseClient, WebSocketBroadcaster, FileConfigService]
+    dependencies: [DatabaseClient, WebSocketBroadcaster]
 });
 ```
 
-Note: File destination is async (pino-roll), so it will be added in Task 5 after the core works. This keeps Task 3 focused on getting the logger resolvable from DI.
+Note: `readLogLevel()` is synchronous — Drizzle's `.get()` is sync with better-sqlite3. FileConfigService dependency removed; the DB `log_level` setting is the source of truth for the construction-time threshold. File destination is async (pino-roll) and initialized via `initFileDestination()` called from server.ts before Fastify creation. This keeps Task 3 focused on getting the logger resolvable from DI.
 
 - [ ] **Step 4: Create feature registration**
 
@@ -531,6 +563,8 @@ Add registration before `AppLogFeature.register(container)`:
 ```typescript
 LoggerFeature.register(container);
 ```
+
+Also update `src/api/services/Logger/LoggerService.ts` dependencies — note that `FileConfigService` was removed. The implementation only depends on `DatabaseClient` and `WebSocketBroadcaster`.
 
 - [ ] **Step 6: Update barrel export**
 
@@ -608,14 +642,25 @@ export const AppLogService = Abstraction.createImplementation({
 
 - [ ] **Step 3: Update existing AppLogService tests**
 
-The existing tests in `src/api/services/AppLog/__tests__/AppLogService.test.ts` verify DB writes and WebSocket broadcasts. These still work because the DB destination handles both. Update the tests:
+The existing tests in `src/api/services/AppLog/__tests__/AppLogService.test.ts` verify DB writes and WebSocket broadcasts. These still work because the DB destination handles both. Specific changes:
 
-- Remove mock of `WebSocketBroadcaster` — the real one is needed by LoggerService now, but we mock it at the container level.
-- Ensure `WebSocketBroadcaster` mock is registered before resolving `AppLogService`.
-- Keep all existing assertions — they verify the end-to-end flow through pino to the DB destination.
-- Remove tests that check file-config-based log level filtering from `AppLogService` level — that filtering now lives in the DB destination's threshold. The `AppLogService` passes all levels through to pino; the DB destination filters.
+**Keep unchanged** (still work through pino → DB destination):
+- "writes an error log entry to the database" — passes, error level above default warn threshold
+- "broadcasts log:created event" — passes, error level triggers broadcast
+- "writes without details when not provided" — passes, error level above threshold
 
-Read the existing test file first, then update assertions that depend on log level filtering to account for the new architecture where filtering is in the DB destination, not AppLogService.
+**Update these tests** — log level filtering moved from AppLogService to DB destination. The DB destination reads the threshold at construction time from appSettings/fileConfig. Since tests use `createTestApiContainer()` which registers all features including LoggerFeature, the threshold is read at container creation time. To test filtering, seed appSettings BEFORE creating the container:
+
+- "respects log_level setting — skips info when level is warn" — rewrite: seed `appSettings` with `log_level=warn` before `createTestApiContainer()`, then verify info-level log is NOT in DB
+- "respects log_level setting — allows error when level is warn" — rewrite similarly: seed first, then verify error IS in DB
+- "respects log_level setting — allows warn when level is warn" — rewrite: seed first, verify warn IS in DB
+- "defaults to warn level when no setting exists" — keep as-is, default threshold is warn so info gets filtered
+- "reads logLevel from global file config when present" — rewrite: write file config BEFORE creating container
+- "falls back to DB log level when file config has no logLevel" — rewrite: seed DB and write file config BEFORE creating container
+
+The key change: seed settings BEFORE container creation (not after), because the DB destination's threshold is set at construction time. Restructure the test to use a helper that creates a fresh container with pre-seeded settings.
+
+**Add WebSocketBroadcaster mock** — register it on the container before resolving AppLogService (LoggerService depends on it).
 
 - [ ] **Step 4: Run tests**
 
@@ -649,7 +694,7 @@ git commit -m "refactor: rewrite AppLogService to delegate to pino logger"
 - Create: `src/api/services/Logger/destinations/__tests__/createFileDestination.test.ts`
 
 **Interfaces:**
-- Consumes: `createFileDestination` from Task 2, `FileConfigService` for data directory
+- Consumes: `createFileDestination` from Task 2, data directory passed from server.ts via `initFileDestination()`
 - Produces: Updated LoggerService that writes to file + console + DB
 
 - [ ] **Step 1: Write file destination test**
@@ -688,60 +733,9 @@ describe("createFileDestination", () => {
 yarn test -- --run src/api/services/Logger/destinations/__tests__/createFileDestination.test.ts
 ```
 
-- [ ] **Step 3: Update LoggerService to include file destination**
+- [ ] **Step 3: Verify LoggerService already supports file destination**
 
-Because `createFileDestination` is async (pino-roll uses async init), the LoggerService constructor can't await it. Use a deferred approach: start with console + DB, then add the file stream once it's ready.
-
-Update `src/api/services/Logger/LoggerService.ts`:
-
-```typescript
-import pino from "pino";
-import { LoggerService as Abstraction } from "./abstractions/LoggerService.js";
-import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
-import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
-import { FileConfigService } from "../FileConfig/index.js";
-import { createConsoleDestination } from "./destinations/createConsoleDestination.js";
-import { createFileDestination } from "./destinations/createFileDestination.js";
-import { createDatabaseDestination } from "./destinations/createDatabaseDestination.js";
-
-const DATA_DIR = process.env["DATA_DIR"] ?? "./data";
-
-class LoggerServiceImpl implements Abstraction.Interface {
-    public readonly logger: pino.Logger;
-
-    public constructor(
-        databaseClient: DatabaseClient.Interface,
-        webSocketBroadcaster: WebSocketBroadcaster.Interface,
-        _fileConfigService: FileConfigService.Interface
-    ) {
-        const dbDestination = createDatabaseDestination({
-            db: databaseClient.db,
-            broadcaster: webSocketBroadcaster,
-            threshold: "warn"
-        });
-
-        const consoleDestination = createConsoleDestination();
-        const multistream = pino.multistream([
-            consoleDestination,
-            { stream: dbDestination }
-        ]);
-
-        this.logger = pino(
-            { level: "trace", timestamp: pino.stdTimeFunctions.epochTime },
-            multistream
-        );
-
-        void createFileDestination({ directory: DATA_DIR }).then(fileEntry => {
-            multistream.add(fileEntry);
-        });
-    }
-}
-
-export const LoggerService = Abstraction.createImplementation({
-    implementation: LoggerServiceImpl,
-    dependencies: [DatabaseClient, WebSocketBroadcaster, FileConfigService]
-});
-```
+`initFileDestination()` was already implemented in Task 3's LoggerService (abstraction includes it, implementation has the method). No code changes needed here — just verify the file destination test passes end-to-end.
 
 - [ ] **Step 4: Run full test suite**
 
@@ -778,9 +772,10 @@ In `src/api/server.ts`, after the container is created and features registered, 
 import { LoggerService } from "./services/Logger/index.js";
 ```
 
-2. After `ApiFeature.register(container, { databaseClient });`, resolve the logger:
+2. After `ApiFeature.register(container, { databaseClient });`, resolve the logger and init the file destination (BEFORE Fastify creation so no logs are lost):
 ```typescript
 const loggerService = container.resolve(LoggerService);
+await loggerService.initFileDestination(DATA_DIR);
 ```
 
 3. Replace `const app = Fastify({ logger: { level: "warn" } });` with:
@@ -790,10 +785,12 @@ const app = Fastify({
 });
 ```
 
-4. Replace the `const logger = container.resolve(Logger);` and its usages in the error handler with `loggerService.logger`:
+4. Replace `const logger = container.resolve(Logger);` and its usages in the error handler with `loggerService.logger`:
 ```typescript
 loggerService.logger.error({ source: "server" }, `Route error: ${error.message}`);
 ```
+
+5. Remove the `import { Logger } from "@webiny/stdlib";` import if no longer used elsewhere in the file.
 
 - [ ] **Step 2: Run full test suite**
 
