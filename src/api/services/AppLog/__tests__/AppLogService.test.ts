@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
+import { sleep } from "#testing/helpers/sleep.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { AppLogService } from "../abstractions/AppLogService.js";
 import { appLogs, appSettings } from "#api/db/schema.js";
@@ -40,7 +41,7 @@ function setupAppLogService(logLevel?: string): ISetupAppLogServiceResult {
 // Logging flows through pino's async stream pipeline before it reaches the
 // DB destination, so assertions need a short delay after logging.
 function flushLogPipeline(): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, 50));
+    return sleep(100);
 }
 
 describe("AppLogService", () => {

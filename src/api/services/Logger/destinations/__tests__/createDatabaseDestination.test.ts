@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
+import { sleep } from "#testing/helpers/sleep.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { appLogs } from "#api/db/schema.js";
 import { createDatabaseDestination } from "../createDatabaseDestination.js";
@@ -35,7 +36,7 @@ describe("createDatabaseDestination", () => {
 
         destination.write(logLine);
 
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await sleep(100);
 
         const rows = await db.select().from(appLogs).all();
         expect(rows).toHaveLength(1);
@@ -62,7 +63,7 @@ describe("createDatabaseDestination", () => {
 
         destination.write(logLine);
 
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await sleep(100);
 
         expect(broadcaster.broadcast).toHaveBeenCalledWith(
             "log:created",
@@ -87,7 +88,7 @@ describe("createDatabaseDestination", () => {
 
         destination.write(logLine);
 
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await sleep(100);
 
         const rows = await db.select().from(appLogs).all();
         expect(rows).toHaveLength(0);
@@ -107,7 +108,7 @@ describe("createDatabaseDestination", () => {
 
         destination.write(logLine);
 
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await sleep(100);
 
         const rows = await db.select().from(appLogs).all();
         expect(rows).toHaveLength(1);
@@ -127,7 +128,7 @@ describe("createDatabaseDestination", () => {
 
         destination.write(logLine);
 
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await sleep(100);
 
         const rows = await db.select().from(appLogs).all();
         expect(rows).toHaveLength(0);

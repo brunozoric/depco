@@ -81,7 +81,10 @@ export function createDatabaseDestination(options: IDatabaseDestinationOptions):
                 });
 
                 callback();
-            } catch {
+            } catch (error) {
+                process.stderr.write(
+                    `[pino-db-destination] Failed to persist log: ${error instanceof Error ? error.message : String(error)}\n`
+                );
                 callback();
             }
         }
