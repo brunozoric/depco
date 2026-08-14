@@ -82,7 +82,11 @@ describe("ListProjectJobsUseCase", () => {
         const result = await useCase.execute({ projectId: "missing-project" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 404, message: "Project not found" });
+        expect(result.error).toEqual({
+            code: "PROJECT_NOT_FOUND",
+            statusCode: 404,
+            message: "Project not found"
+        });
     });
 
     it("fails with 500 when the database is unavailable", async () => {
@@ -93,6 +97,7 @@ describe("ListProjectJobsUseCase", () => {
 
         expect(result.isFail()).toBe(true);
         if (result.isFail()) {
+            expect(result.error.code).toBe("UNEXPECTED_ERROR");
             expect(result.error.statusCode).toBe(500);
             expect(result.error.message).toBeTruthy();
         }

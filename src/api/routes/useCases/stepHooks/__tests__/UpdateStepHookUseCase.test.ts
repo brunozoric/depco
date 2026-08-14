@@ -75,7 +75,11 @@ describe("UpdateStepHookUseCase", () => {
         });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 404, message: "Step hook not found" });
+        expect(result.error).toEqual({
+            code: "STEP_HOOK_NOT_FOUND",
+            statusCode: 404,
+            message: "Step hook not found"
+        });
     });
 
     it("fails with 404 when the hook belongs to a different project", async () => {
@@ -89,7 +93,11 @@ describe("UpdateStepHookUseCase", () => {
         });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 404, message: "Step hook not found" });
+        expect(result.error).toEqual({
+            code: "STEP_HOOK_NOT_FOUND",
+            statusCode: 404,
+            message: "Step hook not found"
+        });
     });
 
     it("fails with 500 when the database is unavailable", async () => {

@@ -39,7 +39,7 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
             return sendNone({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -58,7 +58,7 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
                 reply,
                 request,
                 status: 200,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -77,11 +77,7 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
             return sendNone({
                 reply,
                 request,
-                result: result.mapError(() => ({
-                    code: "UNKNOWN",
-                    statusCode: 500,
-                    message: "Unknown error"
-                }))
+                result
             });
         }
     );
@@ -100,7 +96,7 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
                 reply,
                 request,
                 status: 200,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -114,7 +110,7 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
             reply,
             request,
             status: 200,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -127,11 +123,7 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
         return sendNone({
             reply,
             request,
-            result: result.mapError(() => ({
-                code: "UNKNOWN",
-                statusCode: 500,
-                message: "Unknown error"
-            }))
+            result
         });
     });
 }

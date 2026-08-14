@@ -22,7 +22,7 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -33,7 +33,7 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -44,7 +44,7 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -59,7 +59,7 @@ export function registerDashboardStatusRoutes(app: FastifyInstance, container: C
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 }

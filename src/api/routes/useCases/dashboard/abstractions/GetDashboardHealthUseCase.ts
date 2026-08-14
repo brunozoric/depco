@@ -44,6 +44,7 @@ export interface IGetDashboardHealthUseCaseData {
 }
 
 export interface IGetDashboardHealthUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

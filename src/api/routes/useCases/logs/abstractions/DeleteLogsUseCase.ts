@@ -8,6 +8,7 @@ export interface IDeleteLogsUseCaseData {
 }
 
 export interface IDeleteLogsUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

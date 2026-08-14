@@ -25,7 +25,11 @@ class GetProjectEngineStalenessUseCaseImpl implements Abstraction.Interface {
                 .all();
             lastScannedAt = row?.maxScannedAt ?? null;
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
 
         let maxReleaseDate: number;
@@ -36,7 +40,11 @@ class GetProjectEngineStalenessUseCaseImpl implements Abstraction.Interface {
                     ? 0
                     : Math.max(...schedule.map(release => release.releaseDate));
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
 
         const staleness = computeEngineStaleness({

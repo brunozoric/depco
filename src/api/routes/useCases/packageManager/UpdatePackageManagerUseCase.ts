@@ -22,11 +22,19 @@ class UpdatePackageManagerUseCaseImpl implements Abstraction.Interface {
         try {
             project = await db.select().from(projects).where(eq(projects.id, params.id)).get();
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
 
         if (!project) {
-            return Result.fail({ statusCode: 404, message: "Project not found" });
+            return Result.fail({
+                code: "PROJECT_NOT_FOUND",
+                statusCode: 404,
+                message: "Project not found"
+            });
         }
 
         let packageManager: string;
@@ -34,7 +42,11 @@ class UpdatePackageManagerUseCaseImpl implements Abstraction.Interface {
             packageManager =
                 project.packageManager ?? (await this.packageManagerService.detect(project.path));
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
 
         let currentVersion: string;
@@ -57,7 +69,11 @@ class UpdatePackageManagerUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok({ jobId });
         } catch (error) {
-            return Result.fail({ statusCode: 403, message: (error as Error).message });
+            return Result.fail({
+                code: "ENQUEUE_FORBIDDEN",
+                statusCode: 403,
+                message: (error as Error).message
+            });
         }
     }
 }

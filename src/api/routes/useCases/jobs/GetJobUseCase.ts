@@ -11,12 +11,20 @@ class GetJobUseCaseImpl implements Abstraction.Interface {
         try {
             const job = await this.jobWorker.getJob(params.jobId);
             if (!job || job.referenceId !== params.projectId) {
-                return Result.fail({ statusCode: 404, message: "Job not found" });
+                return Result.fail({
+                    code: "JOB_NOT_FOUND",
+                    statusCode: 404,
+                    message: "Job not found"
+                });
             }
 
             return Result.ok(job);
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

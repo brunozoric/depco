@@ -29,6 +29,7 @@ class CloneProjectUseCaseImpl implements Abstraction.Interface {
 
         if (!url.startsWith("https://") && !url.startsWith("git@")) {
             return Result.fail({
+                code: "INVALID_URL",
                 statusCode: 400,
                 message: "Only https:// and git@ URLs are supported"
             });
@@ -37,6 +38,7 @@ class CloneProjectUseCaseImpl implements Abstraction.Interface {
         const repoName = extractRepoName(url);
         if (!repoName) {
             return Result.fail({
+                code: "REPO_NAME_EXTRACTION_FAILED",
                 statusCode: 400,
                 message: "Could not extract repository name from URL"
             });
@@ -49,6 +51,7 @@ class CloneProjectUseCaseImpl implements Abstraction.Interface {
             finalFolderName.includes("..")
         ) {
             return Result.fail({
+                code: "INVALID_FOLDER_NAME",
                 statusCode: 400,
                 message: "Folder name must not contain path separators or '..'"
             });
@@ -58,6 +61,7 @@ class CloneProjectUseCaseImpl implements Abstraction.Interface {
             await access(destination);
         } catch {
             return Result.fail({
+                code: "DESTINATION_NOT_FOUND",
                 statusCode: 400,
                 message: `Destination directory does not exist: ${destination}`
             });
@@ -73,11 +77,16 @@ class CloneProjectUseCaseImpl implements Abstraction.Interface {
                 .where(eq(projects.path, finalPath))
                 .get();
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
 
         if (existing) {
             return Result.fail({
+                code: "PROJECT_ALREADY_REGISTERED",
                 statusCode: 409,
                 message: `A project is already registered at ${finalPath}`
             });
@@ -93,7 +102,11 @@ class CloneProjectUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok({ jobId });
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

@@ -33,6 +33,7 @@ export interface IListProjectsUseCaseData {
 }
 
 export interface IListProjectsUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

@@ -123,6 +123,10 @@ describe("BulkScanEnginesUseCase", () => {
         const result = await useCase.execute({ projectIds: [projectIdOne] });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 500, message: "scan failed" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 500,
+            message: "scan failed"
+        });
     });
 });

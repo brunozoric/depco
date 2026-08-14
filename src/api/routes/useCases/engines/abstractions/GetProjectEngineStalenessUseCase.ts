@@ -13,6 +13,7 @@ export interface IGetProjectEngineStalenessUseCaseData {
 }
 
 export interface IGetProjectEngineStalenessUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

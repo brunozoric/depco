@@ -71,7 +71,11 @@ describe("CreateTransientJobUseCase", () => {
         const result = await useCase.execute({ projectId: "missing-project" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 404, message: "Project not found" });
+        expect(result.error).toEqual({
+            code: "PROJECT_NOT_FOUND",
+            statusCode: 404,
+            message: "Project not found"
+        });
     });
 
     it("fails with 403 when the job worker rejects the enqueue", async () => {
@@ -86,7 +90,11 @@ describe("CreateTransientJobUseCase", () => {
         const result = await useCase.execute({ projectId: "project-1" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 403, message: "queue is full" });
+        expect(result.error).toEqual({
+            code: "ENQUEUE_FAILED",
+            statusCode: 403,
+            message: "queue is full"
+        });
     });
 
     it("fails with 500 when the database is unavailable", async () => {
@@ -97,6 +105,7 @@ describe("CreateTransientJobUseCase", () => {
 
         expect(result.isFail()).toBe(true);
         if (result.isFail()) {
+            expect(result.error.code).toBe("UNEXPECTED_ERROR");
             expect(result.error.statusCode).toBe(500);
             expect(result.error.message).toBeTruthy();
         }

@@ -21,7 +21,11 @@ class ToggleSecuritySettingUseCaseImpl implements Abstraction.Interface {
                 .get();
 
             if (!existing) {
-                return Result.fail({ statusCode: 404, message: "Setting not found" });
+                return Result.fail({
+                    code: "SETTING_NOT_FOUND",
+                    statusCode: 404,
+                    message: "Setting not found"
+                });
             }
 
             const newEnabled = existing.enabled === 1 ? 0 : 1;
@@ -33,7 +37,11 @@ class ToggleSecuritySettingUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok(toSecuritySettingResponse({ ...existing, enabled: newEnabled }));
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

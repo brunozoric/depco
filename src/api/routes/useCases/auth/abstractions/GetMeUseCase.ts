@@ -6,6 +6,7 @@ export interface IGetMeUseCaseParams {
 }
 
 export interface IGetMeUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

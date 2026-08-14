@@ -10,6 +10,7 @@ export interface ISkipUpgradeStepUseCaseParams {
 export type ISkipUpgradeStepUseCaseData = UpgradeSessionService.Row;
 
 export interface ISessionOperationError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

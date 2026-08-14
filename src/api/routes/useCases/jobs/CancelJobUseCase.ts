@@ -9,14 +9,22 @@ class CancelJobUseCaseImpl implements Abstraction.Interface {
         try {
             const job = await this.jobWorker.getJob(params.jobId);
             if (!job) {
-                return Result.fail({ statusCode: 404, message: "Job not found" });
+                return Result.fail({
+                    code: "JOB_NOT_FOUND",
+                    statusCode: 404,
+                    message: "Job not found"
+                });
             }
 
             await this.jobWorker.cancelJob(params.jobId);
 
             return Result.ok();
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

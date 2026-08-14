@@ -26,7 +26,7 @@ export async function filesystemRoutes(
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -44,7 +44,7 @@ export async function filesystemRoutes(
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 }

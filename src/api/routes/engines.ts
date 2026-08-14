@@ -32,7 +32,7 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         return sendOne({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -43,7 +43,7 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -54,7 +54,7 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -65,7 +65,7 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -76,7 +76,7 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         return sendOne({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -92,7 +92,7 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         return sendOne({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 }

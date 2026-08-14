@@ -9,6 +9,7 @@ export interface IBulkRescanVulnerabilitiesUseCaseData {
 }
 
 export interface IBulkRescanVulnerabilitiesUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

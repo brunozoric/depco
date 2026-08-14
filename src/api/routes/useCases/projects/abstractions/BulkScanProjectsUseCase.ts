@@ -11,6 +11,7 @@ export interface IBulkScanProjectsUseCaseData {
 }
 
 export interface IBulkScanProjectsUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

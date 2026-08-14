@@ -8,6 +8,7 @@ export interface IDeleteJobsUseCaseData {
 }
 
 export interface IDeleteJobsUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

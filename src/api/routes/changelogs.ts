@@ -33,7 +33,7 @@ export async function changelogRoutes(app: FastifyInstance, options: PluginOptio
             return sendList({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -45,7 +45,7 @@ export async function changelogRoutes(app: FastifyInstance, options: PluginOptio
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -59,7 +59,7 @@ export async function changelogRoutes(app: FastifyInstance, options: PluginOptio
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -77,7 +77,7 @@ export async function changelogRoutes(app: FastifyInstance, options: PluginOptio
             return sendList({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );

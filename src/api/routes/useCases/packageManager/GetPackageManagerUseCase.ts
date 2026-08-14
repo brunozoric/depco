@@ -23,7 +23,11 @@ class GetPackageManagerUseCaseImpl implements Abstraction.Interface {
                 .where(eq(projects.id, params.id))
                 .get();
             if (!project) {
-                return Result.fail({ statusCode: 404, message: "Project not found" });
+                return Result.fail({
+                    code: "PROJECT_NOT_FOUND",
+                    statusCode: 404,
+                    message: "Project not found"
+                });
             }
 
             const packageManager =
@@ -35,7 +39,11 @@ class GetPackageManagerUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok({ version });
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

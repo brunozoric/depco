@@ -13,7 +13,7 @@ export function registerPmConfigRoutes(app: FastifyInstance, container: Containe
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -33,7 +33,7 @@ export function registerPmConfigRoutes(app: FastifyInstance, container: Containe
             return sendOne({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );

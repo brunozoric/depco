@@ -47,7 +47,7 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
             return sendOne({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -65,7 +65,7 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
             return sendOne({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -81,7 +81,7 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
         return sendOne({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -93,7 +93,7 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -105,7 +105,7 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -121,7 +121,7 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
             return sendNone({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -138,7 +138,7 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
             return sendList({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );

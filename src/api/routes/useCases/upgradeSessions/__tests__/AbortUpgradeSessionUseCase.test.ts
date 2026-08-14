@@ -91,7 +91,11 @@ describe("AbortUpgradeSessionUseCase", () => {
         const result = await useCase.execute({ projectId: "project-1", sessionId: "session-1" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 409, message: "Session is not active" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 409,
+            message: "Session is not active"
+        });
     });
 
     it("fails with 404 when the session does not exist", async () => {
@@ -106,7 +110,11 @@ describe("AbortUpgradeSessionUseCase", () => {
         });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 404, message: "Session not found" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 404,
+            message: "Session not found"
+        });
     });
 
     it("fails with 500 when the service throws an unexpected error", async () => {
@@ -118,6 +126,10 @@ describe("AbortUpgradeSessionUseCase", () => {
         const result = await useCase.execute({ projectId: "project-1", sessionId: "session-1" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 500, message: "db unavailable" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 500,
+            message: "db unavailable"
+        });
     });
 });

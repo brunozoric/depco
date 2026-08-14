@@ -83,6 +83,10 @@ describe("GetProjectEngineChecksUseCase", () => {
         const result = await useCase.execute({ projectId: "project-1" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 500, message: "db unavailable" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 500,
+            message: "db unavailable"
+        });
     });
 });

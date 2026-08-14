@@ -26,7 +26,7 @@ export async function packageManagerRoutes(
         return sendOne({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -46,7 +46,7 @@ export async function packageManagerRoutes(
             return sendOne({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );

@@ -2,6 +2,7 @@ import { createAbstraction, Result } from "#shared/index.js";
 import type { VulnerabilityQueryService } from "#api/services/Vulnerability/index.js";
 
 export interface IExportVulnerabilitiesUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

@@ -26,7 +26,11 @@ class UpdateStepHookUseCaseImpl implements Abstraction.Interface {
                 .get();
 
             if (!existing) {
-                return Result.fail({ statusCode: 404, message: "Step hook not found" });
+                return Result.fail({
+                    code: "STEP_HOOK_NOT_FOUND",
+                    statusCode: 404,
+                    message: "Step hook not found"
+                });
             }
 
             const merged: typeof projectStepHooks.$inferSelect = {
@@ -49,7 +53,11 @@ class UpdateStepHookUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok(toStepHookResponse(merged));
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

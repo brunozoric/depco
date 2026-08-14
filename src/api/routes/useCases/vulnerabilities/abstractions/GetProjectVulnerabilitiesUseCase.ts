@@ -10,6 +10,7 @@ export interface IGetProjectVulnerabilitiesUseCaseParams {
 }
 
 export interface IGetProjectVulnerabilitiesUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

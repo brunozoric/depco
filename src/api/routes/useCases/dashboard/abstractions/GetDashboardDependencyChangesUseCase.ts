@@ -23,6 +23,7 @@ export interface IGetDashboardDependencyChangesUseCaseData {
 }
 
 export interface IGetDashboardDependencyChangesUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

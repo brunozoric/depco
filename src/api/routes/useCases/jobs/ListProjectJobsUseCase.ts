@@ -23,14 +23,22 @@ class ListProjectJobsUseCaseImpl implements Abstraction.Interface {
                 .where(eq(projects.id, params.projectId))
                 .get();
             if (!project) {
-                return Result.fail({ statusCode: 404, message: "Project not found" });
+                return Result.fail({
+                    code: "PROJECT_NOT_FOUND",
+                    statusCode: 404,
+                    message: "Project not found"
+                });
             }
 
             const jobs = await this.jobWorker.getJobsForReference(params.projectId);
 
             return Result.ok({ items: jobs, total: jobs.length });
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

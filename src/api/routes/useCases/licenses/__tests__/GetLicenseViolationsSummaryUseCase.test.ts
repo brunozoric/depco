@@ -54,7 +54,11 @@ describe("GetLicenseViolationsSummaryUseCase", () => {
 
         expect(result.isFail()).toBe(true);
         if (result.isFail()) {
-            expect(result.error).toEqual({ statusCode: 500, message: "boom" });
+            expect(result.error).toEqual({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: "boom"
+            });
         }
     });
 });

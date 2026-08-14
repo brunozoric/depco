@@ -58,7 +58,11 @@ describe("DeleteStepHookUseCase", () => {
         const result = await useCase.execute({ projectId: "project-1", hookId: "missing-hook" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 404, message: "Step hook not found" });
+        expect(result.error).toEqual({
+            code: "STEP_HOOK_NOT_FOUND",
+            statusCode: 404,
+            message: "Step hook not found"
+        });
     });
 
     it("fails with 404 when the hook belongs to a different project", async () => {
@@ -68,7 +72,11 @@ describe("DeleteStepHookUseCase", () => {
         const result = await useCase.execute({ projectId: "other-project", hookId: "hook-1" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 404, message: "Step hook not found" });
+        expect(result.error).toEqual({
+            code: "STEP_HOOK_NOT_FOUND",
+            statusCode: 404,
+            message: "Step hook not found"
+        });
         expect(
             db.select().from(projectStepHooks).where(eq(projectStepHooks.id, "hook-1")).all()
         ).toHaveLength(1);

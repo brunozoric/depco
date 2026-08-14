@@ -72,7 +72,11 @@ describe("GetJobUseCase", () => {
         const result = await useCase.execute({ projectId: "project-1", jobId: "missing-job" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 404, message: "Job not found" });
+        expect(result.error).toEqual({
+            code: "JOB_NOT_FOUND",
+            statusCode: 404,
+            message: "Job not found"
+        });
     });
 
     it("fails with 404 when the job belongs to a different project", async () => {
@@ -94,7 +98,11 @@ describe("GetJobUseCase", () => {
         const result = await useCase.execute({ projectId: "project-1", jobId: "job-1" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 404, message: "Job not found" });
+        expect(result.error).toEqual({
+            code: "JOB_NOT_FOUND",
+            statusCode: 404,
+            message: "Job not found"
+        });
     });
 
     it("fails with 500 when the job worker throws", async () => {
@@ -106,6 +114,10 @@ describe("GetJobUseCase", () => {
         const result = await useCase.execute({ projectId: "project-1", jobId: "job-1" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 500, message: "worker unavailable" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 500,
+            message: "worker unavailable"
+        });
     });
 });

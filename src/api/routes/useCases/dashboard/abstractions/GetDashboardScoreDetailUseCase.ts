@@ -25,6 +25,7 @@ export interface IGetDashboardScoreDetailUseCaseData {
 }
 
 export interface IGetDashboardScoreDetailUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

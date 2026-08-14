@@ -12,6 +12,7 @@ export interface IListPmSettingsUseCaseData {
 }
 
 export interface IListPmSettingsUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

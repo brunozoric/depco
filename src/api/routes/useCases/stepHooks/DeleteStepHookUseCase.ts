@@ -25,14 +25,22 @@ class DeleteStepHookUseCaseImpl implements Abstraction.Interface {
                 .get();
 
             if (!existing) {
-                return Result.fail({ statusCode: 404, message: "Step hook not found" });
+                return Result.fail({
+                    code: "STEP_HOOK_NOT_FOUND",
+                    statusCode: 404,
+                    message: "Step hook not found"
+                });
             }
 
             await db.delete(projectStepHooks).where(eq(projectStepHooks.id, params.hookId)).run();
 
             return Result.ok({ deleted: true });
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

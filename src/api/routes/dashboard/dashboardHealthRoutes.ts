@@ -15,7 +15,7 @@ export function registerDashboardHealthRoutes(app: FastifyInstance, container: C
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -26,7 +26,7 @@ export function registerDashboardHealthRoutes(app: FastifyInstance, container: C
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 }

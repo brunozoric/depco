@@ -19,6 +19,7 @@ class UpsertAppSettingUseCaseImpl implements Abstraction.Interface {
         if (TOKEN_KEYS.has(params.key)) {
             if (!this.encryptionService.isAvailable()) {
                 return Result.fail({
+                    code: "ENCRYPTION_UNAVAILABLE",
                     statusCode: 400,
                     message: "ENCRYPTION_KEY not configured — cannot store tokens"
                 });
@@ -27,7 +28,11 @@ class UpsertAppSettingUseCaseImpl implements Abstraction.Interface {
             try {
                 storedValue = await this.encryptionService.encrypt(params.value);
             } catch (error) {
-                return Result.fail({ statusCode: 500, message: (error as Error).message });
+                return Result.fail({
+                    code: "UNEXPECTED_ERROR",
+                    statusCode: 500,
+                    message: (error as Error).message
+                });
             }
         }
 
@@ -48,7 +53,11 @@ class UpsertAppSettingUseCaseImpl implements Abstraction.Interface {
                 value: TOKEN_KEYS.has(params.key) ? "••••••••" : params.value
             });
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

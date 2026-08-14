@@ -25,11 +25,19 @@ class UpgradeJobUseCaseImpl implements Abstraction.Interface {
                 .where(eq(projects.id, params.projectId))
                 .get();
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
 
         if (!project) {
-            return Result.fail({ statusCode: 404, message: "Project not found" });
+            return Result.fail({
+                code: "PROJECT_NOT_FOUND",
+                statusCode: 404,
+                message: "Project not found"
+            });
         }
 
         try {
@@ -48,7 +56,11 @@ class UpgradeJobUseCaseImpl implements Abstraction.Interface {
                 };
             });
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
 
         try {
@@ -62,7 +74,11 @@ class UpgradeJobUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok({ jobId });
         } catch (error) {
-            return Result.fail({ statusCode: 403, message: (error as Error).message });
+            return Result.fail({
+                code: "ENQUEUE_FAILED",
+                statusCode: 403,
+                message: (error as Error).message
+            });
         }
     }
 }

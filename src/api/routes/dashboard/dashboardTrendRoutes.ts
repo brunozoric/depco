@@ -27,7 +27,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -41,7 +41,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -55,7 +55,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -69,7 +69,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -83,7 +83,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 }

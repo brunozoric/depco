@@ -25,7 +25,11 @@ class CreateProjectUseCaseImpl implements Abstraction.Interface {
                 packageManagerService: this.packageManagerService
             });
         } catch (error) {
-            return Result.fail({ statusCode: 400, message: (error as Error).message });
+            return Result.fail({
+                code: "REGISTRATION_FAILED",
+                statusCode: 400,
+                message: (error as Error).message
+            });
         }
 
         void this.securityService.check(registered.id, params.projectPath);
@@ -37,7 +41,11 @@ class CreateProjectUseCaseImpl implements Abstraction.Interface {
                 hasNodeModules: existsSync(join(registered.path, "node_modules"))
             });
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

@@ -13,7 +13,11 @@ class CreateUserUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok(user);
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

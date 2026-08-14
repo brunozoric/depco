@@ -23,6 +23,7 @@ class ScanFilesystemUseCaseImpl implements Abstraction.Interface {
             resolvedPath = await realpath(resolve(params.path));
         } catch {
             return Result.fail({
+                code: "PATH_NOT_FOUND",
                 statusCode: 400,
                 message: `Path does not exist: ${params.path}`
             });
@@ -74,7 +75,11 @@ class ScanFilesystemUseCaseImpl implements Abstraction.Interface {
                 mode: "depth"
             });
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

@@ -22,6 +22,7 @@ export interface IImportProjectsUseCaseData {
 }
 
 export interface IImportProjectsUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

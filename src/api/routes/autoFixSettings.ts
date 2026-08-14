@@ -52,7 +52,7 @@ export async function autoFixSettingsRoutes(
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -70,7 +70,7 @@ export async function autoFixSettingsRoutes(
             return sendList({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );

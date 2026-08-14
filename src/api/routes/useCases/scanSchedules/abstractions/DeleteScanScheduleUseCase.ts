@@ -5,6 +5,7 @@ export interface IDeleteScanScheduleUseCaseParams {
 }
 
 export interface IDeleteScanScheduleUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

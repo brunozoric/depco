@@ -27,7 +27,11 @@ class ListStepHooksUseCaseImpl implements Abstraction.Interface {
                 .get();
 
             if (!project) {
-                return Result.fail({ statusCode: 404, message: "Project not found" });
+                return Result.fail({
+                    code: "PROJECT_NOT_FOUND",
+                    statusCode: 404,
+                    message: "Project not found"
+                });
             }
 
             const fileConfig = await this.fileConfigService.readConfig(project.path);
@@ -77,7 +81,11 @@ class ListStepHooksUseCaseImpl implements Abstraction.Interface {
                 discoveredScripts
             });
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

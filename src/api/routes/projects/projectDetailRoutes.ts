@@ -36,7 +36,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
             return sendOne({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -55,7 +55,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -66,7 +66,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -77,7 +77,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
         return sendOne({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -92,7 +92,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
             return sendOne({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -104,7 +104,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -122,7 +122,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
             return sendNone({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );

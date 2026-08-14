@@ -11,12 +11,20 @@ class GetUserUseCaseImpl implements Abstraction.Interface {
         try {
             const user = await this.userService.getById(params.id);
             if (!user) {
-                return Result.fail({ statusCode: 404, message: "User not found" });
+                return Result.fail({
+                    code: "USER_NOT_FOUND",
+                    statusCode: 404,
+                    message: "User not found"
+                });
             }
 
             return Result.ok(user);
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

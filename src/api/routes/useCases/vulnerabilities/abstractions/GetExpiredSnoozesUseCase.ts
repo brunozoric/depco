@@ -10,6 +10,7 @@ export interface IGetExpiredSnoozesUseCaseData {
 }
 
 export interface IGetExpiredSnoozesUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

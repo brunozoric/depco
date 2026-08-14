@@ -14,7 +14,11 @@ class BrowseFilesystemUseCaseImpl implements Abstraction.Interface {
         try {
             resolvedPath = await realpath(resolve(rawPath));
         } catch {
-            return Result.fail({ statusCode: 400, message: `Path does not exist: ${rawPath}` });
+            return Result.fail({
+                code: "PATH_NOT_FOUND",
+                statusCode: 400,
+                message: `Path does not exist: ${rawPath}`
+            });
         }
 
         try {
@@ -37,6 +41,7 @@ class BrowseFilesystemUseCaseImpl implements Abstraction.Interface {
             });
         } catch {
             return Result.fail({
+                code: "PATH_NOT_FOUND",
                 statusCode: 400,
                 message: `Cannot read directory: ${resolvedPath}`
             });

@@ -5,11 +5,13 @@ export interface IDeleteProjectUseCaseParams {
 }
 
 export interface IProjectHasRunningJobsError {
+    code: "PROJECT_HAS_RUNNING_JOBS";
     statusCode: 409;
     message: string;
 }
 
 export interface IUnexpectedError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

@@ -56,7 +56,11 @@ describe("GetAutoFixSettingsUseCase", () => {
 
         expect(result.isFail()).toBe(true);
         if (result.isFail()) {
-            expect(result.error).toEqual({ statusCode: 500, message: "settings lookup failed" });
+            expect(result.error).toEqual({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: "settings lookup failed"
+            });
         }
     });
 });

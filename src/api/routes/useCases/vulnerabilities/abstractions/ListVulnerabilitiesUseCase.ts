@@ -5,6 +5,7 @@ import type {
 } from "#api/services/Vulnerability/index.js";
 
 export interface IListVulnerabilitiesUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

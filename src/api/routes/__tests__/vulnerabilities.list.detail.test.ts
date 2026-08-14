@@ -73,7 +73,7 @@ describe("vulnerability routes - single vulnerability detail", () => {
 
             expect(response.statusCode).toBe(404);
             expect(response.json()).toEqual({
-                error: { code: "UNKNOWN", message: "Vulnerability not found" }
+                error: { code: "VULNERABILITY_NOT_FOUND", message: "Vulnerability not found" }
             });
         });
 

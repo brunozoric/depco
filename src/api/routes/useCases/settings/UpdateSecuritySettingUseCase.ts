@@ -22,7 +22,11 @@ class UpdateSecuritySettingUseCaseImpl implements Abstraction.Interface {
                 .get();
 
             if (!existing) {
-                return Result.fail({ statusCode: 404, message: "Setting not found" });
+                return Result.fail({
+                    code: "SETTING_NOT_FOUND",
+                    statusCode: 404,
+                    message: "Setting not found"
+                });
             }
 
             const fields =
@@ -35,6 +39,7 @@ class UpdateSecuritySettingUseCaseImpl implements Abstraction.Interface {
                 const validation = fieldDef.expectedValueSchema.safeParse(params.expectedValue);
                 if (!validation.success) {
                     return Result.fail({
+                        code: "INVALID_EXPECTED_VALUE",
                         statusCode: 400,
                         message: validation.error.issues[0]?.message ?? "Invalid expected value"
                     });
@@ -51,7 +56,11 @@ class UpdateSecuritySettingUseCaseImpl implements Abstraction.Interface {
                 toSecuritySettingResponse({ ...existing, expectedValue: params.expectedValue })
             );
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

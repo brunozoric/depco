@@ -110,7 +110,11 @@ describe("ScanProjectEnginesUseCase", () => {
         const result = await useCase.execute({ projectId: "missing-project" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 404, message: "Project not found" });
+        expect(result.error).toEqual({
+            code: "PROJECT_NOT_FOUND",
+            statusCode: 404,
+            message: "Project not found"
+        });
     });
 
     it("fails with 500 when the engine service throws", async () => {
@@ -124,6 +128,10 @@ describe("ScanProjectEnginesUseCase", () => {
         const result = await useCase.execute({ projectId });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 500, message: "scan failed" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 500,
+            message: "scan failed"
+        });
     });
 });

@@ -6,6 +6,7 @@ export interface IGetAutoFixSettingsUseCaseParams {
 }
 
 export interface IGetAutoFixSettingsUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

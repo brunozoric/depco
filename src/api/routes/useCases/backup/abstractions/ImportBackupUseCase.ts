@@ -6,6 +6,7 @@ export interface IImportBackupUseCaseParams {
 }
 
 export interface IImportBackupUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

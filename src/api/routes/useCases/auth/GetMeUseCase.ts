@@ -11,11 +11,19 @@ class GetMeUseCaseImpl implements Abstraction.Interface {
         try {
             const user = await this.userService.getById(params.userId);
             if (!user) {
-                return Result.fail({ statusCode: 401, message: "Session expired" });
+                return Result.fail({
+                    code: "UNEXPECTED_ERROR",
+                    statusCode: 401,
+                    message: "Session expired"
+                });
             }
             return Result.ok(user);
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

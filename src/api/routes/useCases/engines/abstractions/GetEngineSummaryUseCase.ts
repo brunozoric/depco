@@ -4,6 +4,7 @@ import type { EngineService } from "#api/services/Engine/index.js";
 export interface IGetEngineSummaryUseCaseParams {}
 
 export interface IGetEngineSummaryUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

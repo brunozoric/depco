@@ -11,12 +11,20 @@ class GetPackageDetailUseCaseImpl implements Abstraction.Interface {
         try {
             const detail = await this.packageQueryService.getPackageDetail(params.packageName);
             if (!detail) {
-                return Result.fail({ statusCode: 404, message: "Package not found" });
+                return Result.fail({
+                    code: "PACKAGE_NOT_FOUND",
+                    statusCode: 404,
+                    message: "Package not found"
+                });
             }
 
             return Result.ok(detail);
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

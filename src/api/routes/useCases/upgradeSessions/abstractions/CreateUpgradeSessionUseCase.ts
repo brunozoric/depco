@@ -8,6 +8,7 @@ export interface ICreateUpgradeSessionUseCaseParams {
 export type ICreateUpgradeSessionUseCaseData = UpgradeSessionService.Row;
 
 export interface ISessionOperationError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

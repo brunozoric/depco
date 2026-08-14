@@ -9,6 +9,7 @@ export interface IDeleteLicensePolicyUseCaseData {
 }
 
 export interface IDeleteLicensePolicyUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

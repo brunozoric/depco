@@ -133,7 +133,11 @@ describe("ListStepHooksUseCase", () => {
         const result = await useCase.execute({ projectId: "missing-project" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 404, message: "Project not found" });
+        expect(result.error).toEqual({
+            code: "PROJECT_NOT_FOUND",
+            statusCode: 404,
+            message: "Project not found"
+        });
     });
 
     it("fails with 500 when the file config service throws", async () => {
@@ -148,6 +152,10 @@ describe("ListStepHooksUseCase", () => {
         const result = await useCase.execute({ projectId: "project-1" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 500, message: "disk unavailable" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 500,
+            message: "disk unavailable"
+        });
     });
 });

@@ -7,6 +7,7 @@ export interface IVerifyMagicLinkUseCaseParams {
 }
 
 export interface IVerifyMagicLinkUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

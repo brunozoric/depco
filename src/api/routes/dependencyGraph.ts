@@ -35,7 +35,7 @@ export async function dependencyGraphRoutes(
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -50,7 +50,7 @@ export async function dependencyGraphRoutes(
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -65,7 +65,7 @@ export async function dependencyGraphRoutes(
             return sendList({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -77,7 +77,7 @@ export async function dependencyGraphRoutes(
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 }

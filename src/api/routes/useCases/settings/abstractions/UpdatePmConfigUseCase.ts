@@ -14,6 +14,7 @@ export interface IUpdatePmConfigUseCaseParams {
 export type IUpdatePmConfigUseCaseData = IPmConfigItemResponse;
 
 export interface IUpdatePmConfigUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

@@ -7,6 +7,7 @@ export interface IVerifyCodeUseCaseParams {
 }
 
 export interface IVerifyCodeUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

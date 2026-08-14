@@ -97,6 +97,10 @@ describe("UpsertScanScheduleDefaultUseCase", () => {
         const result = await useCase.execute({ interval: "24h" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 500, message: "scheduler unavailable" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 500,
+            message: "scheduler unavailable"
+        });
     });
 });

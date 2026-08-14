@@ -24,7 +24,7 @@ export async function cacheRoutes(app: FastifyInstance, options: PluginOptions):
             return sendList({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -41,7 +41,7 @@ export async function cacheRoutes(app: FastifyInstance, options: PluginOptions):
             return sendList({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );

@@ -91,7 +91,11 @@ describe("CreateUpgradeSessionUseCase", () => {
         const result = await useCase.execute({ projectId: "missing-project" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 404, message: "Project not found" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 404,
+            message: "Project not found"
+        });
     });
 
     it("fails with 500 when the service throws an unexpected error", async () => {
@@ -103,6 +107,10 @@ describe("CreateUpgradeSessionUseCase", () => {
         const result = await useCase.execute({ projectId: "project-1" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 500, message: "db unavailable" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 500,
+            message: "db unavailable"
+        });
     });
 });

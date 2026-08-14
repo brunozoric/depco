@@ -115,7 +115,11 @@ describe("ReResolveChangelogsUseCase", () => {
         });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 500, message: "db unavailable" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 500,
+            message: "db unavailable"
+        });
     });
 
     it("fails with 500 when re-fetching the changelogs throws", async () => {
@@ -131,6 +135,10 @@ describe("ReResolveChangelogsUseCase", () => {
         });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 500, message: "registry unavailable" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 500,
+            message: "registry unavailable"
+        });
     });
 });

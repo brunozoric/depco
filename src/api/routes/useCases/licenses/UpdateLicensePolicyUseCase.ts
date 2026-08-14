@@ -20,11 +20,19 @@ class UpdateLicensePolicyUseCaseImpl implements Abstraction.Interface {
                 .where(eq(licensePolicyRules.id, params.id))
                 .get();
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
 
         if (!existing) {
-            return Result.fail({ statusCode: 404, message: "License policy rule not found" });
+            return Result.fail({
+                code: "POLICY_NOT_FOUND",
+                statusCode: 404,
+                message: "License policy rule not found"
+            });
         }
 
         try {
@@ -53,7 +61,11 @@ class UpdateLicensePolicyUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok({ ...existing, ...updates });
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

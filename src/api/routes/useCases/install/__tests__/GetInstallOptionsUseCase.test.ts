@@ -116,6 +116,7 @@ describe("GetInstallOptionsUseCase", () => {
 
         expect(result.isFail()).toBe(true);
         expect(result.error).toEqual({
+            code: "UNKNOWN_PACKAGE_MANAGER",
             statusCode: 400,
             message: "Unknown package manager: cargo"
         });

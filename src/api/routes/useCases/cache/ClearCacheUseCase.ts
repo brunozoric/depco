@@ -10,7 +10,11 @@ class ClearCacheUseCaseImpl implements Abstraction.Interface {
             await this.registryCacheService.clearAll();
             return Result.ok({ success: true });
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

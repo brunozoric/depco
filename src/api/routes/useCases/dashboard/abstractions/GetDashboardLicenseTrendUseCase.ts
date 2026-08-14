@@ -18,6 +18,7 @@ export interface IGetDashboardLicenseTrendUseCaseData {
 }
 
 export interface IGetDashboardLicenseTrendUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

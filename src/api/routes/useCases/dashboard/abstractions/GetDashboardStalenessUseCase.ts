@@ -15,6 +15,7 @@ export interface IGetDashboardStalenessUseCaseData {
 }
 
 export interface IGetDashboardStalenessUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

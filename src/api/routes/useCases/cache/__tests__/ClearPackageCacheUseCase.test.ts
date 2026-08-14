@@ -60,6 +60,7 @@ describe("ClearPackageCacheUseCase", () => {
 
         expect(result.isFail()).toBe(true);
         expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
             statusCode: 500,
             message: "cache backend unavailable"
         });

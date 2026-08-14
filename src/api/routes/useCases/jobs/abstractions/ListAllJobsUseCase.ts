@@ -13,6 +13,7 @@ export interface IListAllJobsUseCaseData {
 }
 
 export interface IListAllJobsUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

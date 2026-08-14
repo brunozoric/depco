@@ -100,6 +100,7 @@ describe("SkipUpgradeStepUseCase", () => {
 
         expect(result.isFail()).toBe(true);
         expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
             statusCode: 400,
             message: "select-packages is required and cannot be skipped"
         });
@@ -118,7 +119,11 @@ describe("SkipUpgradeStepUseCase", () => {
         });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 404, message: "Session not found" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 404,
+            message: "Session not found"
+        });
     });
 
     it("fails with 500 when the service throws an unexpected error", async () => {
@@ -134,6 +139,10 @@ describe("SkipUpgradeStepUseCase", () => {
         });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 500, message: "db unavailable" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 500,
+            message: "db unavailable"
+        });
     });
 });

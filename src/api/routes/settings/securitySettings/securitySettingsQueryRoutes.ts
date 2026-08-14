@@ -15,7 +15,7 @@ export function registerSecuritySettingsQueryRoutes(
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 }

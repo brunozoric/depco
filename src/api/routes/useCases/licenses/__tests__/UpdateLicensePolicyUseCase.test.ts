@@ -54,6 +54,7 @@ describe("UpdateLicensePolicyUseCase", () => {
         expect(result.isFail()).toBe(true);
         if (result.isFail()) {
             expect(result.error).toEqual({
+                code: "POLICY_NOT_FOUND",
                 statusCode: 404,
                 message: "License policy rule not found"
             });

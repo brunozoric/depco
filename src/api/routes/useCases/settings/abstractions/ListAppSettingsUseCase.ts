@@ -14,6 +14,7 @@ export interface IListAppSettingsUseCaseData {
 }
 
 export interface IListAppSettingsUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

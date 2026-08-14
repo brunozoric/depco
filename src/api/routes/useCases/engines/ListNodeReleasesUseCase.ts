@@ -10,7 +10,11 @@ class ListNodeReleasesUseCaseImpl implements Abstraction.Interface {
             const items = await this.nodeReleaseDataService.getSchedule();
             return Result.ok({ items, total: items.length });
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

@@ -6,6 +6,7 @@ export interface ILoginUseCaseParams {
 }
 
 export interface ILoginUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

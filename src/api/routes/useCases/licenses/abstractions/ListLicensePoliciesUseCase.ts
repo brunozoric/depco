@@ -7,6 +7,7 @@ export interface IListLicensePoliciesUseCaseData {
 }
 
 export interface IListLicensePoliciesUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

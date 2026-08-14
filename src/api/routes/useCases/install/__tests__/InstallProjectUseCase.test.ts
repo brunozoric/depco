@@ -95,7 +95,11 @@ describe("InstallProjectUseCase", () => {
         const result = await useCase.execute({ id: "missing-project", flags: [] });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 404, message: "Project not found" });
+        expect(result.error).toEqual({
+            code: "PROJECT_NOT_FOUND",
+            statusCode: 404,
+            message: "Project not found"
+        });
     });
 
     it("fails with 400 when the project has no detected package manager", async () => {
@@ -115,6 +119,7 @@ describe("InstallProjectUseCase", () => {
 
         expect(result.isFail()).toBe(true);
         expect(result.error).toEqual({
+            code: "NO_PACKAGE_MANAGER",
             statusCode: 400,
             message: "No package manager detected for this project"
         });
@@ -139,6 +144,10 @@ describe("InstallProjectUseCase", () => {
         const result = await useCase.execute({ id: "project-3", flags: [] });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 500, message: "queue unavailable" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 500,
+            message: "queue unavailable"
+        });
     });
 });

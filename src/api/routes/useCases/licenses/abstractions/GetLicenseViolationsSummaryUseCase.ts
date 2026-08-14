@@ -2,6 +2,7 @@ import { createAbstraction, Result } from "#shared/index.js";
 import type { LicenseQueryService } from "#api/services/License/index.js";
 
 export interface IGetLicenseViolationsSummaryUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

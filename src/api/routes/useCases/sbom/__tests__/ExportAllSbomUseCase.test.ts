@@ -111,6 +111,7 @@ describe("ExportAllSbomUseCase", () => {
         expect(result.isFail()).toBe(true);
         if (result.isFail()) {
             expect(result.error).toEqual({
+                code: "UNEXPECTED_ERROR",
                 statusCode: 500,
                 message: "Unknown SBOM format: bogus"
             });
@@ -132,7 +133,11 @@ describe("ExportAllSbomUseCase", () => {
 
         expect(result.isFail()).toBe(true);
         if (result.isFail()) {
-            expect(result.error).toEqual({ statusCode: 500, message: "aggregation failed" });
+            expect(result.error).toEqual({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: "aggregation failed"
+            });
         }
         expect(format).not.toHaveBeenCalled();
     });

@@ -14,7 +14,11 @@ class CreateUpgradeSessionUseCaseImpl implements Abstraction.Interface {
             return Result.ok(session);
         } catch (error) {
             const message = (error as Error).message;
-            return Result.fail({ statusCode: mapUpgradeSessionErrorStatus(message), message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: mapUpgradeSessionErrorStatus(message),
+                message
+            });
         }
     }
 }

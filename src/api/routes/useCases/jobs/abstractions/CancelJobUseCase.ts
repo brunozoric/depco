@@ -5,11 +5,13 @@ export interface ICancelJobUseCaseParams {
 }
 
 export interface IJobNotFoundError {
+    code: "JOB_NOT_FOUND";
     statusCode: 404;
     message: string;
 }
 
 export interface IUnexpectedError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

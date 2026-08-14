@@ -14,6 +14,7 @@ export interface IGetChangelogsUseCaseData {
 }
 
 export interface IGetChangelogsUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

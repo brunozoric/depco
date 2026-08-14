@@ -12,6 +12,7 @@ export interface IGetProjectAutoFixPullRequestsUseCaseData {
 }
 
 export interface IGetProjectAutoFixPullRequestsUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

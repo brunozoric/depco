@@ -11,6 +11,7 @@ export interface IGetProjectEngineChecksUseCaseData {
 }
 
 export interface IGetProjectEngineChecksUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

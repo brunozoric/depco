@@ -14,6 +14,7 @@ export interface IReResolveChangelogsUseCaseData {
 }
 
 export interface IReResolveChangelogsUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

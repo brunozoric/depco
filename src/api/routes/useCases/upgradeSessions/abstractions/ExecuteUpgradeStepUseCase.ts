@@ -11,6 +11,7 @@ export interface IExecuteUpgradeStepUseCaseParams {
 export type IExecuteUpgradeStepUseCaseData = UpgradeSessionService.Row;
 
 export interface ISessionOperationError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

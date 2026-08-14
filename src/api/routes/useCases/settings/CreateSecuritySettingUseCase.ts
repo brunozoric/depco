@@ -17,6 +17,7 @@ class CreateSecuritySettingUseCaseImpl implements Abstraction.Interface {
             SECURITY_FIELD_REGISTRY[params.packageManager as keyof typeof SECURITY_FIELD_REGISTRY];
         if (!fields) {
             return Result.fail({
+                code: "UNKNOWN_PACKAGE_MANAGER",
                 statusCode: 400,
                 message: `Unknown package manager: ${params.packageManager}`
             });
@@ -25,6 +26,7 @@ class CreateSecuritySettingUseCaseImpl implements Abstraction.Interface {
         const fieldDef = fields.find(f => f.fieldName === params.fieldName);
         if (!fieldDef) {
             return Result.fail({
+                code: "UNKNOWN_FIELD",
                 statusCode: 400,
                 message: `Unknown field "${params.fieldName}" for ${params.packageManager}`
             });
@@ -33,6 +35,7 @@ class CreateSecuritySettingUseCaseImpl implements Abstraction.Interface {
         const validation = fieldDef.expectedValueSchema.safeParse(params.expectedValue);
         if (!validation.success) {
             return Result.fail({
+                code: "INVALID_EXPECTED_VALUE",
                 statusCode: 400,
                 message: validation.error.issues[0]?.message ?? "Invalid expected value"
             });
@@ -54,6 +57,7 @@ class CreateSecuritySettingUseCaseImpl implements Abstraction.Interface {
 
             if (existing) {
                 return Result.fail({
+                    code: "SETTING_CONFLICT",
                     statusCode: 409,
                     message: `Setting "${params.fieldName}" already exists for ${params.packageManager}`
                 });
@@ -72,7 +76,11 @@ class CreateSecuritySettingUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok(toSecuritySettingResponse(row));
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

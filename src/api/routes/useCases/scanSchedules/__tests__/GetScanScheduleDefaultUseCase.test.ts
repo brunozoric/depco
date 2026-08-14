@@ -60,6 +60,10 @@ describe("GetScanScheduleDefaultUseCase", () => {
         const result = await useCase.execute({});
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 500, message: "database unavailable" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 500,
+            message: "database unavailable"
+        });
     });
 });

@@ -84,7 +84,11 @@ describe("RefreshDependencyGraphUseCase", () => {
 
         expect(result.isFail()).toBe(true);
         if (result.isFail()) {
-            expect(result.error).toEqual({ statusCode: 404, message: "Project not found" });
+            expect(result.error).toEqual({
+                code: "PROJECT_NOT_FOUND",
+                statusCode: 404,
+                message: "Project not found"
+            });
         }
     });
 
@@ -97,6 +101,7 @@ describe("RefreshDependencyGraphUseCase", () => {
         expect(result.isFail()).toBe(true);
         if (result.isFail()) {
             expect(result.error).toEqual({
+                code: "NO_PACKAGE_MANAGER",
                 statusCode: 400,
                 message: "Project has no detected package manager"
             });
@@ -114,7 +119,11 @@ describe("RefreshDependencyGraphUseCase", () => {
 
         expect(result.isFail()).toBe(true);
         if (result.isFail()) {
-            expect(result.error).toEqual({ statusCode: 500, message: "lockfile parse failed" });
+            expect(result.error).toEqual({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: "lockfile parse failed"
+            });
         }
     });
 });

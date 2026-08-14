@@ -17,6 +17,7 @@ class ResetSecuritySettingsUseCaseImpl implements Abstraction.Interface {
             SECURITY_FIELD_REGISTRY[params.packageManager as keyof typeof SECURITY_FIELD_REGISTRY];
         if (!fields) {
             return Result.fail({
+                code: "UNKNOWN_PACKAGE_MANAGER",
                 statusCode: 400,
                 message: `Unknown package manager: ${params.packageManager}`
             });
@@ -45,7 +46,11 @@ class ResetSecuritySettingsUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok({ items: rows.map(toSecuritySettingResponse), total: rows.length });
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

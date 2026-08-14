@@ -20,7 +20,11 @@ class GetDependencyGraphUseCaseImpl implements Abstraction.Interface {
             const graph = await this.dependencyGraphService.getGraph(params.projectId);
             return Result.ok(graph);
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

@@ -9,6 +9,7 @@ export interface IClearPackageCacheUseCaseData {
 }
 
 export interface IClearPackageCacheUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

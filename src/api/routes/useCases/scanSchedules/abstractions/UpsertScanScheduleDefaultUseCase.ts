@@ -10,6 +10,7 @@ export interface IUpsertScanScheduleDefaultUseCaseData {
 }
 
 export interface IUpsertScanScheduleDefaultUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

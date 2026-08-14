@@ -31,7 +31,7 @@ export function registerSecuritySettingsActionRoutes(
                 reply,
                 request,
                 status: 201,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -50,7 +50,7 @@ export function registerSecuritySettingsActionRoutes(
             return sendOne({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -66,7 +66,7 @@ export function registerSecuritySettingsActionRoutes(
             return sendOne({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -82,7 +82,7 @@ export function registerSecuritySettingsActionRoutes(
             return sendList({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );

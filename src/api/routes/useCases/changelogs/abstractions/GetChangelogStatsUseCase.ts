@@ -6,6 +6,7 @@ export interface IGetChangelogStatsUseCaseParams {}
 export type IGetChangelogStatsUseCaseData = ChangelogService.Stats;
 
 export interface IGetChangelogStatsUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

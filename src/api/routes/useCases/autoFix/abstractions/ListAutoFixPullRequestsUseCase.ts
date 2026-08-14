@@ -13,6 +13,7 @@ export interface IListAutoFixPullRequestsUseCaseData {
 }
 
 export interface IListAutoFixPullRequestsUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

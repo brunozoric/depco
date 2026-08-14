@@ -24,11 +24,16 @@ class DeleteProjectUseCaseImpl implements Abstraction.Interface {
                 )
                 .get();
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
 
         if (runningJob) {
             return Result.fail({
+                code: "PROJECT_HAS_RUNNING_JOBS",
                 statusCode: 409,
                 message: "Cannot delete project with running jobs"
             });
@@ -44,7 +49,11 @@ class DeleteProjectUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok();
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

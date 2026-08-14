@@ -28,7 +28,7 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
                 reply,
                 request,
                 status: 201,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -45,7 +45,7 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -56,7 +56,7 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
         return sendOne({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -72,7 +72,7 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
                 reply,
                 request,
                 status: 204,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );

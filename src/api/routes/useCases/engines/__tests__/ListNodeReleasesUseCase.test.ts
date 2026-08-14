@@ -76,6 +76,7 @@ describe("ListNodeReleasesUseCase", () => {
 
         expect(result.isFail()).toBe(true);
         expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
             statusCode: 500,
             message: "endoflife.date unreachable"
         });

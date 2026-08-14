@@ -15,13 +15,21 @@ class GetUpgradeSessionUseCaseImpl implements Abstraction.Interface {
                 params.projectId
             );
             if (!session) {
-                return Result.fail({ statusCode: 404, message: "Session not found" });
+                return Result.fail({
+                    code: "SESSION_NOT_FOUND",
+                    statusCode: 404,
+                    message: "Session not found"
+                });
             }
 
             return Result.ok(session);
         } catch (error) {
             const message = (error as Error).message;
-            return Result.fail({ statusCode: mapUpgradeSessionErrorStatus(message), message });
+            return Result.fail({
+                code: "SESSION_OPERATION",
+                statusCode: mapUpgradeSessionErrorStatus(message),
+                message
+            });
         }
     }
 }

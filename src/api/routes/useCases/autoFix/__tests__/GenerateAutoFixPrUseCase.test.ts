@@ -76,7 +76,11 @@ describe("GenerateAutoFixPrUseCase", () => {
 
         expect(result.isFail()).toBe(true);
         if (result.isFail()) {
-            expect(result.error).toEqual({ statusCode: 404, message: "Project not found" });
+            expect(result.error).toEqual({
+                code: "PROJECT_NOT_FOUND",
+                statusCode: 404,
+                message: "Project not found"
+            });
         }
     });
 
@@ -94,7 +98,11 @@ describe("GenerateAutoFixPrUseCase", () => {
 
         expect(result.isFail()).toBe(true);
         if (result.isFail()) {
-            expect(result.error).toEqual({ statusCode: 500, message: "queue down" });
+            expect(result.error).toEqual({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: "queue down"
+            });
         }
     });
 });

@@ -13,12 +13,20 @@ class UpdateUserUseCaseImpl implements Abstraction.Interface {
         try {
             const existing = await this.userService.getById(params.id);
             if (!existing) {
-                return Result.fail({ statusCode: 404, message: "User not found" });
+                return Result.fail({
+                    code: "USER_NOT_FOUND",
+                    statusCode: 404,
+                    message: "User not found"
+                });
             }
 
             const isSelf = params.id === params.sessionUserId;
             if (!isSelf && params.sessionUserPermission !== FULL_PERMISSION) {
-                return Result.fail({ statusCode: 403, message: "Insufficient permission" });
+                return Result.fail({
+                    code: "INSUFFICIENT_PERMISSION",
+                    statusCode: 403,
+                    message: "Insufficient permission"
+                });
             }
 
             // Self-service updates are restricted to displayName + password —
@@ -42,12 +50,20 @@ class UpdateUserUseCaseImpl implements Abstraction.Interface {
 
             const updated = await this.userService.update({ id: params.id, data });
             if (!updated) {
-                return Result.fail({ statusCode: 404, message: "User not found" });
+                return Result.fail({
+                    code: "USER_NOT_FOUND",
+                    statusCode: 404,
+                    message: "User not found"
+                });
             }
 
             return Result.ok(updated);
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

@@ -7,6 +7,7 @@ export interface IUpdateAutoFixSettingsUseCaseParams {
 }
 
 export interface IUpdateAutoFixSettingsUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

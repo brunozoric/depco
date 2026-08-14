@@ -23,7 +23,7 @@ export function registerLicenseQueryRoutes(app: FastifyInstance, container: Cont
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -34,7 +34,7 @@ export function registerLicenseQueryRoutes(app: FastifyInstance, container: Cont
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -48,7 +48,7 @@ export function registerLicenseQueryRoutes(app: FastifyInstance, container: Cont
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -63,7 +63,7 @@ export function registerLicenseQueryRoutes(app: FastifyInstance, container: Cont
             return sendList({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );

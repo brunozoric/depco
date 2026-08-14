@@ -104,6 +104,7 @@ describe("ScanFilesystemUseCase", () => {
 
         expect(result.isFail()).toBe(true);
         expect(result.error).toEqual({
+            code: "PATH_NOT_FOUND",
             statusCode: 400,
             message: `Path does not exist: ${join(testDir, "does-not-exist")}`
         });
@@ -127,6 +128,10 @@ describe("ScanFilesystemUseCase", () => {
         const result = await useCase.execute({ path: testDir, depth: 1 });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 500, message: "database is locked" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 500,
+            message: "database is locked"
+        });
     });
 });

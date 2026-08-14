@@ -14,7 +14,11 @@ class GetInstallOptionsUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok({ items, total: items.length });
         } catch (error) {
-            return Result.fail({ statusCode: 400, message: (error as Error).message });
+            return Result.fail({
+                code: "UNKNOWN_PACKAGE_MANAGER",
+                statusCode: 400,
+                message: (error as Error).message
+            });
         }
     }
 }

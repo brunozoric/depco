@@ -72,6 +72,7 @@ describe("BrowseFilesystemUseCase", () => {
         const result = await useCase.execute({ path: join(testDir, "does-not-exist") });
 
         expect(result.isFail()).toBe(true);
+        expect(result.error?.code).toBe("PATH_NOT_FOUND");
         expect(result.error?.statusCode).toBe(400);
     });
 
@@ -84,6 +85,7 @@ describe("BrowseFilesystemUseCase", () => {
 
         expect(result.isFail()).toBe(true);
         expect(result.error).toEqual({
+            code: "PATH_NOT_FOUND",
             statusCode: 400,
             message: `Cannot read directory: ${realpathSync(filePath)}`
         });

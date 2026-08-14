@@ -28,7 +28,7 @@ export function registerBackupExportRoutes(app: FastifyInstance, container: Cont
                     sendError({
                         reply,
                         request,
-                        error: { ...error, code: "UNKNOWN" }
+                        error
                     })
             });
         }

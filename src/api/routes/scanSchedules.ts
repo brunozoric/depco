@@ -34,7 +34,7 @@ export async function scanScheduleRoutes(
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -52,7 +52,7 @@ export async function scanScheduleRoutes(
             return sendOne({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -69,7 +69,7 @@ export async function scanScheduleRoutes(
                 reply,
                 request,
                 status: 204,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -81,7 +81,7 @@ export async function scanScheduleRoutes(
         return sendOne({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -96,7 +96,7 @@ export async function scanScheduleRoutes(
             return sendOne({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );

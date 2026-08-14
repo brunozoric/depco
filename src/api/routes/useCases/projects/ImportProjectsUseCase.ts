@@ -31,7 +31,11 @@ class ImportProjectsUseCaseImpl implements Abstraction.Interface {
                 .all();
             existingPaths = new Set(existingRows.map(row => row.path));
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
 
         const results: Abstraction.ImportResult[] = [];

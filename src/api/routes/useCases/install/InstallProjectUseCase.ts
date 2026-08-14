@@ -23,10 +23,15 @@ class InstallProjectUseCaseImpl implements Abstraction.Interface {
                 .where(eq(projects.id, params.id))
                 .get();
             if (!project) {
-                return Result.fail({ statusCode: 404, message: "Project not found" });
+                return Result.fail({
+                    code: "PROJECT_NOT_FOUND",
+                    statusCode: 404,
+                    message: "Project not found"
+                });
             }
             if (!project.packageManager) {
                 return Result.fail({
+                    code: "NO_PACKAGE_MANAGER",
                     statusCode: 400,
                     message: "No package manager detected for this project"
                 });
@@ -41,7 +46,11 @@ class InstallProjectUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok({ jobId });
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

@@ -103,6 +103,7 @@ describe("ExecuteUpgradeStepUseCase", () => {
 
         expect(result.isFail()).toBe(true);
         expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
             statusCode: 400,
             message: "upgrade is not the current step"
         });
@@ -122,7 +123,11 @@ describe("ExecuteUpgradeStepUseCase", () => {
         });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 404, message: "Session not found" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 404,
+            message: "Session not found"
+        });
     });
 
     it("fails with 500 when the service throws an unexpected error", async () => {
@@ -139,6 +144,10 @@ describe("ExecuteUpgradeStepUseCase", () => {
         });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 500, message: "db unavailable" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 500,
+            message: "db unavailable"
+        });
     });
 });

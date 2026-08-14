@@ -20,11 +20,13 @@ export interface IScanFilesystemUseCaseData {
 }
 
 export interface IPathNotFoundError {
+    code: "PATH_NOT_FOUND";
     statusCode: 400;
     message: string;
 }
 
 export interface IUnexpectedError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

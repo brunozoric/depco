@@ -15,11 +15,13 @@ export interface IUpdateStepHookUseCaseParams {
 export type IUpdateStepHookUseCaseData = IStepHookResponse;
 
 export interface IStepHookNotFoundError {
+    code: "STEP_HOOK_NOT_FOUND";
     statusCode: 404;
     message: string;
 }
 
 export interface IUnexpectedError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

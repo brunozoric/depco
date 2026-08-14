@@ -9,11 +9,13 @@ export interface IGetUpgradeSessionUseCaseParams {
 export type IGetUpgradeSessionUseCaseData = UpgradeSessionService.Row;
 
 export interface ISessionNotFoundError {
+    code: "SESSION_NOT_FOUND";
     statusCode: 404;
     message: string;
 }
 
 export interface ISessionOperationError {
+    code: "SESSION_OPERATION";
     statusCode: number;
     message: string;
 }

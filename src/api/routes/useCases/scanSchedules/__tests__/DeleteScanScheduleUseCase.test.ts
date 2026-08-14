@@ -91,6 +91,10 @@ describe("DeleteScanScheduleUseCase", () => {
         const result = await useCase.execute({ projectId: generateId() });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 500, message: "scheduler unavailable" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 500,
+            message: "scheduler unavailable"
+        });
     });
 });

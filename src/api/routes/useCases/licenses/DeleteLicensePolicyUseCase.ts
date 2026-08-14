@@ -15,7 +15,11 @@ class DeleteLicensePolicyUseCaseImpl implements Abstraction.Interface {
             await db.delete(licensePolicyRules).where(eq(licensePolicyRules.id, params.id)).run();
             return Result.ok({ deleted: true });
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

@@ -13,6 +13,7 @@ export interface IListSecuritySettingsUseCaseData {
 }
 
 export interface IListSecuritySettingsUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

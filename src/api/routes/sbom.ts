@@ -27,7 +27,7 @@ export async function sbomRoutes(app: FastifyInstance, options: PluginOptions): 
                 sendError({
                     reply,
                     request,
-                    error: { ...error, code: "UNKNOWN" }
+                    error
                 })
         });
     });
@@ -51,7 +51,7 @@ export async function sbomRoutes(app: FastifyInstance, options: PluginOptions): 
                 sendError({
                     reply,
                     request,
-                    error: { ...error, code: "UNKNOWN" }
+                    error
                 })
         });
     });

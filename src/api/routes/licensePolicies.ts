@@ -32,7 +32,7 @@ export async function licensePolicyRoutes(
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -48,7 +48,7 @@ export async function licensePolicyRoutes(
                 reply,
                 request,
                 status: 201,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -64,7 +64,7 @@ export async function licensePolicyRoutes(
             return sendList({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -80,7 +80,7 @@ export async function licensePolicyRoutes(
             return sendList({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );

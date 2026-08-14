@@ -23,7 +23,7 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
         return sendList({
             reply,
             request,
-            result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+            result
         });
     });
 
@@ -38,7 +38,7 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
             return sendList({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -58,7 +58,7 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
             return sendOne({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );
@@ -77,7 +77,7 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
             return sendList({
                 reply,
                 request,
-                result: result.mapError(error => ({ ...error, code: "UNKNOWN" }))
+                result
             });
         }
     );

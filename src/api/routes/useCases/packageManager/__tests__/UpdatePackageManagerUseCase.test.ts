@@ -151,7 +151,11 @@ describe("UpdatePackageManagerUseCase", () => {
         const result = await useCase.execute({ id: "missing-project", version: "1.0.0" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 404, message: "Project not found" });
+        expect(result.error).toEqual({
+            code: "PROJECT_NOT_FOUND",
+            statusCode: 404,
+            message: "Project not found"
+        });
     });
 
     it("fails with 500 when package manager detection throws", async () => {
@@ -173,7 +177,11 @@ describe("UpdatePackageManagerUseCase", () => {
         const result = await useCase.execute({ id: "project-4", version: "1.0.0" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 500, message: "detect failed" });
+        expect(result.error).toEqual({
+            code: "UNEXPECTED_ERROR",
+            statusCode: 500,
+            message: "detect failed"
+        });
     });
 
     it("fails with 403 when enqueueing the job is rejected", async () => {
@@ -199,6 +207,10 @@ describe("UpdatePackageManagerUseCase", () => {
         const result = await useCase.execute({ id: "project-5", version: "4.20.0" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 403, message: "Security check failed" });
+        expect(result.error).toEqual({
+            code: "ENQUEUE_FORBIDDEN",
+            statusCode: 403,
+            message: "Security check failed"
+        });
     });
 });

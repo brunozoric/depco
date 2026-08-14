@@ -11,6 +11,7 @@ export interface ICreateUserUseCaseParams {
 export type ICreateUserUseCaseData = UserResponse;
 
 export interface IUnexpectedError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

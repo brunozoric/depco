@@ -10,26 +10,31 @@ export interface ICreateSecuritySettingUseCaseParams {
 export type ICreateSecuritySettingUseCaseData = ISecuritySettingResponse;
 
 export interface IUnknownPackageManagerError {
+    code: "UNKNOWN_PACKAGE_MANAGER";
     statusCode: 400;
     message: string;
 }
 
 export interface IUnknownFieldError {
+    code: "UNKNOWN_FIELD";
     statusCode: 400;
     message: string;
 }
 
 export interface IInvalidExpectedValueError {
+    code: "INVALID_EXPECTED_VALUE";
     statusCode: 400;
     message: string;
 }
 
 export interface ISettingConflictError {
+    code: "SETTING_CONFLICT";
     statusCode: 409;
     message: string;
 }
 
 export interface IUnexpectedError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

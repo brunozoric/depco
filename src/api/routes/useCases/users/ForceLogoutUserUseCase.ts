@@ -14,6 +14,7 @@ class ForceLogoutUserUseCaseImpl implements Abstraction.Interface {
         try {
             if (params.id === params.sessionUserId) {
                 return Result.fail({
+                    code: "CANNOT_FORCE_LOGOUT_SELF",
                     statusCode: 400,
                     message: "Cannot force-logout your own account"
                 });
@@ -21,7 +22,11 @@ class ForceLogoutUserUseCaseImpl implements Abstraction.Interface {
 
             const existing = await this.userService.getById(params.id);
             if (!existing) {
-                return Result.fail({ statusCode: 404, message: "User not found" });
+                return Result.fail({
+                    code: "USER_NOT_FOUND",
+                    statusCode: 404,
+                    message: "User not found"
+                });
             }
 
             await this.authService.forceLogout(params.id);
@@ -29,7 +34,11 @@ class ForceLogoutUserUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok();
         } catch (error) {
-            return Result.fail({ statusCode: 500, message: (error as Error).message });
+            return Result.fail({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: (error as Error).message
+            });
         }
     }
 }

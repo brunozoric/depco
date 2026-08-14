@@ -93,7 +93,11 @@ describe("GetUpgradeSessionUseCase", () => {
         });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 404, message: "Session not found" });
+        expect(result.error).toEqual({
+            code: "SESSION_NOT_FOUND",
+            statusCode: 404,
+            message: "Session not found"
+        });
     });
 
     it("fails with 409 when the service throws a not-active error", async () => {
@@ -105,7 +109,11 @@ describe("GetUpgradeSessionUseCase", () => {
         const result = await useCase.execute({ projectId: "project-1", sessionId: "session-1" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 409, message: "Session is not active" });
+        expect(result.error).toEqual({
+            code: "SESSION_OPERATION",
+            statusCode: 409,
+            message: "Session is not active"
+        });
     });
 
     it("fails with 500 when the service throws an unexpected error", async () => {
@@ -117,6 +125,10 @@ describe("GetUpgradeSessionUseCase", () => {
         const result = await useCase.execute({ projectId: "project-1", sessionId: "session-1" });
 
         expect(result.isFail()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 500, message: "db unavailable" });
+        expect(result.error).toEqual({
+            code: "SESSION_OPERATION",
+            statusCode: 500,
+            message: "db unavailable"
+        });
     });
 });

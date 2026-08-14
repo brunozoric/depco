@@ -11,6 +11,7 @@ export interface ISearchDependencyPackagesUseCaseData {
 }
 
 export interface IUnexpectedError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

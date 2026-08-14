@@ -7,6 +7,7 @@ export interface IGetScanScheduleDefaultUseCaseData {
 }
 
 export interface IGetScanScheduleDefaultUseCaseError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }

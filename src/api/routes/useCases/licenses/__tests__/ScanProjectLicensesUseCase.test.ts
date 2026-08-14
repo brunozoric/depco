@@ -61,7 +61,11 @@ describe("ScanProjectLicensesUseCase", () => {
 
         expect(result.isFail()).toBe(true);
         if (result.isFail()) {
-            expect(result.error).toEqual({ statusCode: 404, message: "Project not found" });
+            expect(result.error).toEqual({
+                code: "PROJECT_NOT_FOUND",
+                statusCode: 404,
+                message: "Project not found"
+            });
         }
         expect(jobWorker.enqueue).not.toHaveBeenCalled();
     });
@@ -74,7 +78,11 @@ describe("ScanProjectLicensesUseCase", () => {
 
         expect(result.isFail()).toBe(true);
         if (result.isFail()) {
-            expect(result.error).toEqual({ statusCode: 500, message: "queue full" });
+            expect(result.error).toEqual({
+                code: "UNEXPECTED_ERROR",
+                statusCode: 500,
+                message: "queue full"
+            });
         }
     });
 });

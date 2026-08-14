@@ -13,6 +13,7 @@ export interface ICreateStepHookUseCaseParams {
 export type ICreateStepHookUseCaseData = IStepHookResponse;
 
 export interface IUnexpectedError {
+    code: "UNEXPECTED_ERROR";
     statusCode: number;
     message: string;
 }
