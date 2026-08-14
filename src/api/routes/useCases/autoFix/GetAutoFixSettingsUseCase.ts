@@ -1,4 +1,4 @@
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { AutoFixSettingsService } from "#api/services/AutoFix/index.js";
 import { GetAutoFixSettingsUseCase as Abstraction } from "./abstractions/GetAutoFixSettingsUseCase.js";
 
@@ -14,11 +14,7 @@ class GetAutoFixSettingsUseCaseImpl implements Abstraction.Interface {
             );
             return Result.ok(settings);
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

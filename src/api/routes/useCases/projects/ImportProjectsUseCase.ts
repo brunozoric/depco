@@ -1,5 +1,5 @@
 import { inArray } from "drizzle-orm";
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { SecurityService } from "#api/services/Security/index.js";
 import { PackageManagerService } from "#api/services/PackageManager/index.js";
@@ -31,11 +31,7 @@ class ImportProjectsUseCaseImpl implements Abstraction.Interface {
                 .all();
             existingPaths = new Set(existingRows.map(row => row.path));
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
 
         const results: Abstraction.ImportResult[] = [];

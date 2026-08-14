@@ -1,4 +1,4 @@
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { FileConfigService } from "#api/services/FileConfig/index.js";
 import { buildPmConfigItem } from "./pmConfigHelper.js";
 import { UpdatePmConfigUseCase as Abstraction } from "./abstractions/UpdatePmConfigUseCase.js";
@@ -32,11 +32,7 @@ class UpdatePmConfigUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok(buildPmConfigItem(params.pm, fileConfig, true));
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

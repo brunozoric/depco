@@ -1,4 +1,4 @@
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { SbomService } from "#api/services/Sbom/index.js";
 import { SbomFormatterRegistry } from "#api/services/Sbom/index.js";
 import { ExportAllSbomUseCase as Abstraction } from "./abstractions/ExportAllSbomUseCase.js";
@@ -19,11 +19,7 @@ class ExportAllSbomUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok(result);
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

@@ -1,5 +1,5 @@
 import { eq, max } from "drizzle-orm";
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { NodeReleaseDataService } from "#api/services/Engine/index.js";
 import { engineChecks } from "#api/db/schema.js";
@@ -25,11 +25,7 @@ class GetProjectEngineStalenessUseCaseImpl implements Abstraction.Interface {
                 .all();
             lastScannedAt = row?.maxScannedAt ?? null;
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
 
         let maxReleaseDate: number;
@@ -40,11 +36,7 @@ class GetProjectEngineStalenessUseCaseImpl implements Abstraction.Interface {
                     ? 0
                     : Math.max(...schedule.map(release => release.releaseDate));
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
 
         const staleness = computeEngineStaleness({

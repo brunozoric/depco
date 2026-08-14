@@ -1,4 +1,4 @@
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { DependencyGraphService } from "#api/services/DependencyGraph/index.js";
 import { SearchDependencyPackagesUseCase as Abstraction } from "./abstractions/SearchDependencyPackagesUseCase.js";
 
@@ -17,11 +17,7 @@ class SearchDependencyPackagesUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok({ packages });
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

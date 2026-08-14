@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { JobWorker } from "#api/services/JobExecution/index.js";
 import { PackageManagerService } from "#api/services/PackageManager/index.js";
@@ -22,11 +22,7 @@ class UpdatePackageManagerUseCaseImpl implements Abstraction.Interface {
         try {
             project = await db.select().from(projects).where(eq(projects.id, params.id)).get();
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
 
         if (!project) {
@@ -42,11 +38,7 @@ class UpdatePackageManagerUseCaseImpl implements Abstraction.Interface {
             packageManager =
                 project.packageManager ?? (await this.packageManagerService.detect(project.path));
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
 
         let currentVersion: string;

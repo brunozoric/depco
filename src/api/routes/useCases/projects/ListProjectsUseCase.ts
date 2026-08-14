@@ -2,7 +2,7 @@ import { existsSync } from "fs";
 import { join } from "path";
 import { eq, sql, inArray, like, or } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { SecurityService } from "#api/services/Security/index.js";
 import { projects, teams, teamProjects } from "#api/db/schema.js";
@@ -97,11 +97,7 @@ class ListProjectsUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok({ items, total });
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

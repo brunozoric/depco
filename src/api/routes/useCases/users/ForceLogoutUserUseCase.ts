@@ -1,4 +1,4 @@
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { AuthService, UserService } from "#api/services/Auth/index.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { ForceLogoutUserUseCase as Abstraction } from "./abstractions/ForceLogoutUserUseCase.js";
@@ -34,11 +34,7 @@ class ForceLogoutUserUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok();
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

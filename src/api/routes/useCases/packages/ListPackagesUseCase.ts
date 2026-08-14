@@ -1,4 +1,4 @@
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { PackageQueryService } from "#api/services/Package/index.js";
 import { ListPackagesUseCase as Abstraction } from "./abstractions/ListPackagesUseCase.js";
 
@@ -12,11 +12,7 @@ class ListPackagesUseCaseImpl implements Abstraction.Interface {
             const result = await this.packageQueryService.listPackages(params);
             return Result.ok(result);
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

@@ -1,4 +1,4 @@
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { EncryptionService } from "#api/services/Encryption/index.js";
 import { FileConfigService } from "#api/services/FileConfig/index.js";
@@ -68,11 +68,7 @@ class ListAppSettingsUseCaseImpl implements Abstraction.Interface {
                 fileManaged
             });
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

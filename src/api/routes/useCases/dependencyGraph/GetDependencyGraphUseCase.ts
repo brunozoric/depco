@@ -1,4 +1,4 @@
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { DependencyGraphService } from "#api/services/DependencyGraph/index.js";
 import { GetDependencyGraphUseCase as Abstraction } from "./abstractions/GetDependencyGraphUseCase.js";
 
@@ -20,11 +20,7 @@ class GetDependencyGraphUseCaseImpl implements Abstraction.Interface {
             const graph = await this.dependencyGraphService.getGraph(params.projectId);
             return Result.ok(graph);
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

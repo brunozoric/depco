@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { DependencyGraphService } from "#api/services/DependencyGraph/index.js";
 import { projects } from "#api/db/schema.js";
@@ -45,11 +45,7 @@ class RefreshDependencyGraphUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok({ edgeCount });
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

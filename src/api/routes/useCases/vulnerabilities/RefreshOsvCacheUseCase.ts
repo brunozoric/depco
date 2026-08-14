@@ -1,4 +1,4 @@
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { VulnerabilityService } from "#api/services/Vulnerability/index.js";
 import { RefreshOsvCacheUseCase as Abstraction } from "./abstractions/RefreshOsvCacheUseCase.js";
 
@@ -12,11 +12,7 @@ class RefreshOsvCacheUseCaseImpl implements Abstraction.Interface {
             const invalidated = await this.vulnerabilityService.forceOsvRefresh(params);
             return Result.ok({ invalidated });
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

@@ -1,4 +1,4 @@
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { JobWorker } from "#api/services/JobExecution/index.js";
 import { GetJobUseCase as Abstraction } from "./abstractions/GetJobUseCase.js";
 
@@ -20,11 +20,7 @@ class GetJobUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok(job);
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

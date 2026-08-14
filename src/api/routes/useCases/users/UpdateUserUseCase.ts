@@ -1,4 +1,4 @@
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { UserService } from "#api/services/Auth/index.js";
 import { UpdateUserUseCase as Abstraction } from "./abstractions/UpdateUserUseCase.js";
 
@@ -59,11 +59,7 @@ class UpdateUserUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok(updated);
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

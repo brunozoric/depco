@@ -1,6 +1,6 @@
 import { eq, sql } from "drizzle-orm";
 import semver from "semver";
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { RegistryCacheService } from "#api/services/RegistryCache/index.js";
 import { scanResults } from "#api/db/schema.js";
@@ -86,11 +86,7 @@ class RescanPackageUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok({ updated });
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

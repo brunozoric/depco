@@ -1,4 +1,4 @@
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { UserService } from "#api/services/Auth/index.js";
 import { GetMeUseCase as Abstraction } from "./abstractions/GetMeUseCase.js";
 
@@ -19,11 +19,7 @@ class GetMeUseCaseImpl implements Abstraction.Interface {
             }
             return Result.ok(user);
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

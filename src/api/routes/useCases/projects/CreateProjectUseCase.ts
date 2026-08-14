@@ -1,6 +1,6 @@
 import { existsSync } from "fs";
 import { join } from "path";
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { SecurityService } from "#api/services/Security/index.js";
 import { PackageManagerService } from "#api/services/PackageManager/index.js";
@@ -41,11 +41,7 @@ class CreateProjectUseCaseImpl implements Abstraction.Interface {
                 hasNodeModules: existsSync(join(registered.path, "node_modules"))
             });
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

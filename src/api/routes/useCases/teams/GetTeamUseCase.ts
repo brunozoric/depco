@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { teams, teamProjects, projects } from "#api/db/schema.js";
 import { GetTeamUseCase as Abstraction } from "./abstractions/GetTeamUseCase.js";
@@ -34,11 +34,7 @@ class GetTeamUseCaseImpl implements Abstraction.Interface {
                 projects: projectRows.map(row => ({ id: row.id, name: row.name, path: row.path }))
             });
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { upgradeJobs } from "#api/db/schema.js";
 import { ListAllJobsUseCase as Abstraction } from "./abstractions/ListAllJobsUseCase.js";
@@ -39,11 +39,7 @@ class ListAllJobsUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok({ items, total: countResult?.count ?? 0 });
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

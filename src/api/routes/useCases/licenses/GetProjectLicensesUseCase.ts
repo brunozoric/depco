@@ -1,4 +1,4 @@
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { LicenseQueryService } from "#api/services/License/index.js";
 import { GetProjectLicensesUseCase as Abstraction } from "./abstractions/GetProjectLicensesUseCase.js";
 
@@ -12,11 +12,7 @@ class GetProjectLicensesUseCaseImpl implements Abstraction.Interface {
             const data = await this.licenseQueryService.listProjectLicenses(params);
             return Result.ok(data);
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

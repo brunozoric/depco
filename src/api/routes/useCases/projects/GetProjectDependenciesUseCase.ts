@@ -1,5 +1,5 @@
 import { eq, and, like, sql, type SQL } from "drizzle-orm";
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { projects, scanResults } from "#api/db/schema.js";
 import { GetProjectDependenciesUseCase as Abstraction } from "./abstractions/GetProjectDependenciesUseCase.js";
@@ -16,11 +16,7 @@ class GetProjectDependenciesUseCaseImpl implements Abstraction.Interface {
         try {
             project = await db.select().from(projects).where(eq(projects.id, params.id)).get();
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
 
         if (!project) {
@@ -80,11 +76,7 @@ class GetProjectDependenciesUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok({ items, total });
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

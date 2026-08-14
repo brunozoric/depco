@@ -1,5 +1,5 @@
 import { eq, and, sql } from "drizzle-orm";
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { projects, scanResults } from "#api/db/schema.js";
 import { GetTransitiveResolveStatusUseCase as Abstraction } from "./abstractions/GetTransitiveResolveStatusUseCase.js";
@@ -21,11 +21,7 @@ class GetTransitiveResolveStatusUseCaseImpl implements Abstraction.Interface {
         try {
             project = await db.select().from(projects).where(eq(projects.id, params.id)).get();
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
 
         if (!project) {
@@ -56,11 +52,7 @@ class GetTransitiveResolveStatusUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok({ total, resolved, pending: total - resolved });
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

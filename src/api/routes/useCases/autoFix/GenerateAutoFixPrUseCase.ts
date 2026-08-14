@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { JobWorker } from "#api/services/JobExecution/index.js";
 import { projects } from "#api/db/schema.js";
@@ -23,11 +23,7 @@ class GenerateAutoFixPrUseCaseImpl implements Abstraction.Interface {
                 .where(eq(projects.id, params.projectId))
                 .get();
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
 
         if (!project) {
@@ -46,11 +42,7 @@ class GenerateAutoFixPrUseCaseImpl implements Abstraction.Interface {
             });
             return Result.ok({ jobId });
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

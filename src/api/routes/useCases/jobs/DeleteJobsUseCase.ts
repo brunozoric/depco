@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { upgradeJobs } from "#api/db/schema.js";
 import { DeleteJobsUseCase as Abstraction } from "./abstractions/DeleteJobsUseCase.js";
@@ -31,11 +31,7 @@ class DeleteJobsUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok({ deleted });
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

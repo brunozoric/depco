@@ -1,4 +1,4 @@
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { EngineService } from "#api/services/Engine/index.js";
 import { GetProjectEngineChecksUseCase as Abstraction } from "./abstractions/GetProjectEngineChecksUseCase.js";
 
@@ -12,11 +12,7 @@ class GetProjectEngineChecksUseCaseImpl implements Abstraction.Interface {
             const items = await this.engineService.getByProject(params.projectId);
             return Result.ok({ items, total: items.length });
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

@@ -1,4 +1,4 @@
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { JobWorker } from "#api/services/JobExecution/index.js";
 import { CancelJobUseCase as Abstraction } from "./abstractions/CancelJobUseCase.js";
 
@@ -20,11 +20,7 @@ class CancelJobUseCaseImpl implements Abstraction.Interface {
 
             return Result.ok();
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

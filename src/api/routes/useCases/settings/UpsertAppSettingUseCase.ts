@@ -1,4 +1,4 @@
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { EncryptionService } from "#api/services/Encryption/index.js";
 import { appSettings } from "#api/db/schema.js";
@@ -28,11 +28,7 @@ class UpsertAppSettingUseCaseImpl implements Abstraction.Interface {
             try {
                 storedValue = await this.encryptionService.encrypt(params.value);
             } catch (error) {
-                return Result.fail({
-                    code: "UNEXPECTED_ERROR",
-                    statusCode: 500,
-                    message: (error as Error).message
-                });
+                return Result.fail(unexpectedError(error));
             }
         }
 
@@ -53,11 +49,7 @@ class UpsertAppSettingUseCaseImpl implements Abstraction.Interface {
                 value: TOKEN_KEYS.has(params.key) ? "••••••••" : params.value
             });
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

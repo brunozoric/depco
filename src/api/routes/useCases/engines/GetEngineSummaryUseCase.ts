@@ -1,4 +1,4 @@
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { EngineService } from "#api/services/Engine/index.js";
 import { GetEngineSummaryUseCase as Abstraction } from "./abstractions/GetEngineSummaryUseCase.js";
 
@@ -10,11 +10,7 @@ class GetEngineSummaryUseCaseImpl implements Abstraction.Interface {
             const summary = await this.engineService.getSummary();
             return Result.ok(summary);
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }

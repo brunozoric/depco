@@ -1,4 +1,4 @@
-import { Result } from "#shared/index.js";
+import { Result, unexpectedError } from "#shared/index.js";
 import { VulnerabilityQueryService } from "#api/services/Vulnerability/index.js";
 import { GetProjectVulnerabilitiesUseCase as Abstraction } from "./abstractions/GetProjectVulnerabilitiesUseCase.js";
 
@@ -17,11 +17,7 @@ class GetProjectVulnerabilitiesUseCaseImpl implements Abstraction.Interface {
             });
             return Result.ok(data);
         } catch (error) {
-            return Result.fail({
-                code: "UNEXPECTED_ERROR",
-                statusCode: 500,
-                message: (error as Error).message
-            });
+            return Result.fail(unexpectedError(error));
         }
     }
 }
