@@ -5,19 +5,22 @@ import { requirePermission } from "#api/middleware/requirePermission.js";
 import type {
     CreateProjectResponse,
     ListProjectsResponse,
-    GetProjectResponse
+    GetProjectResponse,
+    UpdateProjectResponse
 } from "#shared/responses/index.js";
 import {
     createProjectRoute,
     listProjectsRoute,
     getProjectRoute,
-    deleteProjectRoute
+    deleteProjectRoute,
+    updateProjectRoute
 } from "#shared/routes/index.js";
 import {
     CreateProjectUseCase,
     ListProjectsUseCase,
     GetProjectUseCase,
-    DeleteProjectUseCase
+    DeleteProjectUseCase,
+    UpdateProjectUseCase
 } from "../useCases/projects/index.js";
 
 export function registerProjectCrudRoutes(app: FastifyInstance, container: Container): void {
@@ -80,6 +83,25 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
                 reply,
                 request,
                 status: 204,
+                result
+            });
+        }
+    );
+
+    registerRoute(
+        app,
+        updateProjectRoute,
+        { preHandler: [requirePermission("full")] },
+        async (request, reply) => {
+            const useCase = container.resolve(UpdateProjectUseCase);
+            const result = await useCase.execute({
+                id: request.params.id,
+                name: request.body.name
+            });
+
+            return sendOne<UpdateProjectResponse>({
+                reply,
+                request,
                 result
             });
         }

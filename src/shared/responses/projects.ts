@@ -116,3 +116,6 @@ export type ImportProjectsResponse = z.infer<typeof importProjectsResponseSchema
 export type GetProjectTeamsResponse = z.infer<typeof getProjectTeamsResponseSchema>;
 export type CloneProjectResponse = z.infer<typeof cloneProjectResponseSchema>;
 export type BulkScanProjectsResponse = z.infer<typeof bulkScanProjectsResponseSchema>;
+
+export const updateProjectResponseSchema = z.object({ item: projectSchema });
+export type UpdateProjectResponse = z.infer<typeof updateProjectResponseSchema>;

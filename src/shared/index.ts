@@ -8,4 +8,9 @@ export {
 } from "./di/createFeature.js";
 export { registerFeatures } from "./di/registerFeatures.js";
 export { createContainer } from "./di/createContainer.js";
-export { type IUnexpectedError, type IProjectNotFoundError, unexpectedError } from "./errors.js";
+export {
+    type IUnexpectedError,
+    type IProjectNotFoundError,
+    type INameAlreadyExistsError,
+    unexpectedError
+} from "./errors.js";

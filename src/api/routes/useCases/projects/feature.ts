@@ -14,6 +14,7 @@ import { ExportProjectsUseCase } from "./ExportProjectsUseCase.js";
 import { ImportProjectsUseCase } from "./ImportProjectsUseCase.js";
 import { CloneProjectUseCase } from "./CloneProjectUseCase.js";
 import { BulkScanProjectsUseCase } from "./BulkScanProjectsUseCase.js";
+import { UpdateProjectUseCase } from "./UpdateProjectUseCase.js";
 
 export const ProjectsUseCasesFeature = createFeature({
     name: "Api/ProjectsUseCasesFeature",
@@ -33,5 +34,6 @@ export const ProjectsUseCasesFeature = createFeature({
         container.register(ImportProjectsUseCase);
         container.register(CloneProjectUseCase);
         container.register(BulkScanProjectsUseCase);
+        container.register(UpdateProjectUseCase);
     }
 });

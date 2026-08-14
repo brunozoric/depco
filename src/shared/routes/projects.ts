@@ -14,7 +14,8 @@ import {
     importProjectsResponseSchema,
     getProjectTeamsResponseSchema,
     cloneProjectResponseSchema,
-    bulkScanProjectsResponseSchema
+    bulkScanProjectsResponseSchema,
+    updateProjectResponseSchema
 } from "../responses/projects.js";
 
 export const createProjectRoute = defineRoute({
@@ -171,4 +172,13 @@ export const bulkScanProjectsRoute = defineRoute({
         force: z.boolean().optional()
     }),
     response: bulkScanProjectsResponseSchema
+});
+
+export const updateProjectRoute = defineRoute({
+    method: "PATCH",
+    path: "/api/projects/:id",
+    description: "Update a project",
+    params: z.object({ id: z.string() }),
+    body: z.object({ name: z.string().trim().min(1).max(100) }),
+    response: updateProjectResponseSchema
 });

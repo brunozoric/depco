@@ -13,4 +13,5 @@ export { ExportProjectsUseCase } from "./abstractions/ExportProjectsUseCase.js";
 export { ImportProjectsUseCase } from "./abstractions/ImportProjectsUseCase.js";
 export { CloneProjectUseCase } from "./abstractions/CloneProjectUseCase.js";
 export { BulkScanProjectsUseCase } from "./abstractions/BulkScanProjectsUseCase.js";
+export { UpdateProjectUseCase } from "./abstractions/UpdateProjectUseCase.js";
 export { ProjectsUseCasesFeature } from "./feature.js";

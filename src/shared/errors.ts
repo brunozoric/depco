@@ -14,6 +14,12 @@ export interface IProjectNotFoundError {
     message: string;
 }
 
+export interface INameAlreadyExistsError {
+    code: "NAME_ALREADY_EXISTS";
+    statusCode: 409;
+    message: string;
+}
+
 export function unexpectedError(error: unknown): IUnexpectedError {
     return {
         code: "UNEXPECTED_ERROR",
