@@ -58,8 +58,7 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
                 reply,
                 request,
                 status: 200,
-                result,
-                route: verifyCodeRoute
+                result
             });
         }
     );
@@ -97,8 +96,7 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
                 reply,
                 request,
                 status: 200,
-                result,
-                route: verifyMagicLinkRoute
+                result
             });
         }
     );
@@ -112,8 +110,7 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
             reply,
             request,
             status: 200,
-            result,
-            route: getMeRoute
+            result
         });
     });
 

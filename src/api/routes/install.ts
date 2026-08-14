@@ -26,8 +26,7 @@ export async function installRoutes(app: FastifyInstance, options: PluginOptions
             return sendOne({
                 reply,
                 request,
-                result,
-                route: installProjectRoute
+                result
             });
         }
     );
@@ -40,8 +39,7 @@ export async function installRoutes(app: FastifyInstance, options: PluginOptions
         return sendList({
             reply,
             request,
-            result,
-            route: getInstallOptionsRoute
+            result
         });
     });
 }

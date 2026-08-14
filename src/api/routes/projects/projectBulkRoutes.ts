@@ -23,8 +23,7 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
         return sendList({
             reply,
             request,
-            result,
-            route: exportProjectsRoute
+            result
         });
     });
 
@@ -39,8 +38,7 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
             return sendList({
                 reply,
                 request,
-                result,
-                route: importProjectsRoute
+                result
             });
         }
     );
@@ -60,8 +58,7 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
             return sendOne({
                 reply,
                 request,
-                result,
-                route: cloneProjectRoute
+                result
             });
         }
     );
@@ -80,8 +77,7 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
             return sendList({
                 reply,
                 request,
-                result,
-                route: bulkScanProjectsRoute
+                result
             });
         }
     );

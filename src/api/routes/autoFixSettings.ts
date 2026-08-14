@@ -52,8 +52,7 @@ export async function autoFixSettingsRoutes(
         return sendList({
             reply,
             request,
-            result,
-            route: getAutoFixSettingsRoute
+            result
         });
     });
 
@@ -71,8 +70,7 @@ export async function autoFixSettingsRoutes(
             return sendList({
                 reply,
                 request,
-                result,
-                route: updateAutoFixSettingsRoute
+                result
             });
         }
     );

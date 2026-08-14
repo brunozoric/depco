@@ -32,8 +32,7 @@ export async function licensePolicyRoutes(
         return sendList({
             reply,
             request,
-            result,
-            route: listLicensePoliciesRoute
+            result
         });
     });
 
@@ -49,8 +48,7 @@ export async function licensePolicyRoutes(
                 reply,
                 request,
                 status: 201,
-                result,
-                route: createLicensePolicyRoute
+                result
             });
         }
     );
@@ -66,8 +64,7 @@ export async function licensePolicyRoutes(
             return sendList({
                 reply,
                 request,
-                result,
-                route: updateLicensePolicyRoute
+                result
             });
         }
     );
@@ -83,8 +80,7 @@ export async function licensePolicyRoutes(
             return sendList({
                 reply,
                 request,
-                result,
-                route: deleteLicensePolicyRoute
+                result
             });
         }
     );

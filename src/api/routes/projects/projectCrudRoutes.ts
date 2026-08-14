@@ -28,8 +28,7 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
                 reply,
                 request,
                 status: 201,
-                result,
-                route: createProjectRoute
+                result
             });
         }
     );
@@ -46,8 +45,7 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
         return sendList({
             reply,
             request,
-            result,
-            route: listProjectsRoute
+            result
         });
     });
 
@@ -58,8 +56,7 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
         return sendOne({
             reply,
             request,
-            result,
-            route: getProjectRoute
+            result
         });
     });
 

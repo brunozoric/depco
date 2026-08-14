@@ -1,5 +1,4 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
-import type { z } from "zod";
 import type { Result } from "#shared/index.js";
 import { sendError } from "./sendError.js";
 import type { SendableError } from "./abstractions/index.js";
@@ -9,12 +8,11 @@ interface SendListParams<TResponse> {
     reply: FastifyReply;
     request: FastifyRequest;
     result: Result<TResponse, SendableError>;
-    route?: { response?: z.ZodType };
     status?: number;
 }
 
 export function sendList<TResponse>(params: SendListParams<TResponse>): FastifyReply {
-    const { reply, request, result, route, status } = params;
+    const { reply, request, result, status } = params;
 
     if (result.isFail()) {
         const routingOptions = getRoutingOptions(request);
@@ -29,15 +27,6 @@ export function sendList<TResponse>(params: SendListParams<TResponse>): FastifyR
                 errorLoggerHook: routingOptions.errorLoggerHook
             })
         });
-    }
-
-    if (route?.response) {
-        const validation = route.response.safeParse(result.value);
-        if (!validation.success) {
-            process.stderr.write(
-                `[sendList] Response validation failed: ${validation.error.message}\n`
-            );
-        }
     }
 
     return reply.status(status ?? 200).send(result.value);

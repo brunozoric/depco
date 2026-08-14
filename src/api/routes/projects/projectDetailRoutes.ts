@@ -36,8 +36,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
             return sendOne({
                 reply,
                 request,
-                result,
-                route: scanProjectAsyncRoute
+                result
             });
         }
     );
@@ -56,8 +55,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
         return sendList({
             reply,
             request,
-            result,
-            route: getProjectDependenciesRoute
+            result
         });
     });
 
@@ -68,8 +66,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
         return sendList({
             reply,
             request,
-            result,
-            route: getTransitiveResolveStatusRoute
+            result
         });
     });
 
@@ -80,8 +77,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
         return sendOne({
             reply,
             request,
-            result,
-            route: getProjectSecurityRoute
+            result
         });
     });
 
@@ -96,8 +92,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
             return sendOne({
                 reply,
                 request,
-                result,
-                route: checkProjectSecurityRoute
+                result
             });
         }
     );
@@ -109,8 +104,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
         return sendList({
             reply,
             request,
-            result,
-            route: getProjectTeamsRoute
+            result
         });
     });
 

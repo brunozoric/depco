@@ -15,8 +15,7 @@ export function registerDashboardHealthRoutes(app: FastifyInstance, container: C
         return sendList({
             reply,
             request,
-            result,
-            route: dashboardHealthRoute
+            result
         });
     });
 
@@ -27,8 +26,7 @@ export function registerDashboardHealthRoutes(app: FastifyInstance, container: C
         return sendList({
             reply,
             request,
-            result,
-            route: dashboardScoreDetailRoute
+            result
         });
     });
 }

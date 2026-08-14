@@ -27,8 +27,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
         return sendList({
             reply,
             request,
-            result,
-            route: dashboardTrendRoute
+            result
         });
     });
 
@@ -42,8 +41,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
         return sendList({
             reply,
             request,
-            result,
-            route: dashboardVulnerabilityTrendRoute
+            result
         });
     });
 
@@ -57,8 +55,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
         return sendList({
             reply,
             request,
-            result,
-            route: dashboardStalenessTrendRoute
+            result
         });
     });
 
@@ -72,8 +69,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
         return sendList({
             reply,
             request,
-            result,
-            route: dashboardLicenseTrendRoute
+            result
         });
     });
 
@@ -87,8 +83,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
         return sendList({
             reply,
             request,
-            result,
-            route: dashboardAutoFixTrendRoute
+            result
         });
     });
 }

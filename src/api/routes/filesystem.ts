@@ -26,8 +26,7 @@ export async function filesystemRoutes(
         return sendList({
             reply,
             request,
-            result,
-            route: browseFilesystemRoute
+            result
         });
     });
 
@@ -45,8 +44,7 @@ export async function filesystemRoutes(
         return sendList({
             reply,
             request,
-            result,
-            route: scanFilesystemRoute
+            result
         });
     });
 }

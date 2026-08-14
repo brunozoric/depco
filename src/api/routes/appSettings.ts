@@ -22,8 +22,7 @@ export async function appSettingsRoutes(
         return sendList({
             reply,
             request,
-            result,
-            route: listAppSettingsRoute
+            result
         });
     });
 
@@ -41,8 +40,7 @@ export async function appSettingsRoutes(
             return sendOne({
                 reply,
                 request,
-                result,
-                route: upsertAppSettingRoute
+                result
             });
         }
     );

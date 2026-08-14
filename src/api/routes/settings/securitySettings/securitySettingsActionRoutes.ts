@@ -31,8 +31,7 @@ export function registerSecuritySettingsActionRoutes(
                 reply,
                 request,
                 status: 201,
-                result,
-                route: createSecuritySettingRoute
+                result
             });
         }
     );
@@ -51,8 +50,7 @@ export function registerSecuritySettingsActionRoutes(
             return sendOne({
                 reply,
                 request,
-                result,
-                route: updateSecuritySettingRoute
+                result
             });
         }
     );
@@ -68,8 +66,7 @@ export function registerSecuritySettingsActionRoutes(
             return sendOne({
                 reply,
                 request,
-                result,
-                route: toggleSecuritySettingRoute
+                result
             });
         }
     );
@@ -85,8 +82,7 @@ export function registerSecuritySettingsActionRoutes(
             return sendList({
                 reply,
                 request,
-                result,
-                route: resetSecuritySettingsRoute
+                result
             });
         }
     );

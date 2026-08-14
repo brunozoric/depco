@@ -33,8 +33,7 @@ export async function changelogRoutes(app: FastifyInstance, options: PluginOptio
             return sendList({
                 reply,
                 request,
-                result,
-                route: reResolveAllChangelogsRoute
+                result
             });
         }
     );
@@ -46,8 +45,7 @@ export async function changelogRoutes(app: FastifyInstance, options: PluginOptio
         return sendList({
             reply,
             request,
-            result,
-            route: getChangelogStatsRoute
+            result
         });
     });
 
@@ -61,8 +59,7 @@ export async function changelogRoutes(app: FastifyInstance, options: PluginOptio
         return sendList({
             reply,
             request,
-            result,
-            route: getChangelogsRoute
+            result
         });
     });
 
@@ -80,8 +77,7 @@ export async function changelogRoutes(app: FastifyInstance, options: PluginOptio
             return sendList({
                 reply,
                 request,
-                result,
-                route: reResolveChangelogsRoute
+                result
             });
         }
     );

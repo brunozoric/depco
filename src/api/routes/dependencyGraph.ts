@@ -35,8 +35,7 @@ export async function dependencyGraphRoutes(
         return sendList({
             reply,
             request,
-            result,
-            route: getDependencyGraphRoute
+            result
         });
     });
 
@@ -51,8 +50,7 @@ export async function dependencyGraphRoutes(
         return sendList({
             reply,
             request,
-            result,
-            route: searchDependencyPackagesRoute
+            result
         });
     });
 
@@ -67,8 +65,7 @@ export async function dependencyGraphRoutes(
             return sendList({
                 reply,
                 request,
-                result,
-                route: refreshDependencyGraphRoute
+                result
             });
         }
     );
@@ -80,8 +77,7 @@ export async function dependencyGraphRoutes(
         return sendList({
             reply,
             request,
-            result,
-            route: getDependencyGraphStatsRoute
+            result
         });
     });
 }

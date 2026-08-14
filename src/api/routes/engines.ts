@@ -32,8 +32,7 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         return sendOne({
             reply,
             request,
-            result,
-            route: getEngineSummaryRoute
+            result
         });
     });
 
@@ -44,8 +43,7 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         return sendList({
             reply,
             request,
-            result,
-            route: listNodeReleasesRoute
+            result
         });
     });
 
@@ -56,8 +54,7 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         return sendList({
             reply,
             request,
-            result,
-            route: bulkScanEnginesRoute
+            result
         });
     });
 
@@ -68,8 +65,7 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         return sendList({
             reply,
             request,
-            result,
-            route: getProjectEngineChecksRoute
+            result
         });
     });
 
@@ -80,8 +76,7 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         return sendOne({
             reply,
             request,
-            result,
-            route: getProjectEngineStalenessRoute
+            result
         });
     });
 
@@ -97,8 +92,7 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
         return sendOne({
             reply,
             request,
-            result,
-            route: scanProjectEnginesRoute
+            result
         });
     });
 }

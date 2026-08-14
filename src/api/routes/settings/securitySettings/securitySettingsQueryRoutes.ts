@@ -15,8 +15,7 @@ export function registerSecuritySettingsQueryRoutes(
         return sendList({
             reply,
             request,
-            result,
-            route: listSecuritySettingsRoute
+            result
         });
     });
 }

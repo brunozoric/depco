@@ -36,8 +36,7 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
         return sendList({
             reply,
             request,
-            result,
-            route: listUsersRoute
+            result
         });
     });
 
@@ -48,8 +47,7 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
         return sendOne({
             reply,
             request,
-            result,
-            route: getUserRoute
+            result
         });
     });
 
@@ -65,8 +63,7 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
                 reply,
                 request,
                 status: 201,
-                result,
-                route: createUserRoute
+                result
             });
         }
     );
@@ -87,8 +84,7 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
         return sendOne({
             reply,
             request,
-            result,
-            route: updateUserRoute
+            result
         });
     });
 

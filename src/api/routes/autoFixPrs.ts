@@ -31,8 +31,7 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
         return sendList({
             reply,
             request,
-            result,
-            route: listAutoFixPullRequestsRoute
+            result
         });
     });
 
@@ -51,8 +50,7 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
             return sendList({
                 reply,
                 request,
-                result,
-                route: deleteAutoFixPullRequestRoute
+                result
             });
         }
     );
@@ -67,8 +65,7 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
         return sendList({
             reply,
             request,
-            result,
-            route: getProjectAutoFixPullRequestsRoute
+            result
         });
     });
 
@@ -83,8 +80,7 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
             return sendList({
                 reply,
                 request,
-                result,
-                route: generateAutoFixPrRoute
+                result
             });
         }
     );

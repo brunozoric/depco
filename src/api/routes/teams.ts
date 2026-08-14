@@ -33,7 +33,7 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
             pageSize: request.query.pageSize
         });
 
-        return sendList({ reply, request, result, route: listTeamsRoute });
+        return sendList({ reply, request, result });
     });
 
     registerRoute(
@@ -44,7 +44,7 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
             const useCase = container.resolve(CreateTeamUseCase);
             const result = await useCase.execute(request.body);
 
-            return sendOne({ reply, request, result, route: createTeamRoute, status: 201 });
+            return sendOne({ reply, request, result, status: 201 });
         }
     );
 
@@ -52,7 +52,7 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
         const useCase = container.resolve(GetTeamUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
-        return sendOne({ reply, request, result, route: getTeamDetailRoute });
+        return sendOne({ reply, request, result });
     });
 
     registerRoute(
@@ -67,7 +67,7 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
                 color: request.body.color
             });
 
-            return sendOne({ reply, request, result, route: updateTeamRoute });
+            return sendOne({ reply, request, result });
         }
     );
 

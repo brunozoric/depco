@@ -38,8 +38,7 @@ export async function upgradeSessionRoutes(
             return sendOne({
                 reply,
                 request,
-                result,
-                route: createUpgradeSessionRoute
+                result
             });
         }
     );
@@ -54,8 +53,7 @@ export async function upgradeSessionRoutes(
         return sendOne({
             reply,
             request,
-            result,
-            route: getUpgradeSessionRoute
+            result
         });
     });
 
@@ -75,8 +73,7 @@ export async function upgradeSessionRoutes(
             return sendOne({
                 reply,
                 request,
-                result,
-                route: executeUpgradeStepRoute
+                result
             });
         }
     );
@@ -96,8 +93,7 @@ export async function upgradeSessionRoutes(
             return sendOne({
                 reply,
                 request,
-                result,
-                route: skipUpgradeStepRoute
+                result
             });
         }
     );
@@ -116,8 +112,7 @@ export async function upgradeSessionRoutes(
             return sendOne({
                 reply,
                 request,
-                result,
-                route: abortUpgradeSessionRoute
+                result
             });
         }
     );

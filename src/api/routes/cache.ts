@@ -24,8 +24,7 @@ export async function cacheRoutes(app: FastifyInstance, options: PluginOptions):
             return sendList({
                 reply,
                 request,
-                result,
-                route: clearCacheRoute
+                result
             });
         }
     );
@@ -42,8 +41,7 @@ export async function cacheRoutes(app: FastifyInstance, options: PluginOptions):
             return sendList({
                 reply,
                 request,
-                result,
-                route: clearPackageCacheRoute
+                result
             });
         }
     );
