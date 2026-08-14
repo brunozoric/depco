@@ -2,11 +2,14 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { mkdirSync, rmSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
+import { eq } from "drizzle-orm";
+import { generateId } from "@webiny/stdlib";
 import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { EngineService } from "../../../Engine/index.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { EngineScanJobExecutor } from "../abstractions/EngineScanJobExecutor.js";
 import { EngineScanJobExecutor as EngineScanJobExecutorRegistration } from "../EngineScanJobExecutor.js";
+import { projects } from "#api/db/schema.js";
 import type { JobExecutor } from "../abstractions/JobExecutor.js";
 import type { IEngineStatusCounts } from "#shared/engines/types.js";
 
@@ -149,5 +152,50 @@ describe("EngineScanJobExecutor", () => {
 
         expect(setProgress).toHaveBeenCalledWith(expect.objectContaining({ percent: 0 }));
         expect(setProgress).toHaveBeenCalledWith(expect.objectContaining({ percent: 100 }));
+    });
+
+    it("updates the project's engineStatus and rootEnginesNode after a successful scan", async () => {
+        const { container, db } = createTestApiContainer();
+        const projectId = generateId();
+        db.insert(projects)
+            .values({
+                id: projectId,
+                name: "test-project",
+                path: testDir,
+                packageManager: "yarn",
+                pmVersion: "4.0.0",
+                addedAt: Date.now()
+            })
+            .run();
+
+        const scanResult: EngineService.ScanResult = {
+            rootStatus: "active-lts",
+            rootEnginesNode: ">=18",
+            findings: [],
+            summary: {
+                totalProjects: 1,
+                counts: {
+                    eol: 0,
+                    maintenance: 0,
+                    activeLts: 1,
+                    current: 0,
+                    unknown: 0
+                },
+                projectSummaries: [],
+                staleProjectCount: 0,
+                stalenessThresholdMs: 604800000
+            }
+        };
+
+        container.registerInstance(EngineService, createStubEngineService(scanResult));
+        container.registerInstance(WebSocketBroadcaster, createStubWebSocketBroadcaster());
+        container.register(EngineScanJobExecutorRegistration);
+        const executor = container.resolve(EngineScanJobExecutor);
+
+        await executor.execute(makeContext({ referenceId: projectId, projectPath: testDir }));
+
+        const row = db.select().from(projects).where(eq(projects.id, projectId)).get();
+        expect(row?.engineStatus).toBe("active-lts");
+        expect(row?.rootEnginesNode).toBe(">=18");
     });
 });

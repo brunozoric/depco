@@ -1,6 +1,9 @@
+import { eq } from "drizzle-orm";
 import type { JobExecutor } from "./abstractions/JobExecutor.js";
 import { EngineScanJobExecutor as Abstraction } from "./abstractions/EngineScanJobExecutor.js";
 import { EngineService } from "../../Engine/index.js";
+import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
+import { projects } from "#api/db/schema.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 
 class EngineScanJobExecutorImpl implements Abstraction.Interface {
@@ -8,6 +11,7 @@ class EngineScanJobExecutorImpl implements Abstraction.Interface {
 
     public constructor(
         private readonly engineService: EngineService.Interface,
+        private readonly databaseClient: DatabaseClient.Interface,
         private readonly webSocketBroadcaster: WebSocketBroadcaster.Interface
     ) {}
 
@@ -23,6 +27,15 @@ class EngineScanJobExecutorImpl implements Abstraction.Interface {
             warnMaintenance: true
         });
 
+        await this.databaseClient.db
+            .update(projects)
+            .set({
+                engineStatus: result.rootStatus,
+                rootEnginesNode: result.rootEnginesNode
+            })
+            .where(eq(projects.id, projectId))
+            .run();
+
         this.webSocketBroadcaster.broadcast("engine-scan:complete", {
             projectId,
             counts: result.summary.counts
@@ -37,5 +50,5 @@ class EngineScanJobExecutorImpl implements Abstraction.Interface {
 
 export const EngineScanJobExecutor = Abstraction.createImplementation({
     implementation: EngineScanJobExecutorImpl,
-    dependencies: [EngineService, WebSocketBroadcaster]
+    dependencies: [EngineService, DatabaseClient, WebSocketBroadcaster]
 });
