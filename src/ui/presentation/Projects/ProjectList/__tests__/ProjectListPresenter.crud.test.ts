@@ -51,7 +51,10 @@ describe("ProjectListPresenter - CRUD and load", () => {
             page: 1,
             pageSize: 25,
             totalPages: 0,
-            totalProjects: 0
+            totalProjects: 0,
+            sortBy: null,
+            sortOrder: null,
+            engineStatusFilter: []
         });
     });
 
@@ -104,7 +107,15 @@ describe("ProjectListPresenter - CRUD and load", () => {
                 route: listProjectsRoute,
                 args: {
                     params: {},
-                    query: { page: 1, pageSize: 25, search: undefined, teamId: undefined }
+                    query: {
+                        page: 1,
+                        pageSize: 25,
+                        search: undefined,
+                        teamId: undefined,
+                        sortBy: undefined,
+                        sortOrder: undefined,
+                        engineStatus: undefined
+                    }
                 }
             },
             { route: getEngineSummaryRoute, args: { params: {} } }
@@ -119,6 +130,7 @@ describe("ProjectListPresenter - CRUD and load", () => {
                 securityPasses: true,
                 securityChecks: { enableScripts: true },
                 lastScannedAt: 2000,
+                addedAt: 1000,
                 scanStatus: "idle",
                 hasNodeModules: false,
                 teams: [],
@@ -134,6 +146,7 @@ describe("ProjectListPresenter - CRUD and load", () => {
                 securityPasses: null,
                 securityChecks: null,
                 lastScannedAt: null,
+                addedAt: 1500,
                 scanStatus: "idle",
                 hasNodeModules: false,
                 teams: [],
@@ -189,6 +202,7 @@ describe("ProjectListPresenter - CRUD and load", () => {
                 securityPasses: null,
                 securityChecks: null,
                 lastScannedAt: null,
+                addedAt: 3000,
                 scanStatus: "idle",
                 hasNodeModules: false,
                 teams: [],
@@ -247,7 +261,15 @@ describe("ProjectListPresenter - CRUD and load", () => {
                 route: listProjectsRoute,
                 args: {
                     params: {},
-                    query: { page: 1, pageSize: 25, search: undefined, teamId: undefined }
+                    query: {
+                        page: 1,
+                        pageSize: 25,
+                        search: undefined,
+                        teamId: undefined,
+                        sortBy: undefined,
+                        sortOrder: undefined,
+                        engineStatus: undefined
+                    }
                 }
             },
             { route: getEngineSummaryRoute, args: { params: {} } },

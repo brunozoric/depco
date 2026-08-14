@@ -87,20 +87,6 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
         const urlFilters = this.urlFilterService.read(FILTER_SCHEMA);
         const pageSize = urlFilters.pageSize ?? DEFAULT_PAGE_SIZE;
 
-        const engineSummary = this.enginesRepository.getSummary();
-        interface IEngineInfo {
-            status: EngineStatus;
-            enginesNode: string | null;
-        }
-
-        const engineInfoByProjectId = new Map<string, IEngineInfo>();
-        for (const projectSummary of engineSummary?.projectSummaries ?? []) {
-            engineInfoByProjectId.set(projectSummary.projectId, {
-                status: projectSummary.rootStatus,
-                enginesNode: projectSummary.rootEnginesNode
-            });
-        }
-
         return {
             loading: this.loading,
             bulkActionRunning: this.scanStatusManager.isBulkRunning,
@@ -113,6 +99,7 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
                 securityPasses: project.security?.passes ?? null,
                 securityChecks: project.security?.checks ?? null,
                 lastScannedAt: project.lastScannedAt,
+                addedAt: project.addedAt,
                 scanStatus: this.scanStatusManager.getStatus(project.id),
                 hasNodeModules: project.hasNodeModules ?? false,
                 teams: (project.teams ?? []).map(team => ({
@@ -120,8 +107,8 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
                     name: team.name,
                     color: team.color
                 })),
-                engineStatus: engineInfoByProjectId.get(project.id)?.status ?? null,
-                engineVersion: engineInfoByProjectId.get(project.id)?.enginesNode ?? null
+                engineStatus: (project.engineStatus as EngineStatus) ?? null,
+                engineVersion: project.rootEnginesNode ?? null
             })),
             addProjectPath: this.addProjectPathValue,
             addProjectLoading: this.addProjectLoading,
@@ -145,7 +132,10 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
             page: urlFilters.page ?? 1,
             pageSize,
             totalPages: Math.ceil(total / pageSize),
-            totalProjects: total
+            totalProjects: total,
+            sortBy: urlFilters.sortBy ?? null,
+            sortOrder: urlFilters.sortOrder ?? null,
+            engineStatusFilter: urlFilters.engineStatus ? urlFilters.engineStatus.split(",") : []
         };
     }
 
@@ -167,7 +157,10 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
             page: urlFilters.page ?? 1,
             pageSize: urlFilters.pageSize ?? DEFAULT_PAGE_SIZE,
             search: urlFilters.search ?? undefined,
-            teamId: teamId ?? undefined
+            teamId: teamId ?? undefined,
+            sortBy: urlFilters.sortBy ?? undefined,
+            sortOrder: urlFilters.sortOrder ?? undefined,
+            engineStatus: urlFilters.engineStatus ?? undefined
         });
     };
 
@@ -381,6 +374,59 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
                 title: "Bulk scan failed",
                 message: getErrorMessage(error, "Failed to enqueue bulk scan")
             });
+        }
+    };
+
+    public setSortBy = (column: string | null): void => {
+        const { sortBy, sortOrder } = this.urlFilterService.read(FILTER_SCHEMA);
+        if (column === null || (sortBy === column && sortOrder === "desc")) {
+            this.urlFilterService.update(FILTER_SCHEMA, {
+                sortBy: null,
+                sortOrder: null,
+                page: null
+            });
+        } else if (sortBy === column && sortOrder !== "desc") {
+            this.urlFilterService.update(FILTER_SCHEMA, {
+                sortBy: column,
+                sortOrder: "desc",
+                page: null
+            });
+        } else {
+            this.urlFilterService.update(FILTER_SCHEMA, {
+                sortBy: column,
+                sortOrder: "asc",
+                page: null
+            });
+        }
+    };
+
+    public setEngineStatusFilter = (statuses: string[]): void => {
+        this.urlFilterService.update(FILTER_SCHEMA, {
+            engineStatus: statuses.length > 0 ? statuses.join(",") : null,
+            page: null
+        });
+    };
+
+    public setPageSize = (size: number): void => {
+        this.urlFilterService.update(FILTER_SCHEMA, {
+            pageSize: size !== DEFAULT_PAGE_SIZE ? String(size) : null,
+            page: null
+        });
+    };
+
+    public renameProject = async (id: string, name: string): Promise<void> => {
+        try {
+            const updated = await this.projectsGateway.update(id, { name });
+            runInAction(() => {
+                this.projectsRepository.updateProject(updated);
+            });
+        } catch (error) {
+            notifications.show({
+                color: "red",
+                title: "Rename failed",
+                message: getErrorMessage(error, "Failed to rename project")
+            });
+            throw error;
         }
     };
 

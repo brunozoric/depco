@@ -103,7 +103,15 @@ describe("ProjectListPresenter - clone, browse, search, and selection", () => {
                     route: listProjectsRoute,
                     args: {
                         params: {},
-                        query: { page: 1, pageSize: 25, search: undefined, teamId: undefined }
+                        query: {
+                            page: 1,
+                            pageSize: 25,
+                            search: undefined,
+                            teamId: undefined,
+                            sortBy: undefined,
+                            sortOrder: undefined,
+                            engineStatus: undefined
+                        }
                     }
                 },
                 { route: getEngineSummaryRoute, args: { params: {} } }

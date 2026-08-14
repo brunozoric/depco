@@ -19,6 +19,7 @@ export interface IProjectListItem {
     securityPasses: boolean | null;
     securityChecks: Record<string, boolean> | null;
     lastScannedAt: number | null;
+    addedAt: number;
     scanStatus: ProjectScanStatus;
     hasNodeModules: boolean;
     teams: IProjectTeamBadge[];
@@ -63,6 +64,9 @@ export interface IProjectListViewModel {
     pageSize: number;
     totalPages: number;
     totalProjects: number;
+    sortBy: string | null;
+    sortOrder: string | null;
+    engineStatusFilter: string[];
 }
 
 export interface IProjectListPresenter {
@@ -91,6 +95,10 @@ export interface IProjectListPresenter {
     selectAllProjects: () => void;
     deselectAllProjects: () => void;
     bulkScanSelected: () => Promise<void>;
+    setSortBy: (column: string | null) => void;
+    setEngineStatusFilter: (statuses: string[]) => void;
+    setPageSize: (size: number) => void;
+    renameProject: (id: string, name: string) => Promise<void>;
     dispose: () => void;
 }
 
