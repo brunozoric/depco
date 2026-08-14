@@ -6,13 +6,13 @@ import { HOUR_MS } from "#shared/time.js";
 import { resolve } from "path";
 import { pathToFileURL } from "url";
 import Fastify from "fastify";
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyBaseLogger } from "fastify";
 import fastifyCompress from "@fastify/compress";
 import fastifyRateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
 import { createContainer } from "#shared/index.js";
-import { Logger } from "@webiny/stdlib";
 import { ApiFeature } from "./feature.js";
+import { LoggerService } from "./services/Logger/index.js";
 import { JobWorker } from "./services/JobExecution/index.js";
 import { ScanSchedulerService } from "./services/ScanScheduler/index.js";
 import { EventBus } from "./services/EventBus/index.js";
@@ -74,12 +74,16 @@ export async function createServer(): Promise<FastifyInstance> {
     const container = createContainer();
     ApiFeature.register(container, { databaseClient });
 
-    const logger = container.resolve(Logger);
-
-    // Run pending Drizzle migrations before accepting traffic.
+    // Run pending Drizzle migrations before accepting traffic. This must
+    // happen before LoggerService is resolved below — its constructor reads
+    // the `log_level` app setting, which requires the app_settings table
+    // (and thus migrations) to already exist.
     runMigrations(databaseClient.db);
     seedSecurityDefaults(databaseClient.db);
     seedAppSettings(databaseClient.db);
+
+    const loggerService = container.resolve(LoggerService);
+    await loggerService.initFileDestination(DATA_DIR);
 
     const snoozeIntervalRow = databaseClient.db
         .select({ value: appSettings.value })
@@ -96,11 +100,12 @@ export async function createServer(): Promise<FastifyInstance> {
     const scanScheduler = container.resolve(ScanSchedulerService);
     await scanScheduler.init();
 
-    const app = Fastify({ logger: { level: "warn" } });
+    const httpLogger: FastifyBaseLogger = loggerService.logger.child({ source: "http" });
+    const app = Fastify({ loggerInstance: httpLogger });
 
     app.setErrorHandler((error: Error & { statusCode?: number }, _request, reply) => {
         const statusCode = error.statusCode ?? 500;
-        logger.error("Route error", { error: error.message, stack: error.stack });
+        loggerService.logger.error({ source: "server" }, `Route error: ${error.message}`);
         reply.status(statusCode).send({
             error: error.message ?? "Internal error",
             stack: process.env["NODE_ENV"] !== "production" ? error.stack : undefined
@@ -164,7 +169,10 @@ export async function createServer(): Promise<FastifyInstance> {
 
     const pollInterval = setInterval(() => {
         jobWorker.processNextJob().catch(error => {
-            logger.error("Job processing error", { error: String(error) });
+            loggerService.logger.error(
+                { source: "server", error: String(error) },
+                "Job processing error"
+            );
         });
     }, POLL_INTERVAL_MS);
 
@@ -173,7 +181,10 @@ export async function createServer(): Promise<FastifyInstance> {
         jobWorker
             .enqueue({ referenceId: projectId, referenceType: "project", type: "scan" })
             .catch(error => {
-                logger.error("Failed to enqueue scheduled scan", { error: String(error) });
+                loggerService.logger.error(
+                    { source: "server", error: String(error) },
+                    "Failed to enqueue scheduled scan"
+                );
             });
     });
 
@@ -189,7 +200,10 @@ export async function createServer(): Promise<FastifyInstance> {
                 });
             }
         } catch (error) {
-            logger.error("Failed to enqueue auto-fix PR", { error: String(error) });
+            loggerService.logger.error(
+                { source: "server", error: String(error) },
+                "Failed to enqueue auto-fix PR"
+            );
         }
     });
 
@@ -220,7 +234,10 @@ export async function createServer(): Promise<FastifyInstance> {
     const authService = container.resolve(AuthService);
     const sessionCleanupInterval = setInterval(() => {
         authService.cleanupExpired().catch(error => {
-            logger.error("Session cleanup error", { error: String(error) });
+            loggerService.logger.error(
+                { source: "server", error: String(error) },
+                "Session cleanup error"
+            );
         });
     }, SESSION_CLEANUP_INTERVAL_MS);
 
