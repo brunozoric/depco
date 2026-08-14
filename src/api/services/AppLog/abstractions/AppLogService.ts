@@ -1,6 +1,6 @@
 import { createAbstraction } from "#shared/index.js";
 
-export type LogLevel = "error" | "warn" | "info";
+export type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
 
 export interface IAppLogService {
     log(

@@ -1172,6 +1172,7 @@ __metadata:
     rehype-sanitize: "npm:^6.0.0"
     semver: "npm:^7.8.5"
     smol-toml: "npm:^1.7.1"
+    sonic-boom: "npm:^4.2.1"
     spdx-license-list: "npm:^6.12.0"
     tsx: "npm:^4.23.11"
     typescript: "npm:^7.0.2"
@@ -7455,7 +7456,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sonic-boom@npm:^4.0.1":
+"sonic-boom@npm:^4.0.1, sonic-boom@npm:^4.2.1":
   version: 4.2.1
   resolution: "sonic-boom@npm:4.2.1"
   dependencies:

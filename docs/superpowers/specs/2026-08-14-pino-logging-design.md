@@ -28,7 +28,7 @@ Abstraction: `src/api/services/Logger/abstractions/LoggerService.ts`
 
 ```typescript
 interface ILoggerService {
-    logger: pino.Logger;
+  logger: pino.Logger;
 }
 ```
 
@@ -41,11 +41,13 @@ Dependencies: `DatabaseClient`, `WebSocketBroadcaster`, `FileConfigService` (for
 All in `src/api/services/Logger/destinations/`:
 
 **Console** (`createConsoleDestination.ts`):
+
 - Uses `pino-pretty` for human-readable output
 - All levels pass through
 - Color output, timestamps, level labels
 
 **File** (`createFileDestination.ts`):
+
 - Uses `pino-roll` for rotation
 - Daily rotation + 10MB size cap
 - Log files in data directory (same location as SQLite DB)
@@ -53,6 +55,7 @@ All in `src/api/services/Logger/destinations/`:
 - 7-day retention
 
 **Database** (`createDatabaseDestination.ts`):
+
 - Custom Node.js `Writable` stream
 - Parses pino JSON log lines
 - Maps pino fields to `appLogs` schema:
@@ -93,14 +96,14 @@ Fastify auto-logs request/response with method, url, statusCode, responseTime. T
 
 Expand from 3 to 6:
 
-| Level | Pino numeric | Use |
-|-------|-------------|-----|
-| trace | 10 | Verbose debugging (disabled by default) |
-| debug | 20 | Development diagnostics |
-| info | 30 | Normal operations (scan started, job complete) |
-| warn | 40 | Recoverable issues (retry, deprecation) |
-| error | 50 | Failures (scan failed, DB error) |
-| fatal | 60 | Unrecoverable (startup failure) |
+| Level | Pino numeric | Use                                            |
+| ----- | ------------ | ---------------------------------------------- |
+| trace | 10           | Verbose debugging (disabled by default)        |
+| debug | 20           | Development diagnostics                        |
+| info  | 30           | Normal operations (scan started, job complete) |
+| warn  | 40           | Recoverable issues (retry, deprecation)        |
+| error | 50           | Failures (scan failed, DB error)               |
+| fatal | 60           | Unrecoverable (startup failure)                |
 
 `LogLevel` type in `AppLogService` abstraction expands to include all 6.
 
@@ -131,6 +134,7 @@ src/api/services/Logger/
 ```
 
 Modified files:
+
 - `src/api/services/AppLog/AppLogService.ts` — rewrite implementation
 - `src/api/services/AppLog/abstractions/AppLogService.ts` — expand LogLevel
 - `src/api/server.ts` — create logger early, pass to Fastify

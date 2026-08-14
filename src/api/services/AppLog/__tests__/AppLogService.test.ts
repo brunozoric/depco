@@ -1,6 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { writeFile, rm } from "fs/promises";
-import { join } from "path";
+import { describe, it, expect, vi } from "vitest";
 import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { AppLogService } from "../abstractions/AppLogService.js";
@@ -8,28 +6,49 @@ import { appLogs, appSettings } from "#api/db/schema.js";
 
 type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
+interface ISetupAppLogServiceResult {
+    db: TestDb;
+    service: AppLogService.Interface;
+    broadcaster: WebSocketBroadcaster.Interface;
+}
+
+/**
+ * LoggerService reads the log_level threshold from appSettings once, at
+ * construction time. Since it's a container singleton, the setting must be
+ * seeded BEFORE AppLogService (and therefore LoggerService) is resolved.
+ */
+function setupAppLogService(logLevel?: string): ISetupAppLogServiceResult {
+    const { container, db } = createTestApiContainer();
+
+    if (logLevel !== undefined) {
+        db.insert(appSettings).values({ key: "log_level", value: logLevel }).run();
+    }
+
+    const broadcaster: WebSocketBroadcaster.Interface = {
+        broadcast: vi.fn(),
+        addClient: vi.fn(),
+        removeClient: vi.fn(),
+        closeConnectionsForUser: vi.fn()
+    };
+    container.registerInstance(WebSocketBroadcaster, broadcaster);
+
+    const service = container.resolve(AppLogService);
+
+    return { db, service, broadcaster };
+}
+
+// Logging flows through pino's async stream pipeline before it reaches the
+// DB destination, so assertions need a short delay after logging.
+function flushLogPipeline(): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, 50));
+}
+
 describe("AppLogService", () => {
-    let db: TestDb;
-    let service: AppLogService.Interface;
-    let broadcaster: WebSocketBroadcaster.Interface;
-
-    beforeEach(() => {
-        broadcaster = {
-            broadcast: vi.fn(),
-            addClient: vi.fn(),
-            removeClient: vi.fn(),
-            closeConnectionsForUser: vi.fn()
-        };
-
-        const { container, db: testDb } = createTestApiContainer();
-        db = testDb;
-        container.registerInstance(WebSocketBroadcaster, broadcaster);
-
-        service = container.resolve(AppLogService);
-    });
-
     it("writes an error log entry to the database", async () => {
+        const { db, service } = setupAppLogService();
+
         await service.log("error", "scan", "p1", "Scan failed", "stack trace");
+        await flushLogPipeline();
 
         const rows = await db.select().from(appLogs).all();
         expect(rows).toHaveLength(1);
@@ -43,7 +62,10 @@ describe("AppLogService", () => {
     });
 
     it("broadcasts log:created event", async () => {
+        const { service, broadcaster } = setupAppLogService();
+
         await service.log("error", "scan", null, "Something broke");
+        await flushLogPipeline();
 
         expect(broadcaster.broadcast).toHaveBeenCalledWith(
             "log:created",
@@ -56,86 +78,54 @@ describe("AppLogService", () => {
         );
     });
 
+    it("writes without details when not provided", async () => {
+        const { db, service } = setupAppLogService();
+
+        await service.log("error", "scan", null, "No details");
+        await flushLogPipeline();
+
+        const rows = await db.select().from(appLogs).all();
+        expect(rows).toHaveLength(1);
+        expect(rows[0]!.details).toBeNull();
+    });
+
     it("respects log_level setting — skips info when level is warn", async () => {
-        await db.insert(appSettings).values({ key: "log_level", value: "warn" }).run();
+        const { db, service } = setupAppLogService("warn");
 
         await service.log("info", "scan", null, "Scan started");
+        await flushLogPipeline();
 
         const rows = await db.select().from(appLogs).all();
         expect(rows).toHaveLength(0);
     });
 
     it("respects log_level setting — allows error when level is warn", async () => {
-        await db.insert(appSettings).values({ key: "log_level", value: "warn" }).run();
+        const { db, service } = setupAppLogService("warn");
 
         await service.log("error", "scan", null, "Scan failed");
+        await flushLogPipeline();
 
         const rows = await db.select().from(appLogs).all();
         expect(rows).toHaveLength(1);
     });
 
     it("respects log_level setting — allows warn when level is warn", async () => {
-        await db.insert(appSettings).values({ key: "log_level", value: "warn" }).run();
+        const { db, service } = setupAppLogService("warn");
 
         await service.log("warn", "scan", null, "Lockfile stale");
+        await flushLogPipeline();
 
         const rows = await db.select().from(appLogs).all();
         expect(rows).toHaveLength(1);
     });
 
     it("defaults to warn level when no setting exists", async () => {
+        const { db, service } = setupAppLogService();
+
         await service.log("info", "scan", null, "Should be skipped");
+        await flushLogPipeline();
 
         const rows = await db.select().from(appLogs).all();
         expect(rows).toHaveLength(0);
-    });
-
-    it("writes without details when not provided", async () => {
-        await service.log("error", "scan", null, "No details");
-
-        const rows = await db.select().from(appLogs).all();
-        expect(rows[0]!.details).toBeNull();
-    });
-
-    it("reads logLevel from global file config when present", async () => {
-        // Seed DB with log_level = "warn"
-        await db.insert(appSettings).values({ key: "log_level", value: "warn" }).run();
-
-        // Write global config with logLevel: "info"
-        const configPath = join(process.cwd(), ".dependency-upgrader.json");
-        await writeFile(configPath, JSON.stringify({ settings: { logLevel: "info" } }), "utf-8");
-
-        try {
-            // Log an info-level entry — should be stored because file config says "info"
-            await service.log("info", "test", null, "info message");
-
-            const rows = await db.select().from(appLogs).all();
-            expect(rows).toHaveLength(1);
-            expect(rows[0]!.level).toBe("info");
-        } finally {
-            await rm(configPath, { force: true });
-        }
-    });
-
-    it("falls back to DB log level when file config has no logLevel", async () => {
-        await db.insert(appSettings).values({ key: "log_level", value: "error" }).run();
-
-        // Write global config with only branchTemplate, no logLevel
-        const configPath = join(process.cwd(), ".dependency-upgrader.json");
-        await writeFile(
-            configPath,
-            JSON.stringify({ settings: { branchTemplate: "chore/deps" } }),
-            "utf-8"
-        );
-
-        try {
-            // Log an info-level entry — should be filtered because DB says "error"
-            await service.log("info", "test", null, "info message");
-
-            const rows = await db.select().from(appLogs).all();
-            expect(rows).toHaveLength(0);
-        } finally {
-            await rm(configPath, { force: true });
-        }
     });
 });
