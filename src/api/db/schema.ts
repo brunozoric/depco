@@ -15,7 +15,9 @@ export const projects = sqliteTable("projects", {
     packageManager: text("package_manager"),
     pmVersion: text("pm_version"),
     addedAt: integer("added_at").notNull(),
-    lastScannedAt: integer("last_scanned_at")
+    lastScannedAt: integer("last_scanned_at"),
+    engineStatus: text("engine_status"),
+    rootEnginesNode: text("root_engines_node")
 });
 
 export const upgradeJobs = sqliteTable(
