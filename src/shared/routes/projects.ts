@@ -35,7 +35,10 @@ export const listProjectsRoute = defineRoute({
         page: z.coerce.number().int().positive().optional(),
         pageSize: z.coerce.number().int().positive().max(200).optional(),
         search: z.string().optional(),
-        teamId: z.string().optional()
+        teamId: z.string().optional(),
+        sortBy: z.enum(["name", "addedAt", "lastScannedAt", "engineStatus"]).optional(),
+        sortOrder: z.enum(["asc", "desc"]).optional(),
+        engineStatus: z.string().optional()
     }),
     response: listProjectsResponseSchema
 });

@@ -26,12 +26,14 @@
 ### Task 5: Gateway + Repository — Engine Fields and Update Method
 
 **Files:**
+
 - Modify: `src/ui/features/Projects/abstractions/ProjectsGateway.ts` (add `engineStatus` + `rootEnginesNode` to `IProject`, add `IListProjectsParams` sort/filter fields, add `update` method)
 - Modify: `src/ui/features/Projects/ProjectsGateway.ts` (implement `update`, pass sort/filter to API, map new fields)
 - Modify: `src/ui/features/Projects/abstractions/ProjectsRepository.ts` (add `updateProject` method)
 - Modify: `src/ui/features/Projects/ProjectsRepository.ts` (implement `updateProject`)
 
 **Interfaces:**
+
 - Consumes: `updateProjectRoute` from `src/shared/routes/projects.ts`, `UpdateProjectResponse` from `src/shared/responses/projects.ts` (from backend plan)
 - Produces: `IProject` with `engineStatus: string | null` and `rootEnginesNode: string | null`; `update(id, params)` method; `IListProjectsParams` with `sortBy`, `sortOrder`, `engineStatus` — used by Tasks 6, 7
 
@@ -41,18 +43,18 @@ In `src/ui/features/Projects/abstractions/ProjectsGateway.ts`, add to `IProject`
 
 ```typescript
 export interface IProject {
-    id: string;
-    name: string;
-    path: string;
-    packageManager: string | null;
-    pmVersion: string | null;
-    addedAt: number;
-    lastScannedAt: number | null;
-    security?: ISecurityStatus | null;
-    hasNodeModules: boolean;
-    teams?: IProjectTeam[];
-    engineStatus: string | null;
-    rootEnginesNode: string | null;
+  id: string;
+  name: string;
+  path: string;
+  packageManager: string | null;
+  pmVersion: string | null;
+  addedAt: number;
+  lastScannedAt: number | null;
+  security?: ISecurityStatus | null;
+  hasNodeModules: boolean;
+  teams?: IProjectTeam[];
+  engineStatus: string | null;
+  rootEnginesNode: string | null;
 }
 ```
 
@@ -60,13 +62,13 @@ Add sort/filter fields to `IListProjectsParams`:
 
 ```typescript
 export interface IListProjectsParams {
-    page?: number | undefined;
-    pageSize?: number | undefined;
-    search?: string | undefined;
-    teamId?: string | undefined;
-    sortBy?: "name" | "addedAt" | "lastScannedAt" | "engineStatus" | undefined;
-    sortOrder?: "asc" | "desc" | undefined;
-    engineStatus?: string | undefined;
+  page?: number | undefined;
+  pageSize?: number | undefined;
+  search?: string | undefined;
+  teamId?: string | undefined;
+  sortBy?: "name" | "addedAt" | "lastScannedAt" | "engineStatus" | undefined;
+  sortOrder?: "asc" | "desc" | undefined;
+  engineStatus?: string | undefined;
 }
 ```
 
@@ -74,8 +76,8 @@ Add `update` method to `IProjectsGateway`:
 
 ```typescript
 export interface IProjectsGateway {
-    // ... existing methods ...
-    update(id: string, params: { name: string }): Promise<IProject>;
+  // ... existing methods ...
+  update(id: string, params: { name: string }): Promise<IProject>;
 }
 ```
 
@@ -93,33 +95,33 @@ Update `toProject` to include new fields:
 
 ```typescript
 function toProject(item: {
-    id: string;
-    name: string;
-    path: string;
-    packageManager: string | null;
-    pmVersion: string | null;
-    addedAt: number;
-    lastScannedAt: number | null;
-    security?: Abstraction.SecurityStatus | null | undefined;
-    hasNodeModules?: boolean;
-    teams?: Array<{ id: string; name: string; color: string }> | undefined;
-    engineStatus?: string | null | undefined;
-    rootEnginesNode?: string | null | undefined;
+  id: string;
+  name: string;
+  path: string;
+  packageManager: string | null;
+  pmVersion: string | null;
+  addedAt: number;
+  lastScannedAt: number | null;
+  security?: Abstraction.SecurityStatus | null | undefined;
+  hasNodeModules?: boolean;
+  teams?: Array<{ id: string; name: string; color: string }> | undefined;
+  engineStatus?: string | null | undefined;
+  rootEnginesNode?: string | null | undefined;
 }): IProject {
-    return {
-        id: item.id,
-        name: item.name,
-        path: item.path,
-        packageManager: item.packageManager,
-        pmVersion: item.pmVersion,
-        addedAt: item.addedAt,
-        lastScannedAt: item.lastScannedAt,
-        security: item.security ?? null,
-        hasNodeModules: item.hasNodeModules ?? false,
-        teams: item.teams ?? [],
-        engineStatus: item.engineStatus ?? null,
-        rootEnginesNode: item.rootEnginesNode ?? null
-    };
+  return {
+    id: item.id,
+    name: item.name,
+    path: item.path,
+    packageManager: item.packageManager,
+    pmVersion: item.pmVersion,
+    addedAt: item.addedAt,
+    lastScannedAt: item.lastScannedAt,
+    security: item.security ?? null,
+    hasNodeModules: item.hasNodeModules ?? false,
+    teams: item.teams ?? [],
+    engineStatus: item.engineStatus ?? null,
+    rootEnginesNode: item.rootEnginesNode ?? null
+  };
 }
 ```
 
@@ -193,11 +195,13 @@ git commit -m "feat: add engine fields, update method, and updateProject to Proj
 ### Task 6: Presenter — Sort/Filter State, Engine Data from Project, Rename
 
 **Files:**
+
 - Modify: `src/ui/presentation/Projects/ProjectList/abstractions/ProjectListPresenter.ts` (add sort/filter/rename to view model + interface)
 - Modify: `src/ui/presentation/Projects/ProjectList/ProjectListPresenter.ts` (remove in-memory engine mapping, read sort/filter from URL, pass to gateway, add rename method)
 - Modify: `src/ui/presentation/Projects/ProjectList/__tests__/ProjectListPresenter.crud.test.ts` (update expectations)
 
 **Interfaces:**
+
 - Consumes: `IProject.engineStatus`, `IProject.rootEnginesNode`, `IListProjectsParams.sortBy/sortOrder/engineStatus` from Task 5
 - Produces: `IProjectListViewModel` with `sortBy`, `sortOrder`, `engineStatusFilter`, `addedAt` on items; `renameProject` method — used by Task 7
 
@@ -209,20 +213,20 @@ Add `addedAt` to `IProjectListItem`:
 
 ```typescript
 export interface IProjectListItem {
-    id: string;
-    name: string;
-    path: string;
-    pmVersion: string | null;
-    packageManager: string | null;
-    securityPasses: boolean | null;
-    securityChecks: Record<string, boolean> | null;
-    lastScannedAt: number | null;
-    addedAt: number;
-    scanStatus: ProjectScanStatus;
-    hasNodeModules: boolean;
-    teams: IProjectTeamBadge[];
-    engineStatus: EngineStatus | null;
-    engineVersion: string | null;
+  id: string;
+  name: string;
+  path: string;
+  pmVersion: string | null;
+  packageManager: string | null;
+  securityPasses: boolean | null;
+  securityChecks: Record<string, boolean> | null;
+  lastScannedAt: number | null;
+  addedAt: number;
+  scanStatus: ProjectScanStatus;
+  hasNodeModules: boolean;
+  teams: IProjectTeamBadge[];
+  engineStatus: EngineStatus | null;
+  engineVersion: string | null;
 }
 ```
 
@@ -230,10 +234,10 @@ Add sort/filter fields to `IProjectListViewModel`:
 
 ```typescript
 export interface IProjectListViewModel {
-    // ... existing fields ...
-    sortBy: string | null;
-    sortOrder: string | null;
-    engineStatusFilter: string[];
+  // ... existing fields ...
+  sortBy: string | null;
+  sortOrder: string | null;
+  engineStatusFilter: string[];
 }
 ```
 
@@ -241,10 +245,10 @@ Add methods to `IProjectListPresenter`:
 
 ```typescript
 export interface IProjectListPresenter {
-    // ... existing methods ...
-    setSortBy: (column: string | null) => void;
-    setEngineStatusFilter: (statuses: string[]) => void;
-    renameProject: (id: string, name: string) => Promise<void>;
+  // ... existing methods ...
+  setSortBy: (column: string | null) => void;
+  setEngineStatusFilter: (statuses: string[]) => void;
+  renameProject: (id: string, name: string) => Promise<void>;
 }
 ```
 
@@ -269,10 +273,10 @@ Add sort/filter to `get vm()`:
 const urlFilters = this.urlFilterService.read(FILTER_SCHEMA);
 // ... existing ...
 return {
-    // ... existing fields ...
-    sortBy: urlFilters.sortBy ?? null,
-    sortOrder: urlFilters.sortOrder ?? null,
-    engineStatusFilter: urlFilters.engineStatus ? urlFilters.engineStatus.split(",") : []
+  // ... existing fields ...
+  sortBy: urlFilters.sortBy ?? null,
+  sortOrder: urlFilters.sortOrder ?? null,
+  engineStatusFilter: urlFilters.engineStatus ? urlFilters.engineStatus.split(",") : []
 };
 ```
 
@@ -390,6 +394,7 @@ git commit -m "feat: add sort, filter, and rename to ProjectListPresenter"
 ### Task 7: UI Components — Filter Bar, Sortable Headers, Rename Modal, Page Size
 
 **Files:**
+
 - Modify: `src/ui/presentation/Projects/ProjectList/components/ProjectListPage.tsx` (filter bar, sortable headers, page size dropdown)
 - Modify: `src/ui/presentation/Projects/ProjectList/components/ProjectRow.tsx` (rename menu item, Added column)
 - Create: `src/ui/presentation/Projects/ProjectList/components/RenameProjectModal.tsx`
@@ -400,6 +405,7 @@ git commit -m "feat: add sort, filter, and rename to ProjectListPresenter"
 - Modify: `src/ui/presentation/Projects/ProjectDetail/ProjectDetailPresenter.ts` (implement rename)
 
 **Interfaces:**
+
 - Consumes: `vm.sortBy`, `vm.sortOrder`, `vm.engineStatusFilter`, `vm.pageSize`, `presenter.setSortBy`, `presenter.setEngineStatusFilter`, `presenter.renameProject` from Task 6
 - Produces: fully interactive project list UI
 
@@ -412,43 +418,43 @@ import type React from "react";
 import { Group, Table, UnstyledButton, Text } from "@mantine/core";
 
 interface SortableColumnHeaderProps {
-    label: string;
-    column: string;
-    activeSortBy: string | null;
-    activeSortOrder: string | null;
-    onSort: (column: string | null) => void;
+  label: string;
+  column: string;
+  activeSortBy: string | null;
+  activeSortOrder: string | null;
+  onSort: (column: string | null) => void;
 }
 
 function getSortIndicator(
-    column: string,
-    activeSortBy: string | null,
-    activeSortOrder: string | null
+  column: string,
+  activeSortBy: string | null,
+  activeSortOrder: string | null
 ): string {
-    if (activeSortBy !== column) return "";
-    return activeSortOrder === "desc" ? " ▼" : " ▲";
+  if (activeSortBy !== column) return "";
+  return activeSortOrder === "desc" ? " ▼" : " ▲";
 }
 
 export function SortableColumnHeader({
-    label,
-    column,
-    activeSortBy,
-    activeSortOrder,
-    onSort
+  label,
+  column,
+  activeSortBy,
+  activeSortOrder,
+  onSort
 }: SortableColumnHeaderProps): React.ReactNode {
-    return (
-        <Table.Th>
-            <UnstyledButton onClick={() => onSort(column)}>
-                <Group gap={4} wrap="nowrap">
-                    <Text size="sm" fw={600}>
-                        {label}
-                    </Text>
-                    <Text size="sm" c="dimmed">
-                        {getSortIndicator(column, activeSortBy, activeSortOrder)}
-                    </Text>
-                </Group>
-            </UnstyledButton>
-        </Table.Th>
-    );
+  return (
+    <Table.Th>
+      <UnstyledButton onClick={() => onSort(column)}>
+        <Group gap={4} wrap="nowrap">
+          <Text size="sm" fw={600}>
+            {label}
+          </Text>
+          <Text size="sm" c="dimmed">
+            {getSortIndicator(column, activeSortBy, activeSortOrder)}
+          </Text>
+        </Group>
+      </UnstyledButton>
+    </Table.Th>
+  );
 }
 ```
 
@@ -462,65 +468,65 @@ import { useState } from "react";
 import { Button, Group, Modal, TextInput } from "@mantine/core";
 
 interface RenameProjectModalProps {
-    opened: boolean;
-    currentName: string;
-    onRename: (name: string) => Promise<void>;
-    onClose: () => void;
+  opened: boolean;
+  currentName: string;
+  onRename: (name: string) => Promise<void>;
+  onClose: () => void;
 }
 
 export function RenameProjectModal({
-    opened,
-    currentName,
-    onRename,
-    onClose
+  opened,
+  currentName,
+  onRename,
+  onClose
 }: RenameProjectModalProps): React.ReactNode {
-    const [name, setName] = useState(currentName);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+  const [name, setName] = useState(currentName);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    const handleSubmit = async (): Promise<void> => {
-        const trimmed = name.trim();
-        if (!trimmed || trimmed.length > 100) return;
-        setLoading(true);
-        setError(null);
-        try {
-            await onRename(trimmed);
-            onClose();
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to rename");
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleSubmit = async (): Promise<void> => {
+    const trimmed = name.trim();
+    if (!trimmed || trimmed.length > 100) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await onRename(trimmed);
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to rename");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-        <Modal opened={opened} onClose={onClose} title="Rename Project">
-            <TextInput
-                label="Project name"
-                value={name}
-                onChange={event => setName(event.currentTarget.value)}
-                error={error}
-                maxLength={100}
-                onKeyDown={event => {
-                    if (event.key === "Enter") {
-                        void handleSubmit();
-                    }
-                }}
-            />
-            <Group justify="flex-end" mt="md">
-                <Button variant="default" onClick={onClose}>
-                    Cancel
-                </Button>
-                <Button
-                    loading={loading}
-                    disabled={!name.trim() || name.trim().length > 100}
-                    onClick={() => void handleSubmit()}
-                >
-                    Save
-                </Button>
-            </Group>
-        </Modal>
-    );
+  return (
+    <Modal opened={opened} onClose={onClose} title="Rename Project">
+      <TextInput
+        label="Project name"
+        value={name}
+        onChange={event => setName(event.currentTarget.value)}
+        error={error}
+        maxLength={100}
+        onKeyDown={event => {
+          if (event.key === "Enter") {
+            void handleSubmit();
+          }
+        }}
+      />
+      <Group justify="flex-end" mt="md">
+        <Button variant="default" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          loading={loading}
+          disabled={!name.trim() || name.trim().length > 100}
+          onClick={() => void handleSubmit()}
+        >
+          Save
+        </Button>
+      </Group>
+    </Modal>
+  );
 }
 ```
 
@@ -539,39 +545,39 @@ Replace the search TextInput with a filter bar group:
 
 ```tsx
 <Group gap="sm" align="flex-end">
-    <TextInput
-        placeholder="Search projects..."
-        value={vm.searchQuery}
-        onChange={event => presenter.setSearchQuery(event.currentTarget.value)}
-        style={{ flex: 1 }}
-    />
-    <MultiSelect
-        label="Engine Status"
-        placeholder="All"
-        data={[
-            { value: "eol", label: "EOL" },
-            { value: "maintenance", label: "Maintenance" },
-            { value: "active-lts", label: "Active LTS" },
-            { value: "current", label: "Current" },
-            { value: "unknown", label: "Unknown" }
-        ]}
-        value={vm.engineStatusFilter}
-        onChange={values => presenter.setEngineStatusFilter(values)}
-        clearable
-        w={250}
-    />
-    <Select
-        label="Per page"
-        data={["10", "25", "50", "100"]}
-        value={String(vm.pageSize)}
-        onChange={value => {
-            if (value) {
-                presenter.setPage(1);
-                presenter.setSearchQuery(vm.searchQuery);
-            }
-        }}
-        w={90}
-    />
+  <TextInput
+    placeholder="Search projects..."
+    value={vm.searchQuery}
+    onChange={event => presenter.setSearchQuery(event.currentTarget.value)}
+    style={{ flex: 1 }}
+  />
+  <MultiSelect
+    label="Engine Status"
+    placeholder="All"
+    data={[
+      { value: "eol", label: "EOL" },
+      { value: "maintenance", label: "Maintenance" },
+      { value: "active-lts", label: "Active LTS" },
+      { value: "current", label: "Current" },
+      { value: "unknown", label: "Unknown" }
+    ]}
+    value={vm.engineStatusFilter}
+    onChange={values => presenter.setEngineStatusFilter(values)}
+    clearable
+    w={250}
+  />
+  <Select
+    label="Per page"
+    data={["10", "25", "50", "100"]}
+    value={String(vm.pageSize)}
+    onChange={value => {
+      if (value) {
+        presenter.setPage(1);
+        presenter.setSearchQuery(vm.searchQuery);
+      }
+    }}
+    w={90}
+  />
 </Group>
 ```
 
@@ -579,16 +585,16 @@ Wait — page size needs to go through urlFilterService. Use:
 
 ```tsx
 <Select
-    label="Per page"
-    data={["10", "25", "50", "100"]}
-    value={String(vm.pageSize)}
-    onChange={value => {
-        if (value) {
-            // Write through presenter — it updates URL
-            // Need a setPageSize method or direct URL update
-        }
-    }}
-    w={90}
+  label="Per page"
+  data={["10", "25", "50", "100"]}
+  value={String(vm.pageSize)}
+  onChange={value => {
+    if (value) {
+      // Write through presenter — it updates URL
+      // Need a setPageSize method or direct URL update
+    }
+  }}
+  w={90}
 />
 ```
 
@@ -609,13 +615,13 @@ Then in the component:
 
 ```tsx
 <Select
-    label="Per page"
-    data={["10", "25", "50", "100"]}
-    value={String(vm.pageSize)}
-    onChange={value => {
-        if (value) presenter.setPageSize(Number(value));
-    }}
-    w={90}
+  label="Per page"
+  data={["10", "25", "50", "100"]}
+  value={String(vm.pageSize)}
+  onChange={value => {
+    if (value) presenter.setPageSize(Number(value));
+  }}
+  w={90}
 />
 ```
 
@@ -667,8 +673,8 @@ Add `onRename` prop:
 
 ```typescript
 interface ProjectRowProps {
-    // ... existing ...
-    onRename: (project: ProjectListPresenter.ProjectListItem) => void;
+  // ... existing ...
+  onRename: (project: ProjectListPresenter.ProjectListItem) => void;
 }
 ```
 
@@ -682,7 +688,7 @@ Add "Added" column cell:
 
 ```tsx
 <Table.Td>
-    <Text size="sm">{formatRelativeTime(project.addedAt)}</Text>
+  <Text size="sm">{formatRelativeTime(project.addedAt)}</Text>
 </Table.Td>
 ```
 
@@ -690,12 +696,12 @@ Add `formatRelativeTime` function:
 
 ```typescript
 function formatRelativeTime(timestamp: number): string {
-    const days = Math.floor((Date.now() - timestamp) / (1000 * 60 * 60 * 24));
-    if (days === 0) return "Today";
-    if (days === 1) return "1 day ago";
-    if (days < 30) return `${days} days ago`;
-    if (days < 365) return `${Math.floor(days / 30)} months ago`;
-    return `${Math.floor(days / 365)} years ago`;
+  const days = Math.floor((Date.now() - timestamp) / (1000 * 60 * 60 * 24));
+  if (days === 0) return "Today";
+  if (days === 1) return "1 day ago";
+  if (days < 30) return `${days} days ago`;
+  if (days < 365) return `${Math.floor(days / 30)} months ago`;
+  return `${Math.floor(days / 365)} years ago`;
 }
 ```
 
@@ -707,20 +713,22 @@ Add state and modal to `ProjectListPage`:
 const [renameTarget, setRenameTarget] = useState<ProjectListPresenter.ProjectListItem | null>(null);
 
 // In ProjectRow:
-onRename={setRenameTarget}
+onRename = { setRenameTarget };
 
 // After InstallDialog:
-{renameTarget && (
+{
+  renameTarget && (
     <RenameProjectModal
-        opened={true}
-        currentName={renameTarget.name}
-        onRename={async (name) => {
-            await presenter.renameProject(renameTarget.id, name);
-            setRenameTarget(null);
-        }}
-        onClose={() => setRenameTarget(null)}
+      opened={true}
+      currentName={renameTarget.name}
+      onRename={async name => {
+        await presenter.renameProject(renameTarget.id, name);
+        setRenameTarget(null);
+      }}
+      onClose={() => setRenameTarget(null)}
     />
-)}
+  );
+}
 ```
 
 - [ ] **Step 6: Make project name editable on detail page**
@@ -733,104 +741,99 @@ import { useState } from "react";
 import { ActionIcon, Group, Stack, Text, TextInput, Title } from "@mantine/core";
 
 interface ProjectDetailHeaderProps {
-    projectName: string;
-    projectPath: string;
-    packageManager: string | null;
-    packageManagerVersion: string | null;
-    loading: boolean;
-    scanning: boolean;
-    onBack: () => void;
-    onRefresh: () => void;
-    onRename?: (name: string) => Promise<void>;
+  projectName: string;
+  projectPath: string;
+  packageManager: string | null;
+  packageManagerVersion: string | null;
+  loading: boolean;
+  scanning: boolean;
+  onBack: () => void;
+  onRefresh: () => void;
+  onRename?: (name: string) => Promise<void>;
 }
 
 export function ProjectDetailHeader({
-    projectName,
-    projectPath,
-    packageManager,
-    packageManagerVersion,
-    loading,
-    scanning,
-    onBack,
-    onRefresh,
-    onRename
+  projectName,
+  projectPath,
+  packageManager,
+  packageManagerVersion,
+  loading,
+  scanning,
+  onBack,
+  onRefresh,
+  onRename
 }: ProjectDetailHeaderProps): React.ReactNode {
-    const [editing, setEditing] = useState(false);
-    const [editValue, setEditValue] = useState(projectName);
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState(projectName);
 
-    const handleSave = async (): Promise<void> => {
-        const trimmed = editValue.trim();
-        if (!trimmed || trimmed === projectName || !onRename) {
-            setEditing(false);
-            setEditValue(projectName);
-            return;
-        }
-        try {
-            await onRename(trimmed);
-            setEditing(false);
-        } catch {
-            setEditValue(projectName);
-            setEditing(false);
-        }
-    };
+  const handleSave = async (): Promise<void> => {
+    const trimmed = editValue.trim();
+    if (!trimmed || trimmed === projectName || !onRename) {
+      setEditing(false);
+      setEditValue(projectName);
+      return;
+    }
+    try {
+      await onRename(trimmed);
+      setEditing(false);
+    } catch {
+      setEditValue(projectName);
+      setEditing(false);
+    }
+  };
 
-    return (
-        <>
-            <Group gap="sm">
-                <ActionIcon variant="subtle" size="lg" onClick={onBack}>
-                    &larr;
-                </ActionIcon>
-                {editing ? (
-                    <TextInput
-                        value={editValue}
-                        onChange={event => setEditValue(event.currentTarget.value)}
-                        onBlur={() => void handleSave()}
-                        onKeyDown={event => {
-                            if (event.key === "Enter") void handleSave();
-                            if (event.key === "Escape") {
-                                setEditing(false);
-                                setEditValue(projectName);
-                            }
-                        }}
-                        autoFocus
-                        maxLength={100}
-                        size="lg"
-                    />
-                ) : (
-                    <Title
-                        order={2}
-                        style={{ cursor: onRename ? "pointer" : "default" }}
-                        onClick={() => {
-                            if (onRename) {
-                                setEditing(true);
-                                setEditValue(projectName);
-                            }
-                        }}
-                    >
-                        {projectName}
-                    </Title>
-                )}
-                <ActionIcon
-                    variant="subtle"
-                    size="lg"
-                    onClick={onRefresh}
-                    loading={loading || scanning}
-                >
-                    &#x21bb;
-                </ActionIcon>
-            </Group>
-            <Stack gap={4}>
-                <Text c="dimmed" size="sm">
-                    {projectPath}
-                </Text>
-                <Text size="sm">
-                    {packageManager
-                        ? `${packageManager.charAt(0).toUpperCase()}${packageManager.slice(1)} ${packageManagerVersion ?? ""}`.trim()
-                        : `Package Manager: ${packageManagerVersion ?? "Unknown"}`}
-                </Text>
-            </Stack>
-        </>
-    );
+  return (
+    <>
+      <Group gap="sm">
+        <ActionIcon variant="subtle" size="lg" onClick={onBack}>
+          &larr;
+        </ActionIcon>
+        {editing ? (
+          <TextInput
+            value={editValue}
+            onChange={event => setEditValue(event.currentTarget.value)}
+            onBlur={() => void handleSave()}
+            onKeyDown={event => {
+              if (event.key === "Enter") void handleSave();
+              if (event.key === "Escape") {
+                setEditing(false);
+                setEditValue(projectName);
+              }
+            }}
+            autoFocus
+            maxLength={100}
+            size="lg"
+          />
+        ) : (
+          <Title
+            order={2}
+            style={{ cursor: onRename ? "pointer" : "default" }}
+            onClick={() => {
+              if (onRename) {
+                setEditing(true);
+                setEditValue(projectName);
+              }
+            }}
+          >
+            {projectName}
+          </Title>
+        )}
+        <ActionIcon variant="subtle" size="lg" onClick={onRefresh} loading={loading || scanning}>
+          &#x21bb;
+        </ActionIcon>
+      </Group>
+      <Stack gap={4}>
+        <Text c="dimmed" size="sm">
+          {projectPath}
+        </Text>
+        <Text size="sm">
+          {packageManager
+            ? `${packageManager.charAt(0).toUpperCase()}${packageManager.slice(1)} ${packageManagerVersion ?? ""}`.trim()
+            : `Package Manager: ${packageManagerVersion ?? "Unknown"}`}
+        </Text>
+      </Stack>
+    </>
+  );
 }
 ```
 
@@ -838,15 +841,15 @@ In `ProjectDetailPage.tsx`, pass `onRename` to the header. This requires a renam
 
 ```tsx
 <ProjectDetailHeader
-    projectName={project.name}
-    projectPath={project.path}
-    packageManager={project.packageManager}
-    packageManagerVersion={project.pmVersion}
-    loading={vm.loading}
-    scanning={vm.scanning}
-    onBack={() => navigate("/projects")}
-    onRefresh={() => presenter.load(projectId)}
-    onRename={async (name) => presenter.renameProject(name)}
+  projectName={project.name}
+  projectPath={project.path}
+  packageManager={project.packageManager}
+  packageManagerVersion={project.pmVersion}
+  loading={vm.loading}
+  scanning={vm.scanning}
+  onBack={() => navigate("/projects")}
+  onRefresh={() => presenter.load(projectId)}
+  onRename={async name => presenter.renameProject(name)}
 />
 ```
 
@@ -874,6 +877,7 @@ public setPageSize = (size: number): void => {
 Run: `yarn full > /tmp/build-output.txt 2>&1`
 
 Read tail. Fix any type errors or test failures. Common issues:
+
 - Test harness may need updating for new presenter methods/vm fields
 - ProjectRow component tests may need `onRename` prop
 - Detail presenter may need `renameProject` added

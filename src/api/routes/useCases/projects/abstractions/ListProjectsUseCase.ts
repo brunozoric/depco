@@ -6,6 +6,9 @@ export interface IListProjectsUseCaseParams {
     pageSize?: number | undefined;
     search?: string | undefined;
     teamId?: string | undefined;
+    sortBy?: "name" | "addedAt" | "lastScannedAt" | "engineStatus" | undefined;
+    sortOrder?: "asc" | "desc" | undefined;
+    engineStatus?: string | undefined;
 }
 
 export interface IProjectTeamBadge {
@@ -25,6 +28,8 @@ export interface IProjectListItem {
     security: SecurityService.CheckResult | null;
     hasNodeModules: boolean;
     teams: IProjectTeamBadge[];
+    engineStatus: string | null;
+    rootEnginesNode: string | null;
 }
 
 export interface IListProjectsUseCaseData {

@@ -87,4 +87,132 @@ describe("ListProjectsUseCase", () => {
             expect(result.value.total).toBe(0);
         }
     });
+
+    it("sorts by name ascending by default", async () => {
+        const { useCase, db } = setup();
+        insertProject(db, { name: "charlie" });
+        insertProject(db, { name: "alpha" });
+        insertProject(db, { name: "bravo" });
+
+        const result = await useCase.execute({});
+
+        expect(result.isOk()).toBe(true);
+        if (!result.isOk()) {
+            return;
+        }
+        const names = result.value.items.map(item => item.name);
+        expect(names).toEqual(["alpha", "bravo", "charlie"]);
+    });
+
+    it("sorts by name descending when sortOrder is desc", async () => {
+        const { useCase, db } = setup();
+        insertProject(db, { name: "alpha" });
+        insertProject(db, { name: "charlie" });
+
+        const result = await useCase.execute({ sortBy: "name", sortOrder: "desc" });
+
+        expect(result.isOk()).toBe(true);
+        if (!result.isOk()) {
+            return;
+        }
+        const names = result.value.items.map(item => item.name);
+        expect(names).toEqual(["charlie", "alpha"]);
+    });
+
+    it("sorts by lastScannedAt with nulls last", async () => {
+        const { useCase, db } = setup();
+        insertProject(db, { name: "never-scanned", lastScannedAt: null });
+        insertProject(db, { name: "old", lastScannedAt: 1000 });
+        insertProject(db, { name: "recent", lastScannedAt: 5000 });
+
+        const result = await useCase.execute({ sortBy: "lastScannedAt", sortOrder: "desc" });
+
+        expect(result.isOk()).toBe(true);
+        if (!result.isOk()) {
+            return;
+        }
+        const names = result.value.items.map(item => item.name);
+        expect(names).toEqual(["recent", "old", "never-scanned"]);
+    });
+
+    it("sorts by engineStatus with eol first (ascending)", async () => {
+        const { useCase, db } = setup();
+        insertProject(db, { name: "healthy", engineStatus: "current" });
+        insertProject(db, { name: "risky", engineStatus: "eol" });
+        insertProject(db, { name: "aging", engineStatus: "maintenance" });
+
+        const result = await useCase.execute({ sortBy: "engineStatus", sortOrder: "asc" });
+
+        expect(result.isOk()).toBe(true);
+        if (!result.isOk()) {
+            return;
+        }
+        const names = result.value.items.map(item => item.name);
+        expect(names).toEqual(["risky", "aging", "healthy"]);
+    });
+
+    it("sorts by engineStatus with null (never scanned) last", async () => {
+        const { useCase, db } = setup();
+        insertProject(db, { name: "no-scan", engineStatus: null });
+        insertProject(db, { name: "eol-project", engineStatus: "eol" });
+
+        const result = await useCase.execute({ sortBy: "engineStatus", sortOrder: "asc" });
+
+        expect(result.isOk()).toBe(true);
+        if (!result.isOk()) {
+            return;
+        }
+        const names = result.value.items.map(item => item.name);
+        expect(names).toEqual(["eol-project", "no-scan"]);
+    });
+
+    it("filters by single engine status", async () => {
+        const { useCase, db } = setup();
+        insertProject(db, { name: "eol-one", engineStatus: "eol" });
+        insertProject(db, { name: "current-one", engineStatus: "current" });
+
+        const result = await useCase.execute({ engineStatus: "eol" });
+
+        expect(result.isOk()).toBe(true);
+        if (!result.isOk()) {
+            return;
+        }
+        expect(result.value.items).toHaveLength(1);
+        expect(result.value.items[0]!.name).toBe("eol-one");
+        expect(result.value.total).toBe(1);
+    });
+
+    it("filters by multiple comma-separated engine statuses", async () => {
+        const { useCase, db } = setup();
+        insertProject(db, { name: "eol-one", engineStatus: "eol" });
+        insertProject(db, { name: "maint-one", engineStatus: "maintenance" });
+        insertProject(db, { name: "current-one", engineStatus: "current" });
+
+        const result = await useCase.execute({ engineStatus: "eol,maintenance" });
+
+        expect(result.isOk()).toBe(true);
+        if (!result.isOk()) {
+            return;
+        }
+        expect(result.value.items).toHaveLength(2);
+        expect(result.value.total).toBe(2);
+    });
+
+    it("includes engineStatus and rootEnginesNode in response items", async () => {
+        const { useCase, db } = setup();
+        insertProject(db, {
+            name: "with-engine",
+            engineStatus: "active-lts",
+            rootEnginesNode: ">=18"
+        });
+
+        const result = await useCase.execute({});
+
+        expect(result.isOk()).toBe(true);
+        if (!result.isOk()) {
+            return;
+        }
+        expect(result.value.items[0]!.engineStatus).toBe("active-lts");
+        expect(result.value.items[0]!.rootEnginesNode).toBe(">=18");
+    });
 });

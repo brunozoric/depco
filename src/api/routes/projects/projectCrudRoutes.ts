@@ -44,7 +44,10 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
             page: request.query.page,
             pageSize: request.query.pageSize,
             search: request.query.search,
-            teamId: request.query.teamId
+            teamId: request.query.teamId,
+            sortBy: request.query.sortBy,
+            sortOrder: request.query.sortOrder,
+            engineStatus: request.query.engineStatus
         });
 
         return sendList<ListProjectsResponse>({

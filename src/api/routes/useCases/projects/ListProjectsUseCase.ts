@@ -1,12 +1,42 @@
 import { existsSync } from "fs";
 import { join } from "path";
-import { eq, sql, inArray, like, or } from "drizzle-orm";
+import { eq, sql, inArray, like, or, asc, desc } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { Result, unexpectedError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { SecurityService } from "#api/services/Security/index.js";
 import { projects, teams, teamProjects } from "#api/db/schema.js";
 import { ListProjectsUseCase as Abstraction } from "./abstractions/ListProjectsUseCase.js";
+
+const ENGINE_STATUS_PRIORITY = sql`CASE ${projects.engineStatus}
+    WHEN 'eol' THEN 0
+    WHEN 'maintenance' THEN 1
+    WHEN 'unknown' THEN 2
+    WHEN 'active-lts' THEN 3
+    WHEN 'current' THEN 4
+    ELSE 5
+END`;
+
+function buildOrderBy(sortBy: string | undefined, sortOrder: string | undefined): SQL[] {
+    const direction = sortOrder === "desc" ? desc : asc;
+
+    switch (sortBy) {
+        case "addedAt":
+            return [direction(projects.addedAt)];
+        case "lastScannedAt":
+            return [
+                asc(sql`CASE WHEN ${projects.lastScannedAt} IS NULL THEN 1 ELSE 0 END`),
+                direction(projects.lastScannedAt)
+            ];
+        case "engineStatus":
+            return [
+                sortOrder === "desc" ? desc(ENGINE_STATUS_PRIORITY) : asc(ENGINE_STATUS_PRIORITY)
+            ];
+        case "name":
+        default:
+            return [direction(projects.name)];
+    }
+}
 
 class ListProjectsUseCaseImpl implements Abstraction.Interface {
     public constructor(
@@ -44,6 +74,11 @@ class ListProjectsUseCaseImpl implements Abstraction.Interface {
                 conditions.push(inArray(projects.id, filteredProjectIds));
             }
 
+            if (params.engineStatus) {
+                const statuses = params.engineStatus.split(",").map(s => s.trim());
+                conditions.push(inArray(projects.engineStatus, statuses));
+            }
+
             const whereClause =
                 conditions.length > 0 ? sql.join(conditions, sql` AND `) : undefined;
 
@@ -58,7 +93,12 @@ class ListProjectsUseCaseImpl implements Abstraction.Interface {
             if (whereClause) {
                 listQuery.where(whereClause);
             }
-            const pagedProjects = await listQuery.limit(pageSize).offset(offset).all();
+            const orderClauses = buildOrderBy(params.sortBy, params.sortOrder);
+            const pagedProjects = await listQuery
+                .orderBy(...orderClauses)
+                .limit(pageSize)
+                .offset(offset)
+                .all();
 
             const projectIds = pagedProjects.map(p => p.id);
             const teamRows =
@@ -90,7 +130,9 @@ class ListProjectsUseCaseImpl implements Abstraction.Interface {
                         ...project,
                         security,
                         hasNodeModules: existsSync(join(project.path, "node_modules")),
-                        teams: teamsByProject.get(project.id) ?? []
+                        teams: teamsByProject.get(project.id) ?? [],
+                        engineStatus: project.engineStatus ?? null,
+                        rootEnginesNode: project.rootEnginesNode ?? null
                     };
                 })
             );

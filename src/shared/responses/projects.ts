@@ -21,7 +21,9 @@ export const projectSchema = z.object({
     lastScannedAt: z.number().nullable(),
     security: securityStatusSchema.nullable().optional(),
     hasNodeModules: z.boolean(),
-    teams: z.array(projectTeamBadgeSchema).optional()
+    teams: z.array(projectTeamBadgeSchema).optional(),
+    engineStatus: z.string().nullable().optional(),
+    rootEnginesNode: z.string().nullable().optional()
 });
 
 export const dependencySchema = z.object({
