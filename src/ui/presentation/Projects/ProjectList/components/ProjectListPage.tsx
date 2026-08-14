@@ -8,7 +8,9 @@ import {
     Group,
     Loader,
     Menu,
+    MultiSelect,
     Pagination,
+    Select,
     Stack,
     Table,
     Text,
@@ -20,17 +22,30 @@ import type { ProjectListPresenter } from "../abstractions/ProjectListPresenter.
 import { AddProjectModal } from "./AddProjectModal.js";
 import { ProjectRow } from "./ProjectRow.js";
 import { InstallDialog } from "../../ProjectDetail/components/InstallDialog.js";
+import { SortableColumnHeader } from "./SortableColumnHeader.js";
+import { RenameProjectModal } from "./RenameProjectModal.js";
 
-interface ProjectListPageProps {
+interface IProjectListPageProps {
     presenter: ProjectListPresenter.Interface;
 }
 
+const ENGINE_STATUS_OPTIONS = [
+    { value: "eol", label: "EOL" },
+    { value: "maintenance", label: "Maintenance" },
+    { value: "active-lts", label: "Active LTS" },
+    { value: "current", label: "Current" },
+    { value: "unknown", label: "Unknown" }
+];
+
 export const ProjectListPage = observer(function ProjectListPage({
     presenter
-}: ProjectListPageProps): React.ReactNode {
+}: IProjectListPageProps): React.ReactNode {
     const { vm } = presenter;
     const [addModalOpened, setAddModalOpened] = useState(false);
     const [installTarget, setInstallTarget] = useState<ProjectListPresenter.ProjectListItem | null>(
+        null
+    );
+    const [renameTarget, setRenameTarget] = useState<ProjectListPresenter.ProjectListItem | null>(
         null
     );
     const [bulkScanning, setBulkScanning] = useState(false);
@@ -108,11 +123,34 @@ export const ProjectListPage = observer(function ProjectListPage({
                     <Button onClick={() => setAddModalOpened(true)}>Add Project</Button>
                 </Group>
             </Group>
-            <TextInput
-                placeholder="Search projects..."
-                value={vm.searchQuery}
-                onChange={event => presenter.setSearchQuery(event.currentTarget.value)}
-            />
+            <Group gap="sm" align="flex-end">
+                <TextInput
+                    placeholder="Search projects..."
+                    value={vm.searchQuery}
+                    onChange={event => presenter.setSearchQuery(event.currentTarget.value)}
+                    style={{ flex: 1 }}
+                />
+                <MultiSelect
+                    label="Engine Status"
+                    placeholder="All"
+                    data={ENGINE_STATUS_OPTIONS}
+                    value={vm.engineStatusFilter}
+                    onChange={values => presenter.setEngineStatusFilter(values)}
+                    clearable
+                    w={250}
+                />
+                <Select
+                    label="Per page"
+                    data={["10", "25", "50", "100"]}
+                    value={String(vm.pageSize)}
+                    onChange={value => {
+                        if (value) {
+                            presenter.setPageSize(Number(value));
+                        }
+                    }}
+                    w={90}
+                />
+            </Group>
             {selectedCount > 0 && (
                 <Group bg="blue.0" p="xs" style={{ borderRadius: 4 }}>
                     <Text size="sm" fw={500}>
@@ -150,13 +188,38 @@ export const ProjectListPage = observer(function ProjectListPage({
                                     }
                                 />
                             </Table.Th>
-                            <Table.Th>Name</Table.Th>
+                            <SortableColumnHeader
+                                label="Name"
+                                column="name"
+                                activeSortBy={vm.sortBy}
+                                activeSortOrder={vm.sortOrder}
+                                onSort={presenter.setSortBy}
+                            />
                             <Table.Th>Path</Table.Th>
                             <Table.Th>Package Manager</Table.Th>
                             <Table.Th>Dependencies</Table.Th>
-                            <Table.Th>Node.js</Table.Th>
+                            <SortableColumnHeader
+                                label="Node.js"
+                                column="engineStatus"
+                                activeSortBy={vm.sortBy}
+                                activeSortOrder={vm.sortOrder}
+                                onSort={presenter.setSortBy}
+                            />
                             <Table.Th>Security</Table.Th>
-                            <Table.Th>Last Scanned</Table.Th>
+                            <SortableColumnHeader
+                                label="Last Scanned"
+                                column="lastScannedAt"
+                                activeSortBy={vm.sortBy}
+                                activeSortOrder={vm.sortOrder}
+                                onSort={presenter.setSortBy}
+                            />
+                            <SortableColumnHeader
+                                label="Added"
+                                column="addedAt"
+                                activeSortBy={vm.sortBy}
+                                activeSortOrder={vm.sortOrder}
+                                onSort={presenter.setSortBy}
+                            />
                             <Table.Th style={{ textAlign: "right" }}>Actions</Table.Th>
                         </Table.Tr>
                     </Table.Thead>
@@ -170,6 +233,7 @@ export const ProjectListPage = observer(function ProjectListPage({
                                 onRemove={presenter.removeProject}
                                 onInstall={setInstallTarget}
                                 onScan={presenter.scanProject}
+                                onRename={setRenameTarget}
                             />
                         ))}
                     </Table.Tbody>
@@ -194,6 +258,17 @@ export const ProjectListPage = observer(function ProjectListPage({
                     project={installTarget}
                     getInstallOptions={presenter.getInstallOptions}
                     onInstall={flags => presenter.install(installTarget.id, flags)}
+                />
+            )}
+            {renameTarget && (
+                <RenameProjectModal
+                    opened={true}
+                    currentName={renameTarget.name}
+                    onRename={async name => {
+                        await presenter.renameProject(renameTarget.id, name);
+                        setRenameTarget(null);
+                    }}
+                    onClose={() => setRenameTarget(null)}
                 />
             )}
         </Stack>

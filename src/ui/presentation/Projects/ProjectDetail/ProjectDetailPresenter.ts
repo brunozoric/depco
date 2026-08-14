@@ -1,4 +1,6 @@
 import { computed, makeAutoObservable, runInAction } from "mobx";
+import { notifications } from "@mantine/notifications";
+import { getErrorMessage } from "#shared/errors.js";
 import type { UpgradeFilter } from "./abstractions/ProjectDetailPresenter.js";
 import { ProjectDetailPresenter as Abstraction } from "./abstractions/ProjectDetailPresenter.js";
 import { LoadProjectsUseCase } from "../useCases/abstractions/LoadProjectsUseCase.js";
@@ -411,6 +413,25 @@ class ProjectDetailPresenterImpl implements Abstraction.Interface {
             return;
         }
         await this.engineManager.scan(this.currentProjectId);
+    };
+
+    public renameProject = async (name: string): Promise<void> => {
+        if (!this.currentProjectId) {
+            return;
+        }
+        try {
+            const updated = await this.projectsGateway.update(this.currentProjectId, { name });
+            runInAction(() => {
+                this.projectsRepository.updateProject(updated);
+            });
+        } catch (error) {
+            notifications.show({
+                color: "red",
+                title: "Rename failed",
+                message: getErrorMessage(error, "Failed to rename project")
+            });
+            throw error;
+        }
     };
 
     public dispose = (): void => {

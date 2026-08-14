@@ -17,13 +17,14 @@ import { ConfirmDialog } from "#ui/infrastructure/Shared/components/ConfirmDialo
 import { EngineStatusBadge } from "#ui/infrastructure/Shared/engines/EngineStatusBadge.js";
 import type { ProjectListPresenter } from "../abstractions/ProjectListPresenter.js";
 
-interface ProjectRowProps {
+interface IProjectRowProps {
     project: ProjectListPresenter.ProjectListItem;
     selected: boolean;
     onToggleSelect: (id: string) => void;
     onRemove: (id: string) => Promise<void>;
     onInstall: (project: ProjectListPresenter.ProjectListItem) => void;
     onScan: (id: string) => Promise<void>;
+    onRename: (project: ProjectListPresenter.ProjectListItem) => void;
 }
 
 function formatLastScanned(lastScannedAt: number | null): string {
@@ -31,6 +32,23 @@ function formatLastScanned(lastScannedAt: number | null): string {
         return "Never";
     }
     return new Date(lastScannedAt).toLocaleString();
+}
+
+function formatRelativeTime(timestamp: number): string {
+    const days = Math.floor((Date.now() - timestamp) / (1000 * 60 * 60 * 24));
+    if (days === 0) {
+        return "Today";
+    }
+    if (days === 1) {
+        return "1 day ago";
+    }
+    if (days < 30) {
+        return `${days} days ago`;
+    }
+    if (days < 365) {
+        return `${Math.floor(days / 30)} months ago`;
+    }
+    return `${Math.floor(days / 365)} years ago`;
 }
 
 const ACRONYMS = new Set(["npm", "pnpm", "yarn"]);
@@ -88,8 +106,9 @@ export const ProjectRow = observer(function ProjectRow({
     onToggleSelect,
     onRemove,
     onInstall,
-    onScan
-}: ProjectRowProps): React.ReactNode {
+    onScan,
+    onRename
+}: IProjectRowProps): React.ReactNode {
     const [confirmRemove, setConfirmRemove] = useState(false);
 
     return (
@@ -169,6 +188,9 @@ export const ProjectRow = observer(function ProjectRow({
                     )}
                 </Group>
             </Table.Td>
+            <Table.Td>
+                <Text size="sm">{formatRelativeTime(project.addedAt)}</Text>
+            </Table.Td>
             <Table.Td style={{ textAlign: "right" }}>
                 <Menu shadow="md" width={160} position="bottom-end">
                     <Menu.Target>
@@ -187,6 +209,7 @@ export const ProjectRow = observer(function ProjectRow({
                         >
                             Install
                         </Menu.Item>
+                        <Menu.Item onClick={() => onRename(project)}>Rename</Menu.Item>
                         <Menu.Divider />
                         <Menu.Item color="red" onClick={() => setConfirmRemove(true)}>
                             Remove

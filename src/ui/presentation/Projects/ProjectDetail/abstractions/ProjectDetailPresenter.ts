@@ -172,6 +172,7 @@ export interface IProjectDetailPresenter {
     stopChangelogTracking: () => void;
     toggleMaintenance: () => void;
     scanEngines: () => Promise<void>;
+    renameProject: (name: string) => Promise<void>;
     dispose: () => void;
 }
 

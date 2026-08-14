@@ -89,6 +89,7 @@ export const ProjectDetailPage = observer(function ProjectDetailPage({
                 scanning={vm.scanning}
                 onBack={() => navigate("/")}
                 onRefresh={() => presenter.load(projectId)}
+                onRename={async name => presenter.renameProject(name)}
             />
 
             <MultiSelect
