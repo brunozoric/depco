@@ -1,4 +1,4 @@
-import { createAbstraction, Result } from "#shared/index.js";
+import { createAbstraction, Result, type IUnexpectedError } from "#shared/index.js";
 
 export interface IRescanPackageUseCaseParams {
     packageName: string;
@@ -6,12 +6,6 @@ export interface IRescanPackageUseCaseParams {
 
 export interface IRescanPackageUseCaseData {
     updated: number;
-}
-
-export interface IUnexpectedError {
-    code: "UNEXPECTED_ERROR";
-    statusCode: number;
-    message: string;
 }
 
 export interface IRescanPackageUseCaseErrors {

@@ -1,4 +1,4 @@
-import { createAbstraction, Result } from "#shared/index.js";
+import { createAbstraction, Result, type IUnexpectedError } from "#shared/index.js";
 import type { ITeamWithStats } from "../teamStatsHelper.js";
 
 export interface ICreateTeamUseCaseParams {
@@ -11,12 +11,6 @@ export type ICreateTeamUseCaseData = ITeamWithStats;
 export interface INameConflictError {
     code: "TEAM_NAME_CONFLICT";
     statusCode: 409;
-    message: string;
-}
-
-export interface IUnexpectedError {
-    code: "UNEXPECTED_ERROR";
-    statusCode: number;
     message: string;
 }
 

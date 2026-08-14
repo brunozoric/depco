@@ -1,4 +1,4 @@
-import { createAbstraction, Result } from "#shared/index.js";
+import { createAbstraction, Result, type IUnexpectedError } from "#shared/index.js";
 import type { PackageManagerDriver } from "#api/services/PackageManager/abstractions/PackageManagerDriver.js";
 
 export interface IGetInstallOptionsUseCaseParams {
@@ -13,12 +13,6 @@ export interface IGetInstallOptionsUseCaseData {
 export interface IUnknownPackageManagerError {
     code: "UNKNOWN_PACKAGE_MANAGER";
     statusCode: 400;
-    message: string;
-}
-
-export interface IUnexpectedError {
-    code: "UNEXPECTED_ERROR";
-    statusCode: number;
     message: string;
 }
 

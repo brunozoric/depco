@@ -1,4 +1,4 @@
-import { createAbstraction, Result } from "#shared/index.js";
+import { createAbstraction, Result, type IUnexpectedError } from "#shared/index.js";
 
 export interface ISearchDependencyPackagesUseCaseParams {
     projectId: string;
@@ -8,12 +8,6 @@ export interface ISearchDependencyPackagesUseCaseParams {
 
 export interface ISearchDependencyPackagesUseCaseData {
     packages: string[];
-}
-
-export interface IUnexpectedError {
-    code: "UNEXPECTED_ERROR";
-    statusCode: number;
-    message: string;
 }
 
 export interface ISearchDependencyPackagesUseCaseErrors {

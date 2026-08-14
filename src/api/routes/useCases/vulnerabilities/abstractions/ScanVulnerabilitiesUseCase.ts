@@ -1,4 +1,9 @@
-import { createAbstraction, Result } from "#shared/index.js";
+import {
+    createAbstraction,
+    Result,
+    type IUnexpectedError,
+    type IProjectNotFoundError
+} from "#shared/index.js";
 import type { VulnerabilitySeverityCounts } from "#shared/vulnerabilities/types.js";
 
 export interface IScanVulnerabilitiesUseCaseParams {
@@ -10,21 +15,9 @@ export interface IScanVulnerabilitiesUseCaseData {
     counts: VulnerabilitySeverityCounts;
 }
 
-export interface IProjectNotFoundError {
-    code: "PROJECT_NOT_FOUND";
-    statusCode: 404;
-    message: string;
-}
-
 export interface INoPackageManagerError {
     code: "NO_PACKAGE_MANAGER";
     statusCode: 422;
-    message: string;
-}
-
-export interface IUnexpectedError {
-    code: "UNEXPECTED_ERROR";
-    statusCode: number;
     message: string;
 }
 

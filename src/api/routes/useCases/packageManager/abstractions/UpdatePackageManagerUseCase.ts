@@ -1,4 +1,9 @@
-import { createAbstraction, Result } from "#shared/index.js";
+import {
+    createAbstraction,
+    Result,
+    type IUnexpectedError,
+    type IProjectNotFoundError
+} from "#shared/index.js";
 
 export interface IUpdatePackageManagerUseCaseParams {
     id: string;
@@ -9,21 +14,9 @@ export interface IUpdatePackageManagerUseCaseData {
     jobId: string;
 }
 
-export interface IProjectNotFoundError {
-    code: "PROJECT_NOT_FOUND";
-    statusCode: 404;
-    message: string;
-}
-
 export interface IEnqueueForbiddenError {
     code: "ENQUEUE_FORBIDDEN";
     statusCode: 403;
-    message: string;
-}
-
-export interface IUnexpectedError {
-    code: "UNEXPECTED_ERROR";
-    statusCode: number;
     message: string;
 }
 

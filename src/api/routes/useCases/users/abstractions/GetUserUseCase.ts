@@ -1,4 +1,4 @@
-import { createAbstraction, Result } from "#shared/index.js";
+import { createAbstraction, Result, type IUnexpectedError } from "#shared/index.js";
 import type { UserResponse } from "#shared/users/index.js";
 
 export interface IGetUserUseCaseParams {
@@ -10,12 +10,6 @@ export type IGetUserUseCaseData = UserResponse;
 export interface IUserNotFoundError {
     code: "USER_NOT_FOUND";
     statusCode: 404;
-    message: string;
-}
-
-export interface IUnexpectedError {
-    code: "UNEXPECTED_ERROR";
-    statusCode: number;
     message: string;
 }
 

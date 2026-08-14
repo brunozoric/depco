@@ -1,4 +1,4 @@
-import { createAbstraction, Result } from "#shared/index.js";
+import { createAbstraction, Result, type IUnexpectedError } from "#shared/index.js";
 import type { IAppSettingItem } from "../appSettingsHelper.js";
 
 export interface IUpsertAppSettingUseCaseParams {
@@ -11,12 +11,6 @@ export type IUpsertAppSettingUseCaseData = IAppSettingItem;
 export interface IEncryptionUnavailableError {
     code: "ENCRYPTION_UNAVAILABLE";
     statusCode: 400;
-    message: string;
-}
-
-export interface IUnexpectedError {
-    code: "UNEXPECTED_ERROR";
-    statusCode: number;
     message: string;
 }
 

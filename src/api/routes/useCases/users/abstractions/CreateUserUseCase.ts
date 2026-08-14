@@ -1,4 +1,4 @@
-import { createAbstraction, Result } from "#shared/index.js";
+import { createAbstraction, Result, type IUnexpectedError } from "#shared/index.js";
 import type { UserPermission, UserResponse } from "#shared/users/index.js";
 
 export interface ICreateUserUseCaseParams {
@@ -9,12 +9,6 @@ export interface ICreateUserUseCaseParams {
 }
 
 export type ICreateUserUseCaseData = UserResponse;
-
-export interface IUnexpectedError {
-    code: "UNEXPECTED_ERROR";
-    statusCode: number;
-    message: string;
-}
 
 export interface ICreateUserUseCaseErrors {
     unexpected: IUnexpectedError;

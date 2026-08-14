@@ -1,4 +1,4 @@
-import { createAbstraction, Result } from "#shared/index.js";
+import { createAbstraction, Result, type IUnexpectedError } from "#shared/index.js";
 
 export interface ICloneProjectUseCaseParams {
     url: string;
@@ -37,12 +37,6 @@ export interface IDestinationNotFoundError {
 export interface IProjectAlreadyRegisteredError {
     code: "PROJECT_ALREADY_REGISTERED";
     statusCode: 409;
-    message: string;
-}
-
-export interface IUnexpectedError {
-    code: "UNEXPECTED_ERROR";
-    statusCode: number;
     message: string;
 }
 

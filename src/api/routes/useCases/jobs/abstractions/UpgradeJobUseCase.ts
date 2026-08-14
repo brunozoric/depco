@@ -1,4 +1,9 @@
-import { createAbstraction, Result } from "#shared/index.js";
+import {
+    createAbstraction,
+    Result,
+    type IUnexpectedError,
+    type IProjectNotFoundError
+} from "#shared/index.js";
 
 export interface IUpgradeJobUseCasePackageInput {
     name: string;
@@ -15,21 +20,9 @@ export interface IUpgradeJobUseCaseData {
     jobId: string;
 }
 
-export interface IProjectNotFoundError {
-    code: "PROJECT_NOT_FOUND";
-    statusCode: 404;
-    message: string;
-}
-
 export interface IEnqueueFailedError {
     code: "ENQUEUE_FAILED";
     statusCode: 403;
-    message: string;
-}
-
-export interface IUnexpectedError {
-    code: "UNEXPECTED_ERROR";
-    statusCode: number;
     message: string;
 }
 

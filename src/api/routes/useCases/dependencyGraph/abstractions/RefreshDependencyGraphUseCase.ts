@@ -1,4 +1,9 @@
-import { createAbstraction, Result } from "#shared/index.js";
+import {
+    createAbstraction,
+    Result,
+    type IUnexpectedError,
+    type IProjectNotFoundError
+} from "#shared/index.js";
 
 export interface IRefreshDependencyGraphUseCaseParams {
     projectId: string;
@@ -8,21 +13,9 @@ export interface IRefreshDependencyGraphUseCaseData {
     edgeCount: number;
 }
 
-export interface IProjectNotFoundError {
-    code: "PROJECT_NOT_FOUND";
-    statusCode: 404;
-    message: string;
-}
-
 export interface INoPackageManagerError {
     code: "NO_PACKAGE_MANAGER";
     statusCode: 400;
-    message: string;
-}
-
-export interface IUnexpectedError {
-    code: "UNEXPECTED_ERROR";
-    statusCode: number;
     message: string;
 }
 

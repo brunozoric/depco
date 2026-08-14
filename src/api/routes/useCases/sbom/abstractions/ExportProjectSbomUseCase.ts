@@ -1,4 +1,9 @@
-import { createAbstraction, Result } from "#shared/index.js";
+import {
+    createAbstraction,
+    Result,
+    type IUnexpectedError,
+    type IProjectNotFoundError
+} from "#shared/index.js";
 
 export interface IExportProjectSbomUseCaseParams {
     projectId: string;
@@ -9,18 +14,6 @@ export interface IExportProjectSbomUseCaseData {
     content: Record<string, unknown>;
     filename: string;
     mediaType: string;
-}
-
-export interface IProjectNotFoundError {
-    code: "PROJECT_NOT_FOUND";
-    statusCode: 404;
-    message: string;
-}
-
-export interface IUnexpectedError {
-    code: "UNEXPECTED_ERROR";
-    statusCode: number;
-    message: string;
 }
 
 export interface IExportProjectSbomUseCaseErrors {

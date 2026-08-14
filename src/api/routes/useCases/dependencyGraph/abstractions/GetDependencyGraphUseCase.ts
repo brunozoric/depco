@@ -1,4 +1,4 @@
-import { createAbstraction, Result } from "#shared/index.js";
+import { createAbstraction, Result, type IUnexpectedError } from "#shared/index.js";
 import type { DependencyGraphService } from "#api/services/DependencyGraph/index.js";
 
 export interface IGetDependencyGraphUseCaseParams {
@@ -13,12 +13,6 @@ export interface IGetDependencyGraphPathsResult {
 export type IGetDependencyGraphUseCaseData =
     | DependencyGraphService.Graph
     | IGetDependencyGraphPathsResult;
-
-export interface IUnexpectedError {
-    code: "UNEXPECTED_ERROR";
-    statusCode: number;
-    message: string;
-}
 
 export interface IGetDependencyGraphUseCaseErrors {
     unexpected: IUnexpectedError;

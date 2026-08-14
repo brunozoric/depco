@@ -1,4 +1,4 @@
-import { createAbstraction, Result } from "#shared/index.js";
+import { createAbstraction, Result, type IUnexpectedError } from "#shared/index.js";
 
 export interface IExportAllSbomUseCaseParams {
     format: string;
@@ -8,12 +8,6 @@ export interface IExportAllSbomUseCaseData {
     content: Record<string, unknown>;
     filename: string;
     mediaType: string;
-}
-
-export interface IUnexpectedError {
-    code: "UNEXPECTED_ERROR";
-    statusCode: number;
-    message: string;
 }
 
 export interface IExportAllSbomUseCaseErrors {

@@ -1,4 +1,4 @@
-import { createAbstraction, Result } from "#shared/index.js";
+import { createAbstraction, Result, type IUnexpectedError } from "#shared/index.js";
 import type { UserPermission, UserResponse } from "#shared/users/index.js";
 
 export interface IUpdateUserUseCaseParams {
@@ -22,12 +22,6 @@ export interface IUserNotFoundError {
 export interface IInsufficientPermissionError {
     code: "INSUFFICIENT_PERMISSION";
     statusCode: 403;
-    message: string;
-}
-
-export interface IUnexpectedError {
-    code: "UNEXPECTED_ERROR";
-    statusCode: number;
     message: string;
 }
 

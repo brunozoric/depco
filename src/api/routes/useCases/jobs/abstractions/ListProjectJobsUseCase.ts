@@ -1,4 +1,9 @@
-import { createAbstraction, Result } from "#shared/index.js";
+import {
+    createAbstraction,
+    Result,
+    type IUnexpectedError,
+    type IProjectNotFoundError
+} from "#shared/index.js";
 import type { JobWorker } from "#api/services/JobExecution/index.js";
 
 export interface IListProjectJobsUseCaseParams {
@@ -8,18 +13,6 @@ export interface IListProjectJobsUseCaseParams {
 export interface IListProjectJobsUseCaseData {
     items: JobWorker.Job[];
     total: number;
-}
-
-export interface IProjectNotFoundError {
-    code: "PROJECT_NOT_FOUND";
-    statusCode: 404;
-    message: string;
-}
-
-export interface IUnexpectedError {
-    code: "UNEXPECTED_ERROR";
-    statusCode: number;
-    message: string;
 }
 
 export interface IListProjectJobsUseCaseErrors {

@@ -1,4 +1,4 @@
-import { createAbstraction, Result } from "#shared/index.js";
+import { createAbstraction, Result, type IUnexpectedError } from "#shared/index.js";
 import type { UserService } from "#api/services/Auth/index.js";
 
 export interface IListUsersUseCaseParams {
@@ -11,12 +11,6 @@ export interface IListUsersUseCaseParams {
 }
 
 export type IListUsersUseCaseData = UserService.ListResult;
-
-export interface IUnexpectedError {
-    code: "UNEXPECTED_ERROR";
-    statusCode: number;
-    message: string;
-}
 
 export interface IListUsersUseCaseErrors {
     unexpected: IUnexpectedError;

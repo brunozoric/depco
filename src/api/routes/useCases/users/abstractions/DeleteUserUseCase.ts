@@ -1,4 +1,4 @@
-import { createAbstraction, Result } from "#shared/index.js";
+import { createAbstraction, Result, type IUnexpectedError } from "#shared/index.js";
 
 export interface IDeleteUserUseCaseParams {
     id: string;
@@ -14,12 +14,6 @@ export interface ICannotDeleteSelfError {
 export interface IUserNotFoundError {
     code: "USER_NOT_FOUND";
     statusCode: 404;
-    message: string;
-}
-
-export interface IUnexpectedError {
-    code: "UNEXPECTED_ERROR";
-    statusCode: number;
     message: string;
 }
 
