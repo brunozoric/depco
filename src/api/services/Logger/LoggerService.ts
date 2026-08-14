@@ -7,6 +7,8 @@ import { appSettings } from "#api/db/schema.js";
 import { createConsoleDestination } from "./destinations/createConsoleDestination.js";
 import { createDatabaseDestination } from "./destinations/createDatabaseDestination.js";
 
+const VALID_LEVELS = new Set(["trace", "debug", "info", "warn", "error", "fatal"]);
+
 class LoggerServiceImpl implements Abstraction.Interface {
     public readonly logger: pino.Logger;
     private readonly multistream: pino.MultiStreamRes;
@@ -50,7 +52,8 @@ class LoggerServiceImpl implements Abstraction.Interface {
             .where(eq(appSettings.key, "log_level"))
             .get();
 
-        return row?.value ?? "warn";
+        const level = row?.value ?? "warn";
+        return VALID_LEVELS.has(level) ? level : "warn";
     }
 }
 

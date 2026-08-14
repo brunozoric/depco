@@ -105,7 +105,10 @@ export async function createServer(): Promise<FastifyInstance> {
 
     app.setErrorHandler((error: Error & { statusCode?: number }, _request, reply) => {
         const statusCode = error.statusCode ?? 500;
-        loggerService.logger.error({ source: "server" }, `Route error: ${error.message}`);
+        loggerService.logger.error(
+            { source: "server", details: error.stack },
+            `Route error: ${error.message}`
+        );
         reply.status(statusCode).send({
             error: error.message ?? "Internal error",
             stack: process.env["NODE_ENV"] !== "production" ? error.stack : undefined
