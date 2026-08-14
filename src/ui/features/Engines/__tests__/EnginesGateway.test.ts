@@ -53,7 +53,8 @@ describe("EnginesGateway", () => {
     });
 
     it("getSummary calls getEngineSummaryRoute with empty params", async () => {
-        mockResult = { totalProjects: 0, counts: {}, projectSummaries: [] };
+        const data = { totalProjects: 0, counts: {}, projectSummaries: [] };
+        mockResult = { item: data };
         const gateway = createGateway();
 
         const result = await gateway.getSummary();
@@ -61,16 +62,17 @@ describe("EnginesGateway", () => {
         expect(calls).toHaveLength(1);
         expect(calls[0]!.route).toBe(getEngineSummaryRoute);
         expect(calls[0]!.args).toEqual({ params: {} });
-        expect(result).toEqual({ totalProjects: 0, counts: {}, projectSummaries: [] });
+        expect(result).toEqual(data);
     });
 
     it("getStaleness calls getProjectEngineStalenessRoute with projectId param", async () => {
-        mockResult = {
+        const data = {
             lastScannedAt: 12345,
             engineScanStale: true,
             engineScanStaleReason: "time",
             stalenessThresholdMs: 604800000
         };
+        mockResult = { item: data };
         const gateway = createGateway();
 
         const result = await gateway.getStaleness("project-1");
@@ -78,21 +80,17 @@ describe("EnginesGateway", () => {
         expect(calls).toHaveLength(1);
         expect(calls[0]!.route).toBe(getProjectEngineStalenessRoute);
         expect(calls[0]!.args).toEqual({ params: { projectId: "project-1" } });
-        expect(result).toEqual({
-            lastScannedAt: 12345,
-            engineScanStale: true,
-            engineScanStaleReason: "time",
-            stalenessThresholdMs: 604800000
-        });
+        expect(result).toEqual(data);
     });
 
     it("scan calls scanProjectEnginesRoute with projectId param", async () => {
-        mockResult = {
+        const data = {
             rootStatus: "current",
             rootEnginesNode: ">=20",
             findings: [],
             summary: { totalProjects: 1, counts: {}, projectSummaries: [] }
         };
+        mockResult = { item: data };
         const gateway = createGateway();
 
         const result = await gateway.scan("project-1");

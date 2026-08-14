@@ -19,22 +19,25 @@ class EnginesGatewayImpl implements Abstraction.Interface {
     }
 
     public async getSummary(): Promise<Abstraction.SummaryData> {
-        return this.httpClient.request(getEngineSummaryRoute, {
+        const response = await this.httpClient.request(getEngineSummaryRoute, {
             params: {}
         });
+        return response.item;
     }
 
     public async getStaleness(projectId: string): Promise<Abstraction.StalenessData> {
-        return this.httpClient.request(getProjectEngineStalenessRoute, {
+        const response = await this.httpClient.request(getProjectEngineStalenessRoute, {
             params: { projectId }
         });
+        return response.item;
     }
 
     public async scan(projectId: string): Promise<Abstraction.ScanResult> {
-        return this.httpClient.request(scanProjectEnginesRoute, {
+        const response = await this.httpClient.request(scanProjectEnginesRoute, {
             params: { projectId },
             query: {}
         });
+        return response.item;
     }
 
     public async bulkScanEngines(projectIds: string[]): Promise<Abstraction.BulkScanResult> {

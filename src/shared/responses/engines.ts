@@ -38,13 +38,15 @@ export const projectEngineSummarySchema = z.object({
     engineScanStaleReason: z.enum(["time", "release", "both"]).nullable()
 });
 
-export const engineSummarySchema = z.object({
+export const engineSummaryDataSchema = z.object({
     totalProjects: z.number(),
     counts: engineStatusCountsSchema,
     projectSummaries: z.array(projectEngineSummarySchema),
     staleProjectCount: z.number(),
     stalenessThresholdMs: z.number()
 });
+
+export const engineSummarySchema = z.object({ item: engineSummaryDataSchema });
 
 export const nodeReleaseSchema = z.object({
     version: z.number(),
@@ -56,10 +58,12 @@ export const nodeReleaseSchema = z.object({
 });
 
 export const engineScanResultSchema = z.object({
-    rootStatus: engineStatusSchema,
-    rootEnginesNode: z.string().nullable(),
-    findings: z.array(engineCheckSchema),
-    summary: engineSummarySchema
+    item: z.object({
+        rootStatus: engineStatusSchema,
+        rootEnginesNode: z.string().nullable(),
+        findings: z.array(engineCheckSchema),
+        summary: engineSummaryDataSchema
+    })
 });
 
 export const listNodeReleasesResponseSchema = z.object({
@@ -73,10 +77,12 @@ export const getProjectEngineChecksResponseSchema = z.object({
 });
 
 export const getProjectEngineStalenessResponseSchema = z.object({
-    lastScannedAt: z.number().nullable(),
-    engineScanStale: z.boolean(),
-    engineScanStaleReason: z.enum(["time", "release", "both"]).nullable(),
-    stalenessThresholdMs: z.number()
+    item: z.object({
+        lastScannedAt: z.number().nullable(),
+        engineScanStale: z.boolean(),
+        engineScanStaleReason: z.enum(["time", "release", "both"]).nullable(),
+        stalenessThresholdMs: z.number()
+    })
 });
 
 export const bulkScanEnginesResponseSchema = z.object({ scannedCount: z.number() });
