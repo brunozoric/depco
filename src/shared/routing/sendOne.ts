@@ -4,10 +4,12 @@ import { sendError } from "./sendError.js";
 import type { SendableError } from "./abstractions/index.js";
 import { getRoutingOptions } from "./getRoutingOptions.js";
 
+type UnwrapItem<T> = T extends { item: infer I } ? I : T;
+
 interface SendOneParams<TResponse> {
     reply: FastifyReply;
     request: FastifyRequest;
-    result: Result<TResponse, SendableError>;
+    result: Result<UnwrapItem<TResponse>, SendableError>;
     status?: number;
 }
 

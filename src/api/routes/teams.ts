@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
+import type { z } from "zod";
 import type { Container } from "@webiny/di";
 import { registerRoute, sendOne, sendList, sendNone } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
@@ -44,7 +45,12 @@ export async function teamsRoutes(app: FastifyInstance, options: PluginOptions):
             const useCase = container.resolve(CreateTeamUseCase);
             const result = await useCase.execute(request.body);
 
-            return sendOne({ reply, request, result, status: 201 });
+            return sendOne<z.infer<typeof createTeamRoute.response>>({
+                reply,
+                request,
+                result,
+                status: 201
+            });
         }
     );
 
