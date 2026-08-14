@@ -11,6 +11,7 @@ import { DatabaseClient } from "./db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "./websocket/WebSocketBroadcaster.js";
 
 import { AppLogFeature } from "./services/AppLog/index.js";
+import { LoggerFeature } from "./services/Logger/feature.js";
 import { AuthFeature } from "./services/Auth/index.js";
 import { AutoFixFeature } from "./services/AutoFix/index.js";
 import { AutoFixUseCasesFeature } from "./routes/useCases/autoFix/index.js";
@@ -87,6 +88,7 @@ export const ApiFeature = createFeature<IApiFeatureContext>({
         EventBusFeature.register(container);
         CommandRunnerFeature.register(container);
         EmailFeature.register(container);
+        LoggerFeature.register(container);
         AppLogFeature.register(container);
         ErrorReporterFeature.register(container);
         PackageJsonFeature.register(container);
