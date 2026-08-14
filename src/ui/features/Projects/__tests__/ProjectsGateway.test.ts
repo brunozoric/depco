@@ -68,12 +68,18 @@ describe("ProjectsGateway", () => {
                         page: undefined,
                         pageSize: undefined,
                         search: undefined,
-                        teamId: undefined
+                        teamId: undefined,
+                        sortBy: undefined,
+                        sortOrder: undefined,
+                        engineStatus: undefined
                     }
                 }
             }
         ]);
-        expect(result).toEqual({ items: [{ ...project, teams: [] }], total: 1 });
+        expect(result).toEqual({
+            items: [{ ...project, teams: [], engineStatus: null, rootEnginesNode: null }],
+            total: 1
+        });
     });
 
     it("get(id) calls getProjectRoute and returns the unwrapped item", async () => {
@@ -93,7 +99,12 @@ describe("ProjectsGateway", () => {
         const result = await gateway.get("p1");
 
         expect(calls).toEqual([{ route: getProjectRoute, args: { params: { id: "p1" } } }]);
-        expect(result).toEqual({ ...project, teams: [] });
+        expect(result).toEqual({
+            ...project,
+            teams: [],
+            engineStatus: null,
+            rootEnginesNode: null
+        });
     });
 
     it("create(path) calls createProjectRoute with the path body", async () => {
@@ -118,7 +129,12 @@ describe("ProjectsGateway", () => {
                 args: { params: {}, body: { path: "/tmp/new-project" } }
             }
         ]);
-        expect(result).toEqual({ ...project, teams: [] });
+        expect(result).toEqual({
+            ...project,
+            teams: [],
+            engineStatus: null,
+            rootEnginesNode: null
+        });
     });
 
     it("remove(id) calls deleteProjectRoute", async () => {

@@ -142,6 +142,8 @@ describe("ProjectListPresenter - clone, browse, search, and selection", () => {
                 security: null,
                 teams: [],
                 addedAt: Date.now(),
+                engineStatus: null,
+                rootEnginesNode: null,
                 ...overrides
             };
         }
@@ -234,6 +236,8 @@ describe("ProjectListPresenter - clone, browse, search, and selection", () => {
                 security: null,
                 teams: [],
                 addedAt: Date.now(),
+                engineStatus: null,
+                rootEnginesNode: null,
                 ...overrides
             };
         }

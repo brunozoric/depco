@@ -20,6 +20,8 @@ export interface IProject {
     security?: ISecurityStatus | null;
     hasNodeModules: boolean;
     teams?: IProjectTeam[];
+    engineStatus: string | null;
+    rootEnginesNode: string | null;
 }
 
 export interface IDependency {
@@ -66,6 +68,9 @@ export interface IListProjectsParams {
     pageSize?: number | undefined;
     search?: string | undefined;
     teamId?: string | undefined;
+    sortBy?: "name" | "addedAt" | "lastScannedAt" | "engineStatus" | undefined;
+    sortOrder?: "asc" | "desc" | undefined;
+    engineStatus?: string | undefined;
 }
 
 export interface IListProjectsResponse {
@@ -77,6 +82,7 @@ export interface IProjectsGateway {
     list(params?: IListProjectsParams): Promise<IListProjectsResponse>;
     get(id: string): Promise<IProject>;
     create(path: string): Promise<IProject>;
+    update(id: string, params: { name: string }): Promise<IProject>;
     remove(id: string): Promise<void>;
     scan(id: string, force?: boolean): Promise<IScanJob>;
     getDependencies(id: string, filters?: IDependencyFilters): Promise<IDependenciesResponse>;

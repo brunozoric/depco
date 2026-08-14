@@ -204,11 +204,14 @@ describe("LicensesPresenter", () => {
                     pmVersion: null,
                     addedAt: 0,
                     lastScannedAt: null,
-                    hasNodeModules: false
+                    hasNodeModules: false,
+                    engineStatus: null,
+                    rootEnginesNode: null
                 })),
             getProjectsTotal: () => 0,
             setProjects: () => {},
             getProject: () => undefined,
+            updateProject: () => {},
             getDependencies: () => undefined,
             setDependencies: () => {},
             getSecurityStatus: () => undefined,

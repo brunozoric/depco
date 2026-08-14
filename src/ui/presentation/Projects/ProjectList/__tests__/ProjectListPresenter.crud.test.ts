@@ -78,7 +78,9 @@ describe("ProjectListPresenter - CRUD and load", () => {
                 addedAt: 1000,
                 lastScannedAt: 2000,
                 security: { passes: true, checks: { enableScripts: true } },
-                hasNodeModules: false
+                hasNodeModules: false,
+                engineStatus: null,
+                rootEnginesNode: null
             },
             {
                 id: "p2",
@@ -88,7 +90,9 @@ describe("ProjectListPresenter - CRUD and load", () => {
                 packageManager: null,
                 addedAt: 1500,
                 lastScannedAt: null,
-                hasNodeModules: false
+                hasNodeModules: false,
+                engineStatus: null,
+                rootEnginesNode: null
             }
         ];
         harness.getResult = projects;
@@ -157,7 +161,9 @@ describe("ProjectListPresenter - CRUD and load", () => {
             packageManager: null,
             addedAt: 3000,
             lastScannedAt: null,
-            hasNodeModules: false
+            hasNodeModules: false,
+            engineStatus: null,
+            rootEnginesNode: null
         };
         harness.postResult = created;
 
@@ -215,7 +221,9 @@ describe("ProjectListPresenter - CRUD and load", () => {
             packageManager: "yarn",
             addedAt: 1000,
             lastScannedAt: null,
-            hasNodeModules: false
+            hasNodeModules: false,
+            engineStatus: null,
+            rootEnginesNode: null
         };
         const removed: ProjectsGateway.Project = {
             id: "p2",
@@ -225,7 +233,9 @@ describe("ProjectListPresenter - CRUD and load", () => {
             packageManager: "yarn",
             addedAt: 1500,
             lastScannedAt: null,
-            hasNodeModules: false
+            hasNodeModules: false,
+            engineStatus: null,
+            rootEnginesNode: null
         };
         harness.getResult = [remaining, removed];
         await presenter.load();

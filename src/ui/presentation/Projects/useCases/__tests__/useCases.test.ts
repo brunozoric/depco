@@ -97,7 +97,9 @@ describe("project use cases", () => {
             await context.loadProjectsUseCase.execute();
 
             expect(calls).toEqual([{ route: listProjectsRoute, args: { params: {}, query: {} } }]);
-            expect(context.projectsRepository.getProjects()).toEqual([{ ...project, teams: [] }]);
+            expect(context.projectsRepository.getProjects()).toEqual([
+                { ...project, teams: [], engineStatus: null, rootEnginesNode: null }
+            ]);
         });
     });
 
@@ -112,7 +114,9 @@ describe("project use cases", () => {
                 pmVersion: "4.1.0",
                 addedAt: 1000,
                 lastScannedAt: null,
-                hasNodeModules: false
+                hasNodeModules: false,
+                engineStatus: null,
+                rootEnginesNode: null
             };
             context.projectsRepository.setProjects([existingProject], 1);
 
@@ -138,7 +142,7 @@ describe("project use cases", () => {
             ]);
             expect(context.projectsRepository.getProjects()).toEqual([
                 existingProject,
-                { ...created, teams: [] }
+                { ...created, teams: [], engineStatus: null, rootEnginesNode: null }
             ]);
         });
     });
@@ -154,7 +158,9 @@ describe("project use cases", () => {
                 pmVersion: "4.1.0",
                 addedAt: 1000,
                 lastScannedAt: null,
-                hasNodeModules: false
+                hasNodeModules: false,
+                engineStatus: null,
+                rootEnginesNode: null
             };
             const removedProject: ProjectsGateway.Project = {
                 id: "p2",
@@ -164,7 +170,9 @@ describe("project use cases", () => {
                 pmVersion: "4.1.0",
                 addedAt: 1500,
                 lastScannedAt: null,
-                hasNodeModules: false
+                hasNodeModules: false,
+                engineStatus: null,
+                rootEnginesNode: null
             };
             context.projectsRepository.setProjects([remainingProject, removedProject], 2);
             context.projectsRepository.setSecurityStatus("p2", {

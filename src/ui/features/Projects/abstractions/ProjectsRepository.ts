@@ -6,6 +6,7 @@ export interface IProjectsRepository {
     getProjectsTotal(): number;
     setProjects(projects: ProjectsGateway.Project[], total: number): void;
     getProject(id: string): ProjectsGateway.Project | undefined;
+    updateProject(project: ProjectsGateway.Project): void;
     getDependencies(projectId: string): ProjectsGateway.DependenciesResponse | undefined;
     setDependencies(projectId: string, dependencies: ProjectsGateway.DependenciesResponse): void;
     getSecurityStatus(projectId: string): ProjectsGateway.SecurityStatus | undefined;

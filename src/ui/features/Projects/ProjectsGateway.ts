@@ -10,7 +10,8 @@ import {
     cloneProjectRoute,
     installProjectRoute,
     getInstallOptionsRoute,
-    bulkScanProjectsRoute
+    bulkScanProjectsRoute,
+    updateProjectRoute
 } from "#shared/routes/index.js";
 import type { IDependency, IProject } from "./abstractions/ProjectsGateway.js";
 import { ProjectsGateway as Abstraction } from "./abstractions/ProjectsGateway.js";
@@ -27,6 +28,8 @@ function toProject(item: {
     security?: Abstraction.SecurityStatus | null | undefined;
     hasNodeModules?: boolean;
     teams?: Array<{ id: string; name: string; color: string }> | undefined;
+    engineStatus?: string | null | undefined;
+    rootEnginesNode?: string | null | undefined;
 }): IProject {
     return {
         id: item.id,
@@ -38,7 +41,9 @@ function toProject(item: {
         lastScannedAt: item.lastScannedAt,
         security: item.security ?? null,
         hasNodeModules: item.hasNodeModules ?? false,
-        teams: item.teams ?? []
+        teams: item.teams ?? [],
+        engineStatus: item.engineStatus ?? null,
+        rootEnginesNode: item.rootEnginesNode ?? null
     };
 }
 
@@ -90,7 +95,10 @@ class ProjectsGatewayImpl implements Abstraction.Interface {
                 page: params?.page,
                 pageSize: params?.pageSize,
                 search: params?.search,
-                teamId: params?.teamId
+                teamId: params?.teamId,
+                sortBy: params?.sortBy,
+                sortOrder: params?.sortOrder,
+                engineStatus: params?.engineStatus
             }
         });
         return { items: response.items.map(toProject), total: response.total };
@@ -105,6 +113,14 @@ class ProjectsGatewayImpl implements Abstraction.Interface {
         const response = await this.httpClient.request(createProjectRoute, {
             params: {},
             body: { path }
+        });
+        return toProject(response.item);
+    }
+
+    public async update(id: string, params: { name: string }): Promise<Abstraction.Project> {
+        const response = await this.httpClient.request(updateProjectRoute, {
+            params: { id },
+            body: { name: params.name }
         });
         return toProject(response.item);
     }

@@ -23,6 +23,13 @@ class ProjectsRepositoryImpl implements Abstraction.Interface {
         return this.projects.find(project => project.id === id);
     }
 
+    public updateProject(project: Abstraction.Project): void {
+        const index = this.projects.findIndex(p => p.id === project.id);
+        if (index !== -1) {
+            this.projects[index] = project;
+        }
+    }
+
     public getDependencies(projectId: string): Abstraction.DependenciesResponse | undefined {
         return this.dependencies.get(projectId);
     }

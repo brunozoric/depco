@@ -98,7 +98,9 @@ describe("LogBrowserPresenter", () => {
                 pmVersion: "4.1.0",
                 addedAt: 1000,
                 lastScannedAt: null,
-                hasNodeModules: false
+                hasNodeModules: false,
+                engineStatus: null,
+                rootEnginesNode: null
             },
             {
                 id: "proj-2",
@@ -108,7 +110,9 @@ describe("LogBrowserPresenter", () => {
                 pmVersion: null,
                 addedAt: 2000,
                 lastScannedAt: null,
-                hasNodeModules: false
+                hasNodeModules: false,
+                engineStatus: null,
+                rootEnginesNode: null
             }
         ];
 
@@ -202,7 +206,9 @@ describe("LogBrowserPresenter", () => {
                 pmVersion: "4.1.0",
                 addedAt: 1000,
                 lastScannedAt: null,
-                hasNodeModules: false
+                hasNodeModules: false,
+                engineStatus: null,
+                rootEnginesNode: null
             }
         ];
 

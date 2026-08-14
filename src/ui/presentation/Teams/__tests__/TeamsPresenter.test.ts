@@ -127,6 +127,7 @@ describe("TeamsPresenter", () => {
             list: async () => ({ items: [], total: 0 }),
             get: async () => ({}) as never,
             create: async () => ({}) as never,
+            update: async () => ({}) as never,
             remove: async () => {},
             scan: async () => ({}) as never,
             getDependencies: async () => ({}) as never,

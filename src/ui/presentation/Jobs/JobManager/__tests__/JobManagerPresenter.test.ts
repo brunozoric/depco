@@ -139,7 +139,9 @@ describe("JobManagerPresenter", () => {
                 pmVersion: "4.1.0",
                 addedAt: 1000,
                 lastScannedAt: null,
-                hasNodeModules: false
+                hasNodeModules: false,
+                engineStatus: null,
+                rootEnginesNode: null
             }
         ];
         jobsResult = [
@@ -627,7 +629,9 @@ describe("JobManagerPresenter", () => {
                 pmVersion: "4.0.0",
                 addedAt: 1000,
                 lastScannedAt: null,
-                hasNodeModules: false
+                hasNodeModules: false,
+                engineStatus: null,
+                rootEnginesNode: null
             },
             {
                 id: "p2",
@@ -637,7 +641,9 @@ describe("JobManagerPresenter", () => {
                 pmVersion: "10.0.0",
                 addedAt: 2000,
                 lastScannedAt: null,
-                hasNodeModules: false
+                hasNodeModules: false,
+                engineStatus: null,
+                rootEnginesNode: null
             }
         ];
 
