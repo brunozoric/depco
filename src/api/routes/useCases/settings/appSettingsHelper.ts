@@ -15,7 +15,9 @@ export interface IFileKeyMapping {
 export const FILE_KEY_MAPPINGS: IFileKeyMapping[] = [
     { fileKey: "branchTemplate", dbKey: "branch_template" },
     { fileKey: "commitTemplate", dbKey: "commit_template" },
-    { fileKey: "logLevel", dbKey: "log_level" }
+    { fileKey: "logLevel", dbKey: "log_level" },
+    { fileKey: "consoleLogLevel", dbKey: "console_log_level" },
+    { fileKey: "fileLogLevel", dbKey: "file_log_level" }
 ];
 
 export function maskTokenValue(row: IAppSettingItem): IAppSettingItem {

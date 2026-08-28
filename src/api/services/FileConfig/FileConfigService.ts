@@ -23,10 +23,14 @@ const fileStepHookSchema = z.object({
     required: z.boolean()
 });
 
+const logLevelEnum = z.enum(["trace", "debug", "info", "warn", "error", "fatal"]);
+
 const fileSettingsSchema = z.object({
     branchTemplate: z.string().optional(),
     commitTemplate: z.string().optional(),
-    logLevel: z.enum(["trace", "debug", "info", "warn", "error", "fatal"]).optional()
+    logLevel: logLevelEnum.optional(),
+    consoleLogLevel: logLevelEnum.optional(),
+    fileLogLevel: logLevelEnum.optional()
 });
 
 const filePmSettingsSchema = z
@@ -120,6 +124,12 @@ function toFileSettings(parsed: z.infer<typeof fileSettingsSchema>): IFileSettin
     }
     if (parsed.logLevel !== undefined) {
         settings.logLevel = parsed.logLevel;
+    }
+    if (parsed.consoleLogLevel !== undefined) {
+        settings.consoleLogLevel = parsed.consoleLogLevel;
+    }
+    if (parsed.fileLogLevel !== undefined) {
+        settings.fileLogLevel = parsed.fileLogLevel;
     }
     return settings;
 }

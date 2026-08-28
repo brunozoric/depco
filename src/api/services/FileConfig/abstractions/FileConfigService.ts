@@ -9,10 +9,14 @@ export interface IFileStepHook {
     required: boolean;
 }
 
+type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
+
 export interface IFileSettings {
     branchTemplate?: string;
     commitTemplate?: string;
-    logLevel?: "trace" | "debug" | "info" | "warn" | "error" | "fatal";
+    logLevel?: LogLevel;
+    consoleLogLevel?: LogLevel;
+    fileLogLevel?: LogLevel;
 }
 
 export interface IFilePmSettings {
