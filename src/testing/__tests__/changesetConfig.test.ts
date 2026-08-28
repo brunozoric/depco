@@ -76,19 +76,53 @@ describe("package.json publish configuration", () => {
         expect(packageJson.bin).toBe("./dist/cli/index.js");
     });
 
-    it("has changeset scripts", () => {
-        expect(packageJson.scripts?.["changeset"]).toBe("changeset");
-        expect(packageJson.scripts?.["changeset:version"]).toBe("changeset version");
-        expect(packageJson.scripts?.["changeset:publish"]).toBeDefined();
-        expect(packageJson.scripts?.["changeset:publish"]).toContain("changeset publish");
+    it("has release script that builds and publishes", () => {
+        expect(packageJson.scripts?.["release"]).toBeDefined();
+        expect(packageJson.scripts?.["release"]).toContain("yarn build");
+        expect(packageJson.scripts?.["release"]).toContain("changeset publish");
     });
 
-    it("has prepublishOnly script that builds", () => {
-        expect(packageJson.scripts?.["prepublishOnly"]).toBeDefined();
-        expect(packageJson.scripts?.["prepublishOnly"]).toContain("build");
+    it("has changeset script for adding changesets", () => {
+        expect(packageJson.scripts?.["changeset"]).toBe("changeset");
     });
 
     it("version starts at 0.0.0 (first changeset bumps to 0.0.1)", () => {
         expect(packageJson.version).toBe("0.0.0");
+    });
+});
+
+describe("publish workflow", () => {
+    it("publish workflow file exists", () => {
+        expect(existsSync(resolve(ROOT, ".github/workflows/publish.yml"))).toBe(true);
+    });
+
+    it("publish workflow triggers after CI success on main", () => {
+        const content = readFileSync(resolve(ROOT, ".github/workflows/publish.yml"), "utf-8");
+
+        expect(content).toContain("workflow_run");
+        expect(content).toContain("workflows: [CI]");
+        expect(content).toContain("branches: [main]");
+        expect(content).toContain("types: [completed]");
+    });
+
+    it("publish workflow uses changesets/action", () => {
+        const content = readFileSync(resolve(ROOT, ".github/workflows/publish.yml"), "utf-8");
+
+        expect(content).toContain("changesets/action@");
+        expect(content).toContain("publish: yarn release");
+    });
+
+    it("publish workflow requires NPM_TOKEN and GITHUB_TOKEN", () => {
+        const content = readFileSync(resolve(ROOT, ".github/workflows/publish.yml"), "utf-8");
+
+        expect(content).toContain("GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}");
+        expect(content).toContain("NPM_TOKEN: ${{ secrets.NPM_TOKEN }}");
+    });
+
+    it("publish workflow has concurrency guard", () => {
+        const content = readFileSync(resolve(ROOT, ".github/workflows/publish.yml"), "utf-8");
+
+        expect(content).toContain("concurrency:");
+        expect(content).toContain("cancel-in-progress: false");
     });
 });

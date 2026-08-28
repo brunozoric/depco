@@ -145,8 +145,6 @@
     "test:coverage": "vitest --config testing/vitest.config.ts --run --coverage",
     "full": "yarn npm audit && yarn adio && yarn lint:fix && yarn format:fix && yarn build && yarn test",
     "changeset": "changeset",
-    "changeset:version": "changeset version",
-    "changeset:publish": "yarn build && yarn build:ui && changeset publish",
-    "prepublishOnly": "yarn build && yarn build:ui"
+    "release": "yarn build && yarn build:ui && changeset publish"
   }
 }

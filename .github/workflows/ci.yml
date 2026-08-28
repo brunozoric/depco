@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -21,6 +25,17 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: yarn
+
+      - name: Verify dist is not tracked
+        run: |
+          tracked=$(git ls-files dist/)
+          if [ -n "$tracked" ]; then
+            echo "ERROR: dist/ files are committed to git:"
+            echo "$tracked"
+            echo "Fix: git rm -r --cached dist/"
+            exit 1
+          fi
+
       - run: yarn install --immutable
       - run: yarn npm audit
       - run: yarn adio

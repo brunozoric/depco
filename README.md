@@ -60,6 +60,17 @@ Opens at `http://localhost:5173` with API on port 3001. Login with the credentia
 | `yarn lint`         | Lint with oxlint                                   |
 | `yarn format:check` | Check formatting with oxfmt                        |
 | `yarn full`         | Full pipeline: adio + lint + format + build + test |
+| `yarn changeset`    | Create a changeset for your changes                |
+
+## Publishing
+
+This project uses [Changesets](https://github.com/changesets/changesets) for versioning and npm publishing.
+
+1. After making changes, run `yarn changeset` to create a changeset (patch/minor/major + summary)
+2. Push to main — CI runs, then the publish workflow creates a "chore: release" PR
+3. Merging that PR bumps the version, updates `CHANGELOG.md`, and publishes to npm
+
+Publishing is automated via GitHub Actions — never publish from a local machine. Requires `NPM_TOKEN` secret in the repo.
 
 ## Contributing
 
