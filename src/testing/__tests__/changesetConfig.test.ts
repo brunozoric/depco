@@ -105,18 +105,19 @@ describe("publish workflow", () => {
         expect(content).toContain("types: [completed]");
     });
 
-    it("publish workflow uses changesets/action", () => {
+    it("publish workflow uses changesets/action v2 with correct inputs", () => {
         const content = readFileSync(resolve(ROOT, ".github/workflows/publish.yml"), "utf-8");
 
         expect(content).toContain("changesets/action@");
-        expect(content).toContain("publish: yarn release");
+        expect(content).toContain("publish-script: yarn release");
+        expect(content).toContain("github-token:");
     });
 
-    it("publish workflow requires NPM_TOKEN and GITHUB_TOKEN", () => {
+    it("publish workflow configures npm auth via .npmrc", () => {
         const content = readFileSync(resolve(ROOT, ".github/workflows/publish.yml"), "utf-8");
 
-        expect(content).toContain("GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}");
-        expect(content).toContain("NPM_TOKEN: ${{ secrets.NPM_TOKEN }}");
+        expect(content).toContain("registry.npmjs.org");
+        expect(content).toContain("NPM_TOKEN");
     });
 
     it("publish workflow has concurrency guard", () => {
@@ -124,5 +125,32 @@ describe("publish workflow", () => {
 
         expect(content).toContain("concurrency:");
         expect(content).toContain("cancel-in-progress: false");
+    });
+
+    it("all workflows use harden-runner", () => {
+        const workflowDir = resolve(ROOT, ".github/workflows");
+        const files = ["ci.yml", "codeql.yml", "publish.yml", "pr-title.yml", "scorecard.yml"];
+
+        for (const file of files) {
+            const content = readFileSync(resolve(workflowDir, file), "utf-8");
+            expect(content).toContain("step-security/harden-runner@");
+        }
+    });
+
+    it("all action references are hash-pinned", () => {
+        const workflowDir = resolve(ROOT, ".github/workflows");
+        const files = ["ci.yml", "codeql.yml", "publish.yml", "pr-title.yml", "scorecard.yml"];
+
+        for (const file of files) {
+            const content = readFileSync(resolve(workflowDir, file), "utf-8");
+            const usesLines = content
+                .split("\n")
+                .filter(line => line.includes("uses:") && line.includes("@"));
+
+            for (const line of usesLines) {
+                const match = line.match(/@([a-f0-9]{40})/);
+                expect(match).not.toBeNull();
+            }
+        }
     });
 });
