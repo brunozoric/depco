@@ -13,6 +13,23 @@
   },
   "bin": "./dist/cli/index.js",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brunozoric/depco.git"
+  },
+  "homepage": "https://github.com/brunozoric/depco#readme",
+  "bugs": {
+    "url": "https://github.com/brunozoric/depco/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "src/api/db/migrations",
+    "LICENSE",
+    "README.md"
+  ],
   "packageManager": "yarn@4.18.0",
   "author": {
     "email": "bruno.zoric@gmail.com",
@@ -68,6 +85,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^1.0.0",
+    "@changesets/cli": "^3.0.1",
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^26.3.0",
     "@types/picomatch": "^4.0.3",
@@ -124,6 +143,10 @@
     "start": "node dist/api/server.js",
     "test": "vitest --config testing/vitest.config.ts --run",
     "test:coverage": "vitest --config testing/vitest.config.ts --run --coverage",
-    "full": "yarn npm audit && yarn adio && yarn lint:fix && yarn format:fix && yarn build && yarn test"
+    "full": "yarn npm audit && yarn adio && yarn lint:fix && yarn format:fix && yarn build && yarn test",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "yarn build && yarn build:ui && changeset publish",
+    "prepublishOnly": "yarn build && yarn build:ui"
   }
 }
