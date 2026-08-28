@@ -17,7 +17,3 @@ export const verifyMagicLinkResponseSchema = z.object({
 export const getMeResponseSchema = z.object({
     item: userResponseSchema
 });
-
-export type VerifyCodeResponse = z.infer<typeof verifyCodeResponseSchema>;
-export type VerifyMagicLinkResponse = z.infer<typeof verifyMagicLinkResponseSchema>;
-export type GetMeResponse = z.infer<typeof getMeResponseSchema>;

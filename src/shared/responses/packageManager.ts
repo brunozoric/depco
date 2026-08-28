@@ -7,6 +7,3 @@ export const getPackageManagerResponseSchema = z.object({
 export const updatePackageManagerResponseSchema = z.object({
     item: z.object({ jobId: z.string() })
 });
-
-export type GetPackageManagerResponse = z.infer<typeof getPackageManagerResponseSchema>;
-export type UpdatePackageManagerResponse = z.infer<typeof updatePackageManagerResponseSchema>;

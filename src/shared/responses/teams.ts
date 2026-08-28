@@ -41,8 +41,3 @@ export const getTeamDetailResponseSchema = z.object({
 export const updateTeamResponseSchema = z.object({
     item: teamWithStatsSchema
 });
-
-export type ListTeamsResponse = z.infer<typeof listTeamsResponseSchema>;
-export type CreateTeamResponse = z.infer<typeof createTeamResponseSchema>;
-export type GetTeamDetailResponse = z.infer<typeof getTeamDetailResponseSchema>;
-export type UpdateTeamResponse = z.infer<typeof updateTeamResponseSchema>;

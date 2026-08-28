@@ -34,10 +34,3 @@ export const createTransientJobResponseSchema = z.object({
 export const cancelJobResponseSchema = z.object({ success: z.boolean() });
 
 export const deleteJobsResponseSchema = z.object({ deleted: z.number() });
-
-export type CreateUpgradeJobResponse = z.infer<typeof createUpgradeJobResponseSchema>;
-export type ListJobsResponse = z.infer<typeof listJobsResponseSchema>;
-export type GetJobResponse = z.infer<typeof getJobResponseSchema>;
-export type CreateTransientJobResponse = z.infer<typeof createTransientJobResponseSchema>;
-export type CancelJobResponse = z.infer<typeof cancelJobResponseSchema>;
-export type DeleteJobsResponse = z.infer<typeof deleteJobsResponseSchema>;

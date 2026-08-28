@@ -37,6 +37,3 @@ export const listPmSettingsResponseSchema = z.object({
 export const updatePmConfigResponseSchema = z.object({
     item: pmConfigItemSchema
 });
-
-export type ListPmSettingsResponse = z.infer<typeof listPmSettingsResponseSchema>;
-export type UpdatePmConfigResponse = z.infer<typeof updatePmConfigResponseSchema>;

@@ -27,9 +27,3 @@ export const executeUpgradeStepResponseSchema = z.object({ item: sessionSchema }
 export const skipUpgradeStepResponseSchema = z.object({ item: sessionSchema });
 
 export const abortUpgradeSessionResponseSchema = z.object({ item: sessionSchema });
-
-export type CreateUpgradeSessionResponse = z.infer<typeof createUpgradeSessionResponseSchema>;
-export type GetUpgradeSessionResponse = z.infer<typeof getUpgradeSessionResponseSchema>;
-export type ExecuteUpgradeStepResponse = z.infer<typeof executeUpgradeStepResponseSchema>;
-export type SkipUpgradeStepResponse = z.infer<typeof skipUpgradeStepResponseSchema>;
-export type AbortUpgradeSessionResponse = z.infer<typeof abortUpgradeSessionResponseSchema>;

@@ -86,12 +86,3 @@ export const getProjectEngineStalenessResponseSchema = z.object({
 });
 
 export const bulkScanEnginesResponseSchema = z.object({ scannedCount: z.number() });
-
-export type EngineSummary = z.infer<typeof engineSummarySchema>;
-export type EngineScanResult = z.infer<typeof engineScanResultSchema>;
-export type ListNodeReleasesResponse = z.infer<typeof listNodeReleasesResponseSchema>;
-export type GetProjectEngineChecksResponse = z.infer<typeof getProjectEngineChecksResponseSchema>;
-export type GetProjectEngineStalenessResponse = z.infer<
-    typeof getProjectEngineStalenessResponseSchema
->;
-export type BulkScanEnginesResponse = z.infer<typeof bulkScanEnginesResponseSchema>;

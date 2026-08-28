@@ -31,8 +31,3 @@ export const createStepHookResponseSchema = z.object({ item: stepHookSchema });
 export const updateStepHookResponseSchema = z.object({ item: stepHookSchema });
 
 export const deleteStepHookResponseSchema = z.object({ deleted: z.boolean() });
-
-export type ListStepHooksResponse = z.infer<typeof listStepHooksResponseSchema>;
-export type CreateStepHookResponse = z.infer<typeof createStepHookResponseSchema>;
-export type UpdateStepHookResponse = z.infer<typeof updateStepHookResponseSchema>;
-export type DeleteStepHookResponse = z.infer<typeof deleteStepHookResponseSchema>;

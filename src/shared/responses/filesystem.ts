@@ -25,6 +25,3 @@ export const scanFilesystemResponseSchema = z.object({
     filteredCount: z.number(),
     mode: z.enum(["workspaces", "depth"])
 });
-
-export type BrowseFilesystemResponse = z.infer<typeof browseFilesystemResponseSchema>;
-export type ScanFilesystemResponse = z.infer<typeof scanFilesystemResponseSchema>;

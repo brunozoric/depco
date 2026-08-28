@@ -101,21 +101,4 @@ export const bulkScanProjectsResponseSchema = z.object({
     skippedCount: z.number()
 });
 
-export type CreateProjectResponse = z.infer<typeof createProjectResponseSchema>;
-export type ListProjectsResponse = z.infer<typeof listProjectsResponseSchema>;
-export type GetProjectResponse = z.infer<typeof getProjectResponseSchema>;
-export type ScanProjectAsyncResponse = z.infer<typeof scanProjectAsyncResponseSchema>;
-export type GetProjectDependenciesResponse = z.infer<typeof getProjectDependenciesResponseSchema>;
-export type GetTransitiveResolveStatusResponse = z.infer<
-    typeof getTransitiveResolveStatusResponseSchema
->;
-export type GetProjectSecurityResponse = z.infer<typeof getProjectSecurityResponseSchema>;
-export type CheckProjectSecurityResponse = z.infer<typeof checkProjectSecurityResponseSchema>;
-export type ExportProjectsResponse = z.infer<typeof exportProjectsResponseSchema>;
-export type ImportProjectsResponse = z.infer<typeof importProjectsResponseSchema>;
-export type GetProjectTeamsResponse = z.infer<typeof getProjectTeamsResponseSchema>;
-export type CloneProjectResponse = z.infer<typeof cloneProjectResponseSchema>;
-export type BulkScanProjectsResponse = z.infer<typeof bulkScanProjectsResponseSchema>;
-
 export const updateProjectResponseSchema = z.object({ item: projectSchema });
-export type UpdateProjectResponse = z.infer<typeof updateProjectResponseSchema>;

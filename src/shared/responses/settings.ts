@@ -34,9 +34,3 @@ export const resetSecuritySettingsResponseSchema = z.object({
     items: z.array(securitySettingSchema),
     total: z.number()
 });
-
-export type ListSecuritySettingsResponse = z.infer<typeof listSecuritySettingsResponseSchema>;
-export type CreateSecuritySettingResponse = z.infer<typeof createSecuritySettingResponseSchema>;
-export type UpdateSecuritySettingResponse = z.infer<typeof updateSecuritySettingResponseSchema>;
-export type ToggleSecuritySettingResponse = z.infer<typeof toggleSecuritySettingResponseSchema>;
-export type ResetSecuritySettingsResponse = z.infer<typeof resetSecuritySettingsResponseSchema>;

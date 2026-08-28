@@ -44,10 +44,3 @@ export const getDependencyGraphStatsResponseSchema = z.object({
 export const searchDependencyPackagesResponseSchema = z.object({
     packages: z.array(z.string())
 });
-
-export type GetDependencyGraphResponse = z.infer<typeof getDependencyGraphResponseSchema>;
-export type RefreshDependencyGraphResponse = z.infer<typeof refreshDependencyGraphResponseSchema>;
-export type GetDependencyGraphStatsResponse = z.infer<typeof getDependencyGraphStatsResponseSchema>;
-export type SearchDependencyPackagesResponse = z.infer<
-    typeof searchDependencyPackagesResponseSchema
->;

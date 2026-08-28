@@ -96,14 +96,3 @@ export const getVulnerabilityDetailResponseSchema = z.object({
     vulnerability: vulnerabilitySchema.extend({ dedupKey: z.string() }),
     osvDetail: osvEnrichedDetailSchema.nullable()
 });
-
-export type ListVulnerabilitiesResponse = z.infer<typeof listVulnerabilitiesResponseSchema>;
-export type GetVulnerabilitySummaryResponse = z.infer<typeof getVulnerabilitySummaryResponseSchema>;
-export type ScanVulnerabilitiesResponse = z.infer<typeof scanVulnerabilitiesResponseSchema>;
-export type RefreshOsvCacheResponse = z.infer<typeof refreshOsvCacheResponseSchema>;
-export type BulkVulnerabilitiesResponse = z.infer<typeof bulkVulnerabilitiesResponseSchema>;
-export type BulkRescanVulnerabilitiesResponse = z.infer<
-    typeof bulkRescanVulnerabilitiesResponseSchema
->;
-export type GetExpiredSnoozesResponse = z.infer<typeof getExpiredSnoozesResponseSchema>;
-export type GetVulnerabilityDetailResponse = z.infer<typeof getVulnerabilityDetailResponseSchema>;
