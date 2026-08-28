@@ -1,28 +1,23 @@
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendList } from "#shared/routing/index.js";
+import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
-import type { ListPmSettingsResponse, UpdatePmConfigResponse } from "#shared/responses/index.js";
 import { listPmSettingsRoute, updatePmConfigRoute } from "#shared/routes/index.js";
 import { ListPmSettingsUseCase, UpdatePmConfigUseCase } from "../useCases/settings/index.js";
 
 export function registerPmConfigRoutes(app: FastifyInstance, container: Container): void {
-    registerRoute(app, listPmSettingsRoute, {}, async (request, reply) => {
+    registerRoute(app, listPmSettingsRoute, {}, async (_request, _reply, send) => {
         const useCase = container.resolve(ListPmSettingsUseCase);
         const result = await useCase.execute({});
 
-        return sendList<ListPmSettingsResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
     registerRoute(
         app,
         updatePmConfigRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(UpdatePmConfigUseCase);
             const result = await useCase.execute({
                 pm: request.params.pm,
@@ -31,11 +26,7 @@ export function registerPmConfigRoutes(app: FastifyInstance, container: Containe
                 upgradeStrategy: request.body.upgradeStrategy
             });
 
-            return sendOne<UpdatePmConfigResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.one({ result });
         }
     );
 }

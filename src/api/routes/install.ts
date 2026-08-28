@@ -1,10 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendList } from "#shared/routing/index.js";
-import type {
-    InstallProjectResponse,
-    GetInstallOptionsResponse
-} from "#shared/responses/install.js";
+import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { installProjectRoute, getInstallOptionsRoute } from "#shared/routes/index.js";
 import { InstallProjectUseCase, GetInstallOptionsUseCase } from "./useCases/install/index.js";
@@ -20,30 +16,22 @@ export async function installRoutes(app: FastifyInstance, options: PluginOptions
         app,
         installProjectRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(InstallProjectUseCase);
             const result = await useCase.execute({
                 id: request.params.id,
                 flags: request.body.flags
             });
 
-            return sendOne<InstallProjectResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.one({ result });
         }
     );
 
     // GET /api/install-options/:packageManager — available install flags for a driver.
-    registerRoute(app, getInstallOptionsRoute, {}, async (request, reply) => {
+    registerRoute(app, getInstallOptionsRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetInstallOptionsUseCase);
         const result = await useCase.execute({ packageManager: request.params.packageManager });
 
-        return sendList<GetInstallOptionsResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 }

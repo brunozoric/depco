@@ -1,10 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne } from "#shared/routing/index.js";
-import type {
-    GetPackageManagerResponse,
-    UpdatePackageManagerResponse
-} from "#shared/responses/packageManager.js";
+import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { getPackageManagerRoute, updatePackageManagerRoute } from "#shared/routes/index.js";
 import {
@@ -23,15 +19,11 @@ export async function packageManagerRoutes(
     const { container } = options;
 
     // GET /api/projects/:id/package-manager — current package manager version.
-    registerRoute(app, getPackageManagerRoute, {}, async (request, reply) => {
+    registerRoute(app, getPackageManagerRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetPackageManagerUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
-        return sendOne<GetPackageManagerResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.one({ result });
     });
 
     // POST /api/projects/:id/package-manager/update — enqueue a package
@@ -40,18 +32,14 @@ export async function packageManagerRoutes(
         app,
         updatePackageManagerRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(UpdatePackageManagerUseCase);
             const result = await useCase.execute({
                 id: request.params.id,
                 version: request.body.version
             });
 
-            return sendOne<UpdatePackageManagerResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.one({ result });
         }
     );
 }

@@ -1,12 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendList } from "#shared/routing/index.js";
-import type {
-    ListStepHooksResponse,
-    CreateStepHookResponse,
-    UpdateStepHookResponse,
-    DeleteStepHookResponse
-} from "#shared/responses/stepHooks.js";
+import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listStepHooksRoute,
@@ -28,22 +22,18 @@ interface PluginOptions extends FastifyPluginOptions {
 export async function stepHooksRoutes(app: FastifyInstance, options: PluginOptions): Promise<void> {
     const { container } = options;
 
-    registerRoute(app, listStepHooksRoute, {}, async (request, reply) => {
+    registerRoute(app, listStepHooksRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(ListStepHooksUseCase);
         const result = await useCase.execute({ projectId: request.params.id });
 
-        return sendList<ListStepHooksResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
     registerRoute(
         app,
         createStepHookRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(CreateStepHookUseCase);
             const result = await useCase.execute({
                 projectId: request.params.id,
@@ -54,11 +44,7 @@ export async function stepHooksRoutes(app: FastifyInstance, options: PluginOptio
                 required: request.body.required
             });
 
-            return sendOne<CreateStepHookResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.one({ result });
         }
     );
 
@@ -66,7 +52,7 @@ export async function stepHooksRoutes(app: FastifyInstance, options: PluginOptio
         app,
         updateStepHookRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(UpdateStepHookUseCase);
             const result = await useCase.execute({
                 projectId: request.params.id,
@@ -79,11 +65,7 @@ export async function stepHooksRoutes(app: FastifyInstance, options: PluginOptio
                 sortOrder: request.body.sortOrder
             });
 
-            return sendOne<UpdateStepHookResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.one({ result });
         }
     );
 
@@ -91,18 +73,14 @@ export async function stepHooksRoutes(app: FastifyInstance, options: PluginOptio
         app,
         deleteStepHookRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(DeleteStepHookUseCase);
             const result = await useCase.execute({
                 projectId: request.params.id,
                 hookId: request.params.hookId
             });
 
-            return sendList<DeleteStepHookResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.list({ result });
         }
     );
 }

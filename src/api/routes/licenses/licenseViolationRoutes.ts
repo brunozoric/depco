@@ -1,10 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendList } from "#shared/routing/index.js";
-import type {
-    ListLicenseViolationsResponse,
-    GetLicenseViolationsSummaryResponse
-} from "#shared/responses/licenses.js";
+import { registerRoute } from "#shared/routing/index.js";
 import {
     listLicenseViolationsRoute,
     getLicenseViolationsSummaryRoute
@@ -15,25 +11,17 @@ import {
 } from "../useCases/licenses/index.js";
 
 export function registerLicenseViolationRoutes(app: FastifyInstance, container: Container): void {
-    registerRoute(app, listLicenseViolationsRoute, {}, async (request, reply) => {
+    registerRoute(app, listLicenseViolationsRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(ListLicenseViolationsUseCase);
         const result = await useCase.execute(request.query);
 
-        return sendList<ListLicenseViolationsResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
-    registerRoute(app, getLicenseViolationsSummaryRoute, {}, async (request, reply) => {
+    registerRoute(app, getLicenseViolationsSummaryRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetLicenseViolationsSummaryUseCase);
         const result = await useCase.execute(request.query);
 
-        return sendList<GetLicenseViolationsSummaryResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 }

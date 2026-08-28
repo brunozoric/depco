@@ -1,13 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendList } from "#shared/routing/index.js";
-import type {
-    DashboardTrendResponse,
-    DashboardVulnerabilityTrendResponse,
-    DashboardStalenessTrendResponse,
-    DashboardLicenseTrendResponse,
-    DashboardAutoFixTrendResponse
-} from "#shared/responses/index.js";
+import { registerRoute } from "#shared/routing/index.js";
 import {
     dashboardTrendRoute,
     dashboardVulnerabilityTrendRoute,
@@ -24,73 +17,53 @@ import {
 } from "../useCases/dashboard/index.js";
 
 export function registerDashboardTrendRoutes(app: FastifyInstance, container: Container): void {
-    registerRoute(app, dashboardTrendRoute, {}, async (request, reply) => {
+    registerRoute(app, dashboardTrendRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetDashboardTrendUseCase);
         const result = await useCase.execute({
             range: request.query.range,
             teamId: request.query.teamId
         });
 
-        return sendList<DashboardTrendResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
-    registerRoute(app, dashboardVulnerabilityTrendRoute, {}, async (request, reply) => {
+    registerRoute(app, dashboardVulnerabilityTrendRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetDashboardVulnerabilityTrendUseCase);
         const result = await useCase.execute({
             days: request.query.days,
             teamId: request.query.teamId
         });
 
-        return sendList<DashboardVulnerabilityTrendResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
-    registerRoute(app, dashboardStalenessTrendRoute, {}, async (request, reply) => {
+    registerRoute(app, dashboardStalenessTrendRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetDashboardStalenessTrendUseCase);
         const result = await useCase.execute({
             days: request.query.days,
             teamId: request.query.teamId
         });
 
-        return sendList<DashboardStalenessTrendResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
-    registerRoute(app, dashboardLicenseTrendRoute, {}, async (request, reply) => {
+    registerRoute(app, dashboardLicenseTrendRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetDashboardLicenseTrendUseCase);
         const result = await useCase.execute({
             days: request.query.days,
             teamId: request.query.teamId
         });
 
-        return sendList<DashboardLicenseTrendResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
-    registerRoute(app, dashboardAutoFixTrendRoute, {}, async (request, reply) => {
+    registerRoute(app, dashboardAutoFixTrendRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetDashboardAutoFixTrendUseCase);
         const result = await useCase.execute({
             days: request.query.days,
             teamId: request.query.teamId
         });
 
-        return sendList<DashboardAutoFixTrendResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 }

@@ -1,12 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendList } from "#shared/routing/index.js";
-import type {
-    ListAutoFixPullRequestsResponse,
-    GetProjectAutoFixPullRequestsResponse,
-    GenerateAutoFixPrResponse,
-    DeleteAutoFixPullRequestResponse
-} from "#shared/responses/autoFix.js";
+import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listAutoFixPullRequestsRoute,
@@ -30,15 +24,11 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
 
     // Registered before the parametrized "/:projectId/..." routes below so it
     // isn't shadowed by them.
-    registerRoute(app, listAutoFixPullRequestsRoute, {}, async (request, reply) => {
+    registerRoute(app, listAutoFixPullRequestsRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(ListAutoFixPullRequestsUseCase);
         const result = await useCase.execute(request.query);
 
-        return sendList<ListAutoFixPullRequestsResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
     // Also registered before "/:projectId/pull-requests" — the fixed
@@ -49,45 +39,33 @@ export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptio
         app,
         deleteAutoFixPullRequestRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(DeleteAutoFixPullRequestUseCase);
             const result = await useCase.execute({ id: request.params.id });
 
-            return sendList<DeleteAutoFixPullRequestResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.list({ result });
         }
     );
 
-    registerRoute(app, getProjectAutoFixPullRequestsRoute, {}, async (request, reply) => {
+    registerRoute(app, getProjectAutoFixPullRequestsRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetProjectAutoFixPullRequestsUseCase);
         const result = await useCase.execute({
             projectId: request.params.projectId,
             status: request.query.status
         });
 
-        return sendList<GetProjectAutoFixPullRequestsResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
     registerRoute(
         app,
         generateAutoFixPrRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(GenerateAutoFixPrUseCase);
             const result = await useCase.execute({ projectId: request.params.projectId });
 
-            return sendList<GenerateAutoFixPrResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.list({ result });
         }
     );
 }

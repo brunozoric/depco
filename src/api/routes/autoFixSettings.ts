@@ -1,10 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendList } from "#shared/routing/index.js";
-import type {
-    GetAutoFixSettingsResponse,
-    UpdateAutoFixSettingsResponse
-} from "#shared/responses/autoFix.js";
+import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { getAutoFixSettingsRoute, updateAutoFixSettingsRoute } from "#shared/routes/index.js";
 import type { AutoFixSettingsService } from "#api/services/AutoFix/index.js";
@@ -49,33 +45,25 @@ export async function autoFixSettingsRoutes(
 ): Promise<void> {
     const { container } = options;
 
-    registerRoute(app, getAutoFixSettingsRoute, {}, async (request, reply) => {
+    registerRoute(app, getAutoFixSettingsRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetAutoFixSettingsUseCase);
         const result = await useCase.execute({ projectId: request.params.projectId });
 
-        return sendList<GetAutoFixSettingsResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
     registerRoute(
         app,
         updateAutoFixSettingsRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(UpdateAutoFixSettingsUseCase);
             const result = await useCase.execute({
                 projectId: request.params.projectId,
                 input: buildUpdateSettingsInput(request.body)
             });
 
-            return sendList<UpdateAutoFixSettingsResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.list({ result });
         }
     );
 }

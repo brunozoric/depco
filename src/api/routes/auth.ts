@@ -1,11 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendNone } from "#shared/routing/index.js";
-import type {
-    VerifyCodeResponse,
-    VerifyMagicLinkResponse,
-    GetMeResponse
-} from "#shared/responses/auth.js";
+import { registerRoute } from "#shared/routing/index.js";
 import {
     loginRoute,
     verifyCodeRoute,
@@ -37,15 +32,11 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
         {
             config: { rateLimit: { max: 10, timeWindow: "15 minutes" } }
         },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(LoginUseCase);
             const result = await useCase.execute(request.body);
 
-            return sendNone({
-                reply,
-                request,
-                result
-            });
+            return send.none({ result });
         }
     );
 
@@ -55,16 +46,11 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
         {
             config: { rateLimit: { max: 5, timeWindow: "15 minutes" } }
         },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(VerifyCodeUseCase);
             const result = await useCase.execute(request.body);
 
-            return sendOne<VerifyCodeResponse>({
-                reply,
-                request,
-                status: 200,
-                result
-            });
+            return send.one({ status: 200, result });
         }
     );
 
@@ -74,16 +60,12 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
         {
             config: { rateLimit: { max: 5, timeWindow: "15 minutes" } }
         },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const baseUrl = `${request.protocol}://${request.hostname}`;
             const useCase = container.resolve(RequestMagicLinkUseCase);
             const result = await useCase.execute({ ...request.body, baseUrl });
 
-            return sendNone({
-                reply,
-                request,
-                result
-            });
+            return send.none({ result });
         }
     );
 
@@ -93,42 +75,28 @@ export async function authRoutes(app: FastifyInstance, options: PluginOptions): 
         {
             config: { rateLimit: { max: 10, timeWindow: "15 minutes" } }
         },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(VerifyMagicLinkUseCase);
             const result = await useCase.execute(request.body);
 
-            return sendOne<VerifyMagicLinkResponse>({
-                reply,
-                request,
-                status: 200,
-                result
-            });
+            return send.one({ status: 200, result });
         }
     );
 
-    registerRoute(app, getMeRoute, {}, async (request, reply) => {
+    registerRoute(app, getMeRoute, {}, async (request, _reply, send) => {
         const { user } = request as IAuthenticatedRequest;
         const useCase = container.resolve(GetMeUseCase);
         const result = await useCase.execute({ userId: user.id });
 
-        return sendOne<GetMeResponse>({
-            reply,
-            request,
-            status: 200,
-            result
-        });
+        return send.one({ status: 200, result });
     });
 
-    registerRoute(app, logoutRoute, {}, async (request, reply) => {
+    registerRoute(app, logoutRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(LogoutUseCase);
         const result = await useCase.execute({
             authorizationHeader: request.headers.authorization
         });
 
-        return sendNone({
-            reply,
-            request,
-            result
-        });
+        return send.none({ result });
     });
 }

@@ -1,13 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendList } from "#shared/routing/index.js";
+import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
-import type {
-    CreateSecuritySettingResponse,
-    UpdateSecuritySettingResponse,
-    ToggleSecuritySettingResponse,
-    ResetSecuritySettingsResponse
-} from "#shared/responses/index.js";
 import {
     createSecuritySettingRoute,
     updateSecuritySettingRoute,
@@ -29,16 +23,11 @@ export function registerSecuritySettingsActionRoutes(
         app,
         createSecuritySettingRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(CreateSecuritySettingUseCase);
             const result = await useCase.execute(request.body);
 
-            return sendOne<CreateSecuritySettingResponse>({
-                reply,
-                request,
-                status: 201,
-                result
-            });
+            return send.one({ result, status: 201 });
         }
     );
 
@@ -46,18 +35,14 @@ export function registerSecuritySettingsActionRoutes(
         app,
         updateSecuritySettingRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(UpdateSecuritySettingUseCase);
             const result = await useCase.execute({
                 id: request.params.id,
                 expectedValue: request.body.expectedValue
             });
 
-            return sendOne<UpdateSecuritySettingResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.one({ result });
         }
     );
 
@@ -65,15 +50,11 @@ export function registerSecuritySettingsActionRoutes(
         app,
         toggleSecuritySettingRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(ToggleSecuritySettingUseCase);
             const result = await useCase.execute({ id: request.params.id });
 
-            return sendOne<ToggleSecuritySettingResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.one({ result });
         }
     );
 
@@ -81,15 +62,11 @@ export function registerSecuritySettingsActionRoutes(
         app,
         resetSecuritySettingsRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(ResetSecuritySettingsUseCase);
             const result = await useCase.execute({ packageManager: request.body.packageManager });
 
-            return sendList<ResetSecuritySettingsResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.list({ result });
         }
     );
 }

@@ -1,15 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendList, sendNone } from "#shared/routing/index.js";
+import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
-import type {
-    ScanProjectAsyncResponse,
-    GetProjectDependenciesResponse,
-    GetTransitiveResolveStatusResponse,
-    GetProjectSecurityResponse,
-    CheckProjectSecurityResponse,
-    GetProjectTeamsResponse
-} from "#shared/responses/index.js";
 import {
     scanProjectAsyncRoute,
     getProjectDependenciesRoute,
@@ -34,22 +26,18 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
         app,
         scanProjectAsyncRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(ScanProjectUseCase);
             const result = await useCase.execute({
                 id: request.params.id,
                 force: request.query.force
             });
 
-            return sendOne<ScanProjectAsyncResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.one({ result });
         }
     );
 
-    registerRoute(app, getProjectDependenciesRoute, {}, async (request, reply) => {
+    registerRoute(app, getProjectDependenciesRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetProjectDependenciesUseCase);
         const result = await useCase.execute({
             id: request.params.id,
@@ -60,78 +48,54 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
             pageSize: request.query.pageSize
         });
 
-        return sendList<GetProjectDependenciesResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
-    registerRoute(app, getTransitiveResolveStatusRoute, {}, async (request, reply) => {
+    registerRoute(app, getTransitiveResolveStatusRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetTransitiveResolveStatusUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
-        return sendList<GetTransitiveResolveStatusResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
-    registerRoute(app, getProjectSecurityRoute, {}, async (request, reply) => {
+    registerRoute(app, getProjectSecurityRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetProjectSecurityUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
-        return sendOne<GetProjectSecurityResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.one({ result });
     });
 
     registerRoute(
         app,
         checkProjectSecurityRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(CheckProjectSecurityUseCase);
             const result = await useCase.execute({ id: request.params.id });
 
-            return sendOne<CheckProjectSecurityResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.one({ result });
         }
     );
 
-    registerRoute(app, getProjectTeamsRoute, {}, async (request, reply) => {
+    registerRoute(app, getProjectTeamsRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetProjectTeamsUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
-        return sendList<GetProjectTeamsResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
     registerRoute(
         app,
         setProjectTeamsRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(SetProjectTeamsUseCase);
             const result = await useCase.execute({
                 id: request.params.id,
                 teamIds: request.body.teamIds
             });
 
-            return sendNone({
-                reply,
-                request,
-                result
-            });
+            return send.none({ result });
         }
     );
 }

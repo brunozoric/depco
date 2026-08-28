@@ -1,13 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne } from "#shared/routing/index.js";
-import type {
-    CreateUpgradeSessionResponse,
-    GetUpgradeSessionResponse,
-    ExecuteUpgradeStepResponse,
-    SkipUpgradeStepResponse,
-    AbortUpgradeSessionResponse
-} from "#shared/responses/upgradeSessions.js";
+import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     createUpgradeSessionRoute,
@@ -38,37 +31,29 @@ export async function upgradeSessionRoutes(
         app,
         createUpgradeSessionRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(CreateUpgradeSessionUseCase);
             const result = await useCase.execute({ projectId: request.params.id });
 
-            return sendOne<CreateUpgradeSessionResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.one({ result });
         }
     );
 
-    registerRoute(app, getUpgradeSessionRoute, {}, async (request, reply) => {
+    registerRoute(app, getUpgradeSessionRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetUpgradeSessionUseCase);
         const result = await useCase.execute({
             projectId: request.params.id,
             sessionId: request.params.sessionId
         });
 
-        return sendOne<GetUpgradeSessionResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.one({ result });
     });
 
     registerRoute(
         app,
         executeUpgradeStepRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(ExecuteUpgradeStepUseCase);
             const result = await useCase.execute({
                 projectId: request.params.id,
@@ -77,11 +62,7 @@ export async function upgradeSessionRoutes(
                 input: request.body
             });
 
-            return sendOne<ExecuteUpgradeStepResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.one({ result });
         }
     );
 
@@ -89,7 +70,7 @@ export async function upgradeSessionRoutes(
         app,
         skipUpgradeStepRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(SkipUpgradeStepUseCase);
             const result = await useCase.execute({
                 projectId: request.params.id,
@@ -97,11 +78,7 @@ export async function upgradeSessionRoutes(
                 stepType: request.params.stepType
             });
 
-            return sendOne<SkipUpgradeStepResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.one({ result });
         }
     );
 
@@ -109,18 +86,14 @@ export async function upgradeSessionRoutes(
         app,
         abortUpgradeSessionRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(AbortUpgradeSessionUseCase);
             const result = await useCase.execute({
                 projectId: request.params.id,
                 sessionId: request.params.sessionId
             });
 
-            return sendOne<AbortUpgradeSessionResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.one({ result });
         }
     );
 }

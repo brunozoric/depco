@@ -1,12 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendList, sendNone } from "#shared/routing/index.js";
-import type {
-    ListUsersResponse,
-    GetUserResponse,
-    CreateUserResponse,
-    UpdateUserResponse
-} from "#shared/responses/users.js";
+import { registerRoute } from "#shared/routing/index.js";
 import {
     listUsersRoute,
     getUserRoute,
@@ -35,46 +29,33 @@ const FULL_PERMISSION = "full";
 export async function userRoutes(app: FastifyInstance, options: PluginOptions): Promise<void> {
     const { container } = options;
 
-    registerRoute(app, listUsersRoute, {}, async (request, reply) => {
+    registerRoute(app, listUsersRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(ListUsersUseCase);
         const result = await useCase.execute(request.query);
 
-        return sendList<ListUsersResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
-    registerRoute(app, getUserRoute, {}, async (request, reply) => {
+    registerRoute(app, getUserRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetUserUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
-        return sendOne<GetUserResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.one({ result });
     });
 
     registerRoute(
         app,
         createUserRoute,
         { preHandler: requirePermission(FULL_PERMISSION) },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(CreateUserUseCase);
             const result = await useCase.execute(request.body);
 
-            return sendOne<CreateUserResponse>({
-                reply,
-                request,
-                status: 201,
-                result
-            });
+            return send.one({ result, status: 201 });
         }
     );
 
-    registerRoute(app, updateUserRoute, {}, async (request, reply) => {
+    registerRoute(app, updateUserRoute, {}, async (request, _reply, send) => {
         const { user: sessionUser } = request as IAuthenticatedRequest;
         const useCase = container.resolve(UpdateUserUseCase);
         const result = await useCase.execute({
@@ -87,18 +68,14 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
             isActive: request.body.isActive
         });
 
-        return sendOne<UpdateUserResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.one({ result });
     });
 
     registerRoute(
         app,
         deleteUserRoute,
         { preHandler: requirePermission(FULL_PERMISSION) },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const { user: sessionUser } = request as IAuthenticatedRequest;
             const useCase = container.resolve(DeleteUserUseCase);
             const result = await useCase.execute({
@@ -106,11 +83,7 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
                 sessionUserId: sessionUser.id
             });
 
-            return sendNone({
-                reply,
-                request,
-                result
-            });
+            return send.none({ result });
         }
     );
 
@@ -118,7 +91,7 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
         app,
         forceLogoutUserRoute,
         { preHandler: requirePermission(FULL_PERMISSION) },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const { user: sessionUser } = request as IAuthenticatedRequest;
             const useCase = container.resolve(ForceLogoutUserUseCase);
             const result = await useCase.execute({
@@ -126,11 +99,7 @@ export async function userRoutes(app: FastifyInstance, options: PluginOptions): 
                 sessionUserId: sessionUser.id
             });
 
-            return sendNone({
-                reply,
-                request,
-                result
-            });
+            return send.none({ result });
         }
     );
 }

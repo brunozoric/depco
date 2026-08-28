@@ -1,12 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendList, sendNone } from "#shared/routing/index.js";
-import type {
-    ListScanSchedulesResponse,
-    UpsertScanScheduleResponse,
-    GetScanScheduleDefaultResponse,
-    UpsertScanScheduleDefaultResponse
-} from "#shared/responses/scanSchedules.js";
+import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listScanSchedulesRoute,
@@ -33,33 +27,25 @@ export async function scanScheduleRoutes(
 ): Promise<void> {
     const { container } = options;
 
-    registerRoute(app, listScanSchedulesRoute, {}, async (request, reply) => {
+    registerRoute(app, listScanSchedulesRoute, {}, async (_request, _reply, send) => {
         const useCase = container.resolve(ListScanSchedulesUseCase);
         const result = await useCase.execute({});
 
-        return sendList<ListScanSchedulesResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
     registerRoute(
         app,
         upsertScanScheduleRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(UpsertScanScheduleUseCase);
             const result = await useCase.execute({
                 projectId: request.params.projectId,
                 interval: request.body.interval
             });
 
-            return sendOne<UpsertScanScheduleResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.one({ result });
         }
     );
 
@@ -67,43 +53,30 @@ export async function scanScheduleRoutes(
         app,
         deleteScanScheduleRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(DeleteScanScheduleUseCase);
             const result = await useCase.execute({ projectId: request.params.projectId });
 
-            return sendNone({
-                reply,
-                request,
-                status: 204,
-                result
-            });
+            return send.none({ result, status: 204 });
         }
     );
 
-    registerRoute(app, getScanScheduleDefaultRoute, {}, async (request, reply) => {
+    registerRoute(app, getScanScheduleDefaultRoute, {}, async (_request, _reply, send) => {
         const useCase = container.resolve(GetScanScheduleDefaultUseCase);
         const result = await useCase.execute({});
 
-        return sendOne<GetScanScheduleDefaultResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.one({ result });
     });
 
     registerRoute(
         app,
         upsertScanScheduleDefaultRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(UpsertScanScheduleDefaultUseCase);
             const result = await useCase.execute({ interval: request.body.interval });
 
-            return sendOne<UpsertScanScheduleDefaultResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.one({ result });
         }
     );
 }

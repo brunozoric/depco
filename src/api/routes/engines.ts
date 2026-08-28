@@ -1,14 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendList } from "#shared/routing/index.js";
-import type {
-    EngineSummary,
-    EngineScanResult,
-    ListNodeReleasesResponse,
-    GetProjectEngineChecksResponse,
-    GetProjectEngineStalenessResponse,
-    BulkScanEnginesResponse
-} from "#shared/responses/engines.js";
+import { registerRoute } from "#shared/routing/index.js";
 import {
     getEngineSummaryRoute,
     listNodeReleasesRoute,
@@ -33,62 +25,42 @@ interface PluginOptions extends FastifyPluginOptions {
 export async function engineRoutes(app: FastifyInstance, options: PluginOptions): Promise<void> {
     const { container } = options;
     // Registered before "/:projectId" so they aren't shadowed by that param route.
-    registerRoute(app, getEngineSummaryRoute, {}, async (request, reply) => {
+    registerRoute(app, getEngineSummaryRoute, {}, async (_request, _reply, send) => {
         const useCase = container.resolve(GetEngineSummaryUseCase);
         const result = await useCase.execute({});
 
-        return sendOne<EngineSummary>({
-            reply,
-            request,
-            result
-        });
+        return send.one({ result });
     });
 
-    registerRoute(app, listNodeReleasesRoute, {}, async (request, reply) => {
+    registerRoute(app, listNodeReleasesRoute, {}, async (_request, _reply, send) => {
         const useCase = container.resolve(ListNodeReleasesUseCase);
         const result = await useCase.execute({});
 
-        return sendList<ListNodeReleasesResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
-    registerRoute(app, bulkScanEnginesRoute, {}, async (request, reply) => {
+    registerRoute(app, bulkScanEnginesRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(BulkScanEnginesUseCase);
         const result = await useCase.execute({ projectIds: request.body.projectIds });
 
-        return sendList<BulkScanEnginesResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
-    registerRoute(app, getProjectEngineChecksRoute, {}, async (request, reply) => {
+    registerRoute(app, getProjectEngineChecksRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetProjectEngineChecksUseCase);
         const result = await useCase.execute({ projectId: request.params.projectId });
 
-        return sendList<GetProjectEngineChecksResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
-    registerRoute(app, getProjectEngineStalenessRoute, {}, async (request, reply) => {
+    registerRoute(app, getProjectEngineStalenessRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetProjectEngineStalenessUseCase);
         const result = await useCase.execute({ projectId: request.params.projectId });
 
-        return sendOne<GetProjectEngineStalenessResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.one({ result });
     });
 
-    registerRoute(app, scanProjectEnginesRoute, {}, async (request, reply) => {
+    registerRoute(app, scanProjectEnginesRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(ScanProjectEnginesUseCase);
         const result = await useCase.execute({
             projectId: request.params.projectId,
@@ -97,10 +69,6 @@ export async function engineRoutes(app: FastifyInstance, options: PluginOptions)
             })
         });
 
-        return sendOne<EngineScanResult>({
-            reply,
-            request,
-            result
-        });
+        return send.one({ result });
     });
 }

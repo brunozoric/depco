@@ -1,13 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendList, sendNone } from "#shared/routing/index.js";
-import type {
-    CreateUpgradeJobResponse,
-    CreateTransientJobResponse,
-    GetJobResponse,
-    ListJobsResponse,
-    DeleteJobsResponse
-} from "#shared/responses/jobs.js";
+import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     createUpgradeJobRoute,
@@ -43,7 +36,7 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
         app,
         createUpgradeJobRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(UpgradeJobUseCase);
             const result = await useCase.execute({
                 projectId: request.params.id,
@@ -51,11 +44,7 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
                 refreshTransient: request.body.refreshTransient
             });
 
-            return sendOne<CreateUpgradeJobResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.one({ result });
         }
     );
 
@@ -65,55 +54,39 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
         app,
         createTransientJobRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(CreateTransientJobUseCase);
             const result = await useCase.execute({ projectId: request.params.id });
 
-            return sendOne<CreateTransientJobResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.one({ result });
         }
     );
 
     // GET /api/projects/:id/jobs/:jobId — job status + logs.
-    registerRoute(app, getJobRoute, {}, async (request, reply) => {
+    registerRoute(app, getJobRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetJobUseCase);
         const result = await useCase.execute({
             projectId: request.params.id,
             jobId: request.params.jobId
         });
 
-        return sendOne<GetJobResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.one({ result });
     });
 
     // GET /api/projects/:id/jobs — job history for the project.
-    registerRoute(app, listJobsRoute, {}, async (request, reply) => {
+    registerRoute(app, listJobsRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(ListProjectJobsUseCase);
         const result = await useCase.execute({ projectId: request.params.id });
 
-        return sendList<ListJobsResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
     // GET /api/jobs — jobs across all projects with filtering, pagination, sorting.
-    registerRoute(app, listAllJobsRoute, {}, async (request, reply) => {
+    registerRoute(app, listAllJobsRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(ListAllJobsUseCase);
         const result = await useCase.execute(request.query);
 
-        return sendList<ListJobsResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
     // POST /api/jobs/:jobId/cancel — cancel or kill a job.
@@ -121,15 +94,11 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
         app,
         cancelJobRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(CancelJobUseCase);
             const result = await useCase.execute({ jobId: request.params.jobId });
 
-            return sendNone({
-                reply,
-                request,
-                result
-            });
+            return send.none({ result });
         }
     );
 
@@ -138,15 +107,11 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
         app,
         deleteJobsRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(DeleteJobsUseCase);
             const result = await useCase.execute(request.body);
 
-            return sendList<DeleteJobsResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.list({ result });
         }
     );
 }

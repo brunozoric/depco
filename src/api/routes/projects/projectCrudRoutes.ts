@@ -1,13 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendList, sendNone } from "#shared/routing/index.js";
+import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
-import type {
-    CreateProjectResponse,
-    ListProjectsResponse,
-    GetProjectResponse,
-    UpdateProjectResponse
-} from "#shared/responses/index.js";
 import {
     createProjectRoute,
     listProjectsRoute,
@@ -28,20 +22,15 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
         app,
         createProjectRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(CreateProjectUseCase);
             const result = await useCase.execute({ projectPath: request.body.path });
 
-            return sendOne<CreateProjectResponse>({
-                reply,
-                request,
-                status: 201,
-                result
-            });
+            return send.one({ result, status: 201 });
         }
     );
 
-    registerRoute(app, listProjectsRoute, {}, async (request, reply) => {
+    registerRoute(app, listProjectsRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(ListProjectsUseCase);
         const result = await useCase.execute({
             page: request.query.page,
@@ -53,38 +42,25 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
             engineStatus: request.query.engineStatus
         });
 
-        return sendList<ListProjectsResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
-    registerRoute(app, getProjectRoute, {}, async (request, reply) => {
+    registerRoute(app, getProjectRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetProjectUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
-        return sendOne<GetProjectResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.one({ result });
     });
 
     registerRoute(
         app,
         deleteProjectRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(DeleteProjectUseCase);
             const result = await useCase.execute({ id: request.params.id });
 
-            return sendNone({
-                reply,
-                request,
-                status: 204,
-                result
-            });
+            return send.none({ result, status: 204 });
         }
     );
 
@@ -92,18 +68,14 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
         app,
         updateProjectRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(UpdateProjectUseCase);
             const result = await useCase.execute({
                 id: request.params.id,
                 name: request.body.name
             });
 
-            return sendOne<UpdateProjectResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.one({ result });
         }
     );
 }

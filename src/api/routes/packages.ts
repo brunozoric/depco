@@ -1,11 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { Container } from "@webiny/di";
-import { registerRoute, sendOne, sendList } from "#shared/routing/index.js";
-import type {
-    ListPackagesResponse,
-    GetPackageDetailResponse,
-    RescanPackageResponse
-} from "#shared/responses/packages.js";
+import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
     listPackagesRoute,
@@ -25,41 +20,29 @@ interface PluginOptions extends FastifyPluginOptions {
 export async function packagesRoutes(app: FastifyInstance, options: PluginOptions): Promise<void> {
     const { container } = options;
 
-    registerRoute(app, listPackagesRoute, {}, async (request, reply) => {
+    registerRoute(app, listPackagesRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(ListPackagesUseCase);
         const result = await useCase.execute(request.query);
 
-        return sendList<ListPackagesResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.list({ result });
     });
 
-    registerRoute(app, getPackageDetailRoute, {}, async (request, reply) => {
+    registerRoute(app, getPackageDetailRoute, {}, async (request, _reply, send) => {
         const useCase = container.resolve(GetPackageDetailUseCase);
         const result = await useCase.execute({ packageName: request.params.packageName });
 
-        return sendOne<GetPackageDetailResponse>({
-            reply,
-            request,
-            result
-        });
+        return send.one({ result });
     });
 
     registerRoute(
         app,
         rescanPackageRoute,
         { preHandler: [requirePermission("full")] },
-        async (request, reply) => {
+        async (request, _reply, send) => {
             const useCase = container.resolve(RescanPackageUseCase);
             const result = await useCase.execute({ packageName: request.params.packageName });
 
-            return sendOne<RescanPackageResponse>({
-                reply,
-                request,
-                result
-            });
+            return send.one({ result });
         }
     );
 }
