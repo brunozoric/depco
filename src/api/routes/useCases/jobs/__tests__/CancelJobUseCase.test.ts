@@ -55,6 +55,8 @@ describe("CancelJobUseCase", () => {
             startedAt: Date.now(),
             completedAt: null,
             warning: null,
+            progress: null,
+            progressLabel: null,
             parentJobId: null
         }));
         const { useCase } = createContext({ jobWorker: { getJob, cancelJob } });

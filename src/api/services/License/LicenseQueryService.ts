@@ -1,9 +1,11 @@
 import { and, asc, desc, eq, inArray, like, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { LicenseQueryService as Abstraction } from "./abstractions/LicenseQueryService.js";
+import type { LicenseSource } from "./abstractions/LicenseQueryService.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { licenses, licenseViolations, projects, teamProjects } from "#api/db/schema.js";
 import { teamProjectIds } from "#api/utils/teamFilter.js";
+import type { LicenseRiskTier } from "#shared/licenses/types.js";
 
 const DEFAULT_PAGE_SIZE = 50;
 
@@ -30,7 +32,7 @@ class LicenseQueryServiceImpl implements Abstraction.Interface {
             .get();
         const total = countResult?.count ?? 0;
 
-        const items = await db
+        const rows = await db
             .select()
             .from(licenses)
             .where(where)
@@ -39,7 +41,7 @@ class LicenseQueryServiceImpl implements Abstraction.Interface {
             .offset((page - 1) * pageSize)
             .all();
 
-        return { items, total };
+        return { items: rows.map(row => this.toLicenseRow(row)), total };
     }
 
     public async listProjectLicenses(
@@ -52,13 +54,13 @@ class LicenseQueryServiceImpl implements Abstraction.Interface {
             eq(licenses.projectId, projectId),
             ...this.buildLicenseConditions(rest)
         ];
-        const items = await db
+        const rows = await db
             .select()
             .from(licenses)
             .where(and(...conditions))
             .all();
 
-        return { items, total: items.length };
+        return { items: rows.map(row => this.toLicenseRow(row)), total: rows.length };
     }
 
     public async getLicenseSummary(
@@ -87,7 +89,8 @@ class LicenseQueryServiceImpl implements Abstraction.Interface {
         const violationFilter =
             violationConditions.length > 0 ? and(...violationConditions) : undefined;
 
-        const allLicenses = await db.select().from(licenses).where(licenseFilter).all();
+        const allLicenseRows = await db.select().from(licenses).where(licenseFilter).all();
+        const allLicenses = allLicenseRows.map(row => this.toLicenseRow(row));
         const allViolations = await db
             .select()
             .from(licenseViolations)
@@ -256,6 +259,20 @@ class LicenseQueryServiceImpl implements Abstraction.Interface {
             warnCount,
             denyCount,
             byProject: Array.from(byProjectMap.values())
+        };
+    }
+
+    private toLicenseRow(row: typeof licenses.$inferSelect): Abstraction.Row {
+        return {
+            id: row.id,
+            projectId: row.projectId,
+            packageName: row.packageName,
+            licenseName: row.licenseName,
+            spdxId: row.spdxId,
+            source: row.source as LicenseSource,
+            riskTier: row.riskTier as LicenseRiskTier,
+            licenseUrl: row.licenseUrl,
+            scannedAt: row.scannedAt
         };
     }
 

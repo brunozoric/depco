@@ -4,6 +4,8 @@ import { registerRoute, sendOne, sendList, sendNone } from "#shared/routing/inde
 import type {
     CreateUpgradeJobResponse,
     CreateTransientJobResponse,
+    GetJobResponse,
+    ListJobsResponse,
     DeleteJobsResponse
 } from "#shared/responses/jobs.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
@@ -83,7 +85,7 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
             jobId: request.params.jobId
         });
 
-        return sendOne({
+        return sendOne<GetJobResponse>({
             reply,
             request,
             result
@@ -95,7 +97,7 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
         const useCase = container.resolve(ListProjectJobsUseCase);
         const result = await useCase.execute({ projectId: request.params.id });
 
-        return sendList({
+        return sendList<ListJobsResponse>({
             reply,
             request,
             result
@@ -107,7 +109,7 @@ export async function jobRoutes(app: FastifyInstance, options: PluginOptions): P
         const useCase = container.resolve(ListAllJobsUseCase);
         const result = await useCase.execute(request.query);
 
-        return sendList({
+        return sendList<ListJobsResponse>({
             reply,
             request,
             result

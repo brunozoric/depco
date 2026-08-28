@@ -271,7 +271,7 @@ describe("FileConfigService", () => {
         it("returns error result on invalid schema", async () => {
             await writeFile(
                 join(process.cwd(), ".dependency-upgrader.json"),
-                JSON.stringify({ settings: { logLevel: "debug" } }),
+                JSON.stringify({ settings: { logLevel: "banana" } }),
                 "utf-8"
             );
 
@@ -454,7 +454,7 @@ describe("FileConfigService", () => {
         it("returns error result on invalid logLevel value", async () => {
             await writeFile(
                 join(process.cwd(), ".dependency-upgrader.json"),
-                JSON.stringify({ settings: { logLevel: "debug" } }),
+                JSON.stringify({ settings: { logLevel: "banana" } }),
                 "utf-8"
             );
 

@@ -9,27 +9,35 @@ import { createDatabaseDestination } from "./destinations/createDatabaseDestinat
 
 const VALID_LEVELS = new Set(["trace", "debug", "info", "warn", "error", "fatal"]);
 
+interface IDestinationLevels {
+    console: string;
+    file: string;
+    database: string;
+}
+
 class LoggerServiceImpl implements Abstraction.Interface {
     public readonly logger: pino.Logger;
     private readonly multistream: pino.MultiStreamRes;
+    private readonly databaseClient: DatabaseClient.Interface;
 
     public constructor(
         databaseClient: DatabaseClient.Interface,
         webSocketBroadcaster: WebSocketBroadcaster.Interface
     ) {
-        const logLevel = this.readLogLevel(databaseClient);
+        this.databaseClient = databaseClient;
+        const levels = this.readDestinationLevels();
 
         const dbDestination = createDatabaseDestination({
             db: databaseClient.db,
             broadcaster: webSocketBroadcaster,
-            threshold: logLevel
+            threshold: levels.database
         });
 
-        const consoleDestination = createConsoleDestination({ threshold: "info" });
+        const consoleDestination = createConsoleDestination({ threshold: levels.console });
 
         const streams: pino.StreamEntry[] = [
             consoleDestination,
-            { stream: dbDestination, level: logLevel as pino.Level }
+            { stream: dbDestination, level: levels.database as pino.Level }
         ];
 
         this.multistream = pino.multistream(streams);
@@ -41,19 +49,28 @@ class LoggerServiceImpl implements Abstraction.Interface {
 
     public async initFileDestination(directory: string): Promise<void> {
         const { createFileDestination } = await import("./destinations/createFileDestination.js");
-        const fileEntry = await createFileDestination({ directory, threshold: "debug" });
+        const fileLevel = this.readSingleLevel("file_log_level", "debug");
+        const fileEntry = await createFileDestination({ directory, threshold: fileLevel });
         this.multistream.add(fileEntry);
     }
 
-    private readLogLevel(databaseClient: DatabaseClient.Interface): string {
-        const row = databaseClient.db
+    private readDestinationLevels(): IDestinationLevels {
+        return {
+            console: this.readSingleLevel("console_log_level", "info"),
+            file: this.readSingleLevel("file_log_level", "debug"),
+            database: this.readSingleLevel("log_level", "warn")
+        };
+    }
+
+    private readSingleLevel(key: string, fallback: string): string {
+        const row = this.databaseClient.db
             .select()
             .from(appSettings)
-            .where(eq(appSettings.key, "log_level"))
+            .where(eq(appSettings.key, key))
             .get();
 
-        const level = row?.value ?? "warn";
-        return VALID_LEVELS.has(level) ? level : "warn";
+        const level = row?.value ?? fallback;
+        return VALID_LEVELS.has(level) ? level : fallback;
     }
 }
 

@@ -12,7 +12,7 @@ export interface IFileStepHook {
 export interface IFileSettings {
     branchTemplate?: string;
     commitTemplate?: string;
-    logLevel?: "error" | "warn" | "info";
+    logLevel?: "trace" | "debug" | "info" | "warn" | "error" | "fatal";
 }
 
 export interface IFilePmSettings {

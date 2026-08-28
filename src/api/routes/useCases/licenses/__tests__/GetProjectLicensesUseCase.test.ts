@@ -37,7 +37,7 @@ describe("GetProjectLicensesUseCase", () => {
                     packageName: "lodash",
                     licenseName: "MIT",
                     spdxId: "MIT",
-                    source: "npm",
+                    source: "registry",
                     riskTier: "permissive",
                     licenseUrl: null,
                     scannedAt: 2000

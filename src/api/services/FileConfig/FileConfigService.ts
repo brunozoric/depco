@@ -26,7 +26,7 @@ const fileStepHookSchema = z.object({
 const fileSettingsSchema = z.object({
     branchTemplate: z.string().optional(),
     commitTemplate: z.string().optional(),
-    logLevel: z.enum(["error", "warn", "info"]).optional()
+    logLevel: z.enum(["trace", "debug", "info", "warn", "error", "fatal"]).optional()
 });
 
 const filePmSettingsSchema = z

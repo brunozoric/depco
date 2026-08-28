@@ -22,12 +22,41 @@ const KNOWN_SETTINGS: Record<string, IKnownSettingMeta> = {
             "Template for upgrade commit messages. Tokens: ${PROJECT}, ${BRANCH}, ${YYYY}, ${MM}, ${DD}"
     },
     log_level: {
-        label: "Log Level",
-        description: "Minimum severity level for log entries. Lower levels capture more detail.",
+        label: "Database Log Level",
+        description:
+            "Minimum severity for logs stored in the database and broadcast via WebSocket.",
         options: [
-            { label: "Error", value: "error" },
+            { label: "Trace", value: "trace" },
+            { label: "Debug", value: "debug" },
+            { label: "Info", value: "info" },
             { label: "Warning", value: "warn" },
-            { label: "Info", value: "info" }
+            { label: "Error", value: "error" },
+            { label: "Fatal", value: "fatal" }
+        ]
+    },
+    console_log_level: {
+        label: "Console Log Level",
+        description: "Minimum severity for log output in the server console. Requires restart.",
+        options: [
+            { label: "Trace", value: "trace" },
+            { label: "Debug", value: "debug" },
+            { label: "Info", value: "info" },
+            { label: "Warning", value: "warn" },
+            { label: "Error", value: "error" },
+            { label: "Fatal", value: "fatal" }
+        ]
+    },
+    file_log_level: {
+        label: "File Log Level",
+        description:
+            "Minimum severity for log entries written to the rotating file (data/app.log). Requires restart.",
+        options: [
+            { label: "Trace", value: "trace" },
+            { label: "Debug", value: "debug" },
+            { label: "Info", value: "info" },
+            { label: "Warning", value: "warn" },
+            { label: "Error", value: "error" },
+            { label: "Fatal", value: "fatal" }
         ]
     },
     github_token: {

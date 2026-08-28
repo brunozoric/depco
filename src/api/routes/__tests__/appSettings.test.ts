@@ -165,7 +165,7 @@ describe("app settings routes", () => {
 
     it("returns configSource error on invalid schema", async () => {
         const configPath = join(process.cwd(), ".dependency-upgrader.json");
-        await writeFile(configPath, JSON.stringify({ settings: { logLevel: "debug" } }), "utf-8");
+        await writeFile(configPath, JSON.stringify({ settings: { logLevel: "banana" } }), "utf-8");
 
         try {
             const response = await app.inject({

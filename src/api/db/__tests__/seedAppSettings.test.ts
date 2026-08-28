@@ -12,7 +12,7 @@ describe("seedAppSettings", () => {
 
         const rows = await db.select().from(appSettings).all();
 
-        expect(rows).toHaveLength(5);
+        expect(rows).toHaveLength(7);
 
         const branchRow = rows.find(r => r.key === "branch_template");
         expect(branchRow).toBeDefined();
@@ -25,6 +25,14 @@ describe("seedAppSettings", () => {
         const logRow = rows.find(r => r.key === "log_level");
         expect(logRow).toBeDefined();
         expect(logRow!.value).toBe("warn");
+
+        const consoleLogRow = rows.find(r => r.key === "console_log_level");
+        expect(consoleLogRow).toBeDefined();
+        expect(consoleLogRow!.value).toBe("info");
+
+        const fileLogRow = rows.find(r => r.key === "file_log_level");
+        expect(fileLogRow).toBeDefined();
+        expect(fileLogRow!.value).toBe("debug");
 
         const snoozeCheckIntervalRow = rows.find(r => r.key === "snooze_check_interval");
         expect(snoozeCheckIntervalRow).toBeDefined();
@@ -55,7 +63,7 @@ describe("seedAppSettings", () => {
         expect(row!.value).toBe("custom/my-branch");
 
         const allRows = await db.select().from(appSettings).all();
-        expect(allRows).toHaveLength(5);
+        expect(allRows).toHaveLength(7);
     });
 
     it("is idempotent — second call does not duplicate rows", async () => {
@@ -65,6 +73,6 @@ describe("seedAppSettings", () => {
         await seedAppSettings(db);
 
         const allRows = await db.select().from(appSettings).all();
-        expect(allRows).toHaveLength(5);
+        expect(allRows).toHaveLength(7);
     });
 });

@@ -20,6 +20,14 @@ const DEFAULT_SETTINGS: IDefaultSetting[] = [
         value: "warn"
     },
     {
+        key: "console_log_level",
+        value: "info"
+    },
+    {
+        key: "file_log_level",
+        value: "debug"
+    },
+    {
         key: "snooze_check_interval",
         value: "3600000"
     },

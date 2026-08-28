@@ -39,6 +39,8 @@ function makeJob(overrides: IMakeJobOverrides = {}): JobWorker.Job {
         startedAt: Date.now(),
         completedAt: Date.now(),
         warning: overrides.warning ?? null,
+        progress: null,
+        progressLabel: null,
         parentJobId: "job-1"
     };
 }

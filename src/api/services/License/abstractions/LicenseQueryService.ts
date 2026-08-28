@@ -1,4 +1,7 @@
 import { createAbstraction } from "#shared/index.js";
+import type { LicenseRiskTier } from "#shared/licenses/types.js";
+
+export type LicenseSource = "registry" | "license-checker";
 
 export interface ILicenseListFilters {
     projectId?: string | undefined;
@@ -19,8 +22,8 @@ export interface ILicenseRow {
     packageName: string;
     licenseName: string;
     spdxId: string | null;
-    source: string;
-    riskTier: string;
+    source: LicenseSource;
+    riskTier: LicenseRiskTier;
     licenseUrl: string | null;
     scannedAt: number;
 }

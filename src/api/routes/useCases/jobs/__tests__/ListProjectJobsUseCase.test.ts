@@ -58,6 +58,8 @@ describe("ListProjectJobsUseCase", () => {
                 startedAt: Date.now(),
                 completedAt: Date.now(),
                 warning: null,
+                progress: null,
+                progressLabel: null,
                 parentJobId: null
             }
         ];

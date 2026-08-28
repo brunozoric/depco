@@ -54,6 +54,8 @@ describe("GetJobUseCase", () => {
             startedAt: Date.now(),
             completedAt: Date.now(),
             warning: null,
+            progress: null,
+            progressLabel: null,
             parentJobId: null
         };
         const { useCase } = createContext({ jobWorker: { getJob: vi.fn(async () => job) } });
@@ -91,6 +93,8 @@ describe("GetJobUseCase", () => {
             startedAt: Date.now(),
             completedAt: Date.now(),
             warning: null,
+            progress: null,
+            progressLabel: null,
             parentJobId: null
         };
         const { useCase } = createContext({ jobWorker: { getJob: vi.fn(async () => job) } });

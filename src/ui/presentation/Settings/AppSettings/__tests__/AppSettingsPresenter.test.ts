@@ -67,7 +67,7 @@ describe("AppSettingsPresenter", () => {
         expect(logLevel).toBeDefined();
         expect(logLevel!.value).toBe("warn");
         expect(logLevel!.options).not.toBeNull();
-        expect(logLevel!.options).toHaveLength(3);
+        expect(logLevel!.options).toHaveLength(6);
     });
 
     it("vm.settings includes branch_template and commit_template without options", () => {
@@ -96,9 +96,12 @@ describe("AppSettingsPresenter", () => {
         const logLevel = presenter.vm.settings.find(s => s.key === "log_level");
 
         expect(logLevel!.options).toEqual([
-            { label: "Error", value: "error" },
+            { label: "Trace", value: "trace" },
+            { label: "Debug", value: "debug" },
+            { label: "Info", value: "info" },
             { label: "Warning", value: "warn" },
-            { label: "Info", value: "info" }
+            { label: "Error", value: "error" },
+            { label: "Fatal", value: "fatal" }
         ]);
     });
 
@@ -360,7 +363,7 @@ describe("AppSettingsPresenter", () => {
 
         expect(logLevel).toBeDefined();
         expect(logLevel!.description).toBe(
-            "Minimum severity level for log entries. Lower levels capture more detail."
+            "Minimum severity for logs stored in the database and broadcast via WebSocket."
         );
     });
 });

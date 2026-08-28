@@ -70,6 +70,8 @@ export interface IJob {
     startedAt: number | null;
     completedAt: number | null;
     warning: string | null;
+    progress: number | null;
+    progressLabel: string | null;
     parentJobId: string | null;
 }
 

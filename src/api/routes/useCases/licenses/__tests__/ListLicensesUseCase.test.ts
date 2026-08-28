@@ -37,7 +37,7 @@ describe("ListLicensesUseCase", () => {
                     packageName: "react",
                     licenseName: "MIT",
                     spdxId: "MIT",
-                    source: "npm",
+                    source: "registry",
                     riskTier: "permissive",
                     licenseUrl: null,
                     scannedAt: 1000
