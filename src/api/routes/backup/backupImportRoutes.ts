@@ -2,104 +2,74 @@ import { z } from "zod";
 import type { FastifyInstance } from "fastify";
 import type { Container } from "@webiny/di";
 import { unzipSync, strFromU8 } from "fflate";
+import { Result } from "#shared/index.js";
+import { defineRoute, registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
-import { sendError, sendList } from "#shared/routing/index.js";
-import type { ImportResult } from "#shared/responses/backup.js";
+import { backupPayloadSchema, importResultSchema } from "#shared/responses/backup.js";
 import { ImportBackupUseCase } from "../useCases/backup/index.js";
 
-const backupChangelogEntrySchema = z.object({
-    content: z.string().nullable(),
-    source: z.string().nullable()
-});
-
-const backupVersionEntrySchema = z.object({
-    version: z.string(),
-    publishedAt: z.number().nullable(),
-    changelog: backupChangelogEntrySchema.optional()
-});
-
-const backupPayloadSchema = z.object({
-    version: z.number(),
-    exportedAt: z.number(),
-    appSettings: z.array(z.object({ key: z.string(), value: z.string() })),
-    securitySettings: z.array(
-        z.object({
-            packageManager: z.string(),
-            configFile: z.string(),
-            fieldName: z.string(),
-            expectedValue: z.string()
-        })
-    ),
-    projects: z.array(
-        z.object({
-            name: z.string(),
-            path: z.string(),
-            packageManager: z.string().nullable(),
-            pmVersion: z.string().nullable()
-        })
-    ),
-    dependencies: z.array(
-        z.object({
-            name: z.string(),
-            repoUrl: z.string().nullable(),
-            versions: z.array(backupVersionEntrySchema)
-        })
-    ),
-    registryCache: z.array(
-        z.object({
-            packageName: z.string(),
-            data: z.string(),
-            cachedAt: z.number()
-        })
-    )
+// Body is a raw ZIP buffer (parsed by the octet-stream content type parser
+// in backup.ts), so no body schema — the handler validates manually after
+// unzipping.
+const importBackupZipRoute = defineRoute({
+    method: "POST",
+    path: "/api/projects/backup",
+    description: "Import application backup from ZIP",
+    params: z.object({}),
+    response: importResultSchema
 });
 
 export function registerBackupImportRoutes(app: FastifyInstance, container: Container): void {
-    app.post(
-        "/api/projects/backup",
+    registerRoute(
+        app,
+        importBackupZipRoute,
         {
             preHandler: [requirePermission("full")],
             config: { rateLimit: { max: 10, timeWindow: "1 minute" } }
         },
-        async (request, reply) => {
-            const rawBody = request.body as Buffer;
-            const unzipped = unzipSync(new Uint8Array(rawBody));
-            const jsonFile = unzipped["backup.json"];
+        async (request, _reply, send) => {
+            const body = request.body as unknown as Buffer;
+            let unzipped: ReturnType<typeof unzipSync>;
 
+            try {
+                unzipped = unzipSync(new Uint8Array(body));
+            } catch {
+                return send.list({
+                    result: Result.fail({
+                        code: "INVALID_ZIP",
+                        statusCode: 400,
+                        message: "Request body is not a valid ZIP file"
+                    })
+                });
+            }
+
+            const jsonFile = unzipped["backup.json"];
             if (!jsonFile) {
-                return sendError({
-                    reply,
-                    request,
-                    error: {
+                return send.list({
+                    result: Result.fail({
                         code: "MISSING_BACKUP_JSON",
                         statusCode: 400,
                         message: "ZIP must contain backup.json"
-                    }
+                    })
                 });
             }
 
             const content = strFromU8(jsonFile);
             const parseResult = backupPayloadSchema.safeParse(JSON.parse(content));
             if (!parseResult.success) {
-                return sendError({
-                    reply,
-                    request,
-                    error: {
+                return send.list({
+                    result: Result.fail({
                         code: "INVALID_BACKUP_FORMAT",
                         statusCode: 400,
                         message: "Invalid backup format"
-                    }
+                    })
                 });
             }
 
             const useCase = container.resolve(ImportBackupUseCase);
             const result = await useCase.execute({ payload: parseResult.data });
 
-            return sendList<ImportResult>({
-                reply,
-                request,
-                result
-            });
+            return send.list({ result });
         }
     );
 }

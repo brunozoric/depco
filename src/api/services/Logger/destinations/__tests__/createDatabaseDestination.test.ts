@@ -22,7 +22,7 @@ describe("createDatabaseDestination", () => {
     });
 
     it("inserts a log entry into the database", async () => {
-        const destination = createDatabaseDestination({ db, broadcaster, threshold: "info" });
+        const { writable } = createDatabaseDestination({ db, broadcaster, threshold: "info" });
 
         const logLine =
             JSON.stringify({
@@ -34,7 +34,7 @@ describe("createDatabaseDestination", () => {
                 details: "stack trace"
             }) + "\n";
 
-        destination.write(logLine);
+        writable.write(logLine);
 
         await sleep(100);
 
@@ -50,7 +50,7 @@ describe("createDatabaseDestination", () => {
     });
 
     it("broadcasts log:created event", async () => {
-        const destination = createDatabaseDestination({ db, broadcaster, threshold: "info" });
+        const { writable } = createDatabaseDestination({ db, broadcaster, threshold: "info" });
 
         const logLine =
             JSON.stringify({
@@ -61,7 +61,7 @@ describe("createDatabaseDestination", () => {
                 projectId: null
             }) + "\n";
 
-        destination.write(logLine);
+        writable.write(logLine);
 
         await sleep(100);
 
@@ -76,7 +76,7 @@ describe("createDatabaseDestination", () => {
     });
 
     it("skips HTTP info-level logs", async () => {
-        const destination = createDatabaseDestination({ db, broadcaster, threshold: "info" });
+        const { writable } = createDatabaseDestination({ db, broadcaster, threshold: "info" });
 
         const logLine =
             JSON.stringify({
@@ -86,7 +86,7 @@ describe("createDatabaseDestination", () => {
                 source: "http"
             }) + "\n";
 
-        destination.write(logLine);
+        writable.write(logLine);
 
         await sleep(100);
 
@@ -95,7 +95,7 @@ describe("createDatabaseDestination", () => {
     });
 
     it("persists HTTP error-level logs", async () => {
-        const destination = createDatabaseDestination({ db, broadcaster, threshold: "info" });
+        const { writable } = createDatabaseDestination({ db, broadcaster, threshold: "info" });
 
         const logLine =
             JSON.stringify({
@@ -106,7 +106,7 @@ describe("createDatabaseDestination", () => {
                 projectId: null
             }) + "\n";
 
-        destination.write(logLine);
+        writable.write(logLine);
 
         await sleep(100);
 
@@ -115,7 +115,7 @@ describe("createDatabaseDestination", () => {
     });
 
     it("respects threshold — skips info when threshold is warn", async () => {
-        const destination = createDatabaseDestination({ db, broadcaster, threshold: "warn" });
+        const { writable } = createDatabaseDestination({ db, broadcaster, threshold: "warn" });
 
         const logLine =
             JSON.stringify({
@@ -126,11 +126,38 @@ describe("createDatabaseDestination", () => {
                 projectId: "p1"
             }) + "\n";
 
-        destination.write(logLine);
+        writable.write(logLine);
 
         await sleep(100);
 
         const rows = await db.select().from(appLogs).all();
         expect(rows).toHaveLength(0);
+    });
+
+    it("respects state.thresholdPriority changes at runtime", async () => {
+        const { writable, state } = createDatabaseDestination({
+            db,
+            broadcaster,
+            threshold: "warn"
+        });
+
+        // Info should be skipped at "warn" threshold
+        writable.write(
+            JSON.stringify({ level: 30, time: Date.now(), msg: "before", source: "app" }) + "\n"
+        );
+        await sleep(50);
+        expect(await db.select().from(appLogs).all()).toHaveLength(0);
+
+        // Lower threshold to "info" via state mutation (simulates refreshLogLevels)
+        state.thresholdPriority = 2; // info priority
+
+        writable.write(
+            JSON.stringify({ level: 30, time: Date.now(), msg: "after", source: "app" }) + "\n"
+        );
+        await sleep(50);
+
+        const rows = await db.select().from(appLogs).all();
+        expect(rows).toHaveLength(1);
+        expect(rows[0]!.message).toBe("after");
     });
 });

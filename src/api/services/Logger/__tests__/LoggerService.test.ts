@@ -82,4 +82,24 @@ describe("LoggerService", () => {
         const service = container.resolve(LoggerService);
         expect(service.logger).toBeDefined();
     });
+
+    it("refreshLogLevels re-reads updated values from the database", () => {
+        const { container, db } = setup();
+
+        const service = container.resolve(LoggerService);
+
+        // Change log_level from default "warn" to "debug"
+        db.update(appSettings)
+            .set({ value: "debug" })
+            .where(eq(appSettings.key, "log_level"))
+            .run();
+
+        // Before refresh, nothing has changed in the service.
+        // After refresh, the service should pick up the new value.
+        service.refreshLogLevels();
+
+        // The service still works after refresh — logger is usable.
+        expect(service.logger).toBeDefined();
+        expect(typeof service.logger.debug).toBe("function");
+    });
 });

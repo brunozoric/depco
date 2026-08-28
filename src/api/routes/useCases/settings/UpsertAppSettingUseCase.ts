@@ -1,14 +1,18 @@
 import { Result, unexpectedError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { EncryptionService } from "#api/services/Encryption/index.js";
+import { LoggerService } from "#api/services/Logger/index.js";
 import { appSettings } from "#api/db/schema.js";
 import { TOKEN_KEYS } from "./appSettingsHelper.js";
 import { UpsertAppSettingUseCase as Abstraction } from "./abstractions/UpsertAppSettingUseCase.js";
 
+const LOG_LEVEL_KEYS = new Set(["log_level", "console_log_level", "file_log_level"]);
+
 class UpsertAppSettingUseCaseImpl implements Abstraction.Interface {
     public constructor(
         private readonly databaseClient: DatabaseClient.Interface,
-        private readonly encryptionService: EncryptionService.Interface
+        private readonly encryptionService: EncryptionService.Interface,
+        private readonly loggerService: LoggerService.Interface
     ) {}
 
     public async execute(
@@ -44,6 +48,10 @@ class UpsertAppSettingUseCaseImpl implements Abstraction.Interface {
                 })
                 .run();
 
+            if (LOG_LEVEL_KEYS.has(params.key)) {
+                this.loggerService.refreshLogLevels();
+            }
+
             return Result.ok({
                 key: params.key,
                 value: TOKEN_KEYS.has(params.key) ? "••••••••" : params.value
@@ -56,5 +64,5 @@ class UpsertAppSettingUseCaseImpl implements Abstraction.Interface {
 
 export const UpsertAppSettingUseCase = Abstraction.createImplementation({
     implementation: UpsertAppSettingUseCaseImpl,
-    dependencies: [DatabaseClient, EncryptionService]
+    dependencies: [DatabaseClient, EncryptionService, LoggerService]
 });

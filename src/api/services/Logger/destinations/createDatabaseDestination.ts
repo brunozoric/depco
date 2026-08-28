@@ -13,7 +13,7 @@ const PINO_LEVEL_TO_STRING: Record<number, string> = {
     60: "fatal"
 };
 
-const LEVEL_PRIORITY: Record<string, number> = {
+export const LEVEL_PRIORITY: Record<string, number> = {
     trace: 0,
     debug: 1,
     info: 2,
@@ -28,11 +28,24 @@ interface IDatabaseDestinationOptions {
     threshold: string;
 }
 
-export function createDatabaseDestination(options: IDatabaseDestinationOptions): Writable {
-    const { db, broadcaster, threshold } = options;
-    const thresholdPriority = LEVEL_PRIORITY[threshold] ?? 3;
+export interface IDatabaseDestinationState {
+    thresholdPriority: number;
+}
 
-    return new Writable({
+export interface IDatabaseDestinationResult {
+    writable: Writable;
+    state: IDatabaseDestinationState;
+}
+
+export function createDatabaseDestination(
+    options: IDatabaseDestinationOptions
+): IDatabaseDestinationResult {
+    const { db, broadcaster, threshold } = options;
+    const state: IDatabaseDestinationState = {
+        thresholdPriority: LEVEL_PRIORITY[threshold] ?? 3
+    };
+
+    const writable = new Writable({
         write(chunk: Buffer, _encoding, callback) {
             try {
                 const line = chunk.toString().trim();
@@ -51,7 +64,7 @@ export function createDatabaseDestination(options: IDatabaseDestinationOptions):
                     return;
                 }
 
-                if (entryPriority < thresholdPriority) {
+                if (entryPriority < state.thresholdPriority) {
                     callback();
                     return;
                 }
@@ -89,4 +102,6 @@ export function createDatabaseDestination(options: IDatabaseDestinationOptions):
             }
         }
     });
+
+    return { writable, state };
 }
