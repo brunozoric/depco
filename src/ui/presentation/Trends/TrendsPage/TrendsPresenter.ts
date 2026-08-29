@@ -9,6 +9,8 @@ import { ProjectsRepository } from "../../../features/Projects/abstractions/Proj
 import { TeamFilterService } from "../../../features/TeamFilter/abstractions/TeamFilterService.js";
 import { getErrorMessage } from "#shared/errors.js";
 
+type ITeamIdFilter = { teamId: string } | Record<string, never>;
+
 const DEFAULT_RANGE = "30";
 
 class TrendsPresenterImpl implements Abstraction.Interface {
@@ -151,7 +153,7 @@ class TrendsPresenterImpl implements Abstraction.Interface {
         };
     }
 
-    private buildTeamIdFilter(): { teamId: string } | Record<string, never> {
+    private buildTeamIdFilter(): ITeamIdFilter {
         const teamId = this.teamFilterService.selectedTeamId;
         return teamId ? { teamId } : {};
     }

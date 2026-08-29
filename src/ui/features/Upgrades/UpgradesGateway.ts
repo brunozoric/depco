@@ -12,7 +12,7 @@ import type { IJob } from "./abstractions/UpgradesGateway.js";
 import { UpgradesGateway as Abstraction } from "./abstractions/UpgradesGateway.js";
 import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 
-function toJob(item: {
+interface IJobApiItem {
     id: string;
     referenceId: string;
     referenceType: string;
@@ -25,7 +25,9 @@ function toJob(item: {
     warning?: string | null | undefined;
     progress: number | null;
     progressLabel: string | null;
-}): IJob {
+}
+
+function toJob(item: IJobApiItem): IJob {
     return {
         id: item.id,
         referenceId: item.referenceId,

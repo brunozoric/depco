@@ -29,10 +29,12 @@ function normalizeLicenseField(rawLicense: unknown): string {
     return "UNKNOWN";
 }
 
-async function fetchLicense(args: {
+interface IFetchLicenseArgs {
     packageEntry: IPackageEntry;
     registryUrl: string;
-}): Promise<ILicenseResult> {
+}
+
+async function fetchLicense(args: IFetchLicenseArgs): Promise<ILicenseResult> {
     const { packageEntry, registryUrl } = args;
     try {
         const response = await fetch(`${registryUrl}/${packageEntry.name}/${packageEntry.version}`);
@@ -62,10 +64,12 @@ async function fetchLicense(args: {
     }
 }
 
-async function fetchInBatches(args: {
+interface IFetchInBatchesArgs {
     packages: IPackageEntry[];
     registryUrl: string;
-}): Promise<ILicenseResult[]> {
+}
+
+async function fetchInBatches(args: IFetchInBatchesArgs): Promise<ILicenseResult[]> {
     const { packages, registryUrl } = args;
     const results: ILicenseResult[] = [];
     for (let i = 0; i < packages.length; i += CONCURRENCY) {

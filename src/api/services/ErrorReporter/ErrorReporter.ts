@@ -1,7 +1,12 @@
 import { ErrorReporter as Abstraction } from "./abstractions/ErrorReporter.js";
 import { AppLogService } from "../AppLog/index.js";
 
-function extractError(error: unknown): { message: string; stack: string } {
+interface IExtractedError {
+    message: string;
+    stack: string;
+}
+
+function extractError(error: unknown): IExtractedError {
     if (error instanceof Error) {
         return { message: error.message, stack: error.stack ?? error.message };
     }

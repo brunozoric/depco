@@ -1,5 +1,6 @@
 import { makeAutoObservable, runInAction, computed } from "mobx";
 import { AppSettingsPresenter as Abstraction } from "./abstractions/AppSettingsPresenter.js";
+import type { ISettingOption } from "./abstractions/AppSettingsPresenter.js";
 import { LoadAppSettingsUseCase } from "../appSettingsUseCases/abstractions/LoadAppSettingsUseCase.js";
 import { UpsertAppSettingUseCase } from "../appSettingsUseCases/abstractions/UpsertAppSettingUseCase.js";
 import { AppSettingsRepository } from "../../../features/AppSettings/abstractions/AppSettingsRepository.js";
@@ -8,7 +9,7 @@ import { getErrorMessage } from "#shared/errors.js";
 interface IKnownSettingMeta {
     label: string;
     description: string;
-    options?: Array<{ label: string; value: string }>;
+    options?: ISettingOption[];
 }
 
 const KNOWN_SETTINGS: Record<string, IKnownSettingMeta> = {

@@ -58,6 +58,10 @@ export interface IScanJob {
     jobId: string;
 }
 
+export interface IUpdateProjectParams {
+    name: string;
+}
+
 export interface IBulkScanResult {
     enqueuedCount: number;
     skippedCount: number;
@@ -82,7 +86,7 @@ export interface IProjectsGateway {
     list(params?: IListProjectsParams): Promise<IListProjectsResponse>;
     get(id: string): Promise<IProject>;
     create(path: string): Promise<IProject>;
-    update(id: string, params: { name: string }): Promise<IProject>;
+    update(id: string, params: IUpdateProjectParams): Promise<IProject>;
     remove(id: string): Promise<void>;
     scan(id: string, force?: boolean): Promise<IScanJob>;
     getDependencies(id: string, filters?: IDependencyFilters): Promise<IDependenciesResponse>;
@@ -108,4 +112,5 @@ export namespace ProjectsGateway {
     export type BulkScanResult = IBulkScanResult;
     export type ListParams = IListProjectsParams;
     export type ListResponse = IListProjectsResponse;
+    export type UpdateParams = IUpdateProjectParams;
 }

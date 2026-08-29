@@ -1,7 +1,12 @@
 import { StepResolver } from "./abstractions/StepResolver.js";
-import { getNextStep } from "./abstractions/StepResolver.js";
+import { getNextStep } from "./stepUtils.js";
 import type { ICustomStepConfig } from "./abstractions/CustomStepConfig.js";
 import type { CommandRunner } from "../../CommandRunner/index.js";
+
+interface ICommandSpec {
+    command: string;
+    args: string[];
+}
 
 export class CustomStepResolver implements StepResolver.Interface {
     public readonly type: string;
@@ -58,7 +63,7 @@ export class CustomStepResolver implements StepResolver.Interface {
         };
     }
 
-    private buildCommand(packageManager: string): { command: string; args: string[] } {
+    private buildCommand(packageManager: string): ICommandSpec {
         switch (this.config.executionType) {
             case "command":
             case "script":

@@ -92,7 +92,7 @@ class VulnerabilitiesGatewayImpl implements Abstraction.Interface {
 
     public async refreshOsvCache(
         options: Abstraction.RefreshOptions
-    ): Promise<{ invalidated: number }> {
+    ): Promise<Abstraction.RefreshResult> {
         return this.httpClient.request(refreshOsvCacheRoute, {
             params: {},
             body: options
@@ -103,7 +103,7 @@ class VulnerabilitiesGatewayImpl implements Abstraction.Interface {
         ids,
         action,
         snoozeDays
-    }: Abstraction.BulkActionParams): Promise<{ updatedCount: number }> {
+    }: Abstraction.BulkActionParams): Promise<Abstraction.BulkResult> {
         if (action === "snooze") {
             return this.httpClient.request(bulkVulnerabilitiesRoute, {
                 params: {},
@@ -116,7 +116,7 @@ class VulnerabilitiesGatewayImpl implements Abstraction.Interface {
         });
     }
 
-    public async bulkRescan(ids: string[]): Promise<{ projectsQueued: number }> {
+    public async bulkRescan(ids: string[]): Promise<Abstraction.RescanResult> {
         return this.httpClient.request(bulkRescanVulnerabilitiesRoute, {
             params: {},
             body: { ids }

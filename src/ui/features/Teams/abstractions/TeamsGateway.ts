@@ -51,6 +51,11 @@ export interface IProjectTeamsResponse {
     total: number;
 }
 
+export interface ISetTeamProjectsInput {
+    teamId: string;
+    projectIds: string[];
+}
+
 export interface ITeamsGateway {
     list(): Promise<ITeamListResponse>;
     getDetail(id: string): Promise<ITeamDetail>;
@@ -59,7 +64,7 @@ export interface ITeamsGateway {
     remove(id: string): Promise<void>;
     getProjectTeams(projectId: string): Promise<IProjectTeamsResponse>;
     setProjectTeams(projectId: string, teamIds: string[]): Promise<void>;
-    setTeamProjects(input: { teamId: string; projectIds: string[] }): Promise<void>;
+    setTeamProjects(input: ISetTeamProjectsInput): Promise<void>;
 }
 
 export const TeamsGateway = createAbstraction<ITeamsGateway>("Ui/TeamsGateway");
@@ -74,4 +79,5 @@ export namespace TeamsGateway {
     export type UpdateInput = IUpdateTeamInput;
     export type ListResponse = ITeamListResponse;
     export type ProjectTeamsResponse = IProjectTeamsResponse;
+    export type SetTeamProjectsInput = ISetTeamProjectsInput;
 }

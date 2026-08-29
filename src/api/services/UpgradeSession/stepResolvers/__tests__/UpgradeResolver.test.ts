@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { UpgradeResolver } from "../UpgradeResolver.js";
-import { createDefaultSteps, StepResolver, STEP_ORDER } from "../abstractions/StepResolver.js";
+import { StepResolver } from "../abstractions/StepResolver.js";
+import { createDefaultSteps, STEP_ORDER } from "../stepUtils.js";
 import { UpgradeService } from "../../../Upgrade/index.js";
 import type { IStepState, IStepContext } from "../abstractions/StepResolver.js";
 

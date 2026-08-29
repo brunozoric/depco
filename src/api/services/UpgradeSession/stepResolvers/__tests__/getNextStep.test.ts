@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getNextStep, STEP_ORDER } from "../abstractions/StepResolver.js";
+import { getNextStep, STEP_ORDER } from "../stepUtils.js";
 
 describe("getNextStep", () => {
     it("returns next step from default order", () => {

@@ -4,9 +4,13 @@ import { parseRegistryOutput } from "../registrySchema.js";
 import type { IInstallFlagDefinition } from "#shared/install/types.js";
 import { PNPM_INSTALL_FLAGS } from "#shared/install/pnpm.js";
 
+interface IPnpmVersionEntry {
+    version?: string;
+}
+
 interface IPnpmListEntry {
-    dependencies?: Record<string, { version?: string }>;
-    devDependencies?: Record<string, { version?: string }>;
+    dependencies?: Record<string, IPnpmVersionEntry>;
+    devDependencies?: Record<string, IPnpmVersionEntry>;
 }
 
 const pnpmVersionRecord = z.record(z.string(), z.object({ version: z.string().optional() }));

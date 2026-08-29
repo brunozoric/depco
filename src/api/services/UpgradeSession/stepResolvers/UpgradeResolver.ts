@@ -1,5 +1,5 @@
 import type { IStepExecuteParams, IStepResult } from "./abstractions/StepResolver.js";
-import { getNextStep } from "./abstractions/StepResolver.js";
+import { getNextStep } from "./stepUtils.js";
 import { StepResolver as StepResolverAbstraction } from "./abstractions/StepResolver.js";
 import { UpgradeService } from "../../Upgrade/index.js";
 

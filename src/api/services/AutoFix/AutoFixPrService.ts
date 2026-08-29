@@ -12,6 +12,22 @@ import {
     type IEligiblePackage
 } from "./autoFixHelpers.js";
 
+interface IFilterEligibleResult {
+    eligiblePackages: IEligiblePackage[];
+    skippedDeny: string[];
+}
+
+interface IFilterDuplicatesResult {
+    finalPackages: IEligiblePackage[];
+    skippedDuplicate: string[];
+}
+
+interface IUpgradeGroup {
+    packages: IEligiblePackage[];
+    upgradeType: string;
+    branchSlug: string;
+}
+
 const OPEN_PULL_REQUEST_STATUSES = ["pending", "created"];
 
 export class AutoFixPrServiceImpl implements Abstraction.Interface {
@@ -68,7 +84,7 @@ export class AutoFixPrServiceImpl implements Abstraction.Interface {
             latestVersion: string;
             upgradeType: string;
         }[]
-    ): Promise<{ eligiblePackages: IEligiblePackage[]; skippedDeny: string[] }> {
+    ): Promise<IFilterEligibleResult> {
         const licenseRows = await this.databaseClient.db
             .select()
             .from(licenses)
@@ -132,7 +148,7 @@ export class AutoFixPrServiceImpl implements Abstraction.Interface {
     private async filterDuplicates(
         projectId: string,
         eligiblePackages: IEligiblePackage[]
-    ): Promise<{ finalPackages: IEligiblePackage[]; skippedDuplicate: string[] }> {
+    ): Promise<IFilterDuplicatesResult> {
         const existingPullRequestRows = await this.databaseClient.db
             .select()
             .from(autoFixPullRequests)
@@ -171,7 +187,7 @@ export class AutoFixPrServiceImpl implements Abstraction.Interface {
 
     private async insertPendingRecords(
         projectId: string,
-        groups: { packages: IEligiblePackage[]; upgradeType: string; branchSlug: string }[],
+        groups: IUpgradeGroup[],
         branchPrefix: string
     ): Promise<Abstraction.PullRequestRecord[]> {
         const now = Date.now();

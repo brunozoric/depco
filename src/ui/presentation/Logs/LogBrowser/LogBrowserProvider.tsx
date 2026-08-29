@@ -3,11 +3,15 @@ import { useFeature } from "#ui/infrastructure/Shared/di/useFeature.js";
 import { LogBrowserPresentationFeature } from "./feature.js";
 import type { LogBrowserPresenter } from "./abstractions/LogBrowserPresenter.js";
 
-interface LogBrowserProviderProps {
-    children: (params: { presenter: LogBrowserPresenter.Interface }) => React.ReactNode;
+interface ILogBrowserPresenterParams {
+    presenter: LogBrowserPresenter.Interface;
 }
 
-export function LogBrowserProvider({ children }: LogBrowserProviderProps): React.ReactNode {
+interface ILogBrowserProviderProps {
+    children: (params: ILogBrowserPresenterParams) => React.ReactNode;
+}
+
+export function LogBrowserProvider({ children }: ILogBrowserProviderProps): React.ReactNode {
     const { presenter } = useFeature(LogBrowserPresentationFeature);
     return children({ presenter });
 }

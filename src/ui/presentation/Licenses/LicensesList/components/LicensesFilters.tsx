@@ -9,12 +9,17 @@ const VIOLATION_SELECT_DATA = [
     { value: "deny", label: "Deny" }
 ];
 
-interface LicensesFiltersProps {
+interface IProjectOption {
+    id: string;
+    name: string;
+}
+
+interface ILicensesFiltersProps {
     riskTierFilter: string | null;
     packageNameFilter: string;
     projectIdFilter: string | null;
     violationFilter: string | null;
-    availableProjects: Array<{ id: string; name: string }>;
+    availableProjects: IProjectOption[];
     onRiskTierChange: (value: string | null) => void;
     onPackageNameChange: (value: string) => void;
     onProjectIdChange: (value: string | null) => void;
@@ -31,7 +36,7 @@ export function LicensesFilters({
     onPackageNameChange,
     onProjectIdChange,
     onViolationChange
-}: LicensesFiltersProps): React.ReactNode {
+}: ILicensesFiltersProps): React.ReactNode {
     return (
         <Group>
             <Select

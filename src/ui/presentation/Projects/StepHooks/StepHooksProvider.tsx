@@ -3,11 +3,15 @@ import { useFeature } from "#ui/infrastructure/Shared/di/useFeature.js";
 import { StepHooksPresentationFeature } from "./feature.js";
 import type { StepHooksPresenter } from "./abstractions/StepHooksPresenter.js";
 
-interface StepHooksProviderProps {
-    children: (params: { presenter: StepHooksPresenter.Interface }) => React.ReactNode;
+interface IStepHooksPresenterParams {
+    presenter: StepHooksPresenter.Interface;
 }
 
-export function StepHooksProvider({ children }: StepHooksProviderProps): React.ReactNode {
+interface IStepHooksProviderProps {
+    children: (params: IStepHooksPresenterParams) => React.ReactNode;
+}
+
+export function StepHooksProvider({ children }: IStepHooksProviderProps): React.ReactNode {
     const { presenter } = useFeature(StepHooksPresentationFeature);
     return children({ presenter });
 }

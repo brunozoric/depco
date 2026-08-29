@@ -3,11 +3,15 @@ import { useFeature } from "#ui/infrastructure/Shared/di/useFeature.js";
 import { PackageDetailFeature } from "./feature.js";
 import type { PackageDetailPresenter } from "./abstractions/PackageDetailPresenter.js";
 
-interface PackageDetailProviderProps {
-    children: (params: { presenter: PackageDetailPresenter.Interface }) => React.ReactNode;
+interface IPackageDetailPresenterParams {
+    presenter: PackageDetailPresenter.Interface;
 }
 
-export function PackageDetailProvider({ children }: PackageDetailProviderProps): React.ReactNode {
+interface IPackageDetailProviderProps {
+    children: (params: IPackageDetailPresenterParams) => React.ReactNode;
+}
+
+export function PackageDetailProvider({ children }: IPackageDetailProviderProps): React.ReactNode {
     const { presenter } = useFeature(PackageDetailFeature);
     return children({ presenter });
 }

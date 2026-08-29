@@ -9,7 +9,7 @@ import {
     abortUpgradeSessionRoute
 } from "#shared/routes/index.js";
 
-function toSession(item: {
+interface IUpgradeSessionApiItem {
     id: string;
     projectId: string;
     status: string;
@@ -18,7 +18,9 @@ function toSession(item: {
     stepOrder: string[];
     createdAt: number;
     updatedAt: number;
-}): IUpgradeSessionResponse {
+}
+
+function toSession(item: IUpgradeSessionApiItem): IUpgradeSessionResponse {
     return {
         id: item.id,
         projectId: item.projectId,

@@ -168,7 +168,7 @@ class DependencyGraphPresenterImpl implements Abstraction.Interface {
         this.searchMode = mode;
     };
 
-    public setFilter = (params: { field: string; value: string | number | null }): void => {
+    public setFilter = (params: Abstraction.FilterParams): void => {
         switch (params.field) {
             case "dependencyKind":
                 this.filterDependencyKind = params.value as string | null;

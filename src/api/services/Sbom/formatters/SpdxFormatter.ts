@@ -1,6 +1,6 @@
 import { generateId } from "@webiny/stdlib";
 import { SbomFormatter as Abstraction } from "../abstractions/SbomFormatter.js";
-import { sanitizeFilename } from "../abstractions/SbomFormatter.js";
+import { sanitizeFilename } from "../sanitizeFilename.js";
 import type { SbomService } from "../abstractions/SbomService.js";
 
 interface ISpdxPackage {

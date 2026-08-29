@@ -62,12 +62,16 @@ export async function resolveMinimalAgeSeconds(
     }
 }
 
-export async function insertChangelogPlaceholders(input: {
+interface IInsertChangelogPlaceholdersInput {
     db: DatabaseClient.Interface["db"];
     scanDependencies: ScanService.Dependency[];
     registryData: Map<string, ScanService.RegistryData>;
     minimalAgeSeconds?: number | undefined;
-}): Promise<void> {
+}
+
+export async function insertChangelogPlaceholders(
+    input: IInsertChangelogPlaceholdersInput
+): Promise<void> {
     const { db, scanDependencies, registryData, minimalAgeSeconds } = input;
     const ageCutoff =
         minimalAgeSeconds !== undefined ? Date.now() - minimalAgeSeconds * 1000 : undefined;

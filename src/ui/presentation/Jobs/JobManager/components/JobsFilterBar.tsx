@@ -41,12 +41,17 @@ function datetimeLocalToEpochMs(value: string): string | null {
     return String(ms);
 }
 
-interface JobsFilterBarProps {
+interface ISelectOption {
+    value: string;
+    label: string;
+}
+
+interface IJobsFilterBarProps {
     typeFilter: string | null;
     referenceFilter: string | null;
     dateFrom: string | null;
     dateTo: string | null;
-    references: Array<{ value: string; label: string }>;
+    references: ISelectOption[];
     onFilterChange: (key: string, value: string | null) => void;
     onClear: () => void;
 }
@@ -59,7 +64,7 @@ export function JobsFilterBar({
     references,
     onFilterChange,
     onClear
-}: JobsFilterBarProps): React.ReactNode {
+}: IJobsFilterBarProps): React.ReactNode {
     return (
         <Group gap="sm">
             <Select

@@ -3,11 +3,15 @@ import { useFeature } from "#ui/infrastructure/Shared/di/useFeature.js";
 import { TeamsPageFeature } from "./feature.js";
 import type { TeamsPresenter } from "./abstractions/TeamsPresenter.js";
 
-interface TeamsProviderProps {
-    children: (params: { presenter: TeamsPresenter.Interface }) => React.ReactNode;
+interface ITeamsPresenterParams {
+    presenter: TeamsPresenter.Interface;
 }
 
-export function TeamsProvider({ children }: TeamsProviderProps): React.ReactNode {
+interface ITeamsProviderProps {
+    children: (params: ITeamsPresenterParams) => React.ReactNode;
+}
+
+export function TeamsProvider({ children }: ITeamsProviderProps): React.ReactNode {
     const { presenter } = useFeature(TeamsPageFeature);
     return children({ presenter });
 }

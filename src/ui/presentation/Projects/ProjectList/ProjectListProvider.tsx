@@ -3,11 +3,15 @@ import { useFeature } from "#ui/infrastructure/Shared/di/useFeature.js";
 import { ProjectListFeature } from "./feature.js";
 import type { ProjectListPresenter } from "./abstractions/ProjectListPresenter.js";
 
-interface ProjectListProviderProps {
-    children: (params: { presenter: ProjectListPresenter.Interface }) => React.ReactNode;
+interface IProjectListPresenterParams {
+    presenter: ProjectListPresenter.Interface;
 }
 
-export function ProjectListProvider({ children }: ProjectListProviderProps): React.ReactNode {
+interface IProjectListProviderProps {
+    children: (params: IProjectListPresenterParams) => React.ReactNode;
+}
+
+export function ProjectListProvider({ children }: IProjectListProviderProps): React.ReactNode {
     const { presenter } = useFeature(ProjectListFeature);
     return children({ presenter });
 }

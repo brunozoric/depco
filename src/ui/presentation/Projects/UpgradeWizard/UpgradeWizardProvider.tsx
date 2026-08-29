@@ -3,11 +3,15 @@ import { useFeature } from "#ui/infrastructure/Shared/di/useFeature.js";
 import { UpgradeWizardFeature } from "./feature.js";
 import type { UpgradeWizardPresenter } from "./abstractions/UpgradeWizardPresenter.js";
 
-interface UpgradeWizardProviderProps {
-    children: (params: { presenter: UpgradeWizardPresenter.Interface }) => React.ReactNode;
+interface IUpgradeWizardPresenterParams {
+    presenter: UpgradeWizardPresenter.Interface;
 }
 
-export function UpgradeWizardProvider({ children }: UpgradeWizardProviderProps): React.ReactNode {
+interface IUpgradeWizardProviderProps {
+    children: (params: IUpgradeWizardPresenterParams) => React.ReactNode;
+}
+
+export function UpgradeWizardProvider({ children }: IUpgradeWizardProviderProps): React.ReactNode {
     const { presenter } = useFeature(UpgradeWizardFeature);
     return children({ presenter });
 }

@@ -3,11 +3,15 @@ import { useFeature } from "#ui/infrastructure/Shared/di/useFeature.js";
 import { LicenseListFeature } from "./feature.js";
 import type { LicensesPresenter } from "./abstractions/LicensesPresenter.js";
 
-interface LicensesProviderProps {
-    children: (params: { presenter: LicensesPresenter.Interface }) => React.ReactNode;
+interface ILicensesPresenterParams {
+    presenter: LicensesPresenter.Interface;
 }
 
-export function LicensesProvider({ children }: LicensesProviderProps): React.ReactNode {
+interface ILicensesProviderProps {
+    children: (params: ILicensesPresenterParams) => React.ReactNode;
+}
+
+export function LicensesProvider({ children }: ILicensesProviderProps): React.ReactNode {
     const { presenter } = useFeature(LicenseListFeature);
     return children({ presenter });
 }

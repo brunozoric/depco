@@ -3,7 +3,7 @@ import {
     type IStepResult,
     StepResolver as StepResolverAbstraction
 } from "./abstractions/StepResolver.js";
-import { getNextStep } from "./abstractions/StepResolver.js";
+import { getNextStep } from "./stepUtils.js";
 
 class SelectPackagesResolverImpl implements StepResolverAbstraction.Interface {
     public readonly type = "select-packages";

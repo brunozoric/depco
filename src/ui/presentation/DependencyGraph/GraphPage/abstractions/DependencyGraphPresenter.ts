@@ -50,6 +50,11 @@ export interface IDependencyGraphViewModel {
     showSuggestions: boolean;
 }
 
+export interface IFilterParams {
+    field: string;
+    value: string | number | null;
+}
+
 export interface IDependencyGraphPresenter {
     get vm(): IDependencyGraphViewModel;
     load(projectId: string): Promise<void>;
@@ -57,7 +62,7 @@ export interface IDependencyGraphPresenter {
     setSearchQuery(query: string): void;
     selectSuggestion(packageName: string): void;
     setSearchMode(mode: DependencyGraphSearchMode): void;
-    setFilter(params: { field: string; value: string | number | null }): void;
+    setFilter(params: IFilterParams): void;
     closeSuggestions(): void;
     clearSearch(): void;
     setViewMode(mode: DependencyGraphViewMode): void;
@@ -80,4 +85,5 @@ export namespace DependencyGraphPresenter {
     export type Stats = IDependencyGraphStatsViewModel;
     export type SearchMode = DependencyGraphSearchMode;
     export type Filters = IDependencyGraphFilters;
+    export type FilterParams = IFilterParams;
 }

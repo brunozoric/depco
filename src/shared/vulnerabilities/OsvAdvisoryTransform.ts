@@ -1,4 +1,4 @@
-import { mapCvssScoreToSeverity } from "./abstractions/OsvQueryService.js";
+import { mapCvssScoreToSeverity } from "./mapCvssScoreToSeverity.js";
 import type { IOsvAdvisory } from "./abstractions/OsvQueryService.js";
 import type { VulnerabilitySeverity } from "./types.js";
 import type {

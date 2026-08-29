@@ -6,24 +6,34 @@ import type { PmSettingsPresenter } from "../abstractions/PmSettingsPresenter.js
 import { SettingsTableRow } from "./SettingsTableRow.js";
 import { AddSettingInlineRow } from "./AddSettingInlineRow.js";
 
-interface SecuritySettingsTabProps {
+interface IStartEditInput {
+    id: string;
+    currentValue: string;
+}
+
+interface IStartAddInput {
+    fieldName: string;
+    defaultValue: string;
+}
+
+interface ISecuritySettingsTabProps {
     presenter: PmSettingsPresenter.Interface;
 }
 
 export const SecuritySettingsTab = observer(function SecuritySettingsTab({
     presenter
-}: SecuritySettingsTabProps): React.ReactNode {
+}: ISecuritySettingsTabProps): React.ReactNode {
     const { vm } = presenter;
     const [editValue, setEditValue] = useState("");
     const [addValue, setAddValue] = useState("");
     const isPmFileManaged = vm.fileManagedPms.includes(vm.selectedPackageManager);
 
-    function handleStartEdit(input: { id: string; currentValue: string }): void {
+    function handleStartEdit(input: IStartEditInput): void {
         setEditValue(input.currentValue);
         presenter.startEdit(input.id);
     }
 
-    function handleStartAdd(input: { fieldName: string; defaultValue: string }): void {
+    function handleStartAdd(input: IStartAddInput): void {
         setAddValue(input.defaultValue);
         presenter.startAdd(input.fieldName);
     }

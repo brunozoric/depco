@@ -13,11 +13,11 @@ import {
     bulkScanProjectsRoute,
     updateProjectRoute
 } from "#shared/routes/index.js";
-import type { IDependency, IProject } from "./abstractions/ProjectsGateway.js";
+import type { IDependency, IProject, IProjectTeam } from "./abstractions/ProjectsGateway.js";
 import { ProjectsGateway as Abstraction } from "./abstractions/ProjectsGateway.js";
 import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 
-function toProject(item: {
+interface IProjectApiItem {
     id: string;
     name: string;
     path: string;
@@ -27,10 +27,37 @@ function toProject(item: {
     lastScannedAt: number | null;
     security?: Abstraction.SecurityStatus | null | undefined;
     hasNodeModules?: boolean;
-    teams?: Array<{ id: string; name: string; color: string }> | undefined;
+    teams?: IProjectTeam[] | undefined;
     engineStatus?: string | null | undefined;
     rootEnginesNode?: string | null | undefined;
-}): IProject {
+}
+
+interface IInstallFlagDefinitionApiItem {
+    flag: string;
+    label: string;
+    description: string;
+    exclusive?: string | undefined;
+    defaultEnabled: boolean;
+}
+
+interface IDependencyApiItem {
+    name: string;
+    currentVersion: string;
+    latestInRange: string | null;
+    latestVersion: string | null;
+    type: string;
+    upgradeType: string | null;
+    dependencyKind?: string | undefined;
+    registryResolved?: boolean | undefined;
+}
+
+interface ICloneProjectBody {
+    url: string;
+    destination: string;
+    folderName?: string;
+}
+
+function toProject(item: IProjectApiItem): IProject {
     return {
         id: item.id,
         name: item.name,
@@ -47,13 +74,9 @@ function toProject(item: {
     };
 }
 
-function toInstallFlagDefinition(item: {
-    flag: string;
-    label: string;
-    description: string;
-    exclusive?: string | undefined;
-    defaultEnabled: boolean;
-}): Abstraction.InstallFlagDefinition {
+function toInstallFlagDefinition(
+    item: IInstallFlagDefinitionApiItem
+): Abstraction.InstallFlagDefinition {
     return {
         flag: item.flag,
         label: item.label,
@@ -63,16 +86,7 @@ function toInstallFlagDefinition(item: {
     };
 }
 
-function toDependency(item: {
-    name: string;
-    currentVersion: string;
-    latestInRange: string | null;
-    latestVersion: string | null;
-    type: string;
-    upgradeType: string | null;
-    dependencyKind?: string | undefined;
-    registryResolved?: boolean | undefined;
-}): IDependency {
+function toDependency(item: IDependencyApiItem): IDependency {
     return {
         name: item.name,
         currentVersion: item.currentVersion,
@@ -117,7 +131,10 @@ class ProjectsGatewayImpl implements Abstraction.Interface {
         return toProject(response.item);
     }
 
-    public async update(id: string, params: { name: string }): Promise<Abstraction.Project> {
+    public async update(
+        id: string,
+        params: Abstraction.UpdateParams
+    ): Promise<Abstraction.Project> {
         const response = await this.httpClient.request(updateProjectRoute, {
             params: { id },
             body: { name: params.name }
@@ -182,7 +199,7 @@ class ProjectsGatewayImpl implements Abstraction.Interface {
         destination: string,
         folderName?: string
     ): Promise<Abstraction.ScanJob> {
-        const body: { url: string; destination: string; folderName?: string } = {
+        const body: ICloneProjectBody = {
             url,
             destination
         };

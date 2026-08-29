@@ -19,7 +19,3 @@ export namespace SbomFormatter {
     export type ProjectData = SbomService.ProjectData;
     export type Result = ISbomFormatterResult;
 }
-
-export function sanitizeFilename(name: string): string {
-    return name.replace(/["\r\n/\\:]/g, "-");
-}

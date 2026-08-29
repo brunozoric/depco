@@ -14,13 +14,18 @@ import {
 import { observer } from "mobx-react-lite";
 import type { PmSettingsPresenter } from "../abstractions/PmSettingsPresenter.js";
 
-interface SettingsTableRowProps {
+interface IStartEditInput {
+    id: string;
+    currentValue: string;
+}
+
+interface ISettingsTableRowProps {
     setting: PmSettingsPresenter.SettingViewModel;
     presenter: PmSettingsPresenter.Interface;
     editingId: string | null;
     editValue: string;
     onEditValueChange: (value: string) => void;
-    onStartEdit: (input: { id: string; currentValue: string }) => void;
+    onStartEdit: (input: IStartEditInput) => void;
 }
 
 export const SettingsTableRow = observer(function SettingsTableRow({
@@ -30,7 +35,7 @@ export const SettingsTableRow = observer(function SettingsTableRow({
     editValue,
     onEditValueChange,
     onStartEdit
-}: SettingsTableRowProps): React.ReactNode {
+}: ISettingsTableRowProps): React.ReactNode {
     return (
         <Table.Tr
             style={setting.enabled ? undefined : { opacity: 0.5 }}

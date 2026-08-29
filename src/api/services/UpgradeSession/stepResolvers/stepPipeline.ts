@@ -1,4 +1,4 @@
-import { STEP_ORDER } from "./abstractions/StepResolver.js";
+import { STEP_ORDER } from "./stepUtils.js";
 import type { IStepState } from "./abstractions/StepResolver.js";
 import type { IResolvedStepHook } from "../../StepHook/index.js";
 

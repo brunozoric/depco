@@ -3,7 +3,12 @@ import { useEffect, useRef } from "react";
 import { ActionIcon, Box, CopyButton, ScrollArea, Text, Tooltip } from "@mantine/core";
 import { observer } from "mobx-react-lite";
 
-interface JobLogViewerProps {
+interface IScrollPosition {
+    x: number;
+    y: number;
+}
+
+interface IJobLogViewerProps {
     logs: string;
 }
 
@@ -11,7 +16,7 @@ const NEAR_BOTTOM_THRESHOLD = 50;
 
 export const JobLogViewer = observer(function JobLogViewer({
     logs
-}: JobLogViewerProps): React.ReactNode {
+}: IJobLogViewerProps): React.ReactNode {
     const viewportRef = useRef<HTMLDivElement>(null);
     const wasNearBottomRef = useRef(true);
 
@@ -23,7 +28,7 @@ export const JobLogViewer = observer(function JobLogViewer({
         viewport.scrollTop = viewport.scrollHeight;
     }, [logs]);
 
-    function handleScroll(position: { x: number; y: number }): void {
+    function handleScroll(position: IScrollPosition): void {
         const viewport = viewportRef.current;
         if (!viewport) {
             return;

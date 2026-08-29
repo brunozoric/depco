@@ -6,7 +6,7 @@ class RefreshOsvCacheUseCaseImpl implements Abstraction.Interface {
 
     public execute = async (
         options: VulnerabilitiesGateway.RefreshOptions
-    ): Promise<{ invalidated: number }> => {
+    ): Promise<VulnerabilitiesGateway.RefreshResult> => {
         return this.gateway.refreshOsvCache(options);
     };
 }

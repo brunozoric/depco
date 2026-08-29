@@ -2,7 +2,7 @@ import { JobsGateway as Abstraction } from "./abstractions/JobsGateway.js";
 import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { listAllJobsRoute, cancelJobRoute, deleteJobsRoute } from "#shared/routes/index.js";
 
-function toJob(item: {
+interface IJobApiItem {
     id: string;
     referenceId: string;
     referenceType: string;
@@ -16,7 +16,9 @@ function toJob(item: {
     progress: number | null;
     progressLabel: string | null;
     parentJobId?: string | null | undefined;
-}): Abstraction.Job {
+}
+
+function toJob(item: IJobApiItem): Abstraction.Job {
     return {
         id: item.id,
         referenceId: item.referenceId,

@@ -75,9 +75,14 @@ export function groupPackages(
     }));
 }
 
-export function buildUpgradeTable(
-    packages: { packageName: string; fromVersion: string; toVersion: string; upgradeType: string }[]
-): string[] {
+interface IUpgradeTableEntry {
+    packageName: string;
+    fromVersion: string;
+    toVersion: string;
+    upgradeType: string;
+}
+
+export function buildUpgradeTable(packages: IUpgradeTableEntry[]): string[] {
     const lines = ["| Package | From | To | Type |", "| --- | --- | --- | --- |"];
     for (const pkg of packages) {
         lines.push(

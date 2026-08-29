@@ -1,6 +1,11 @@
 import type React from "react";
 import { Badge, Button, Checkbox, Select, Table } from "@mantine/core";
 
+interface ISelectOption {
+    value: string;
+    label: string;
+}
+
 export interface SelectPackagesRow {
     name: string;
     currentVersion: string;
@@ -34,7 +39,7 @@ const UPGRADE_BADGE_COLOR: Record<SelectPackagesRow["upgradeType"], string> = {
     major: "red"
 };
 
-function buildVersionOptions(row: SelectPackagesRow): Array<{ value: string; label: string }> {
+function buildVersionOptions(row: SelectPackagesRow): ISelectOption[] {
     const options = new Map<string, string>();
     options.set(row.latestInRange, `In-range (${row.latestInRange})`);
     options.set(row.latestVersion, `Latest (${row.latestVersion})`);

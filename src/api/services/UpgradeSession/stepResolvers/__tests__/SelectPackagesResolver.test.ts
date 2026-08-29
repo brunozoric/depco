@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { createContainer } from "#shared/index.js";
 import { SelectPackagesResolver } from "../SelectPackagesResolver.js";
-import { createDefaultSteps, StepResolver, STEP_ORDER } from "../abstractions/StepResolver.js";
+import { StepResolver } from "../abstractions/StepResolver.js";
+import { createDefaultSteps, STEP_ORDER } from "../stepUtils.js";
 
 function createResolver(): StepResolver.Interface {
     const container = createContainer();

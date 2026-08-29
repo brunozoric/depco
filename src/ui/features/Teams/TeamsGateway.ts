@@ -57,7 +57,7 @@ class TeamsGatewayImpl implements Abstraction.Interface {
         });
     }
 
-    public async setTeamProjects(input: { teamId: string; projectIds: string[] }): Promise<void> {
+    public async setTeamProjects(input: Abstraction.SetTeamProjectsInput): Promise<void> {
         await this.httpClient.request(setTeamProjectsRoute, {
             params: { id: input.teamId },
             body: { projectIds: input.projectIds }

@@ -6,6 +6,10 @@ interface IJobChainingDependencies {
     clearRefreshTransientFlag: (jobId: string) => void;
 }
 
+interface IPackageNameEntry {
+    name: string;
+}
+
 interface IChainableJob {
     id: string;
     referenceId: string;
@@ -27,7 +31,7 @@ export async function chainRefreshTransientIfNeeded(
     let packageNames: string | undefined;
     if (job.packages) {
         try {
-            const parsed = JSON.parse(job.packages) as Array<{ name: string }>;
+            const parsed = JSON.parse(job.packages) as IPackageNameEntry[];
             const names = parsed.map(p => p.name);
             if (names.length > 0) {
                 packageNames = JSON.stringify(names);

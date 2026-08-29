@@ -3,11 +3,15 @@ import { useFeature } from "#ui/infrastructure/Shared/di/useFeature.js";
 import { BackupPresentationFeature } from "./feature.js";
 import type { BackupPresenter } from "./abstractions/BackupPresenter.js";
 
-interface BackupProviderProps {
-    children: (params: { presenter: BackupPresenter.Interface }) => React.ReactNode;
+interface IBackupPresenterParams {
+    presenter: BackupPresenter.Interface;
 }
 
-export function BackupProvider({ children }: BackupProviderProps): React.ReactNode {
+interface IBackupProviderProps {
+    children: (params: IBackupPresenterParams) => React.ReactNode;
+}
+
+export function BackupProvider({ children }: IBackupProviderProps): React.ReactNode {
     const { presenter } = useFeature(BackupPresentationFeature);
     return children({ presenter });
 }

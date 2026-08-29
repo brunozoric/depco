@@ -15,13 +15,25 @@ import { sendNone } from "./sendNone.js";
 
 type UnwrapItem<T> = T extends { item: infer I } ? I : T;
 
+export interface IRouteSendOneParams<TResponse> {
+    result: Result<UnwrapItem<TResponse>, SendableError>;
+    status?: number;
+}
+
+export interface IRouteSendListParams<TResponse> {
+    result: Result<TResponse, SendableError>;
+    status?: number;
+}
+
+export interface IRouteSendNoneParams {
+    result: Result<unknown, SendableError>;
+    status?: number;
+}
+
 export interface IRouteSend<TResponse> {
-    one(params: {
-        result: Result<UnwrapItem<TResponse>, SendableError>;
-        status?: number;
-    }): FastifyReply;
-    list(params: { result: Result<TResponse, SendableError>; status?: number }): FastifyReply;
-    none(params: { result: Result<unknown, SendableError>; status?: number }): FastifyReply;
+    one(params: IRouteSendOneParams<TResponse>): FastifyReply;
+    list(params: IRouteSendListParams<TResponse>): FastifyReply;
+    none(params: IRouteSendNoneParams): FastifyReply;
 }
 
 export function registerRoute<

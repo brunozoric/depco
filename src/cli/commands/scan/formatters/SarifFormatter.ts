@@ -11,10 +11,18 @@ const TOOL_VERSION = "0.0.0";
 
 type SarifLevel = "error" | "warning" | "note";
 
+interface ISarifDescription {
+    text: string;
+}
+
+interface ISarifConfiguration {
+    level: SarifLevel;
+}
+
 interface ISarifRule {
     id: string;
-    shortDescription: { text: string };
-    defaultConfiguration: { level: SarifLevel };
+    shortDescription: ISarifDescription;
+    defaultConfiguration: ISarifConfiguration;
 }
 
 interface ISarifArtifactLocation {
@@ -29,10 +37,14 @@ interface ISarifLocation {
     physicalLocation: ISarifPhysicalLocation;
 }
 
+interface ISarifMessage {
+    text: string;
+}
+
 interface ISarifResult {
     ruleId: string;
     ruleIndex: number;
-    message: { text: string };
+    message: ISarifMessage;
     locations: ISarifLocation[];
     properties: Record<string, unknown>;
 }
@@ -43,8 +55,12 @@ interface ISarifDriver {
     rules: ISarifRule[];
 }
 
+interface ISarifTool {
+    driver: ISarifDriver;
+}
+
 interface ISarifRun {
-    tool: { driver: ISarifDriver };
+    tool: ISarifTool;
     results: ISarifResult[];
 }
 

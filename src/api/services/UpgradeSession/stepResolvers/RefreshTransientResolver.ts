@@ -1,6 +1,6 @@
 import type { IStepExecuteParams, IStepResult } from "./abstractions/StepResolver.js";
 import { StepResolver as StepResolverAbstraction } from "./abstractions/StepResolver.js";
-import { getNextStep } from "./abstractions/StepResolver.js";
+import { getNextStep } from "./stepUtils.js";
 import { UpgradeService } from "../../Upgrade/index.js";
 
 class RefreshTransientResolverImpl implements StepResolverAbstraction.Interface {

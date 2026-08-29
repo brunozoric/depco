@@ -4,7 +4,7 @@ import { UpgradeSessionService as Abstraction } from "./abstractions/UpgradeSess
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { upgradeSessions, projects } from "#api/db/schema.js";
-import { getNextStep } from "./stepResolvers/abstractions/StepResolver.js";
+import { getNextStep } from "./stepResolvers/stepUtils.js";
 import type { IStepResolver } from "./stepResolvers/abstractions/StepResolver.js";
 import { UpgradeSessionStepResolverRegistry } from "./stepResolvers/abstractions/UpgradeSessionStepResolverRegistry.js";
 import type { ICustomStepConfig } from "./stepResolvers/abstractions/CustomStepConfig.js";

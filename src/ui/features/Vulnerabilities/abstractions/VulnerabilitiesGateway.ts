@@ -116,6 +116,18 @@ export interface IVulnerabilityExportParams {
     teamId?: string;
 }
 
+export interface IOsvRefreshResult {
+    invalidated: number;
+}
+
+export interface IBulkActionResult {
+    updatedCount: number;
+}
+
+export interface IBulkRescanResult {
+    projectsQueued: number;
+}
+
 export interface IVulnerabilitiesGateway {
     list(filters?: IVulnerabilityListFilters): Promise<IVulnerabilityListResponse>;
     getByProject(
@@ -124,9 +136,9 @@ export interface IVulnerabilitiesGateway {
     ): Promise<IVulnerabilityListResponse>;
     getSummary(teamId?: string): Promise<IVulnerabilitySummaryData>;
     scan(projectId: string): Promise<IVulnerabilityScanResult>;
-    refreshOsvCache(options: IVulnerabilityRefreshOptions): Promise<{ invalidated: number }>;
-    bulkAction(params: IVulnerabilityBulkActionParams): Promise<{ updatedCount: number }>;
-    bulkRescan(ids: string[]): Promise<{ projectsQueued: number }>;
+    refreshOsvCache(options: IVulnerabilityRefreshOptions): Promise<IOsvRefreshResult>;
+    bulkAction(params: IVulnerabilityBulkActionParams): Promise<IBulkActionResult>;
+    bulkRescan(ids: string[]): Promise<IBulkRescanResult>;
     getExportUrl(params: IVulnerabilityExportParams): string;
     getDetail(vulnerabilityId: string): Promise<IVulnerabilityDetailData>;
     getExpiredSnoozes(sinceMs: number): Promise<IExpiredSnoozesData>;
@@ -145,6 +157,9 @@ export namespace VulnerabilitiesGateway {
     export type ListResponse = IVulnerabilityListResponse;
     export type ScanResult = IVulnerabilityScanResult;
     export type RefreshOptions = IVulnerabilityRefreshOptions;
+    export type RefreshResult = IOsvRefreshResult;
+    export type BulkResult = IBulkActionResult;
+    export type RescanResult = IBulkRescanResult;
     export type DetailData = IVulnerabilityDetailData;
     export type DetailItem = IVulnerabilityDetailItem;
     export type ExpiredSnoozesData = IExpiredSnoozesData;

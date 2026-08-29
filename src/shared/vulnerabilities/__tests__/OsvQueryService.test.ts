@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createContainer, registerFeatures } from "#shared/index.js";
-import { OsvQueryService, mapCvssScoreToSeverity } from "../abstractions/OsvQueryService.js";
+import { OsvQueryService } from "../abstractions/OsvQueryService.js";
+import { mapCvssScoreToSeverity } from "../mapCvssScoreToSeverity.js";
 import { SharedVulnerabilityFeature } from "../feature.js";
 
 describe("OsvQueryService", () => {

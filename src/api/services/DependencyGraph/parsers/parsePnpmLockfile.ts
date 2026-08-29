@@ -4,6 +4,11 @@ import type { IDependencyEdge } from "../abstractions/LockfileParserService.js";
 import type { IRootPackageJson } from "./types.js";
 import { rootPackageJsonSchema } from "./types.js";
 
+interface IPnpmDependencyEntry {
+    specifier: string;
+    version: string;
+}
+
 const pnpmLockImporterDependencyEntrySchema = z.object({
     specifier: z.string(),
     version: z.string()
@@ -81,7 +86,7 @@ export function parsePnpmLockfile(
     const queue: IPnpmLockQueueItem[] = [];
 
     for (const importer of Object.values(importers)) {
-        const directDependencies: Record<string, { specifier: string; version: string }> = {
+        const directDependencies: Record<string, IPnpmDependencyEntry> = {
             ...importer.dependencies,
             ...importer.devDependencies
         };
