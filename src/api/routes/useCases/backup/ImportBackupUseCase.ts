@@ -18,6 +18,8 @@ import {
 import { ImportBackupUseCase as Abstraction } from "./abstractions/ImportBackupUseCase.js";
 import type { IImportBackupResult } from "./backupTypes.js";
 
+type DbHandle = DatabaseClient.Interface["db"];
+
 class ImportBackupUseCaseImpl implements Abstraction.Interface {
     public constructor(
         private readonly databaseClient: DatabaseClient.Interface,
@@ -39,173 +41,218 @@ class ImportBackupUseCaseImpl implements Abstraction.Interface {
                 registryCache: { imported: 0, skipped: 0 }
             };
 
-            for (const setting of payload.appSettings) {
-                const inserted = await db
-                    .insert(appSettings)
-                    .values(setting)
-                    .onConflictDoNothing()
-                    .run();
-                if (inserted.changes > 0) {
-                    result.appSettings.imported++;
-                } else {
-                    result.appSettings.skipped++;
-                }
-            }
-
-            for (const setting of payload.securitySettings) {
-                const inserted = await db
-                    .insert(pmSecuritySettings)
-                    .values({ id: generateId(), ...setting })
-                    .onConflictDoNothing()
-                    .run();
-                if (inserted.changes > 0) {
-                    result.securitySettings.imported++;
-                } else {
-                    result.securitySettings.skipped++;
-                }
-            }
-
-            for (const entry of payload.registryCache) {
-                const inserted = await db
-                    .insert(registryCache)
-                    .values(entry)
-                    .onConflictDoNothing()
-                    .run();
-                if (inserted.changes > 0) {
-                    result.registryCache.imported++;
-                } else {
-                    result.registryCache.skipped++;
-                }
-            }
-
-            for (const project of payload.projects) {
-                try {
-                    await access(project.path);
-                } catch {
-                    result.projects.failed++;
-                    result.projects.errors.push(`Path does not exist: ${project.path}`);
-                    continue;
-                }
-
-                const existing = await db
-                    .select()
-                    .from(projects)
-                    .where(eq(projects.path, project.path))
-                    .get();
-
-                if (existing) {
-                    result.projects.skipped++;
-                    continue;
-                }
-
-                try {
-                    await registerProject({
-                        projectPath: project.path,
-                        databaseClient: this.databaseClient,
-                        packageManagerService: this.packageManagerService
-                    });
-                    result.projects.imported++;
-                } catch (err) {
-                    result.projects.failed++;
-                    result.projects.errors.push(
-                        `${project.path}: ${getErrorMessage(err, "Unknown error")}`
-                    );
-                }
-            }
-
-            for (const dep of payload.dependencies) {
-                const depId = generateId();
-                const depInserted = await db
-                    .insert(dependencies)
-                    .values({
-                        id: depId,
-                        name: dep.name,
-                        repoUrl: dep.repoUrl,
-                        createdAt: Date.now()
-                    })
-                    .onConflictDoNothing()
-                    .run();
-
-                let dependencyId: string;
-                if (depInserted.changes > 0) {
-                    dependencyId = depId;
-                    result.dependencies.imported++;
-                } else {
-                    const depRow = await db
-                        .select({ id: dependencies.id })
-                        .from(dependencies)
-                        .where(eq(dependencies.name, dep.name))
-                        .get();
-                    if (!depRow) {
-                        continue;
-                    }
-                    dependencyId = depRow.id;
-                    result.dependencies.skipped++;
-                }
-
-                for (const version of dep.versions) {
-                    const versionId = generateId();
-                    const vInserted = await db
-                        .insert(dependencyVersions)
-                        .values({
-                            id: versionId,
-                            dependencyId,
-                            version: version.version,
-                            publishedAt: version.publishedAt
-                        })
-                        .onConflictDoNothing()
-                        .run();
-
-                    if (vInserted.changes > 0) {
-                        result.dependencies.imported++;
-                    } else {
-                        result.dependencies.skipped++;
-                    }
-
-                    if (version.changelog) {
-                        const resolvedVersionId =
-                            vInserted.changes > 0
-                                ? versionId
-                                : (
-                                      await db
-                                          .select({ id: dependencyVersions.id })
-                                          .from(dependencyVersions)
-                                          .where(
-                                              and(
-                                                  eq(dependencyVersions.dependencyId, dependencyId),
-                                                  eq(dependencyVersions.version, version.version)
-                                              )
-                                          )
-                                          .get()
-                                  )?.id;
-
-                        if (resolvedVersionId) {
-                            const clInserted = await db
-                                .insert(changelogs)
-                                .values({
-                                    id: generateId(),
-                                    dependencyId,
-                                    dependencyVersionId: resolvedVersionId,
-                                    content: version.changelog.content,
-                                    source: version.changelog.source,
-                                    fetchedAt: Date.now()
-                                })
-                                .onConflictDoNothing()
-                                .run();
-
-                            if (clInserted.changes > 0) {
-                                result.dependencies.imported++;
-                            } else {
-                                result.dependencies.skipped++;
-                            }
-                        }
-                    }
-                }
-            }
+            await this.importAppSettings(db, payload, result);
+            await this.importSecuritySettings(db, payload, result);
+            await this.importRegistryCache(db, payload, result);
+            await this.importProjects(db, payload, result);
+            await this.importDependencies(db, payload, result);
 
             return Result.ok(result);
         } catch (error) {
             return Result.fail(unexpectedError(error));
+        }
+    }
+
+    private async importAppSettings(
+        db: DbHandle,
+        payload: Abstraction.Params["payload"],
+        result: IImportBackupResult
+    ): Promise<void> {
+        for (const setting of payload.appSettings) {
+            const inserted = await db
+                .insert(appSettings)
+                .values(setting)
+                .onConflictDoNothing()
+                .run();
+            if (inserted.changes > 0) {
+                result.appSettings.imported++;
+            } else {
+                result.appSettings.skipped++;
+            }
+        }
+    }
+
+    private async importSecuritySettings(
+        db: DbHandle,
+        payload: Abstraction.Params["payload"],
+        result: IImportBackupResult
+    ): Promise<void> {
+        for (const setting of payload.securitySettings) {
+            const inserted = await db
+                .insert(pmSecuritySettings)
+                .values({ id: generateId(), ...setting })
+                .onConflictDoNothing()
+                .run();
+            if (inserted.changes > 0) {
+                result.securitySettings.imported++;
+            } else {
+                result.securitySettings.skipped++;
+            }
+        }
+    }
+
+    private async importRegistryCache(
+        db: DbHandle,
+        payload: Abstraction.Params["payload"],
+        result: IImportBackupResult
+    ): Promise<void> {
+        for (const entry of payload.registryCache) {
+            const inserted = await db
+                .insert(registryCache)
+                .values(entry)
+                .onConflictDoNothing()
+                .run();
+            if (inserted.changes > 0) {
+                result.registryCache.imported++;
+            } else {
+                result.registryCache.skipped++;
+            }
+        }
+    }
+
+    private async importProjects(
+        db: DbHandle,
+        payload: Abstraction.Params["payload"],
+        result: IImportBackupResult
+    ): Promise<void> {
+        for (const project of payload.projects) {
+            try {
+                await access(project.path);
+            } catch {
+                result.projects.failed++;
+                result.projects.errors.push(`Path does not exist: ${project.path}`);
+                continue;
+            }
+
+            const existing = await db
+                .select()
+                .from(projects)
+                .where(eq(projects.path, project.path))
+                .get();
+
+            if (existing) {
+                result.projects.skipped++;
+                continue;
+            }
+
+            try {
+                await registerProject({
+                    projectPath: project.path,
+                    databaseClient: this.databaseClient,
+                    packageManagerService: this.packageManagerService
+                });
+                result.projects.imported++;
+            } catch (err) {
+                result.projects.failed++;
+                result.projects.errors.push(
+                    `${project.path}: ${getErrorMessage(err, "Unknown error")}`
+                );
+            }
+        }
+    }
+
+    private async importDependencies(
+        db: DbHandle,
+        payload: Abstraction.Params["payload"],
+        result: IImportBackupResult
+    ): Promise<void> {
+        for (const dep of payload.dependencies) {
+            const depId = generateId();
+            const depInserted = await db
+                .insert(dependencies)
+                .values({
+                    id: depId,
+                    name: dep.name,
+                    repoUrl: dep.repoUrl,
+                    createdAt: Date.now()
+                })
+                .onConflictDoNothing()
+                .run();
+
+            let dependencyId: string;
+            if (depInserted.changes > 0) {
+                dependencyId = depId;
+                result.dependencies.imported++;
+            } else {
+                const depRow = await db
+                    .select({ id: dependencies.id })
+                    .from(dependencies)
+                    .where(eq(dependencies.name, dep.name))
+                    .get();
+                if (!depRow) {
+                    continue;
+                }
+                dependencyId = depRow.id;
+                result.dependencies.skipped++;
+            }
+
+            await this.importDependencyVersions(db, dep.versions, dependencyId, result);
+        }
+    }
+
+    private async importDependencyVersions(
+        db: DbHandle,
+        versions: Abstraction.Params["payload"]["dependencies"][number]["versions"],
+        dependencyId: string,
+        result: IImportBackupResult
+    ): Promise<void> {
+        for (const version of versions) {
+            const versionId = generateId();
+            const vInserted = await db
+                .insert(dependencyVersions)
+                .values({
+                    id: versionId,
+                    dependencyId,
+                    version: version.version,
+                    publishedAt: version.publishedAt
+                })
+                .onConflictDoNothing()
+                .run();
+
+            if (vInserted.changes > 0) {
+                result.dependencies.imported++;
+            } else {
+                result.dependencies.skipped++;
+            }
+
+            if (version.changelog) {
+                const resolvedVersionId =
+                    vInserted.changes > 0
+                        ? versionId
+                        : (
+                              await db
+                                  .select({ id: dependencyVersions.id })
+                                  .from(dependencyVersions)
+                                  .where(
+                                      and(
+                                          eq(dependencyVersions.dependencyId, dependencyId),
+                                          eq(dependencyVersions.version, version.version)
+                                      )
+                                  )
+                                  .get()
+                          )?.id;
+
+                if (resolvedVersionId) {
+                    const clInserted = await db
+                        .insert(changelogs)
+                        .values({
+                            id: generateId(),
+                            dependencyId,
+                            dependencyVersionId: resolvedVersionId,
+                            content: version.changelog.content,
+                            source: version.changelog.source,
+                            fetchedAt: Date.now()
+                        })
+                        .onConflictDoNothing()
+                        .run();
+
+                    if (clInserted.changes > 0) {
+                        result.dependencies.imported++;
+                    } else {
+                        result.dependencies.skipped++;
+                    }
+                }
+            }
         }
     }
 }

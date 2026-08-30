@@ -63,75 +63,16 @@ const POLL_INTERVAL_MS = 3000;
 const SESSION_CLEANUP_INTERVAL_MS = HOUR_MS;
 const API_PORT = 3001;
 
-export async function createServer(): Promise<FastifyInstance> {
-    // Ensure the SQLite data directory exists before opening the database.
-    if (!existsSync(DATA_DIR)) {
-        mkdirSync(DATA_DIR, { recursive: true });
-    }
+interface IBackgroundTimerHandles {
+    pollInterval: ReturnType<typeof setInterval>;
+    snoozeCheckInterval: ReturnType<typeof setInterval>;
+    sessionCleanupInterval: ReturnType<typeof setInterval>;
+}
 
-    // Create the DI container and register all API services.
-    const databaseClient = createDatabaseClient(DB_PATH);
-    const container = createContainer();
-    ApiFeature.register(container, { databaseClient });
-
-    // Run pending Drizzle migrations before accepting traffic. This must
-    // happen before LoggerService is resolved below — its constructor reads
-    // the `log_level` app setting, which requires the app_settings table
-    // (and thus migrations) to already exist.
-    runMigrations(databaseClient.db);
-    seedSecurityDefaults(databaseClient.db);
-    seedAppSettings(databaseClient.db);
-
-    const loggerService = container.resolve(LoggerService);
-    await loggerService.initFileDestination(DATA_DIR);
-
-    const snoozeIntervalRow = databaseClient.db
-        .select({ value: appSettings.value })
-        .from(appSettings)
-        .where(eq(appSettings.key, "snooze_check_interval"))
-        .get();
-    const snoozeCheckIntervalMs = snoozeIntervalRow
-        ? parseInt(snoozeIntervalRow.value, 10) || HOUR_MS
-        : HOUR_MS;
-
-    const jobWorker = container.resolve(JobWorker);
-    await jobWorker.recoverStaleJobs();
-
-    const scanScheduler = container.resolve(ScanSchedulerService);
-    await scanScheduler.init();
-
-    const httpLogger: FastifyBaseLogger = loggerService.logger.child({ source: "http" });
-    const app = Fastify({ loggerInstance: httpLogger });
-
-    app.setErrorHandler((error: Error & { statusCode?: number }, _request, reply) => {
-        const statusCode = error.statusCode ?? 500;
-        loggerService.logger.error(
-            { source: "server", details: error.stack },
-            `Route error: ${error.message}`
-        );
-        reply.status(statusCode).send({
-            error: error.message ?? "Internal error",
-            stack: process.env["NODE_ENV"] !== "production" ? error.stack : undefined
-        });
-    });
-
-    await app.register(fastifyCompress);
-    await app.register(fastifyRateLimit, {
-        global: false
-    });
-
-    // Global auth hook: requires a valid session `Authorization: Bearer`
-    // token on every `/api/*` route except the login/verification endpoints.
-    // The `/ws` WebSocket upgrade authenticates separately, via a `?token=`
-    // query param — see WebSocketPlugin.ts.
-    app.addHook("onRequest", createAuthHook(container));
-
-    app.get("/api/health", async (_request, reply) => {
-        reply.send({ status: "ok" });
-    });
-
-    // Route plugins are registered here, each receiving the DI container via
-    // its Fastify plugin options (`{ container }`).
+async function registerAllRoutes(
+    app: FastifyInstance,
+    container: ReturnType<typeof createContainer>
+): Promise<void> {
     await app.register(projectRoutes, { container });
     await app.register(jobRoutes, { container });
     await app.register(packageManagerRoutes, { container });
@@ -160,16 +101,14 @@ export async function createServer(): Promise<FastifyInstance> {
     await app.register(userRoutes, { container });
     await app.register(authRoutes, { container });
     await app.register(websocketRoutes, { container });
+}
 
-    // In production, serve the built UI as static files.
-    const distUiPath = resolve("dist/ui");
-    if (existsSync(distUiPath)) {
-        await app.register(fastifyStatic, {
-            root: distUiPath,
-            prefix: "/"
-        });
-    }
-
+function startBackgroundTimers(
+    container: ReturnType<typeof createContainer>,
+    jobWorker: JobWorker.Interface,
+    loggerService: LoggerService.Interface,
+    snoozeCheckIntervalMs: number
+): IBackgroundTimerHandles {
     const pollInterval = setInterval(() => {
         jobWorker.processNextJob().catch(error => {
             loggerService.logger.error(
@@ -244,11 +183,99 @@ export async function createServer(): Promise<FastifyInstance> {
         });
     }, SESSION_CLEANUP_INTERVAL_MS);
 
+    return { pollInterval, snoozeCheckInterval, sessionCleanupInterval };
+}
+
+export async function createServer(): Promise<FastifyInstance> {
+    // Ensure the SQLite data directory exists before opening the database.
+    if (!existsSync(DATA_DIR)) {
+        mkdirSync(DATA_DIR, { recursive: true });
+    }
+
+    // Create the DI container and register all API services.
+    const databaseClient = createDatabaseClient(DB_PATH);
+    const container = createContainer();
+    ApiFeature.register(container, { databaseClient });
+
+    // Run pending Drizzle migrations before accepting traffic. This must
+    // happen before LoggerService is resolved below — its constructor reads
+    // the `log_level` app setting, which requires the app_settings table
+    // (and thus migrations) to already exist.
+    runMigrations(databaseClient.db);
+    seedSecurityDefaults(databaseClient.db);
+    seedAppSettings(databaseClient.db);
+
+    const loggerService = container.resolve(LoggerService);
+    await loggerService.initFileDestination(DATA_DIR);
+
+    const snoozeIntervalRow = databaseClient.db
+        .select({ value: appSettings.value })
+        .from(appSettings)
+        .where(eq(appSettings.key, "snooze_check_interval"))
+        .get();
+    const snoozeCheckIntervalMs = snoozeIntervalRow
+        ? parseInt(snoozeIntervalRow.value, 10) || HOUR_MS
+        : HOUR_MS;
+
+    const jobWorker = container.resolve(JobWorker);
+    await jobWorker.recoverStaleJobs();
+
+    const scanScheduler = container.resolve(ScanSchedulerService);
+    await scanScheduler.init();
+
+    const httpLogger: FastifyBaseLogger = loggerService.logger.child({ source: "http" });
+    const app = Fastify({ loggerInstance: httpLogger });
+
+    app.setErrorHandler((error: Error & { statusCode?: number }, _request, reply) => {
+        const statusCode = error.statusCode ?? 500;
+        loggerService.logger.error(
+            { source: "server", details: error.stack },
+            `Route error: ${error.message}`
+        );
+        reply.status(statusCode).send({
+            error: error.message ?? "Internal error",
+            stack: process.env["NODE_ENV"] !== "production" ? error.stack : undefined
+        });
+    });
+
+    await app.register(fastifyCompress);
+    await app.register(fastifyRateLimit, {
+        global: false
+    });
+
+    // Global auth hook: requires a valid session `Authorization: Bearer`
+    // token on every `/api/*` route except the login/verification endpoints.
+    // The `/ws` WebSocket upgrade authenticates separately, via a `?token=`
+    // query param — see WebSocketPlugin.ts.
+    app.addHook("onRequest", createAuthHook(container));
+
+    app.get("/api/health", async (_request, reply) => {
+        reply.send({ status: "ok" });
+    });
+
+    await registerAllRoutes(app, container);
+
+    // In production, serve the built UI as static files.
+    const distUiPath = resolve("dist/ui");
+    if (existsSync(distUiPath)) {
+        await app.register(fastifyStatic, {
+            root: distUiPath,
+            prefix: "/"
+        });
+    }
+
+    const timers = startBackgroundTimers(
+        container,
+        jobWorker,
+        loggerService,
+        snoozeCheckIntervalMs
+    );
+
     app.addHook("onClose", async () => {
         await scanScheduler.stop();
-        clearInterval(pollInterval);
-        clearInterval(snoozeCheckInterval);
-        clearInterval(sessionCleanupInterval);
+        clearInterval(timers.pollInterval);
+        clearInterval(timers.snoozeCheckInterval);
+        clearInterval(timers.sessionCleanupInterval);
     });
 
     return app;

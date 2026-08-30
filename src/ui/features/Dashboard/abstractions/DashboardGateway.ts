@@ -1,5 +1,7 @@
 import { createAbstraction } from "#shared/index.js";
 
+// ── Health ──────────────────────────────────────────────────────────────
+
 export interface IHealthProject {
     projectId: string;
     projectName: string;
@@ -39,6 +41,8 @@ export interface IHealthResponse {
     projects: IHealthProject[];
 }
 
+// ── Trends ──────────────────────────────────────────────────────────────
+
 export interface ITrendSnapshot {
     date: string;
     score: number;
@@ -54,6 +58,8 @@ export interface ITrendResponse {
     items: ITrendProject[];
 }
 
+// ── Activity ────────────────────────────────────────────────────────────
+
 export interface IActivityJob {
     id: string;
     type: string;
@@ -63,6 +69,8 @@ export interface IActivityJob {
     startedAt: number | null;
     completedAt: number | null;
 }
+
+// ── Staleness & Security ────────────────────────────────────────────────
 
 export interface IStalenessProject {
     projectId: string;
@@ -88,6 +96,8 @@ export interface IStalenessResponse {
 export interface ISecurityResponse {
     items: ISecurityProject[];
 }
+
+// ── Vulnerability ───────────────────────────────────────────────────────
 
 export interface IVulnerabilitySummaryProject {
     projectId: string;
@@ -125,6 +135,8 @@ export interface IVulnerabilityTrendResponse {
     points: IVulnerabilityTrendPoint[];
 }
 
+// ── License ─────────────────────────────────────────────────────────────
+
 export interface ILicenseRiskTierCounts {
     permissive: number;
     "weak-copyleft": number;
@@ -144,6 +156,8 @@ export interface ILicenseComplianceSummary {
     riskTierCounts: ILicenseRiskTierCounts;
     violationCounts: ILicenseViolationCounts;
 }
+
+// ── Sparkline Trends ────────────────────────────────────────────────────
 
 export interface IStalenessTrendPoint {
     date: string;
@@ -197,6 +211,8 @@ export interface IDashboardSparklineTrendParams {
     teamId?: string;
 }
 
+// ── Score Detail ────────────────────────────────────────────────────────
+
 export interface IScoreDetailOutdatedPackage {
     name: string;
     currentVersion: string;
@@ -217,22 +233,31 @@ export interface IScoreDetailResponse {
     vulnerabilities: IScoreDetailVulnerability[];
 }
 
+// ── Gateway Interface ───────────────────────────────────────────────────
+
 export interface IDashboardGateway {
+    // Health
     getHealth(teamId?: string): Promise<IHealthResponse>;
+    getScoreDetail(projectId: string): Promise<IScoreDetailResponse>;
+
+    // Trends
     getTrend(params: IDashboardTrendParams): Promise<ITrendResponse>;
-    getActivity(teamId?: string): Promise<IActivityResponse>;
-    getStaleness(teamId?: string): Promise<IStalenessResponse>;
-    getSecurity(teamId?: string): Promise<ISecurityResponse>;
-    getVulnerabilitySummary(teamId?: string): Promise<IVulnerabilitySummaryResponse>;
     getVulnerabilityTrend(
         params?: IDashboardVulnerabilityTrendParams
     ): Promise<IVulnerabilityTrendResponse>;
-    getLicenseSummary(teamId?: string): Promise<ILicenseComplianceSummary>;
-    getOpenAutoFixPrCount(teamId?: string): Promise<number>;
     getStalenessTrend(params?: IDashboardSparklineTrendParams): Promise<IStalenessTrendResponse>;
     getLicenseTrend(params?: IDashboardSparklineTrendParams): Promise<ILicenseTrendResponse>;
     getAutoFixTrend(params?: IDashboardSparklineTrendParams): Promise<IAutoFixTrendResponse>;
-    getScoreDetail(projectId: string): Promise<IScoreDetailResponse>;
+
+    // Activity & Staleness
+    getActivity(teamId?: string): Promise<IActivityResponse>;
+    getStaleness(teamId?: string): Promise<IStalenessResponse>;
+    getSecurity(teamId?: string): Promise<ISecurityResponse>;
+
+    // Vulnerability & License summaries
+    getVulnerabilitySummary(teamId?: string): Promise<IVulnerabilitySummaryResponse>;
+    getLicenseSummary(teamId?: string): Promise<ILicenseComplianceSummary>;
+    getOpenAutoFixPrCount(teamId?: string): Promise<number>;
 }
 
 export const DashboardGateway = createAbstraction<IDashboardGateway>("Ui/DashboardGateway");
