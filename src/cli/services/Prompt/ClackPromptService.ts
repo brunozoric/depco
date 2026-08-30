@@ -16,7 +16,7 @@ class ClackPromptServiceImpl implements Abstraction.Interface {
 
         if (clack.isCancel(result)) {
             clack.cancel("Operation cancelled.");
-            process.exit(0);
+            process.exit(130);
         }
 
         return result;
@@ -35,7 +35,7 @@ class ClackPromptServiceImpl implements Abstraction.Interface {
 
         if (clack.isCancel(result)) {
             clack.cancel("Operation cancelled.");
-            process.exit(0);
+            process.exit(130);
         }
 
         return result;
