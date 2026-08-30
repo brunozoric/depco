@@ -1,3 +1,4 @@
+import { formatZodError } from "#shared/index.js";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -29,7 +30,7 @@ class LoadConfigStepImpl implements Abstraction.Interface {
             const raw = module["default"];
             const parsed = depcoConfigSchema.safeParse(raw);
             if (!parsed.success) {
-                throw new Error(JSON.stringify(parsed.error.issues));
+                throw new Error(formatZodError(parsed.error.issues));
             }
             const config = parsed.data;
             context.results.set("config", config);

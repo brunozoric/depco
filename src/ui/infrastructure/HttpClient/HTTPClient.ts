@@ -1,3 +1,4 @@
+import { formatZodError } from "#shared/index.js";
 import type { RouteDefinition, HTTPMethod, IRequestArgs } from "#shared/routing/index.js";
 import { interpolatePath } from "#shared/routing/index.js";
 import { HTTPClient as Abstraction } from "./abstractions/HTTPClient.js";
@@ -73,7 +74,7 @@ class HTTPClientImpl implements Abstraction.Interface {
         const parsed = route.response.safeParse(json);
         if (!parsed.success) {
             throw new Error(
-                `Response validation failed for ${route.method} ${route.path}: ${JSON.stringify(parsed.error.issues)}`
+                `Response validation failed for ${route.method} ${route.path}: ${formatZodError(parsed.error.issues)}`
             );
         }
         return parsed.data;

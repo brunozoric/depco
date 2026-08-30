@@ -1,3 +1,4 @@
+import { formatZodError } from "#shared/index.js";
 import { z } from "zod";
 
 const licenseSchema = z
@@ -15,7 +16,7 @@ const licenseSchema = z
 export function parseLicense(value: unknown): string | null {
     const parsed = licenseSchema.safeParse(value);
     if (!parsed.success) {
-        throw new Error(JSON.stringify(parsed.error.issues));
+        throw new Error(formatZodError(parsed.error.issues));
     }
     return parsed.data;
 }

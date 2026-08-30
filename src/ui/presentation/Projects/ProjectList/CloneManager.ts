@@ -21,8 +21,8 @@ export class CloneManager {
     public setUrl = (url: string): void => {
         this.url = url;
         const match = url.match(/\/([^/]+?)(?:\.git)?$/);
-        if (match) {
-            this.folderName = match[1]!;
+        if (match?.[1]) {
+            this.folderName = match[1];
         }
     };
 
@@ -40,15 +40,17 @@ export class CloneManager {
                 this.folderName || undefined
             );
             runInAction(() => {
-                this.loading = false;
                 this.url = "";
                 this.folderName = "";
             });
             await this.dependencies.onCloned();
         } catch (error) {
             runInAction(() => {
-                this.loading = false;
                 this.error = getErrorMessage(error, "Failed to clone project");
+            });
+        } finally {
+            runInAction(() => {
+                this.loading = false;
             });
         }
     };

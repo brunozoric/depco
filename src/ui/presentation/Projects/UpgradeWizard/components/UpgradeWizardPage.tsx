@@ -53,11 +53,11 @@ function groupSteps(stepOrder: string[]): StepGroup[] {
             if (!groupMap.has(stepType)) {
                 groupMap.set(stepType, {
                     builtInType: stepType,
-                    label: BUILT_IN_LABELS[stepType]!,
+                    label: BUILT_IN_LABELS[stepType],
                     steps: []
                 });
             }
-            groupMap.get(stepType)!.steps.push(stepType);
+            groupMap.get(stepType)?.steps.push(stepType);
         } else {
             const parentType = stepType.split(":")[1] ?? stepType;
             if (!groupMap.has(parentType)) {
@@ -67,7 +67,7 @@ function groupSteps(stepOrder: string[]): StepGroup[] {
                     steps: []
                 });
             }
-            groupMap.get(parentType)!.steps.push(stepType);
+            groupMap.get(parentType)?.steps.push(stepType);
         }
     }
 
@@ -124,8 +124,9 @@ export const UpgradeWizardPage = observer(function UpgradeWizardPage({
         );
     }
 
-    const activeGroupIndex = vm.activeStep
-        ? groups.findIndex(group => group.steps.includes(vm.activeStep!.type))
+    const activeStepType = vm.activeStep?.type;
+    const activeGroupIndex = activeStepType
+        ? groups.findIndex(group => group.steps.includes(activeStepType))
         : groups.length;
 
     const isCompleted = vm.session?.status === "completed";

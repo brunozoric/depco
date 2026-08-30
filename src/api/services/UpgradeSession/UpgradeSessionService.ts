@@ -63,6 +63,12 @@ class UpgradeSessionServiceImpl implements Abstraction.Interface {
         const hooks = await this.stepHookService.getStepConfig(projectId, project.path);
         const stepOrder = buildStepOrder(hooks);
         const steps = createSessionSteps(stepOrder, hooks);
+
+        const firstStep = steps[0];
+        if (!firstStep) {
+            throw new Error("Cannot create upgrade session with no steps");
+        }
+
         const now = Date.now();
         const id = generateId();
 
@@ -72,7 +78,7 @@ class UpgradeSessionServiceImpl implements Abstraction.Interface {
                 id,
                 projectId,
                 status: "active",
-                currentStep: steps[0]!.type,
+                currentStep: firstStep.type,
                 steps: JSON.stringify(steps),
                 stepOrder: JSON.stringify(stepOrder),
                 createdAt: now,

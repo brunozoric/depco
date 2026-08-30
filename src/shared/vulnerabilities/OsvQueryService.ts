@@ -1,3 +1,4 @@
+import { formatZodError } from "../validation.js";
 import { OsvQueryService as Abstraction } from "./abstractions/OsvQueryService.js";
 import type {
     IOsvAdvisory,
@@ -102,7 +103,7 @@ class OsvQueryServiceImpl implements Abstraction.Interface {
 
         const parsed = osvBatchResponseSchema.safeParse(await response.json());
         if (!parsed.success) {
-            throw new Error(JSON.stringify(parsed.error.issues));
+            throw new Error(formatZodError(parsed.error.issues));
         }
         const data = parsed.data;
         return packages.map((_pkg, index) => data.results[index]?.vulns ?? []);
@@ -138,7 +139,7 @@ class OsvQueryServiceImpl implements Abstraction.Interface {
                             await response.json()
                         );
                         if (!parsed.success) {
-                            throw new Error(JSON.stringify(parsed.error.issues));
+                            throw new Error(formatZodError(parsed.error.issues));
                         }
                         detailById.set(id, parsed.data);
                     }

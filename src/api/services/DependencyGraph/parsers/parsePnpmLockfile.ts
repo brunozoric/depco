@@ -1,3 +1,4 @@
+import { formatZodError } from "#shared/index.js";
 import { z } from "zod";
 import { parse as parseYaml } from "yaml";
 import type { IDependencyEdge } from "../abstractions/LockfileParserService.js";
@@ -56,7 +57,7 @@ export function parsePnpmLockfile(
         }
         const parsedLockfile = pnpmLockFileSchema.safeParse(parsedYaml);
         if (!parsedLockfile.success) {
-            throw new Error(JSON.stringify(parsedLockfile.error.issues));
+            throw new Error(formatZodError(parsedLockfile.error.issues));
         }
         lockfile = parsedLockfile.data;
     } catch {

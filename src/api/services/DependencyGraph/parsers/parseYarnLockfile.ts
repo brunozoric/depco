@@ -44,13 +44,13 @@ function parseYarnLockFieldLine(line: string): [string, string] | null {
     const trimmed = line.trim();
 
     const colonSeparated = /^"?([^":]+)"?:\s*(.+)$/.exec(trimmed);
-    if (colonSeparated) {
-        return [colonSeparated[1]!.trim(), stripSurroundingQuotes(colonSeparated[2]!.trim())];
+    if (colonSeparated?.[1] && colonSeparated[2]) {
+        return [colonSeparated[1].trim(), stripSurroundingQuotes(colonSeparated[2].trim())];
     }
 
     const spaceSeparated = /^"?([^"]+?)"?\s+"([^"]*)"$/.exec(trimmed);
-    if (spaceSeparated) {
-        return [spaceSeparated[1]!.trim(), spaceSeparated[2]!.trim()];
+    if (spaceSeparated?.[1] && spaceSeparated[2] !== undefined) {
+        return [spaceSeparated[1].trim(), spaceSeparated[2].trim()];
     }
 
     return null;

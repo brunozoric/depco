@@ -1,3 +1,4 @@
+import { formatZodError } from "#shared/index.js";
 import { z } from "zod";
 import { generateId, Logger } from "@webiny/stdlib";
 import { NodeReleaseDataService as Abstraction } from "./abstractions/NodeReleaseDataService.js";
@@ -119,7 +120,7 @@ class NodeReleaseDataServiceImpl implements Abstraction.Interface {
         const result = nodeReleaseApiResponseSchema.safeParse(json);
 
         if (!result.success) {
-            throw new Error(JSON.stringify(result.error.issues));
+            throw new Error(formatZodError(result.error.issues));
         }
 
         const releases: INodeRelease[] = [];

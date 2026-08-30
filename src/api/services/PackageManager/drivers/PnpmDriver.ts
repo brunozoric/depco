@@ -1,3 +1,4 @@
+import { formatZodError } from "#shared/index.js";
 import { z } from "zod";
 import { PackageManagerDriver as Abstraction } from "../abstractions/PackageManagerDriver.js";
 import { parseRegistryOutput } from "../registrySchema.js";
@@ -45,7 +46,7 @@ class PnpmDriverImpl implements Abstraction.Interface {
             if (Array.isArray(parsedStdout)) {
                 const parsedEntries = z.array(pnpmListEntrySchema).safeParse(parsedStdout);
                 if (!parsedEntries.success) {
-                    throw new Error(JSON.stringify(parsedEntries.error.issues));
+                    throw new Error(formatZodError(parsedEntries.error.issues));
                 }
                 entries = parsedEntries.data as IPnpmListEntry[];
             } else {

@@ -1,3 +1,4 @@
+import { formatZodError } from "#shared/index.js";
 import { z } from "zod";
 import type { JobExecutor } from "./abstractions/JobExecutor.js";
 import { PackageManagerJobExecutor as Abstraction } from "./abstractions/PackageManagerJobExecutor.js";
@@ -18,7 +19,7 @@ class PackageManagerJobExecutorImpl implements JobExecutor.Interface {
             JSON.parse(context.packagesJson ?? "{}")
         );
         if (!parsed.success) {
-            throw new Error(JSON.stringify(parsed.error.issues));
+            throw new Error(formatZodError(parsed.error.issues));
         }
         const packages = parsed.data;
 

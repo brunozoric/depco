@@ -1,3 +1,4 @@
+import { formatZodError } from "#shared/index.js";
 import { z } from "zod";
 import type { IDependencyEdge } from "../abstractions/LockfileParserService.js";
 import { parseRootPackageJson } from "./types.js";
@@ -69,7 +70,7 @@ export function parseBunLockfile(
             JSON.parse(stripJsonComments(lockfileContent))
         );
         if (!parsedLockfile.success) {
-            throw new Error(JSON.stringify(parsedLockfile.error.issues));
+            throw new Error(formatZodError(parsedLockfile.error.issues));
         }
         lockfile = parsedLockfile.data as IBunLockFile;
     } catch {

@@ -64,7 +64,7 @@ export function SummaryCards({ summary, openAutoFixPrCount }: SummaryCardsProps)
                             size="xs"
                             c="blue"
                             style={{ cursor: "pointer" }}
-                            onClick={() => navigate(`/projects/${summary.worstProject!.id}`)}
+                            onClick={() => navigate(`/projects/${summary.worstProject?.id}`)}
                         >
                             {summary.worstProject.name}
                         </Text>

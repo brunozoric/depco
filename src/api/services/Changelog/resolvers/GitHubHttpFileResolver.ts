@@ -1,3 +1,4 @@
+import { formatZodError } from "#shared/index.js";
 import { z } from "zod";
 import { ChangelogResolver as Abstraction } from "../abstractions/ChangelogResolver.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
@@ -82,7 +83,7 @@ class GitHubHttpFileResolverImpl implements Abstraction.Interface {
 
                     const parsedContents = githubContentsSchema.safeParse(await response.json());
                     if (!parsedContents.success) {
-                        throw new Error(JSON.stringify(parsedContents.error.issues));
+                        throw new Error(formatZodError(parsedContents.error.issues));
                     }
                     const data = parsedContents.data;
                     if (data.content && data.encoding === "base64") {

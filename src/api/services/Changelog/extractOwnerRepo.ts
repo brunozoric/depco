@@ -5,5 +5,5 @@
 // `git@github.com:owner/repo`) ever reaches this function.
 export function extractOwnerRepo(repoUrl: string): string | null {
     const match = repoUrl.match(/github\.com[/:]([^/]+\/[^/]+)/);
-    return match ? match[1]!.replace(/\.git$/, "") : null;
+    return match?.[1]?.replace(/\.git$/, "") ?? null;
 }

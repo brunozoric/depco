@@ -19,3 +19,4 @@ export {
     projectNotFoundError,
     getErrorMessage
 } from "./errors.js";
+export { formatZodError } from "./validation.js";

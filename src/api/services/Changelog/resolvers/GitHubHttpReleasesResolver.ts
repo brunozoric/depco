@@ -1,3 +1,4 @@
+import { formatZodError } from "#shared/index.js";
 import { ChangelogResolver as Abstraction } from "../abstractions/ChangelogResolver.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { EncryptionService } from "#api/services/Encryption/abstractions/EncryptionService.js";
@@ -52,7 +53,7 @@ class GitHubHttpReleasesResolverImpl implements Abstraction.Interface {
 
             const parsedReleases = githubReleasesSchema.safeParse(await response.json());
             if (!parsedReleases.success) {
-                throw new Error(JSON.stringify(parsedReleases.error.issues));
+                throw new Error(formatZodError(parsedReleases.error.issues));
             }
             const releases = parsedReleases.data;
             const versionSet = new Set(versions);

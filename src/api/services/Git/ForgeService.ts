@@ -127,17 +127,17 @@ export class ForgeServiceImpl implements Abstraction.Interface {
         const cleaned = url.trim().replace(/\.git$/, "");
 
         const sshMatch = cleaned.match(/^git@[^:]+:(.+)$/);
-        if (sshMatch) {
-            const parts = sshMatch[1]!.split("/");
-            const repo = parts.pop()!;
+        if (sshMatch?.[1]) {
+            const parts = sshMatch[1].split("/");
+            const repo = parts.pop() ?? "";
             const owner = parts.join("/");
             return { owner, repo };
         }
 
         const httpsMatch = cleaned.match(/https?:\/\/[^/]+\/(.+)$/);
-        if (httpsMatch) {
-            const parts = httpsMatch[1]!.split("/");
-            const repo = parts.pop()!;
+        if (httpsMatch?.[1]) {
+            const parts = httpsMatch[1].split("/");
+            const repo = parts.pop() ?? "";
             const owner = parts.join("/");
             return { owner, repo };
         }
@@ -148,8 +148,8 @@ export class ForgeServiceImpl implements Abstraction.Interface {
 
 function extractHostname(url: string): string | null {
     const sshMatch = url.match(/^git@([^:]+):/);
-    if (sshMatch) {
-        return sshMatch[1]!;
+    if (sshMatch?.[1]) {
+        return sshMatch[1];
     }
     try {
         return new URL(url).hostname;

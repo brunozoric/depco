@@ -1,3 +1,4 @@
+import { formatZodError } from "#shared/index.js";
 import { z } from "zod";
 import { and, eq, isNull } from "drizzle-orm";
 import type { JobExecutor } from "./abstractions/JobExecutor.js";
@@ -29,7 +30,7 @@ class ChangelogJobExecutorImpl implements JobExecutor.Interface {
     public async execute(context: JobExecutor.ExecutionContext): Promise<void> {
         const parsed = changelogPackagesSchema.safeParse(JSON.parse(context.packagesJson ?? "{}"));
         if (!parsed.success) {
-            throw new Error(JSON.stringify(parsed.error.issues));
+            throw new Error(formatZodError(parsed.error.issues));
         }
         const { packageName, from, to } = parsed.data;
 
