@@ -1,8 +1,6 @@
-import type { PackageManagerId } from "#shared/security/index.js";
+import { PACKAGE_MANAGER_IDS, type PackageManagerId } from "#shared/security/index.js";
 import { INSTALL_FLAG_REGISTRY } from "#shared/install/index.js";
 import type { FileConfigService } from "#api/services/FileConfig/index.js";
-
-export const ALL_PACKAGE_MANAGERS: PackageManagerId[] = ["yarn", "npm", "pnpm", "bun"];
 
 export interface IInstallFlagItemResponse {
     flag: string;
@@ -25,7 +23,7 @@ export interface IPmConfigItemResponse {
 }
 
 export function buildDefaultPmItems(): IPmConfigItemResponse[] {
-    return ALL_PACKAGE_MANAGERS.map(pm => ({
+    return PACKAGE_MANAGER_IDS.map(pm => ({
         packageManager: pm,
         installFlags: INSTALL_FLAG_REGISTRY[pm].map(flag => ({
             flag: flag.flag,

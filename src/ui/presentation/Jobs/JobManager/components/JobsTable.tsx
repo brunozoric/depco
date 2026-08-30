@@ -16,6 +16,7 @@ import {
 } from "@mantine/core";
 import { navigate } from "#ui/infrastructure/Router/router.js";
 import type { JobManagerPresenter } from "../abstractions/JobManagerPresenter.js";
+import { formatTimestamp } from "#ui/infrastructure/Shared/formatting/dateFormatters.js";
 
 const STATUS_COLORS: Record<string, string> = {
     pending: "gray",
@@ -38,13 +39,6 @@ function formatDuration(startedAt: number | null, completedAt: number | null): s
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}m ${remainingSeconds}s`;
-}
-
-function formatTime(timestamp: number | null): string {
-    if (!timestamp) {
-        return "-";
-    }
-    return new Date(timestamp).toLocaleString();
 }
 
 interface JobsTableProps {
@@ -137,7 +131,7 @@ export function JobsTable({
                                 </Stack>
                             </Table.Td>
                             <Table.Td>
-                                <Text size="sm">{formatTime(job.startedAt)}</Text>
+                                <Text size="sm">{formatTimestamp(job.startedAt)}</Text>
                             </Table.Td>
                             <Table.Td>
                                 <Text size="sm">

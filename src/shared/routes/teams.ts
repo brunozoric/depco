@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineRoute } from "#shared/routing/index.js";
+import { defineRoute, paginationQuerySchema } from "#shared/routing/index.js";
 import {
     listTeamsResponseSchema,
     createTeamResponseSchema,
@@ -13,8 +13,7 @@ export const listTeamsRoute = defineRoute({
     description: "List all teams with aggregate stats",
     params: z.object({}),
     querystring: z.object({
-        page: z.coerce.number().int().positive().optional(),
-        pageSize: z.coerce.number().int().positive().max(200).optional()
+        ...paginationQuerySchema
     }),
     response: listTeamsResponseSchema
 });

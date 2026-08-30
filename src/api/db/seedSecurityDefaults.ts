@@ -12,7 +12,7 @@ export function seedSecurityDefaults(db: BetterSQLite3Database): void {
             .where(eq(pmSecuritySettings.packageManager, packageManager))
             .all();
 
-        if (row!.total > 0) {
+        if (!row || row.total > 0) {
             continue;
         }
 

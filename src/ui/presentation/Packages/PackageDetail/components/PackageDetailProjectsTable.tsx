@@ -2,13 +2,7 @@ import type React from "react";
 import { Anchor, Badge, Table } from "@mantine/core";
 import { navigate } from "#ui/infrastructure/Router/router.js";
 import type { PackagesGateway } from "../../../../features/Packages/abstractions/PackagesGateway.js";
-
-const UPGRADE_BADGE_COLOR: Record<string, string> = {
-    patch: "green",
-    minor: "yellow",
-    major: "red",
-    none: "gray"
-};
+import { UPGRADE_BADGE_COLORS } from "#ui/infrastructure/Shared/upgrades/upgradeBadgeColors.js";
 
 interface PackageDetailProjectsTableProps {
     projects: PackagesGateway.PackageDetailProject[];
@@ -46,7 +40,7 @@ export function PackageDetailProjectsTable({
                             {project.upgradeType !== "none" && (
                                 <Badge
                                     size="sm"
-                                    color={UPGRADE_BADGE_COLOR[project.upgradeType] ?? "gray"}
+                                    color={UPGRADE_BADGE_COLORS[project.upgradeType] ?? "gray"}
                                 >
                                     {project.upgradeType}
                                 </Badge>

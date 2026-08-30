@@ -12,5 +12,10 @@ export {
     type IUnexpectedError,
     type IProjectNotFoundError,
     type INameAlreadyExistsError,
-    unexpectedError
+    type ISettingNotFoundError,
+    type IUnknownPackageManagerError,
+    type IInvalidExpectedValueError,
+    unexpectedError,
+    projectNotFoundError,
+    getErrorMessage
 } from "./errors.js";

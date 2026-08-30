@@ -1,5 +1,5 @@
 import { asc, eq } from "drizzle-orm";
-import { Result, unexpectedError } from "#shared/index.js";
+import { Result, unexpectedError, projectNotFoundError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { FileConfigService } from "#api/services/FileConfig/index.js";
 import { PackageJsonService } from "#api/services/PackageJson/index.js";
@@ -27,11 +27,7 @@ class ListStepHooksUseCaseImpl implements Abstraction.Interface {
                 .get();
 
             if (!project) {
-                return Result.fail({
-                    code: "PROJECT_NOT_FOUND",
-                    statusCode: 404,
-                    message: "Project not found"
-                });
+                return Result.fail(projectNotFoundError());
             }
 
             const fileConfig = await this.fileConfigService.readConfig(project.path);

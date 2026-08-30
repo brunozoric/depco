@@ -1,15 +1,12 @@
 import type React from "react";
 import { ActionIcon, Badge, Group, Stack, Table, Text, Tooltip } from "@mantine/core";
 import type { StepHooksPresenter } from "../abstractions/StepHooksPresenter.js";
+import { truncate } from "#ui/infrastructure/Shared/formatting/truncate.js";
 
 interface DiscoveredScriptsListProps {
     scripts: StepHooksPresenter.DiscoveredScriptViewModel[];
     configSource: "db" | "file";
     onAdd: (name: string, command: string) => void;
-}
-
-function truncate(value: string, max = 60): string {
-    return value.length > max ? `${value.slice(0, max)}…` : value;
 }
 
 export function DiscoveredScriptsList({

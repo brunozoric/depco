@@ -1,6 +1,7 @@
 import type { z } from "zod";
 
-export type PackageManagerId = "yarn" | "npm" | "pnpm" | "bun";
+export const PACKAGE_MANAGER_IDS = ["yarn", "npm", "pnpm", "bun"] as const;
+export type PackageManagerId = (typeof PACKAGE_MANAGER_IDS)[number];
 
 export type FieldInputType = "exists" | "duration" | "boolean";
 

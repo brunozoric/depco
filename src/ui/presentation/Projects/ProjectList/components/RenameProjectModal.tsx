@@ -1,6 +1,7 @@
 import type React from "react";
 import { useState } from "react";
 import { Button, Group, Modal, TextInput } from "@mantine/core";
+import { getErrorMessage } from "#shared/index.js";
 
 interface IRenameProjectModalProps {
     opened: boolean;
@@ -30,7 +31,7 @@ export function RenameProjectModal({
             await onRename(trimmed);
             onClose();
         } catch (submitError) {
-            setError(submitError instanceof Error ? submitError.message : "Failed to rename");
+            setError(getErrorMessage(submitError, "Failed to rename"));
         } finally {
             setLoading(false);
         }

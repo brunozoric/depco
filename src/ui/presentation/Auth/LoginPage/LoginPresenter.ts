@@ -1,4 +1,5 @@
 import { computed, makeAutoObservable, runInAction } from "mobx";
+import { getErrorMessage } from "#shared/index.js";
 import { LoginPresenter as Abstraction } from "./abstractions/LoginPresenter.js";
 import { AuthGateway } from "../../../features/Auth/abstractions/AuthGateway.js";
 import { AuthRepository } from "../../../features/Auth/abstractions/AuthRepository.js";
@@ -61,7 +62,7 @@ class LoginPresenterImpl implements Abstraction.Interface {
             });
         } catch (error) {
             runInAction(() => {
-                this.errorValue = error instanceof Error ? error.message : "Login failed";
+                this.errorValue = getErrorMessage(error, "Login failed");
             });
         } finally {
             runInAction(() => {
@@ -85,7 +86,7 @@ class LoginPresenterImpl implements Abstraction.Interface {
             });
         } catch (error) {
             runInAction(() => {
-                this.errorValue = error instanceof Error ? error.message : "Verification failed";
+                this.errorValue = getErrorMessage(error, "Verification failed");
                 this.state = "credentials-submitted";
             });
         } finally {
@@ -105,8 +106,7 @@ class LoginPresenterImpl implements Abstraction.Interface {
             });
         } catch (error) {
             runInAction(() => {
-                this.errorValue =
-                    error instanceof Error ? error.message : "Failed to send magic link";
+                this.errorValue = getErrorMessage(error, "Failed to send magic link");
             });
         } finally {
             runInAction(() => {
@@ -126,8 +126,7 @@ class LoginPresenterImpl implements Abstraction.Interface {
             });
         } catch (error) {
             runInAction(() => {
-                this.errorValue =
-                    error instanceof Error ? error.message : "Magic link verification failed";
+                this.errorValue = getErrorMessage(error, "Magic link verification failed");
             });
         } finally {
             runInAction(() => {

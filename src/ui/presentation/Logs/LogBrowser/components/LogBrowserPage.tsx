@@ -19,6 +19,7 @@ import { observer } from "mobx-react-lite";
 import { navigate } from "#ui/infrastructure/Router/router.js";
 import { ConfirmDialog } from "#ui/infrastructure/Shared/components/ConfirmDialog.js";
 import type { LogBrowserPresenter } from "../abstractions/LogBrowserPresenter.js";
+import { formatTimestamp } from "#ui/infrastructure/Shared/formatting/dateFormatters.js";
 import { LogFilterBar } from "./LogFilterBar.js";
 
 interface LogBrowserPageProps {
@@ -30,10 +31,6 @@ const LEVEL_COLORS: Record<string, string> = {
     warn: "orange",
     info: "blue"
 };
-
-function formatTimestamp(ts: number): string {
-    return new Date(ts).toLocaleString();
-}
 
 export const LogBrowserPage = observer(function LogBrowserPage({
     presenter

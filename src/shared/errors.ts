@@ -20,10 +20,32 @@ export interface INameAlreadyExistsError {
     message: string;
 }
 
+export interface ISettingNotFoundError {
+    code: "SETTING_NOT_FOUND";
+    statusCode: 404;
+    message: string;
+}
+
+export interface IUnknownPackageManagerError {
+    code: "UNKNOWN_PACKAGE_MANAGER";
+    statusCode: 400;
+    message: string;
+}
+
+export interface IInvalidExpectedValueError {
+    code: "INVALID_EXPECTED_VALUE";
+    statusCode: 400;
+    message: string;
+}
+
 export function unexpectedError(error: unknown): IUnexpectedError {
     return {
         code: "UNEXPECTED_ERROR",
         statusCode: 500,
         message: error instanceof Error ? error.message : "Unknown error"
     };
+}
+
+export function projectNotFoundError(message = "Project not found"): IProjectNotFoundError {
+    return { code: "PROJECT_NOT_FOUND", statusCode: 404, message };
 }

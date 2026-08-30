@@ -1,13 +1,7 @@
 import type React from "react";
 import { Table, Text } from "@mantine/core";
 import type { IPackageListItemViewModel } from "../../abstractions/PackagesPresenter.js";
-
-function formatDate(timestamp: number | null): string {
-    if (timestamp === null) {
-        return "-";
-    }
-    return new Date(timestamp).toLocaleDateString();
-}
+import { formatDate } from "#ui/infrastructure/Shared/formatting/dateFormatters.js";
 
 interface LastReleaseProps {
     pkg: IPackageListItemViewModel;
@@ -16,7 +10,7 @@ interface LastReleaseProps {
 export function LastRelease({ pkg }: LastReleaseProps): React.ReactNode {
     return (
         <Table.Td>
-            <Text size="sm">{formatDate(pkg.lastPublishedAt)}</Text>
+            <Text size="sm">{formatDate(pkg.lastPublishedAt, "-")}</Text>
         </Table.Td>
     );
 }

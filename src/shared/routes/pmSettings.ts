@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { defineRoute } from "#shared/routing/index.js";
+import { PACKAGE_MANAGER_IDS } from "#shared/security/index.js";
 import {
     listPmSettingsResponseSchema,
     updatePmConfigResponseSchema
@@ -26,7 +27,7 @@ export const updatePmConfigRoute = defineRoute({
     path: "/api/settings/pm/:pm",
     description: "Update PM config in .dependency-upgrader.json",
     params: z.object({
-        pm: z.enum(["yarn", "npm", "pnpm", "bun"])
+        pm: z.enum(PACKAGE_MANAGER_IDS)
     }),
     body: updatePmConfigBodySchema,
     response: updatePmConfigResponseSchema

@@ -2,16 +2,10 @@ import type React from "react";
 import { ActionIcon, Anchor, Badge, Group, Stack, Text, Title } from "@mantine/core";
 import { navigate } from "#ui/infrastructure/Router/router.js";
 import type { PackagesGateway } from "../../../../features/Packages/abstractions/PackagesGateway.js";
+import { formatDate } from "#ui/infrastructure/Shared/formatting/dateFormatters.js";
 
 interface PackageDetailHeaderProps {
     packageDetail: PackagesGateway.PackageDetail;
-}
-
-function formatDate(timestamp: number | null): string {
-    if (timestamp === null) {
-        return "Unknown";
-    }
-    return new Date(timestamp).toLocaleDateString();
 }
 
 function isSafeRepoUrl(url: string): boolean {
@@ -42,7 +36,7 @@ export function PackageDetailHeader({ packageDetail }: PackageDetailHeaderProps)
                     Latest: {packageDetail.latestVersion ?? "Unknown"}
                 </Text>
                 <Text size="sm" c="dimmed">
-                    Last published: {formatDate(packageDetail.lastPublishedAt)}
+                    Last published: {formatDate(packageDetail.lastPublishedAt, "Unknown")}
                 </Text>
             </Group>
         </Stack>

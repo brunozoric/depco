@@ -4,6 +4,7 @@ import { Accordion, Badge, Button, Group, Stack, Switch, Table, Text } from "@ma
 import { EngineStatusBadge } from "#ui/infrastructure/Shared/engines/EngineStatusBadge.js";
 import type { ProjectDetailPresenter } from "../abstractions/ProjectDetailPresenter.js";
 import type { EngineScanStaleReason } from "../abstractions/ProjectDetailPresenter.js";
+import { formatRelativeTime } from "#ui/infrastructure/Shared/formatting/dateFormatters.js";
 
 interface EngineStatusSectionProps {
     presenter: ProjectDetailPresenter.Interface;
@@ -14,17 +15,6 @@ function formatEolDate(eolDate: number | null): string | null {
         return null;
     }
     return new Date(eolDate).toLocaleDateString();
-}
-
-function formatRelativeTime(timestamp: number): string {
-    const days = Math.floor((Date.now() - timestamp) / (1000 * 60 * 60 * 24));
-    if (days === 0) {
-        return "today";
-    }
-    if (days === 1) {
-        return "1 day ago";
-    }
-    return `${days} days ago`;
 }
 
 function formatStaleReason(reason: EngineScanStaleReason): string {

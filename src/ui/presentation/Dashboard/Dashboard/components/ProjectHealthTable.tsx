@@ -2,6 +2,7 @@ import type React from "react";
 import { Table, Badge, Text } from "@mantine/core";
 import { navigate } from "#ui/infrastructure/Router/router.js";
 import type { DashboardGateway } from "#ui/features/Dashboard/abstractions/DashboardGateway.js";
+import { formatDate } from "#ui/infrastructure/Shared/formatting/dateFormatters.js";
 
 interface ProjectHealthTableProps {
     projects: DashboardGateway.HealthProject[];
@@ -24,13 +25,6 @@ function formatDelta(delta: number | null): React.ReactNode {
             {delta}
         </Text>
     );
-}
-
-function formatDate(timestamp: number | null): string {
-    if (!timestamp) {
-        return "Never";
-    }
-    return new Date(timestamp).toLocaleDateString();
 }
 
 export function ProjectHealthTable({
@@ -108,7 +102,7 @@ export function ProjectHealthTable({
                                 "0"
                             )}
                         </Table.Td>
-                        <Table.Td>{formatDate(project.lastScannedAt)}</Table.Td>
+                        <Table.Td>{formatDate(project.lastScannedAt, "Never")}</Table.Td>
                     </Table.Tr>
                 ))}
             </Table.Tbody>

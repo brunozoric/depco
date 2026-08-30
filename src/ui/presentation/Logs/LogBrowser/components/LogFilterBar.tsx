@@ -1,5 +1,9 @@
 import type React from "react";
 import { Button, Group, Select, TextInput } from "@mantine/core";
+import {
+    epochMsToDatetimeLocal,
+    datetimeLocalToEpochMs
+} from "#ui/infrastructure/Shared/formatting/datetimeConverters.js";
 
 const LEVEL_OPTIONS = [
     { label: "Error", value: "error" },
@@ -15,34 +19,6 @@ const SOURCE_OPTIONS = [
     { label: "Git", value: "git" },
     { label: "Clone", value: "clone" }
 ];
-
-// Converts an epoch-ms string (as stored by the presenter) into the local
-// "YYYY-MM-DDTHH:mm" format expected by <input type="datetime-local">.
-function epochMsToDatetimeLocal(value: string | null): string {
-    if (!value) {
-        return "";
-    }
-    const ms = Number(value);
-    if (Number.isNaN(ms)) {
-        return "";
-    }
-    const date = new Date(ms);
-    const offsetMs = date.getTimezoneOffset() * 60000;
-    return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
-}
-
-// Converts a datetime-local input value back into an epoch-ms string, or
-// null when the input was cleared / invalid.
-function datetimeLocalToEpochMs(value: string): string | null {
-    if (!value) {
-        return null;
-    }
-    const ms = new Date(value).getTime();
-    if (Number.isNaN(ms)) {
-        return null;
-    }
-    return String(ms);
-}
 
 interface ProjectOption {
     label: string;

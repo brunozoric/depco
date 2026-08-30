@@ -1,4 +1,5 @@
 import { createFeature } from "#shared/index.js";
+import { PromptServiceFeature } from "../../services/Prompt/index.js";
 import { EnsureDataDirectoryStepFeature } from "./steps/EnsureDataDirectory/index.js";
 import { RunMigrationsStepFeature } from "./steps/RunMigrations/index.js";
 import { GenerateEncryptionKeyStepFeature } from "./steps/GenerateEncryptionKey/index.js";
@@ -11,6 +12,7 @@ import { InitCommand } from "./InitCommand.js";
 export const InitCommandFeature = createFeature({
     name: "Cli/InitCommand",
     dependencies: [
+        PromptServiceFeature,
         EnsureDataDirectoryStepFeature,
         RunMigrationsStepFeature,
         GenerateEncryptionKeyStepFeature,

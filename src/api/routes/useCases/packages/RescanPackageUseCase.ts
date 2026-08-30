@@ -1,28 +1,11 @@
 import { eq, sql } from "drizzle-orm";
 import semver from "semver";
 import { Result, unexpectedError } from "#shared/index.js";
+import { classifyUpgrade } from "#shared/versions/types.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { RegistryCacheService } from "#api/services/RegistryCache/index.js";
 import { scanResults } from "#api/db/schema.js";
 import { RescanPackageUseCase as Abstraction } from "./abstractions/RescanPackageUseCase.js";
-
-function resolveUpgradeType(currentVersion: string, latestVersion: string): string {
-    if (currentVersion === latestVersion) {
-        return "none";
-    }
-
-    const diff = semver.diff(currentVersion, latestVersion);
-    if (!diff || !semver.gt(latestVersion, currentVersion)) {
-        return "none";
-    }
-    if (diff === "major" || diff === "premajor") {
-        return "major";
-    }
-    if (diff === "minor" || diff === "preminor") {
-        return "minor";
-    }
-    return "patch";
-}
 
 class RescanPackageUseCaseImpl implements Abstraction.Interface {
     public constructor(
@@ -70,7 +53,10 @@ class RescanPackageUseCaseImpl implements Abstraction.Interface {
                         ? row.currentVersion
                         : info.latestVersion;
 
-                const upgradeType = resolveUpgradeType(row.currentVersion, resolvedLatest);
+                const upgradeType = classifyUpgrade({
+                    currentVersion: row.currentVersion,
+                    latestVersion: resolvedLatest
+                });
 
                 await db
                     .update(scanResults)

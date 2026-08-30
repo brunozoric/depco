@@ -60,7 +60,7 @@ import { websocketRoutes } from "./websocket/WebSocketPlugin.js";
 const DATA_DIR = "./data";
 const DB_PATH = process.env["DB_PATH"] ?? "./data/manager.db";
 const POLL_INTERVAL_MS = 3000;
-const SESSION_CLEANUP_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+const SESSION_CLEANUP_INTERVAL_MS = HOUR_MS;
 const API_PORT = 3001;
 
 export async function createServer(): Promise<FastifyInstance> {

@@ -9,3 +9,4 @@ export { sendBlob } from "./sendBlob.js";
 export type { SendableError, RoutingOptions } from "./abstractions/index.js";
 export { ErrorLoggerHook } from "./abstractions/index.js";
 export { getRoutingOptions } from "./getRoutingOptions.js";
+export { paginationQuerySchema, sortOrderSchema } from "./paginationSchema.js";

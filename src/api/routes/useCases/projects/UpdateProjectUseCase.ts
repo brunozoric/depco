@@ -1,7 +1,7 @@
 import { existsSync } from "fs";
 import { join } from "path";
 import { eq, and, ne } from "drizzle-orm";
-import { Result, unexpectedError } from "#shared/index.js";
+import { Result, unexpectedError, projectNotFoundError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { projects } from "#api/db/schema.js";
 import { UpdateProjectUseCase as Abstraction } from "./abstractions/UpdateProjectUseCase.js";
@@ -18,11 +18,7 @@ class UpdateProjectUseCaseImpl implements Abstraction.Interface {
 
             const existing = db.select().from(projects).where(eq(projects.id, params.id)).get();
             if (!existing) {
-                return Result.fail({
-                    code: "PROJECT_NOT_FOUND",
-                    statusCode: 404,
-                    message: `Project ${params.id} not found`
-                });
+                return Result.fail(projectNotFoundError(`Project ${params.id} not found`));
             }
 
             const duplicate = db

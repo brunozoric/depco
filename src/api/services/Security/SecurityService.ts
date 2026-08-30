@@ -90,7 +90,7 @@ class SecurityServiceImpl implements Abstraction.Interface {
             }
         }
 
-        const registry = SECURITY_FIELD_REGISTRY[project!.packageManager as PackageManagerId] ?? [];
+        const registry = SECURITY_FIELD_REGISTRY[project?.packageManager as PackageManagerId] ?? [];
         const checks: Record<string, boolean> = {};
         for (const setting of settings) {
             const config = configs.get(setting.configFile) ?? {};

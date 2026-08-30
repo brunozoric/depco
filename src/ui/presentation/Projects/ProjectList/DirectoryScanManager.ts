@@ -1,4 +1,5 @@
 import { makeAutoObservable, runInAction } from "mobx";
+import { getErrorMessage } from "#shared/index.js";
 import type { FilesystemGateway } from "../../../features/Filesystem/abstractions/FilesystemGateway.js";
 import type { ProjectListPresenter } from "./abstractions/ProjectListPresenter.js";
 
@@ -35,7 +36,7 @@ export class DirectoryScanManager {
             });
             return undefined;
         } catch (error) {
-            return error instanceof Error ? error.message : "Failed to scan directory";
+            return getErrorMessage(error, "Failed to scan directory");
         } finally {
             runInAction(() => {
                 this.loading = false;

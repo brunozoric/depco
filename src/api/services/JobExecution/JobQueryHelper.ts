@@ -4,7 +4,7 @@ import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { upgradeJobs } from "#api/db/schema.js";
 
 const JOB_WAIT_POLL_INTERVAL_MS = 200;
-const TERMINAL_JOB_STATUSES = new Set<string>(["completed", "failed", "cancelled", "interrupted"]);
+import { TERMINAL_JOB_STATUSES } from "#shared/jobs/index.js";
 
 /**
  * Read-side job lookups (single job, by-reference lists, running jobs) plus

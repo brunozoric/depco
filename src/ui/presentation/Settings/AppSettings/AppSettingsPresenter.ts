@@ -12,6 +12,15 @@ interface IKnownSettingMeta {
     options?: ISettingOption[];
 }
 
+const LOG_LEVEL_OPTIONS: ISettingOption[] = [
+    { label: "Trace", value: "trace" },
+    { label: "Debug", value: "debug" },
+    { label: "Info", value: "info" },
+    { label: "Warning", value: "warn" },
+    { label: "Error", value: "error" },
+    { label: "Fatal", value: "fatal" }
+];
+
 const KNOWN_SETTINGS: Record<string, IKnownSettingMeta> = {
     branch_template: {
         label: "Branch Name Template",
@@ -26,39 +35,18 @@ const KNOWN_SETTINGS: Record<string, IKnownSettingMeta> = {
         label: "Database Log Level",
         description:
             "Minimum severity for logs stored in the database and broadcast via WebSocket.",
-        options: [
-            { label: "Trace", value: "trace" },
-            { label: "Debug", value: "debug" },
-            { label: "Info", value: "info" },
-            { label: "Warning", value: "warn" },
-            { label: "Error", value: "error" },
-            { label: "Fatal", value: "fatal" }
-        ]
+        options: LOG_LEVEL_OPTIONS
     },
     console_log_level: {
         label: "Console Log Level",
         description: "Minimum severity for log output in the server console. Requires restart.",
-        options: [
-            { label: "Trace", value: "trace" },
-            { label: "Debug", value: "debug" },
-            { label: "Info", value: "info" },
-            { label: "Warning", value: "warn" },
-            { label: "Error", value: "error" },
-            { label: "Fatal", value: "fatal" }
-        ]
+        options: LOG_LEVEL_OPTIONS
     },
     file_log_level: {
         label: "File Log Level",
         description:
             "Minimum severity for log entries written to the rotating file (data/app.log). Requires restart.",
-        options: [
-            { label: "Trace", value: "trace" },
-            { label: "Debug", value: "debug" },
-            { label: "Info", value: "info" },
-            { label: "Warning", value: "warn" },
-            { label: "Error", value: "error" },
-            { label: "Fatal", value: "fatal" }
-        ]
+        options: LOG_LEVEL_OPTIONS
     },
     github_token: {
         label: "GitHub Token",

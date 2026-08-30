@@ -8,6 +8,7 @@ import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { EventBus } from "../../EventBus/index.js";
 import { licenses, licenseSnapshots } from "#api/db/schema.js";
+import { todayISO } from "#shared/time.js";
 import { classifyLicenseRiskTier } from "#shared/licenses/types.js";
 
 declare module "../../EventBus/index.js" {
@@ -97,7 +98,7 @@ class LicenseScanJobExecutorImpl implements Abstraction.Interface {
 
         try {
             const complianceStatus = await this.licensePolicyService.getComplianceStatus(projectId);
-            const today = new Date().toISOString().slice(0, 10);
+            const today = todayISO();
             await this.databaseClient.db
                 .insert(licenseSnapshots)
                 .values({

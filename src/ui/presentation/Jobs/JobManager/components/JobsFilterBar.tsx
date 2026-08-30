@@ -1,5 +1,9 @@
 import type React from "react";
 import { Button, Group, Select, TextInput } from "@mantine/core";
+import {
+    epochMsToDatetimeLocal,
+    datetimeLocalToEpochMs
+} from "#ui/infrastructure/Shared/formatting/datetimeConverters.js";
 
 const TYPE_OPTIONS = [
     { label: "Scan", value: "scan" },
@@ -16,30 +20,6 @@ const TYPE_OPTIONS = [
     { label: "Changelog", value: "changelog" },
     { label: "Auto-Fix PR", value: "auto-fix-pr" }
 ];
-
-function epochMsToDatetimeLocal(value: string | null): string {
-    if (!value) {
-        return "";
-    }
-    const ms = Number(value);
-    if (Number.isNaN(ms)) {
-        return "";
-    }
-    const date = new Date(ms);
-    const offsetMs = date.getTimezoneOffset() * 60000;
-    return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
-}
-
-function datetimeLocalToEpochMs(value: string): string | null {
-    if (!value) {
-        return null;
-    }
-    const ms = new Date(value).getTime();
-    if (Number.isNaN(ms)) {
-        return null;
-    }
-    return String(ms);
-}
 
 interface ISelectOption {
     value: string;

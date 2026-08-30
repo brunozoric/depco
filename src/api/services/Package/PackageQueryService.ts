@@ -3,8 +3,9 @@ import { PackageQueryService as Abstraction } from "./abstractions/PackageQueryS
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { dependencies } from "#api/db/schema.js";
 import { teamProjectIds } from "#api/utils/teamFilter.js";
+import { DEFAULT_PAGE_SIZES } from "#shared/pagination.js";
 
-const DEFAULT_PAGE_SIZE = 50;
+const DEFAULT_PAGE_SIZE = DEFAULT_PAGE_SIZES.large;
 
 interface IRawPackageRow {
     name: string;

@@ -1,4 +1,5 @@
 import { computed, makeAutoObservable, runInAction } from "mobx";
+import { getErrorMessage } from "#shared/index.js";
 import { PackageDetailPresenter as Abstraction } from "./abstractions/PackageDetailPresenter.js";
 import { PackagesGateway } from "../../../features/Packages/abstractions/PackagesGateway.js";
 import { VulnerabilitiesGateway } from "../../../features/Vulnerabilities/abstractions/VulnerabilitiesGateway.js";
@@ -63,8 +64,7 @@ class PackageDetailPresenterImpl implements Abstraction.Interface {
             ]);
         } catch (error) {
             runInAction(() => {
-                this.error =
-                    error instanceof Error ? error.message : "Failed to load package detail";
+                this.error = getErrorMessage(error, "Failed to load package detail");
             });
         } finally {
             runInAction(() => {

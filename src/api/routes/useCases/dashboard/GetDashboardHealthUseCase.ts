@@ -90,19 +90,19 @@ class GetDashboardHealthUseCaseImpl implements Abstraction.Interface {
                     ? Math.round(projectList.reduce((sum, p) => sum + p.score, 0) / totalProjects)
                     : 0;
 
-            const worstProject: Abstraction.WorstProject | null =
-                projectList.length > 0
-                    ? {
-                          id: projectList[0]!.projectId,
-                          name: projectList[0]!.projectName,
-                          score: projectList[0]!.score,
-                          totalPackages: projectList[0]!.totalPackages,
-                          upToDate: projectList[0]!.upToDate,
-                          patchOutdated: projectList[0]!.patchOutdated,
-                          minorOutdated: projectList[0]!.minorOutdated,
-                          majorOutdated: projectList[0]!.majorOutdated
-                      }
-                    : null;
+            const worst = projectList.length > 0 ? projectList[0]! : null;
+            const worstProject: Abstraction.WorstProject | null = worst
+                ? {
+                      id: worst.projectId,
+                      name: worst.projectName,
+                      score: worst.score,
+                      totalPackages: worst.totalPackages,
+                      upToDate: worst.upToDate,
+                      patchOutdated: worst.patchOutdated,
+                      minorOutdated: worst.minorOutdated,
+                      majorOutdated: worst.majorOutdated
+                  }
+                : null;
 
             return Result.ok({
                 summary: { totalProjects, averageScore, worstProject },

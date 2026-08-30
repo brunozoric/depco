@@ -1,4 +1,5 @@
 import { makeAutoObservable, runInAction } from "mobx";
+import { getErrorMessage } from "#shared/index.js";
 import type { SbomGateway } from "../../../features/Sbom/abstractions/SbomGateway.js";
 import { downloadBlob } from "#ui/infrastructure/Shared/download/downloadBlob.js";
 
@@ -27,7 +28,7 @@ export class SbomExportManager {
             downloadBlob(response.blob, response.filename);
         } catch (error) {
             runInAction(() => {
-                this.error = error instanceof Error ? error.message : "SBOM export failed";
+                this.error = getErrorMessage(error, "SBOM export failed");
             });
         } finally {
             runInAction(() => {

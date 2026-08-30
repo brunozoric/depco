@@ -35,7 +35,7 @@ function toBranchSlug(packageName: string): string {
 function combinedUpgradeType(packages: IEligiblePackage[]): string {
     const upgradeTypes = new Set(packages.map(pkg => pkg.upgradeType));
     if (upgradeTypes.size === 1) {
-        return [...upgradeTypes][0]!;
+        return upgradeTypes.values().next().value!;
     }
     return "mixed";
 }

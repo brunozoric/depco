@@ -1,4 +1,10 @@
-import { createAbstraction, Result, type IUnexpectedError } from "#shared/index.js";
+import {
+    createAbstraction,
+    Result,
+    type IUnexpectedError,
+    type ISettingNotFoundError,
+    type IInvalidExpectedValueError
+} from "#shared/index.js";
 import type { ISecuritySettingResponse } from "../securitySettingsHelper.js";
 
 export interface IUpdateSecuritySettingUseCaseParams {
@@ -7,18 +13,6 @@ export interface IUpdateSecuritySettingUseCaseParams {
 }
 
 export type IUpdateSecuritySettingUseCaseData = ISecuritySettingResponse;
-
-export interface ISettingNotFoundError {
-    code: "SETTING_NOT_FOUND";
-    statusCode: 404;
-    message: string;
-}
-
-export interface IInvalidExpectedValueError {
-    code: "INVALID_EXPECTED_VALUE";
-    statusCode: 400;
-    message: string;
-}
 
 export interface IUpdateSecuritySettingUseCaseErrors {
     notFound: ISettingNotFoundError;

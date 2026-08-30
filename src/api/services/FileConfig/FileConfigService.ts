@@ -1,7 +1,11 @@
 import { join } from "path";
 import { z } from "zod";
 import { JsonFileTool } from "@webiny/stdlib/node";
-import { SECURITY_FIELD_REGISTRY, type PackageManagerId } from "#shared/security/index.js";
+import {
+    SECURITY_FIELD_REGISTRY,
+    PACKAGE_MANAGER_IDS,
+    type PackageManagerId
+} from "#shared/security/index.js";
 import { INSTALL_FLAG_REGISTRY } from "#shared/install/index.js";
 import { FileConfigService as Abstraction } from "./abstractions/FileConfigService.js";
 import type {
@@ -48,9 +52,8 @@ const filePmSettingsSchema = z
         if (!value) {
             return;
         }
-        const validPms = ["yarn", "npm", "pnpm", "bun"];
         for (const [pm, pmConfig] of Object.entries(value)) {
-            if (!validPms.includes(pm)) {
+            if (!PACKAGE_MANAGER_IDS.includes(pm as PackageManagerId)) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
                     message: `Unknown package manager: ${pm}`,

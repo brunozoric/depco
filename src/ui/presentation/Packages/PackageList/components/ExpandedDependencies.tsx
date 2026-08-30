@@ -2,15 +2,10 @@ import type React from "react";
 import { Anchor, Badge, Button, Group, Pagination, Stack, Table, Text } from "@mantine/core";
 import { navigate } from "#ui/infrastructure/Router/router.js";
 import type { PackagesGateway } from "../../../../features/Packages/abstractions/PackagesGateway.js";
+import { UPGRADE_BADGE_COLORS } from "#ui/infrastructure/Shared/upgrades/upgradeBadgeColors.js";
+import { DEFAULT_PAGE_SIZES } from "#shared/pagination.js";
 
-const PAGE_SIZE = 10;
-
-const UPGRADE_BADGE_COLOR: Record<string, string> = {
-    patch: "green",
-    minor: "yellow",
-    major: "red",
-    none: "gray"
-};
+const PAGE_SIZE = DEFAULT_PAGE_SIZES.small;
 
 interface IUpgradeTarget {
     projectId: string;
@@ -76,7 +71,7 @@ export function ExpandedDependencies({
                                         <Badge
                                             size="xs"
                                             color={
-                                                UPGRADE_BADGE_COLOR[
+                                                UPGRADE_BADGE_COLORS[
                                                     project.upgradeType ?? "none"
                                                 ] ?? "gray"
                                             }

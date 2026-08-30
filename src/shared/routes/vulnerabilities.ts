@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineRoute } from "#shared/routing/index.js";
+import { defineRoute, paginationQuerySchema, sortOrderSchema } from "#shared/routing/index.js";
 import {
     listVulnerabilitiesResponseSchema,
     getVulnerabilitySummaryResponseSchema,
@@ -25,10 +25,9 @@ export const listVulnerabilitiesRoute = defineRoute({
         scannedDate: z.string().date().optional(),
         teamId: z.string().optional(),
         dependencyType: z.enum(["all", "direct", "transitive"]).optional(),
-        page: z.coerce.number().optional(),
-        pageSize: z.coerce.number().optional(),
+        ...paginationQuerySchema,
         sortBy: z.enum(["severity", "packageName", "projectName"]).optional(),
-        sortOrder: z.enum(["asc", "desc"]).optional()
+        ...sortOrderSchema
     }),
     response: listVulnerabilitiesResponseSchema
 });
@@ -57,10 +56,9 @@ export const getProjectVulnerabilitiesRoute = defineRoute({
         includeDismissed: z.enum(["true", "false"]).optional(),
         scannedDate: z.string().date().optional(),
         dependencyType: z.enum(["all", "direct", "transitive"]).optional(),
-        page: z.coerce.number().optional(),
-        pageSize: z.coerce.number().optional(),
+        ...paginationQuerySchema,
         sortBy: z.enum(["severity", "packageName", "projectName"]).optional(),
-        sortOrder: z.enum(["asc", "desc"]).optional()
+        ...sortOrderSchema
     }),
     response: listVulnerabilitiesResponseSchema
 });
@@ -134,7 +132,7 @@ export const exportVulnerabilitiesRoute = defineRoute({
         teamId: z.string().optional(),
         dependencyType: z.enum(["all", "direct", "transitive"]).optional(),
         sortBy: z.enum(["severity", "packageName", "projectName"]).optional(),
-        sortOrder: z.enum(["asc", "desc"]).optional()
+        ...sortOrderSchema
     })
 });
 

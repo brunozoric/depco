@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineRoute } from "#shared/routing/index.js";
+import { defineRoute, paginationQuerySchema, sortOrderSchema } from "#shared/routing/index.js";
 import { LICENSE_POLICY_ACTIONS } from "#shared/licenses/types.js";
 import {
     listLicensesResponseSchema,
@@ -24,10 +24,9 @@ export const listLicensesRoute = defineRoute({
         packageName: z.string().optional(),
         teamId: z.string().optional(),
         violationAction: z.enum(["warn", "deny"]).optional(),
-        page: z.coerce.number().optional(),
-        pageSize: z.coerce.number().optional(),
+        ...paginationQuerySchema,
         sortBy: z.enum(["packageName", "licenseName", "riskTier", "projectName"]).optional(),
-        sortOrder: z.enum(["asc", "desc"]).optional()
+        ...sortOrderSchema
     }),
     response: listLicensesResponseSchema
 });
@@ -126,8 +125,7 @@ export const listLicenseViolationsRoute = defineRoute({
         action: z.string().optional(),
         packageName: z.string().optional(),
         teamId: z.string().optional(),
-        page: z.coerce.number().int().positive().optional(),
-        pageSize: z.coerce.number().int().positive().max(200).optional()
+        ...paginationQuerySchema
     }),
     response: listLicenseViolationsResponseSchema
 });

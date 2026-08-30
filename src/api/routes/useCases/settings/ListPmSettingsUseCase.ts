@@ -1,6 +1,7 @@
 import { Result, unexpectedError } from "#shared/index.js";
 import { FileConfigService } from "#api/services/FileConfig/index.js";
-import { ALL_PACKAGE_MANAGERS, buildDefaultPmItems, buildPmConfigItem } from "./pmConfigHelper.js";
+import { PACKAGE_MANAGER_IDS } from "#shared/security/index.js";
+import { buildDefaultPmItems, buildPmConfigItem } from "./pmConfigHelper.js";
 import { ListPmSettingsUseCase as Abstraction } from "./abstractions/ListPmSettingsUseCase.js";
 
 class ListPmSettingsUseCaseImpl implements Abstraction.Interface {
@@ -23,7 +24,7 @@ class ListPmSettingsUseCaseImpl implements Abstraction.Interface {
             const fileManagedPms = allPmSettings ? Object.keys(allPmSettings) : [];
             const configSource: "db" | "file" = fileManagedPms.length > 0 ? "file" : "db";
 
-            const items = ALL_PACKAGE_MANAGERS.map(pm =>
+            const items = PACKAGE_MANAGER_IDS.map(pm =>
                 buildPmConfigItem(pm, allPmSettings?.[pm], fileManagedPms.includes(pm))
             );
 

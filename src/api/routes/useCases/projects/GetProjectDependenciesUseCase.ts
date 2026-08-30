@@ -1,5 +1,5 @@
 import { eq, and, like, sql, type SQL } from "drizzle-orm";
-import { Result, unexpectedError } from "#shared/index.js";
+import { Result, unexpectedError, projectNotFoundError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { projects, scanResults } from "#api/db/schema.js";
 import { GetProjectDependenciesUseCase as Abstraction } from "./abstractions/GetProjectDependenciesUseCase.js";
@@ -20,11 +20,7 @@ class GetProjectDependenciesUseCaseImpl implements Abstraction.Interface {
         }
 
         if (!project) {
-            return Result.fail({
-                code: "PROJECT_NOT_FOUND",
-                statusCode: 404,
-                message: "Project not found"
-            });
+            return Result.fail(projectNotFoundError());
         }
 
         try {

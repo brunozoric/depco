@@ -1,4 +1,5 @@
 import { computed, makeAutoObservable, reaction, runInAction } from "mobx";
+import { DEFAULT_PAGE_SIZES } from "#shared/pagination.js";
 import { LicensesPresenter as Abstraction } from "./abstractions/LicensesPresenter.js";
 import { LoadLicensesUseCase } from "../useCases/abstractions/LoadLicensesUseCase.js";
 import { ManagePolicyRulesUseCase } from "../useCases/abstractions/ManagePolicyRulesUseCase.js";
@@ -20,7 +21,7 @@ const FILTER_SCHEMA = listLicensesRoute.querystring as NonNullable<
 > &
     z.ZodObject<z.ZodRawShape>;
 
-const DEFAULT_PAGE_SIZE = 50;
+const DEFAULT_PAGE_SIZE = DEFAULT_PAGE_SIZES.large;
 
 class LicensesPresenterImpl implements Abstraction.Interface {
     private loading = true;

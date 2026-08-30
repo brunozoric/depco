@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { Result, unexpectedError } from "#shared/index.js";
+import { Result, unexpectedError, projectNotFoundError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { PackageManagerService } from "#api/services/PackageManager/index.js";
 import { projects } from "#api/db/schema.js";
@@ -23,11 +23,7 @@ class GetPackageManagerUseCaseImpl implements Abstraction.Interface {
                 .where(eq(projects.id, params.id))
                 .get();
             if (!project) {
-                return Result.fail({
-                    code: "PROJECT_NOT_FOUND",
-                    statusCode: 404,
-                    message: "Project not found"
-                });
+                return Result.fail(projectNotFoundError());
             }
 
             const packageManager =

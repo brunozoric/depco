@@ -1,11 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { createTestCliContainer } from "#testing/helpers/createTestCliContainer.js";
 import { SelectPortStep } from "../abstractions/SelectPortStep.js";
+import { PromptService } from "../../../../../services/Prompt/index.js";
 import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
-
-vi.mock("@inquirer/prompts", () => ({
-    input: vi.fn().mockResolvedValue("4000")
-}));
 
 function createTestContext(): IStepContext {
     return {
@@ -21,6 +18,10 @@ describe("SelectPortStep", () => {
 
     beforeEach(() => {
         container = createTestCliContainer();
+        container.registerInstance(PromptService, {
+            text: async () => "4000",
+            password: async () => ""
+        });
     });
 
     it("stores selected port in context", async () => {

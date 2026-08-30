@@ -1,4 +1,5 @@
 import { makeAutoObservable, runInAction } from "mobx";
+import { getErrorMessage } from "#shared/index.js";
 import type { CloneProjectUseCase } from "../useCases/abstractions/CloneProjectUseCase.js";
 
 interface ICloneManagerDependencies {
@@ -47,7 +48,7 @@ export class CloneManager {
         } catch (error) {
             runInAction(() => {
                 this.loading = false;
-                this.error = error instanceof Error ? error.message : "Failed to clone project";
+                this.error = getErrorMessage(error, "Failed to clone project");
             });
         }
     };

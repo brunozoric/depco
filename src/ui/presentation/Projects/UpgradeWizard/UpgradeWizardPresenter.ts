@@ -1,4 +1,5 @@
 import { computed, makeAutoObservable, runInAction } from "mobx";
+import { getErrorMessage } from "#shared/index.js";
 import { UpgradeWizardPresenter as Abstraction } from "./abstractions/UpgradeWizardPresenter.js";
 import { UpgradeSessionsGateway } from "../../../features/UpgradeSessions/abstractions/UpgradeSessionsGateway.js";
 import { UpgradeSessionsRepository } from "../../../features/UpgradeSessions/abstractions/UpgradeSessionsRepository.js";
@@ -126,8 +127,7 @@ class UpgradeWizardPresenterImpl implements Abstraction.Interface {
             });
         } catch (error) {
             runInAction(() => {
-                this.error =
-                    error instanceof Error ? error.message : "Failed to start upgrade session";
+                this.error = getErrorMessage(error, "Failed to start upgrade session");
             });
         } finally {
             runInAction(() => {
@@ -160,7 +160,7 @@ class UpgradeWizardPresenterImpl implements Abstraction.Interface {
             });
         } catch (error) {
             runInAction(() => {
-                this.error = error instanceof Error ? error.message : "Failed to execute step";
+                this.error = getErrorMessage(error, "Failed to execute step");
             });
         } finally {
             runInAction(() => {
@@ -188,7 +188,7 @@ class UpgradeWizardPresenterImpl implements Abstraction.Interface {
             });
         } catch (error) {
             runInAction(() => {
-                this.error = error instanceof Error ? error.message : "Failed to skip step";
+                this.error = getErrorMessage(error, "Failed to skip step");
             });
         } finally {
             runInAction(() => {
@@ -215,7 +215,7 @@ class UpgradeWizardPresenterImpl implements Abstraction.Interface {
             });
         } catch (error) {
             runInAction(() => {
-                this.error = error instanceof Error ? error.message : "Failed to abort session";
+                this.error = getErrorMessage(error, "Failed to abort session");
             });
         } finally {
             runInAction(() => {

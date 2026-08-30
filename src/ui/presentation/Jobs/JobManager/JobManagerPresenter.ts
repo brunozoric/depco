@@ -9,8 +9,9 @@ import { ProjectsRepository } from "../../../features/Projects/abstractions/Proj
 import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBridge.js";
 import "../../../infrastructure/Events/eventMap.js";
 import type { JobsGateway } from "../../../features/Jobs/abstractions/JobsGateway.js";
+import { DEFAULT_PAGE_SIZES } from "#shared/pagination.js";
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = DEFAULT_PAGE_SIZES.standard;
 
 class JobManagerPresenterImpl implements Abstraction.Interface {
     private loading = false;

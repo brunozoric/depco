@@ -5,6 +5,8 @@ import { navigate } from "#ui/infrastructure/Router/router.js";
 import { computeVulnerabilityPenalty } from "#shared/vulnerabilities/types.js";
 import type { DashboardGateway } from "../../../../features/Dashboard/abstractions/DashboardGateway.js";
 import type { DashboardPresenter } from "../abstractions/DashboardPresenter.js";
+import { UPGRADE_BADGE_COLORS } from "#ui/infrastructure/Shared/upgrades/upgradeBadgeColors.js";
+import { SEVERITY_COLORS } from "#ui/infrastructure/Shared/vulnerabilities/severityColors.js";
 
 interface ScoreDetailModalProps {
     project: DashboardGateway.HealthProject | undefined;
@@ -25,19 +27,6 @@ interface OutdatedPackagesSectionProps {
 interface VulnerabilitiesSectionProps {
     vulnerabilities: DashboardGateway.ScoreDetailVulnerability[];
 }
-
-const UPGRADE_BADGE_COLOR: Record<string, string> = {
-    major: "red",
-    minor: "yellow",
-    patch: "green"
-};
-
-const SEVERITY_BADGE_COLOR: Record<string, string> = {
-    critical: "red",
-    high: "orange",
-    moderate: "yellow",
-    low: "blue"
-};
 
 const INITIAL_VISIBLE_COUNT = 10;
 
@@ -141,7 +130,7 @@ function OutdatedPackagesSection({
                                     <Table.Td>
                                         <Badge
                                             size="xs"
-                                            color={UPGRADE_BADGE_COLOR[pkg.upgradeType] ?? "gray"}
+                                            color={UPGRADE_BADGE_COLORS[pkg.upgradeType] ?? "gray"}
                                         >
                                             {pkg.upgradeType}
                                         </Badge>
@@ -197,7 +186,7 @@ function VulnerabilitiesSection({ vulnerabilities }: VulnerabilitiesSectionProps
                             <Table.Td>
                                 <Badge
                                     size="xs"
-                                    color={SEVERITY_BADGE_COLOR[vulnerability.severity] ?? "gray"}
+                                    color={SEVERITY_COLORS[vulnerability.severity] ?? "gray"}
                                 >
                                     {vulnerability.severity}
                                 </Badge>

@@ -13,6 +13,11 @@ import {
 } from "@mantine/core";
 import { observer } from "mobx-react-lite";
 import { navigate } from "#ui/infrastructure/Router/router.js";
+import {
+    formatRelativeTime,
+    formatTimestamp
+} from "#ui/infrastructure/Shared/formatting/dateFormatters.js";
+import { formatFieldName } from "#ui/infrastructure/Shared/formatting/formatFieldName.js";
 import { ConfirmDialog } from "#ui/infrastructure/Shared/components/ConfirmDialog.js";
 import { EngineStatusBadge } from "#ui/infrastructure/Shared/engines/EngineStatusBadge.js";
 import type { ProjectListPresenter } from "../abstractions/ProjectListPresenter.js";
@@ -25,46 +30,6 @@ interface IProjectRowProps {
     onInstall: (project: ProjectListPresenter.ProjectListItem) => void;
     onScan: (id: string) => Promise<void>;
     onRename: (project: ProjectListPresenter.ProjectListItem) => void;
-}
-
-function formatLastScanned(lastScannedAt: number | null): string {
-    if (lastScannedAt === null) {
-        return "Never";
-    }
-    return new Date(lastScannedAt).toLocaleString();
-}
-
-function formatRelativeTime(timestamp: number): string {
-    const days = Math.floor((Date.now() - timestamp) / (1000 * 60 * 60 * 24));
-    if (days === 0) {
-        return "Today";
-    }
-    if (days === 1) {
-        return "1 day ago";
-    }
-    if (days < 30) {
-        return `${days} days ago`;
-    }
-    if (days < 365) {
-        return `${Math.floor(days / 30)} months ago`;
-    }
-    return `${Math.floor(days / 365)} years ago`;
-}
-
-const ACRONYMS = new Set(["npm", "pnpm", "yarn"]);
-
-function formatFieldName(key: string): string {
-    const words = key.replace(/([a-z0-9])([A-Z])/g, "$1 $2").split(" ");
-    return words
-        .filter(word => word.length > 0)
-        .map(word => {
-            const lower = word.toLowerCase();
-            if (ACRONYMS.has(lower)) {
-                return lower.toUpperCase();
-            }
-            return word.charAt(0).toUpperCase() + word.slice(1);
-        })
-        .join(" ");
 }
 
 interface SecurityTooltipContentProps {
@@ -180,7 +145,7 @@ export const ProjectRow = observer(function ProjectRow({
             </Table.Td>
             <Table.Td>
                 <Group gap="xs">
-                    <Text size="sm">{formatLastScanned(project.lastScannedAt)}</Text>
+                    <Text size="sm">{formatTimestamp(project.lastScannedAt, "Never")}</Text>
                     {project.scanStatus !== "idle" && (
                         <Badge size="sm" color={SCAN_STATUS_COLOR[project.scanStatus]}>
                             {SCAN_STATUS_LABEL[project.scanStatus]}

@@ -9,7 +9,7 @@ const PROGRESS_DB_WRITE_THROTTLE_MS = 1000;
 const LOG_DB_FLUSH_INTERVAL_MS = 2000;
 
 export class JobExecutionContext {
-    private logs = "";
+    private logLines: string[] = [];
     private logsDirty = false;
     private progressUsed = false;
     private lastProgressDbWriteAt = 0;
@@ -26,7 +26,7 @@ export class JobExecutionContext {
     }
 
     public appendLog = (line: string): void => {
-        this.logs += `${line}\n`;
+        this.logLines.push(line);
         this.logsDirty = true;
         this.webSocketBroadcaster.broadcast("job:log", {
             jobId: this.jobId,
@@ -67,7 +67,7 @@ export class JobExecutionContext {
     };
 
     public getLogs(): string {
-        return this.logs;
+        return this.logLines.join("\n") + (this.logLines.length > 0 ? "\n" : "");
     }
 
     public wasProgressUsed(): boolean {
@@ -87,7 +87,7 @@ export class JobExecutionContext {
         try {
             this.databaseClient.db
                 .update(upgradeJobs)
-                .set({ logs: this.logs })
+                .set({ logs: this.getLogs() })
                 .where(eq(upgradeJobs.id, this.jobId))
                 .run();
         } catch (error) {

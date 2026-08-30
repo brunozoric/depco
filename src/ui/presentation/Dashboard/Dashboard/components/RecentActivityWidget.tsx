@@ -2,6 +2,7 @@ import type React from "react";
 import { Card, Text, Badge, Stack, Group } from "@mantine/core";
 import { navigate } from "#ui/infrastructure/Router/router.js";
 import type { DashboardGateway } from "#ui/features/Dashboard/abstractions/DashboardGateway.js";
+import { formatTimeAgo } from "#ui/infrastructure/Shared/formatting/dateFormatters.js";
 
 interface RecentActivityWidgetProps {
     jobs: DashboardGateway.ActivityJob[];
@@ -15,26 +16,6 @@ const STATUS_COLOR: Record<string, string> = {
     running: "blue",
     interrupted: "orange"
 };
-
-function formatTimeAgo(timestamp: number | null): string {
-    if (!timestamp) {
-        return "—";
-    }
-    const seconds = Math.floor((Date.now() - timestamp) / 1000);
-    if (seconds < 60) {
-        return "just now";
-    }
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) {
-        return `${minutes}m ago`;
-    }
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) {
-        return `${hours}h ago`;
-    }
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
-}
 
 export function RecentActivityWidget({ jobs }: RecentActivityWidgetProps): React.ReactNode {
     return (

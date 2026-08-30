@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineRoute } from "#shared/routing/index.js";
+import { defineRoute, paginationQuerySchema, sortOrderSchema } from "#shared/routing/index.js";
 import {
     createProjectResponseSchema,
     listProjectsResponseSchema,
@@ -33,12 +33,11 @@ export const listProjectsRoute = defineRoute({
     description: "List all projects",
     params: z.object({}),
     querystring: z.object({
-        page: z.coerce.number().int().positive().optional(),
-        pageSize: z.coerce.number().int().positive().max(200).optional(),
+        ...paginationQuerySchema,
         search: z.string().optional(),
         teamId: z.string().optional(),
         sortBy: z.enum(["name", "addedAt", "lastScannedAt", "engineStatus"]).optional(),
-        sortOrder: z.enum(["asc", "desc"]).optional(),
+        ...sortOrderSchema,
         engineStatus: z.string().optional()
     }),
     response: listProjectsResponseSchema
@@ -86,8 +85,7 @@ export const getProjectDependenciesRoute = defineRoute({
             .optional(),
         registryResolved: z.enum(["all", "true", "false"]).optional(),
         search: z.string().optional(),
-        page: z.coerce.number().optional(),
-        pageSize: z.coerce.number().optional()
+        ...paginationQuerySchema
     }),
     response: getProjectDependenciesResponseSchema
 });

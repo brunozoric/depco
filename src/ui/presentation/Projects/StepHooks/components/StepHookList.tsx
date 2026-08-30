@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ActionIcon, Badge, Group, Switch, Table, Text } from "@mantine/core";
 import { ConfirmDialog } from "#ui/infrastructure/Shared/components/ConfirmDialog.js";
 import type { StepHooksPresenter } from "../abstractions/StepHooksPresenter.js";
+import { truncate } from "#ui/infrastructure/Shared/formatting/truncate.js";
 
 const POSITION_ORDER = [
     "pre:select-packages",
@@ -28,10 +29,6 @@ const SOURCE_COLORS: Record<string, string> = {
     file: "gray",
     "package-json": "orange"
 };
-
-function truncate(value: string, max = 60): string {
-    return value.length > max ? `${value.slice(0, max)}…` : value;
-}
 
 interface StepHookListProps {
     hooks: StepHooksPresenter.HookViewModel[];

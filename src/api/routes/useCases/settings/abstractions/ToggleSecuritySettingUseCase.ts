@@ -1,4 +1,9 @@
-import { createAbstraction, Result, type IUnexpectedError } from "#shared/index.js";
+import {
+    createAbstraction,
+    Result,
+    type IUnexpectedError,
+    type ISettingNotFoundError
+} from "#shared/index.js";
 import type { ISecuritySettingResponse } from "../securitySettingsHelper.js";
 
 export interface IToggleSecuritySettingUseCaseParams {
@@ -6,12 +11,6 @@ export interface IToggleSecuritySettingUseCaseParams {
 }
 
 export type IToggleSecuritySettingUseCaseData = ISecuritySettingResponse;
-
-export interface ISettingNotFoundError {
-    code: "SETTING_NOT_FOUND";
-    statusCode: 404;
-    message: string;
-}
 
 export interface IToggleSecuritySettingUseCaseErrors {
     notFound: ISettingNotFoundError;

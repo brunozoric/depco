@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineRoute } from "#shared/routing/index.js";
+import { defineRoute, paginationQuerySchema, sortOrderSchema } from "#shared/routing/index.js";
 import {
     listPackagesResponseSchema,
     rescanPackageResponseSchema,
@@ -26,10 +26,9 @@ export const listPackagesRoute = defineRoute({
             .optional(),
         projectId: z.string().optional(),
         hasChangelog: z.string().optional(),
-        page: z.coerce.number().optional(),
-        pageSize: z.coerce.number().optional(),
+        ...paginationQuerySchema,
         sortBy: z.enum(["name", "lastPublishedAt"]).optional(),
-        sortOrder: z.enum(["asc", "desc"]).optional(),
+        ...sortOrderSchema,
         teamId: z.string().optional()
     }),
     response: listPackagesResponseSchema

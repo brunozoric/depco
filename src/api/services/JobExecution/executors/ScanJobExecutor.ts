@@ -1,6 +1,7 @@
 import { access } from "fs/promises";
 import { join } from "path";
 import { and, eq, lt, sql } from "drizzle-orm";
+import { HOUR_MS } from "#shared/time.js";
 import type { JobExecutor } from "./abstractions/JobExecutor.js";
 import { ScanJobExecutor as Abstraction } from "./abstractions/ScanJobExecutor.js";
 import { JobWorkerProvider } from "../abstractions/JobWorkerProvider.js";
@@ -71,7 +72,7 @@ class ScanJobExecutorImpl implements JobExecutor.Interface {
             return;
         }
 
-        const cutoff = Date.now() - ttlHours * 3600 * 1000;
+        const cutoff = Date.now() - ttlHours * HOUR_MS;
         const staleResult = await this.databaseClient.db
             .update(scanResults)
             .set({ registryResolved: 0 })

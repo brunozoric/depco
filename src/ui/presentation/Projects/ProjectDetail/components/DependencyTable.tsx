@@ -4,6 +4,7 @@ import { observer } from "mobx-react-lite";
 import type { ProjectDetailPresenter } from "../abstractions/ProjectDetailPresenter.js";
 import { SEVERITY_COLORS } from "#ui/infrastructure/Shared/vulnerabilities/severityColors.js";
 import { navigate } from "#ui/infrastructure/Router/router.js";
+import { UPGRADE_BADGE_COLORS } from "#ui/infrastructure/Shared/upgrades/upgradeBadgeColors.js";
 
 interface DependencyTableProps {
     dependencies: ProjectDetailPresenter.DependencyViewModel[];
@@ -18,16 +19,6 @@ interface DependencyRowProps {
     onToggle: (name: string) => void;
     onViewChangelog: (name: string, currentVersion: string, latestVersion: string) => void;
 }
-
-const UPGRADE_BADGE_COLOR: Record<
-    ProjectDetailPresenter.DependencyViewModel["upgradeType"],
-    string
-> = {
-    patch: "green",
-    minor: "yellow",
-    major: "red",
-    none: "gray"
-};
 
 interface DependencyKindBadgeConfig {
     label: string;
@@ -101,7 +92,7 @@ const DependencyRow = observer(function DependencyRow({
                 <Badge color={kindBadge.color}>{kindBadge.label}</Badge>
             </Table.Td>
             <Table.Td>
-                <Badge color={UPGRADE_BADGE_COLOR[dependency.upgradeType]}>
+                <Badge color={UPGRADE_BADGE_COLORS[dependency.upgradeType] ?? "gray"}>
                     {dependency.upgradeType}
                 </Badge>
             </Table.Td>

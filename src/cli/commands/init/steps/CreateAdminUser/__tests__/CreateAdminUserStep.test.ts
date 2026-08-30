@@ -8,12 +8,20 @@ import { createDatabaseClient } from "#api/db/client.js";
 import { runMigrations } from "#api/db/migrate.js";
 import { users } from "#api/db/schema.js";
 import { CreateAdminUserStep } from "../abstractions/CreateAdminUserStep.js";
+import { PromptService } from "../../../../../services/Prompt/index.js";
 import type { IStepContext } from "../../../../../runner/abstractions/Step.js";
 
-vi.mock("@inquirer/prompts", () => ({
-    input: vi.fn().mockResolvedValueOnce("admin@test.com").mockResolvedValueOnce("Admin User"),
-    password: vi.fn().mockResolvedValueOnce("password123").mockResolvedValueOnce("password123")
-}));
+function createMockPromptService(): PromptService.Interface {
+    const textResponses = ["admin@test.com", "Admin User"];
+    const passwordResponses = ["password123", "password123"];
+    let textIndex = 0;
+    let passwordIndex = 0;
+
+    return {
+        text: vi.fn().mockImplementation(async () => textResponses[textIndex++]!),
+        password: vi.fn().mockImplementation(async () => passwordResponses[passwordIndex++]!)
+    };
+}
 
 describe("CreateAdminUserStep", () => {
     let workDir: string;
@@ -23,6 +31,7 @@ describe("CreateAdminUserStep", () => {
         workDir = mkdtempSync(join(tmpdir(), "create-admin-"));
         mkdirSync(join(workDir, "data"), { recursive: true });
         container = createTestCliContainer();
+        container.registerInstance(PromptService, createMockPromptService());
     });
 
     afterEach(() => {
@@ -52,13 +61,7 @@ describe("CreateAdminUserStep", () => {
     });
 
     it("skips when users already exist", async () => {
-        const { input, password } = await import("@inquirer/prompts");
-        vi.mocked(input)
-            .mockResolvedValueOnce("admin@test.com")
-            .mockResolvedValueOnce("Admin User");
-        vi.mocked(password)
-            .mockResolvedValueOnce("password123")
-            .mockResolvedValueOnce("password123");
+        container.registerInstance(PromptService, createMockPromptService());
 
         const dbPath = join(workDir, "data", "manager.db");
         const databaseClient = createDatabaseClient(dbPath);

@@ -1,6 +1,7 @@
 import { computed, makeAutoObservable, reaction, runInAction } from "mobx";
 import { notifications } from "@mantine/notifications";
-import { getErrorMessage } from "#shared/errors.js";
+import { getErrorMessage } from "#shared/index.js";
+import { DEFAULT_PAGE_SIZES } from "#shared/pagination.js";
 import { listProjectsRoute } from "#shared/routes/index.js";
 import { ProjectListPresenter as Abstraction } from "./abstractions/ProjectListPresenter.js";
 import { CloneManagerFactory } from "./abstractions/CloneManagerFactory.js";
@@ -19,7 +20,7 @@ import { EnginesRepository } from "../../../features/Engines/abstractions/Engine
 import type { EngineStatus } from "#shared/engines/types.js";
 import type { z } from "zod";
 
-const DEFAULT_PAGE_SIZE = 25;
+const DEFAULT_PAGE_SIZE = DEFAULT_PAGE_SIZES.standard;
 
 const FILTER_SCHEMA = listProjectsRoute.querystring as NonNullable<
     typeof listProjectsRoute.querystring
@@ -190,8 +191,7 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
             });
         } catch (error) {
             runInAction(() => {
-                this.addProjectError =
-                    error instanceof Error ? error.message : "Failed to add project";
+                this.addProjectError = getErrorMessage(error, "Failed to add project");
             });
         } finally {
             runInAction(() => {
@@ -209,8 +209,7 @@ class ProjectListPresenterImpl implements Abstraction.Interface {
             }
         } catch (error) {
             runInAction(() => {
-                this.addProjectError =
-                    error instanceof Error ? error.message : "Failed to add projects";
+                this.addProjectError = getErrorMessage(error, "Failed to add projects");
             });
         } finally {
             runInAction(() => {

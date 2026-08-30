@@ -1,8 +1,8 @@
-import { input, password } from "@inquirer/prompts";
 import { hash } from "argon2";
 import { generateId, Logger } from "@webiny/stdlib";
 import { sql } from "drizzle-orm";
 import { CreateAdminUserStep as Abstraction } from "./abstractions/CreateAdminUserStep.js";
+import { PromptService } from "../../../../services/Prompt/index.js";
 import { createDatabaseClient } from "#api/db/client.js";
 import { users } from "#api/db/schema.js";
 import type { IStepContext, IStepResult } from "../../../../runner/abstractions/Step.js";
@@ -11,7 +11,10 @@ class CreateAdminUserStepImpl implements Abstraction.Interface {
     public name = "create-admin-user";
     public description = "Create admin user";
 
-    public constructor(private readonly logger: Logger.Interface) {}
+    public constructor(
+        private readonly logger: Logger.Interface,
+        private readonly promptService: PromptService.Interface
+    ) {}
 
     public async execute(context: IStepContext): Promise<IStepResult> {
         const dbPath = context.results.get("dbPath") as string;
@@ -28,7 +31,7 @@ class CreateAdminUserStepImpl implements Abstraction.Interface {
 
         this.logger.info("\nCreate the first admin user:\n");
 
-        const email = await input({
+        const email = await this.promptService.text({
             message: "Email:",
             validate: value => {
                 if (!value.includes("@")) {
@@ -38,7 +41,7 @@ class CreateAdminUserStepImpl implements Abstraction.Interface {
             }
         });
 
-        const displayName = await input({
+        const displayName = await this.promptService.text({
             message: "Display name:",
             validate: value => {
                 if (value.length < 1) {
@@ -48,7 +51,7 @@ class CreateAdminUserStepImpl implements Abstraction.Interface {
             }
         });
 
-        const userPassword = await password({
+        const userPassword = await this.promptService.password({
             message: "Password (min 8 chars):",
             validate: value => {
                 if (value.length < 8) {
@@ -58,7 +61,7 @@ class CreateAdminUserStepImpl implements Abstraction.Interface {
             }
         });
 
-        const confirmPassword = await password({
+        const confirmPassword = await this.promptService.password({
             message: "Confirm password:"
         });
 
@@ -89,5 +92,5 @@ class CreateAdminUserStepImpl implements Abstraction.Interface {
 
 export const CreateAdminUserStep = Abstraction.createImplementation({
     implementation: CreateAdminUserStepImpl,
-    dependencies: [Logger]
+    dependencies: [Logger, PromptService]
 });

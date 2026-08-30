@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
-import { Result, unexpectedError } from "#shared/index.js";
+import { Result, unexpectedError, projectNotFoundError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { projects, teamProjects } from "#api/db/schema.js";
 import { SetProjectTeamsUseCase as Abstraction } from "./abstractions/SetProjectTeamsUseCase.js";
@@ -19,11 +19,7 @@ class SetProjectTeamsUseCaseImpl implements Abstraction.Interface {
         }
 
         if (!project) {
-            return Result.fail({
-                code: "PROJECT_NOT_FOUND",
-                statusCode: 404,
-                message: "Project not found"
-            });
+            return Result.fail(projectNotFoundError());
         }
 
         try {

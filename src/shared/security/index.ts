@@ -1,4 +1,5 @@
 export {
+    PACKAGE_MANAGER_IDS,
     type PackageManagerId,
     type SecurityFieldDefinition,
     type FieldInputType

@@ -1,6 +1,7 @@
 import { computed, makeAutoObservable, runInAction } from "mobx";
 import { notifications } from "@mantine/notifications";
 import { getErrorMessage } from "#shared/errors.js";
+import { DEFAULT_PAGE_SIZES } from "#shared/pagination.js";
 import type { UpgradeFilter } from "./abstractions/ProjectDetailPresenter.js";
 import { ProjectDetailPresenter as Abstraction } from "./abstractions/ProjectDetailPresenter.js";
 import { LoadProjectsUseCase } from "../useCases/abstractions/LoadProjectsUseCase.js";
@@ -38,7 +39,7 @@ import { ChangelogManager } from "./ChangelogManager.js";
 import { PackageManagerManager } from "./PackageManagerManager.js";
 import { TeamsManager } from "./TeamsManager.js";
 
-const DEFAULT_PAGE_SIZE = 25;
+const DEFAULT_PAGE_SIZE = DEFAULT_PAGE_SIZES.standard;
 
 const DEPENDENCY_FILTER_SCHEMA = getProjectDependenciesRoute.querystring as NonNullable<
     typeof getProjectDependenciesRoute.querystring

@@ -1,4 +1,5 @@
 import { computed, makeAutoObservable, runInAction } from "mobx";
+import { DEFAULT_PAGE_SIZES } from "#shared/pagination.js";
 import type { z } from "zod";
 import { UserListPresenter as Abstraction } from "./abstractions/UserListPresenter.js";
 import type { UserPermission } from "#shared/users/index.js";
@@ -19,7 +20,7 @@ import { getErrorMessage } from "#shared/errors.js";
 const FILTER_SCHEMA = listUsersRoute.querystring as NonNullable<typeof listUsersRoute.querystring> &
     z.ZodObject<z.ZodRawShape>;
 
-const DEFAULT_PAGE_SIZE = 25;
+const DEFAULT_PAGE_SIZE = DEFAULT_PAGE_SIZES.standard;
 const DEFAULT_SORT_BY = "createdAt";
 const DEFAULT_SORT_ORDER = "desc";
 const FULL_PERMISSION: UserPermission = "full";

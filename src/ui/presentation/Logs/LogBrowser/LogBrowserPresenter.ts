@@ -9,8 +9,9 @@ import { EventBridge } from "../../../infrastructure/Events/abstractions/EventBr
 import "../../../infrastructure/Events/eventMap.js";
 import type { AppLogsGateway } from "../../../features/AppLogs/abstractions/AppLogsGateway.js";
 import { getErrorMessage } from "#shared/errors.js";
+import { DEFAULT_PAGE_SIZES } from "#shared/pagination.js";
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = DEFAULT_PAGE_SIZES.large;
 
 class LogBrowserPresenterImpl implements Abstraction.Interface {
     private loading = false;

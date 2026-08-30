@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineRoute } from "#shared/routing/index.js";
+import { defineRoute, paginationQuerySchema } from "#shared/routing/index.js";
 import {
     getAutoFixSettingsResponseSchema,
     updateAutoFixSettingsResponseSchema,
@@ -40,8 +40,7 @@ export const listAutoFixPullRequestsRoute = defineRoute({
         projectId: z.string().optional(),
         status: z.string().optional(),
         teamId: z.string().optional(),
-        page: z.coerce.number().int().positive().optional(),
-        pageSize: z.coerce.number().int().positive().max(200).optional()
+        ...paginationQuerySchema
     }),
     response: listAutoFixPullRequestsResponseSchema
 });

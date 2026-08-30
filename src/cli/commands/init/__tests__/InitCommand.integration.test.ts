@@ -6,17 +6,9 @@ import { sql } from "drizzle-orm";
 import { createTestCliContainer } from "#testing/helpers/createTestCliContainer.js";
 import { InitCommand } from "../abstractions/InitCommand.js";
 import { StepRunner } from "../../../runner/abstractions/StepRunner.js";
+import { PromptService } from "../../../services/Prompt/index.js";
 import { createDatabaseClient } from "#api/db/client.js";
 import { users } from "#api/db/schema.js";
-
-vi.mock("@inquirer/prompts", () => ({
-    input: vi
-        .fn()
-        .mockResolvedValueOnce("4000")
-        .mockResolvedValueOnce("admin@test.com")
-        .mockResolvedValueOnce("Test Admin"),
-    password: vi.fn().mockResolvedValueOnce("password123").mockResolvedValueOnce("password123")
-}));
 
 describe("InitCommand integration", () => {
     let workDir: string;
@@ -25,6 +17,16 @@ describe("InitCommand integration", () => {
     beforeEach(() => {
         workDir = mkdtempSync(join(tmpdir(), "init-integration-"));
         container = createTestCliContainer();
+
+        const textResponses = ["4000", "admin@test.com", "Test Admin"];
+        const passwordResponses = ["password123", "password123"];
+        let textIndex = 0;
+        let passwordIndex = 0;
+
+        container.registerInstance(PromptService, {
+            text: vi.fn().mockImplementation(async () => textResponses[textIndex++]!),
+            password: vi.fn().mockImplementation(async () => passwordResponses[passwordIndex++]!)
+        });
     });
 
     afterEach(() => {

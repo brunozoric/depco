@@ -1,4 +1,9 @@
-import { createAbstraction, Result, type IUnexpectedError } from "#shared/index.js";
+import {
+    createAbstraction,
+    Result,
+    type IUnexpectedError,
+    type IUnknownPackageManagerError
+} from "#shared/index.js";
 import type { ISecuritySettingResponse } from "../securitySettingsHelper.js";
 
 export interface IResetSecuritySettingsUseCaseParams {
@@ -8,12 +13,6 @@ export interface IResetSecuritySettingsUseCaseParams {
 export interface IResetSecuritySettingsUseCaseData {
     items: ISecuritySettingResponse[];
     total: number;
-}
-
-export interface IUnknownPackageManagerError {
-    code: "UNKNOWN_PACKAGE_MANAGER";
-    statusCode: 400;
-    message: string;
 }
 
 export interface IResetSecuritySettingsUseCaseErrors {

@@ -1,5 +1,6 @@
 import type React from "react";
 import { Badge, Button, Checkbox, Select, Table } from "@mantine/core";
+import { UPGRADE_BADGE_COLORS } from "#ui/infrastructure/Shared/upgrades/upgradeBadgeColors.js";
 
 interface ISelectOption {
     value: string;
@@ -33,12 +34,6 @@ interface SelectPackagesRowProps {
     onViewChangelog: (name: string, currentVersion: string, latestVersion: string) => void;
 }
 
-const UPGRADE_BADGE_COLOR: Record<SelectPackagesRow["upgradeType"], string> = {
-    patch: "green",
-    minor: "yellow",
-    major: "red"
-};
-
 function buildVersionOptions(row: SelectPackagesRow): ISelectOption[] {
     const options = new Map<string, string>();
     options.set(row.latestInRange, `In-range (${row.latestInRange})`);
@@ -62,7 +57,9 @@ function PackageRow({
             <Table.Td>{row.latestVersion}</Table.Td>
             <Table.Td>{row.type}</Table.Td>
             <Table.Td>
-                <Badge color={UPGRADE_BADGE_COLOR[row.upgradeType]}>{row.upgradeType}</Badge>
+                <Badge color={UPGRADE_BADGE_COLORS[row.upgradeType] ?? "gray"}>
+                    {row.upgradeType}
+                </Badge>
             </Table.Td>
             <Table.Td>
                 <Select

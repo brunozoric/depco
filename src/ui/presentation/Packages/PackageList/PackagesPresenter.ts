@@ -1,4 +1,6 @@
 import { computed, makeAutoObservable, reaction, runInAction } from "mobx";
+import { getErrorMessage } from "#shared/index.js";
+import { DEFAULT_PAGE_SIZES } from "#shared/pagination.js";
 import { PackagesPresenter as Abstraction } from "./abstractions/PackagesPresenter.js";
 import { LoadPackagesUseCase } from "../useCases/abstractions/LoadPackagesUseCase.js";
 import { LoadProjectsUseCase } from "../../Projects/useCases/abstractions/LoadProjectsUseCase.js";
@@ -23,7 +25,7 @@ const UPGRADE_TYPE_PRIORITY: Record<string, number> = {
     none: 0
 };
 
-const DEFAULT_PAGE_SIZE = 50;
+const DEFAULT_PAGE_SIZE = DEFAULT_PAGE_SIZES.large;
 
 const FILTER_SCHEMA = listPackagesRoute.querystring as NonNullable<
     typeof listPackagesRoute.querystring
@@ -150,7 +152,7 @@ class PackagesPresenterImpl implements Abstraction.Interface {
             ]);
         } catch (error) {
             runInAction(() => {
-                this.error = error instanceof Error ? error.message : "Failed to load packages";
+                this.error = getErrorMessage(error, "Failed to load packages");
             });
         } finally {
             runInAction(() => {
