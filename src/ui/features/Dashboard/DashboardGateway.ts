@@ -19,7 +19,7 @@ import { cleanQuery } from "../../infrastructure/HttpClient/cleanQuery.js";
 
 type TrendRangeQuery = "7d" | "30d" | "90d" | "all" | undefined;
 type VulnerabilityTrendDaysQuery = "7" | "30" | "90";
-type SparklineTrendDaysQuery = "7" | "30" | "90" | undefined;
+export type SparklineTrendDaysQuery = "7" | "30" | "90" | undefined;
 
 class DashboardGatewayImpl implements Abstraction.Interface {
     public constructor(private readonly httpClient: HTTPClient.Interface) {}

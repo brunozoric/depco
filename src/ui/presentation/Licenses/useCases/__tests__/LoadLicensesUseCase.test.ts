@@ -104,7 +104,7 @@ describe("LoadLicensesUseCase", () => {
         expect(calls).toEqual([
             { route: listLicensesRoute, args: { params: {}, query: undefined } },
             { route: listLicenseViolationsRoute, args: { params: {}, query: undefined } },
-            { route: getLicenseSummaryRoute, args: { params: {}, query: {} } }
+            { route: getLicenseSummaryRoute, args: { params: {}, query: undefined } }
         ]);
         expect(context.repository.getLicenses()).toEqual([license]);
         expect(context.repository.getLicensesTotal()).toBe(1);

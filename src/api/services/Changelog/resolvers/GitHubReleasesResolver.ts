@@ -1,14 +1,7 @@
-import { z } from "zod";
 import { ChangelogResolver as Abstraction } from "../abstractions/ChangelogResolver.js";
 import { CommandRunner } from "../../CommandRunner/index.js";
 import { extractOwnerRepo } from "../extractOwnerRepo.js";
-
-const githubReleasesSchema = z.array(
-    z.object({
-        tag_name: z.string(),
-        body: z.string().nullable().default(null)
-    })
-);
+import { githubReleasesSchema } from "../schemas.js";
 
 class GitHubReleasesResolverImpl implements Abstraction.Interface {
     public readonly name = "github-releases";

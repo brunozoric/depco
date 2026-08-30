@@ -1,15 +1,11 @@
-import type { FastifyInstance, FastifyPluginOptions } from "fastify";
-import type { Container } from "@webiny/di";
+import type { FastifyInstance } from "fastify";
+import type { IPluginOptions } from "./types.js";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { listLogsRoute, deleteLogsRoute } from "#shared/routes/index.js";
 import { ListLogsUseCase, DeleteLogsUseCase } from "./useCases/logs/index.js";
 
-interface PluginOptions extends FastifyPluginOptions {
-    container: Container;
-}
-
-export async function logsRoutes(app: FastifyInstance, options: PluginOptions): Promise<void> {
+export async function logsRoutes(app: FastifyInstance, options: IPluginOptions): Promise<void> {
     const { container } = options;
 
     registerRoute(app, listLogsRoute, {}, async (request, _reply, send) => {

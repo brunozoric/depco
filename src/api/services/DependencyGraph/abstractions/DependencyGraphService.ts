@@ -36,6 +36,8 @@ export interface ISearchPackagesParams {
 export interface IFindPathsParams {
     projectId: string;
     packageName: string;
+    maxDepth?: number;
+    maxPaths?: number;
 }
 
 export interface IDependencyGraphService {

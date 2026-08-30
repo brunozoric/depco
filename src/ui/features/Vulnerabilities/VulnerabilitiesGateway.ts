@@ -11,57 +11,35 @@ import {
     getVulnerabilityDetailRoute,
     getExpiredSnoozesRoute
 } from "#shared/routes/index.js";
+import { cleanQuery, cleanQueryRecord } from "../../infrastructure/HttpClient/cleanQuery.js";
 
-function buildListQuery(filters?: Abstraction.ListFilters): Record<string, string> {
-    const query: Record<string, string> = {};
-    if (filters?.severity) {
-        query["severity"] = filters.severity;
-    }
-    if (filters?.packageName) {
-        query["packageName"] = filters.packageName;
-    }
-    if (filters?.source) {
-        query["source"] = filters.source;
-    }
-    if (filters?.projectIds?.length) {
-        query["projectIds"] = filters.projectIds.join(",");
-    }
-    if (filters?.includeDismissed) {
-        query["includeDismissed"] = "true";
-    }
-    if (filters?.scannedDate) {
-        query["scannedDate"] = filters.scannedDate;
-    }
-    if (filters?.teamId) {
-        query["teamId"] = filters.teamId;
-    }
-    if (filters?.dependencyType && filters.dependencyType !== "all") {
-        query["dependencyType"] = filters.dependencyType;
-    }
-    if (filters?.page) {
-        query["page"] = String(filters.page);
-    }
-    if (filters?.pageSize) {
-        query["pageSize"] = String(filters.pageSize);
-    }
-    if (filters?.sortBy) {
-        query["sortBy"] = filters.sortBy;
-    }
-    if (filters?.sortOrder) {
-        query["sortOrder"] = filters.sortOrder;
-    }
-    return query;
+function buildListQuery(filters?: Abstraction.ListFilters): Record<string, string> | undefined {
+    return cleanQueryRecord({
+        severity: filters?.severity,
+        packageName: filters?.packageName,
+        source: filters?.source,
+        projectIds: filters?.projectIds?.length ? filters.projectIds.join(",") : undefined,
+        includeDismissed: filters?.includeDismissed ? "true" : undefined,
+        scannedDate: filters?.scannedDate,
+        teamId: filters?.teamId,
+        dependencyType:
+            filters?.dependencyType && filters.dependencyType !== "all"
+                ? filters.dependencyType
+                : undefined,
+        page: filters?.page ? String(filters.page) : undefined,
+        pageSize: filters?.pageSize ? String(filters.pageSize) : undefined,
+        sortBy: filters?.sortBy,
+        sortOrder: filters?.sortOrder
+    });
 }
 
 class VulnerabilitiesGatewayImpl implements Abstraction.Interface {
     public constructor(private readonly httpClient: HTTPClient.Interface) {}
 
     public async list(filters?: Abstraction.ListFilters): Promise<Abstraction.ListResponse> {
-        const query = buildListQuery(filters);
-
         return this.httpClient.request(listVulnerabilitiesRoute, {
             params: {},
-            query: Object.keys(query).length > 0 ? query : undefined
+            query: buildListQuery(filters)
         });
     }
 
@@ -69,18 +47,16 @@ class VulnerabilitiesGatewayImpl implements Abstraction.Interface {
         projectId: string,
         filters?: Abstraction.ListFilters
     ): Promise<Abstraction.ListResponse> {
-        const query = buildListQuery(filters);
-
         return this.httpClient.request(getProjectVulnerabilitiesRoute, {
             params: { projectId },
-            query: Object.keys(query).length > 0 ? query : undefined
+            query: buildListQuery(filters)
         });
     }
 
     public async getSummary(teamId?: string): Promise<Abstraction.SummaryData> {
         return this.httpClient.request(getVulnerabilitySummaryRoute, {
             params: {},
-            query: teamId ? { teamId } : {}
+            query: cleanQuery({ teamId })
         });
     }
 

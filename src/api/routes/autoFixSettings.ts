@@ -1,5 +1,5 @@
-import type { FastifyInstance, FastifyPluginOptions } from "fastify";
-import type { Container } from "@webiny/di";
+import type { FastifyInstance } from "fastify";
+import type { IPluginOptions } from "./types.js";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { getAutoFixSettingsRoute, updateAutoFixSettingsRoute } from "#shared/routes/index.js";
@@ -8,10 +8,6 @@ import {
     GetAutoFixSettingsUseCase,
     UpdateAutoFixSettingsUseCase
 } from "./useCases/autoFix/index.js";
-
-interface PluginOptions extends FastifyPluginOptions {
-    container: Container;
-}
 
 interface IUpdateAutoFixSettingsBody {
     enabled?: boolean | undefined;
@@ -41,7 +37,7 @@ function buildUpdateSettingsInput(
 
 export async function autoFixSettingsRoutes(
     app: FastifyInstance,
-    options: PluginOptions
+    options: IPluginOptions
 ): Promise<void> {
     const { container } = options;
 

@@ -16,7 +16,13 @@ function rowToSettings(row: typeof autoFixSettings.$inferSelect): Abstraction.Se
         id: row.id,
         projectId: row.projectId,
         enabled: row.enabled === 1,
-        upgradeTypes: JSON.parse(row.upgradeTypes) as string[],
+        upgradeTypes: (() => {
+            try {
+                return JSON.parse(row.upgradeTypes) as string[];
+            } catch {
+                return ["patch"];
+            }
+        })(),
         groupingStrategy: row.groupingStrategy,
         branchPrefix: row.branchPrefix,
         createdAt: row.createdAt,

@@ -12,7 +12,16 @@ function setup(securityResult: SecurityService.CheckResult | null = null) {
     ProjectsUseCasesFeature.register(container);
     container.registerInstance(SecurityService, {
         check: vi.fn(async () => ({ passes: true, checks: {} })),
-        getLatest: vi.fn(async () => securityResult)
+        getLatest: vi.fn(async () => securityResult),
+        getLatestForProjects: vi.fn(async (ids: string[]) => {
+            const map = new Map<string, SecurityService.CheckResult>();
+            if (securityResult) {
+                for (const id of ids) {
+                    map.set(id, securityResult);
+                }
+            }
+            return map;
+        })
     });
     const useCase = container.resolve(ListProjectsUseCase);
     return { useCase, db };

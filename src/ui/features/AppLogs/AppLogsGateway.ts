@@ -1,6 +1,7 @@
 import { AppLogsGateway as Abstraction } from "./abstractions/AppLogsGateway.js";
 import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { listLogsRoute, deleteLogsRoute } from "#shared/routes/index.js";
+import { cleanQueryRecord } from "../../infrastructure/HttpClient/cleanQuery.js";
 
 class AppLogsGatewayImpl implements Abstraction.Interface {
     public constructor(private readonly httpClient: HTTPClient.Interface) {}
@@ -10,28 +11,15 @@ class AppLogsGatewayImpl implements Abstraction.Interface {
         limit?: number,
         offset?: number
     ): Promise<Abstraction.ListResponse> {
-        const query: Record<string, string> = {};
-        if (filters.level) {
-            query["level"] = filters.level;
-        }
-        if (filters.source) {
-            query["source"] = filters.source;
-        }
-        if (filters.projectId) {
-            query["projectId"] = filters.projectId;
-        }
-        if (filters.from) {
-            query["from"] = filters.from;
-        }
-        if (filters.to) {
-            query["to"] = filters.to;
-        }
-        if (limit !== undefined) {
-            query["limit"] = String(limit);
-        }
-        if (offset !== undefined) {
-            query["offset"] = String(offset);
-        }
+        const query = cleanQueryRecord({
+            level: filters.level,
+            source: filters.source,
+            projectId: filters.projectId,
+            from: filters.from,
+            to: filters.to,
+            limit: limit !== undefined ? String(limit) : undefined,
+            offset: offset !== undefined ? String(offset) : undefined
+        });
 
         const response = await this.httpClient.request(listLogsRoute, {
             params: {},
@@ -41,22 +29,13 @@ class AppLogsGatewayImpl implements Abstraction.Interface {
     }
 
     public async deleteFiltered(filters: Abstraction.Filters): Promise<number> {
-        const body: Record<string, string> = {};
-        if (filters.level) {
-            body["level"] = filters.level;
-        }
-        if (filters.source) {
-            body["source"] = filters.source;
-        }
-        if (filters.projectId) {
-            body["projectId"] = filters.projectId;
-        }
-        if (filters.from) {
-            body["from"] = filters.from;
-        }
-        if (filters.to) {
-            body["to"] = filters.to;
-        }
+        const body = cleanQueryRecord({
+            level: filters.level,
+            source: filters.source,
+            projectId: filters.projectId,
+            from: filters.from,
+            to: filters.to
+        });
 
         const response = await this.httpClient.request(deleteLogsRoute, {
             params: {},

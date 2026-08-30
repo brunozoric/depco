@@ -1,6 +1,7 @@
 import { TrendsGateway as Abstraction } from "./abstractions/TrendsGateway.js";
 import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import type { DashboardGateway } from "../Dashboard/abstractions/DashboardGateway.js";
+import { type SparklineTrendDaysQuery } from "../Dashboard/DashboardGateway.js";
 import {
     dashboardStalenessTrendRoute,
     dashboardLicenseTrendRoute,
@@ -8,8 +9,6 @@ import {
     dashboardDependencyChangesRoute
 } from "#shared/routes/index.js";
 import { cleanQuery } from "../../infrastructure/HttpClient/cleanQuery.js";
-
-type SparklineTrendDaysQuery = "7" | "30" | "90" | undefined;
 
 class TrendsGatewayImpl implements Abstraction.Interface {
     public constructor(private readonly httpClient: HTTPClient.Interface) {}

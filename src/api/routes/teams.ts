@@ -1,5 +1,5 @@
-import type { FastifyInstance, FastifyPluginOptions } from "fastify";
-import type { Container } from "@webiny/di";
+import type { FastifyInstance } from "fastify";
+import type { IPluginOptions } from "./types.js";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
@@ -19,11 +19,7 @@ import {
     DeleteTeamUseCase
 } from "./useCases/teams/index.js";
 
-interface PluginOptions extends FastifyPluginOptions {
-    container: Container;
-}
-
-export async function teamsRoutes(app: FastifyInstance, options: PluginOptions): Promise<void> {
+export async function teamsRoutes(app: FastifyInstance, options: IPluginOptions): Promise<void> {
     const { container } = options;
 
     registerRoute(app, listTeamsRoute, {}, async (request, _reply, send) => {

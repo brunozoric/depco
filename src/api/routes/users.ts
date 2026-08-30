@@ -1,5 +1,5 @@
-import type { FastifyInstance, FastifyPluginOptions } from "fastify";
-import type { Container } from "@webiny/di";
+import type { FastifyInstance } from "fastify";
+import type { IPluginOptions } from "./types.js";
 import { registerRoute } from "#shared/routing/index.js";
 import {
     listUsersRoute,
@@ -20,13 +20,9 @@ import {
     ForceLogoutUserUseCase
 } from "./useCases/users/index.js";
 
-interface PluginOptions extends FastifyPluginOptions {
-    container: Container;
-}
-
 const FULL_PERMISSION = "full";
 
-export async function userRoutes(app: FastifyInstance, options: PluginOptions): Promise<void> {
+export async function userRoutes(app: FastifyInstance, options: IPluginOptions): Promise<void> {
     const { container } = options;
 
     registerRoute(app, listUsersRoute, {}, async (request, _reply, send) => {

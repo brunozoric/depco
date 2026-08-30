@@ -1,7 +1,6 @@
 import { z } from "zod";
-import { toBoolean } from "@webiny/stdlib";
 import type { SecurityFieldDefinition } from "./types.js";
-import { parseDuration } from "./duration.js";
+import { booleanCompare, durationCompare } from "./comparators.js";
 
 export const NPM_SECURITY_FIELDS: SecurityFieldDefinition[] = [
     {
@@ -13,12 +12,7 @@ export const NPM_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "boolean",
         expectedValueSchema: z.enum(["true", "false"]),
         defaultExpectedValue: "true",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            return toBoolean(actual) === toBoolean(expected);
-        }
+        compare: booleanCompare
     },
     {
         fieldName: "audit",
@@ -28,12 +22,7 @@ export const NPM_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "boolean",
         expectedValueSchema: z.enum(["true", "false"]),
         defaultExpectedValue: "true",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            return toBoolean(actual) === toBoolean(expected);
-        }
+        compare: booleanCompare
     },
     {
         fieldName: "strict-ssl",
@@ -44,12 +33,7 @@ export const NPM_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "boolean",
         expectedValueSchema: z.enum(["true", "false"]),
         defaultExpectedValue: "true",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            return toBoolean(actual) === toBoolean(expected);
-        }
+        compare: booleanCompare
     },
     {
         fieldName: "minimal-age-gate",
@@ -62,15 +46,6 @@ export const NPM_SECURITY_FIELDS: SecurityFieldDefinition[] = [
             .string()
             .regex(/^\d+[dhms]$/, "Must be a duration like 3d, 72h, 30m"),
         defaultExpectedValue: "3d",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            try {
-                return parseDuration(String(actual)) >= parseDuration(expected);
-            } catch {
-                return false;
-            }
-        }
+        compare: durationCompare
     }
 ];

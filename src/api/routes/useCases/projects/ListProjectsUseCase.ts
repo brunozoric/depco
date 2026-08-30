@@ -123,19 +123,16 @@ class ListProjectsUseCaseImpl implements Abstraction.Interface {
                 teamsByProject.set(row.projectId, list);
             }
 
-            const items = await Promise.all(
-                pagedProjects.map(async project => {
-                    const security = await this.securityService.getLatest(project.id);
-                    return {
-                        ...project,
-                        security,
-                        hasNodeModules: existsSync(join(project.path, "node_modules")),
-                        teams: teamsByProject.get(project.id) ?? [],
-                        engineStatus: project.engineStatus ?? null,
-                        rootEnginesNode: project.rootEnginesNode ?? null
-                    };
-                })
-            );
+            const securityByProject = await this.securityService.getLatestForProjects(projectIds);
+
+            const items = pagedProjects.map(project => ({
+                ...project,
+                security: securityByProject.get(project.id) ?? null,
+                hasNodeModules: existsSync(join(project.path, "node_modules")),
+                teams: teamsByProject.get(project.id) ?? [],
+                engineStatus: project.engineStatus ?? null,
+                rootEnginesNode: project.rootEnginesNode ?? null
+            }));
 
             return Result.ok({ items, total });
         } catch (error) {

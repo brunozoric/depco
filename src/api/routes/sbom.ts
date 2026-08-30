@@ -1,14 +1,10 @@
-import type { FastifyInstance, FastifyPluginOptions } from "fastify";
-import type { Container } from "@webiny/di";
+import type { FastifyInstance } from "fastify";
+import type { IPluginOptions } from "./types.js";
 import { registerRoute, sendError, sendBlob } from "#shared/routing/index.js";
 import { exportAllSbomRoute, exportProjectSbomRoute } from "#shared/routes/index.js";
 import { ExportAllSbomUseCase, ExportProjectSbomUseCase } from "./useCases/sbom/index.js";
 
-interface PluginOptions extends FastifyPluginOptions {
-    container: Container;
-}
-
-export async function sbomRoutes(app: FastifyInstance, options: PluginOptions): Promise<void> {
+export async function sbomRoutes(app: FastifyInstance, options: IPluginOptions): Promise<void> {
     const { container } = options;
     // Registered before "/:projectId" so it isn't shadowed by that param route.
     registerRoute(app, exportAllSbomRoute, {}, async (request, reply) => {

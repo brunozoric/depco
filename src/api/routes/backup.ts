@@ -1,13 +1,9 @@
-import type { FastifyInstance, FastifyPluginOptions } from "fastify";
-import type { Container } from "@webiny/di";
+import type { FastifyInstance } from "fastify";
+import type { IPluginOptions } from "./types.js";
 import { registerBackupExportRoutes } from "./backup/backupExportRoutes.js";
 import { registerBackupImportRoutes } from "./backup/backupImportRoutes.js";
 
-interface PluginOptions extends FastifyPluginOptions {
-    container: Container;
-}
-
-export async function backupRoutes(app: FastifyInstance, options: PluginOptions): Promise<void> {
+export async function backupRoutes(app: FastifyInstance, options: IPluginOptions): Promise<void> {
     const { container } = options;
 
     app.addContentTypeParser(

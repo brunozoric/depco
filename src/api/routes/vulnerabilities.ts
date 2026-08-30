@@ -1,15 +1,11 @@
-import type { FastifyInstance, FastifyPluginOptions } from "fastify";
-import type { Container } from "@webiny/di";
+import type { FastifyInstance } from "fastify";
+import type { IPluginOptions } from "./types.js";
 import { registerVulnerabilityQueryRoutes } from "./vulnerabilities/vulnerabilityQueryRoutes.js";
 import { registerVulnerabilityActionRoutes } from "./vulnerabilities/vulnerabilityActionRoutes.js";
 
-interface PluginOptions extends FastifyPluginOptions {
-    container: Container;
-}
-
 export async function vulnerabilityRoutes(
     app: FastifyInstance,
-    options: PluginOptions
+    options: IPluginOptions
 ): Promise<void> {
     const { container } = options;
     registerVulnerabilityQueryRoutes(app, container);

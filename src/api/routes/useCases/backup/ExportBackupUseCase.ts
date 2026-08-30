@@ -45,20 +45,31 @@ class ExportBackupUseCaseImpl implements Abstraction.Interface {
             const allVersions = await db.select().from(dependencyVersions).all();
             const allChangelogs = await db.select().from(changelogs).all();
 
+            const versionsByDep = new Map<string, typeof allVersions>();
+            for (const v of allVersions) {
+                const list = versionsByDep.get(v.dependencyId) ?? [];
+                list.push(v);
+                versionsByDep.set(v.dependencyId, list);
+            }
+
+            const changelogByVersionId = new Map<string, (typeof allChangelogs)[number]>();
+            for (const cl of allChangelogs) {
+                changelogByVersionId.set(cl.dependencyVersionId, cl);
+            }
+
             const exportDeps = allDeps.map(dep => {
-                const versions: IBackupVersionEntry[] = allVersions
-                    .filter(v => v.dependencyId === dep.id)
-                    .map(v => {
-                        const cl = allChangelogs.find(c => c.dependencyVersionId === v.id);
-                        const entry: IBackupVersionEntry = {
-                            version: v.version,
-                            publishedAt: v.publishedAt
-                        };
-                        if (cl) {
-                            entry.changelog = { content: cl.content, source: cl.source };
-                        }
-                        return entry;
-                    });
+                const depVersions = versionsByDep.get(dep.id) ?? [];
+                const versions: IBackupVersionEntry[] = depVersions.map(v => {
+                    const cl = changelogByVersionId.get(v.id);
+                    const entry: IBackupVersionEntry = {
+                        version: v.version,
+                        publishedAt: v.publishedAt
+                    };
+                    if (cl) {
+                        entry.changelog = { content: cl.content, source: cl.source };
+                    }
+                    return entry;
+                });
                 return {
                     name: dep.name,
                     repoUrl: dep.repoUrl,

@@ -17,7 +17,15 @@ class DependencyJobExecutorImpl implements JobExecutor.Interface {
     public constructor(private readonly upgradeService: UpgradeService.Interface) {}
 
     public async execute(context: JobExecutor.ExecutionContext): Promise<void> {
-        const packages = dependencyPackagesSchema.parse(JSON.parse(context.packagesJson ?? "[]"));
+        const parseResult = dependencyPackagesSchema.safeParse(
+            JSON.parse(context.packagesJson ?? "[]")
+        );
+        if (!parseResult.success) {
+            throw new Error(
+                `Invalid dependency packages payload: ${parseResult.error.issues.map(i => i.message).join(", ")}`
+            );
+        }
+        const packages = parseResult.data;
 
         for (const upgradePackage of packages) {
             await this.upgradeService.upgradePackage(

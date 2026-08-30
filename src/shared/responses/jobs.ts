@@ -16,9 +16,11 @@ export const jobSchema = z.object({
     parentJobId: z.string().nullable().optional()
 });
 
-export const createUpgradeJobResponseSchema = z.object({
-    item: z.object({ jobId: z.string() })
-});
+export const jobHandleSchema = z.object({ jobId: z.string() });
+
+export const jobHandleResponseSchema = z.object({ item: jobHandleSchema });
+
+export const createUpgradeJobResponseSchema = jobHandleResponseSchema;
 
 export const listJobsResponseSchema = z.object({
     items: z.array(jobSchema),
@@ -27,9 +29,7 @@ export const listJobsResponseSchema = z.object({
 
 export const getJobResponseSchema = z.object({ item: jobSchema });
 
-export const createTransientJobResponseSchema = z.object({
-    item: z.object({ jobId: z.string() })
-});
+export const createTransientJobResponseSchema = jobHandleResponseSchema;
 
 export const cancelJobResponseSchema = z.object({ success: z.boolean() });
 

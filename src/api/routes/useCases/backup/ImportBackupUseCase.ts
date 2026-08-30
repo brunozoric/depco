@@ -1,5 +1,5 @@
 import { access } from "fs/promises";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import { Result, unexpectedError } from "#shared/index.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
@@ -114,10 +114,11 @@ class ImportBackupUseCaseImpl implements Abstraction.Interface {
             }
 
             for (const dep of payload.dependencies) {
+                const depId = generateId();
                 const depInserted = await db
                     .insert(dependencies)
                     .values({
-                        id: generateId(),
+                        id: depId,
                         name: dep.name,
                         repoUrl: dep.repoUrl,
                         createdAt: Date.now()
@@ -125,28 +126,30 @@ class ImportBackupUseCaseImpl implements Abstraction.Interface {
                     .onConflictDoNothing()
                     .run();
 
-                const depRow = await db
-                    .select()
-                    .from(dependencies)
-                    .where(eq(dependencies.name, dep.name))
-                    .get();
-
-                if (!depRow) {
-                    continue;
-                }
-
+                let dependencyId: string;
                 if (depInserted.changes > 0) {
+                    dependencyId = depId;
                     result.dependencies.imported++;
                 } else {
+                    const depRow = await db
+                        .select({ id: dependencies.id })
+                        .from(dependencies)
+                        .where(eq(dependencies.name, dep.name))
+                        .get();
+                    if (!depRow) {
+                        continue;
+                    }
+                    dependencyId = depRow.id;
                     result.dependencies.skipped++;
                 }
 
                 for (const version of dep.versions) {
+                    const versionId = generateId();
                     const vInserted = await db
                         .insert(dependencyVersions)
                         .values({
-                            id: generateId(),
-                            dependencyId: depRow.id,
+                            id: versionId,
+                            dependencyId,
                             version: version.version,
                             publishedAt: version.publishedAt
                         })
@@ -160,21 +163,29 @@ class ImportBackupUseCaseImpl implements Abstraction.Interface {
                     }
 
                     if (version.changelog) {
-                        const versionRow = (
-                            await db
-                                .select()
-                                .from(dependencyVersions)
-                                .where(eq(dependencyVersions.dependencyId, depRow.id))
-                                .all()
-                        ).find(v => v.version === version.version);
+                        const resolvedVersionId =
+                            vInserted.changes > 0
+                                ? versionId
+                                : (
+                                      await db
+                                          .select({ id: dependencyVersions.id })
+                                          .from(dependencyVersions)
+                                          .where(
+                                              and(
+                                                  eq(dependencyVersions.dependencyId, dependencyId),
+                                                  eq(dependencyVersions.version, version.version)
+                                              )
+                                          )
+                                          .get()
+                                  )?.id;
 
-                        if (versionRow) {
+                        if (resolvedVersionId) {
                             const clInserted = await db
                                 .insert(changelogs)
                                 .values({
                                     id: generateId(),
-                                    dependencyId: depRow.id,
-                                    dependencyVersionId: versionRow.id,
+                                    dependencyId,
+                                    dependencyVersionId: resolvedVersionId,
                                     content: version.changelog.content,
                                     source: version.changelog.source,
                                     fetchedAt: Date.now()

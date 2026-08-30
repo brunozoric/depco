@@ -1,5 +1,5 @@
-import type { FastifyInstance, FastifyPluginOptions } from "fastify";
-import type { Container } from "@webiny/di";
+import type { FastifyInstance } from "fastify";
+import type { IPluginOptions } from "./types.js";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
@@ -15,11 +15,10 @@ import {
     GenerateAutoFixPrUseCase
 } from "./useCases/autoFix/index.js";
 
-interface PluginOptions extends FastifyPluginOptions {
-    container: Container;
-}
-
-export async function autoFixPrRoutes(app: FastifyInstance, options: PluginOptions): Promise<void> {
+export async function autoFixPrRoutes(
+    app: FastifyInstance,
+    options: IPluginOptions
+): Promise<void> {
     const { container } = options;
 
     // Registered before the parametrized "/:projectId/..." routes below so it

@@ -325,8 +325,15 @@ class EngineServiceImpl implements Abstraction.Interface {
     private readRootEnginesNode(projectPath: string): string | null {
         try {
             const raw = readFileSync(join(projectPath, "package.json"), "utf-8");
-            const parsed = packageJsonEnginesSchema.parse(JSON.parse(raw));
-            return parsed.engines?.node ?? null;
+            const parseResult = packageJsonEnginesSchema.safeParse(JSON.parse(raw));
+            if (!parseResult.success) {
+                this.logger.warn("Invalid package.json engines schema", {
+                    projectPath,
+                    issues: parseResult.error.issues.map(i => i.message).join(", ")
+                });
+                return null;
+            }
+            return parseResult.data.engines?.node ?? null;
         } catch (error) {
             this.logger.warn("Failed to read root package.json during engine scan", {
                 projectPath,

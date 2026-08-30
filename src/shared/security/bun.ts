@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { toBoolean } from "@webiny/stdlib";
 import type { SecurityFieldDefinition } from "./types.js";
+import { booleanCompare, existsCompare } from "./comparators.js";
 
 export const BUN_SECURITY_FIELDS: SecurityFieldDefinition[] = [
     {
@@ -12,9 +12,7 @@ export const BUN_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "exists",
         expectedValueSchema: z.literal("exists"),
         defaultExpectedValue: "exists",
-        compare(actual: unknown, _expected: string): boolean {
-            return actual != null && Array.isArray(actual);
-        }
+        compare: existsCompare
     },
     {
         fieldName: "install.exact",
@@ -25,12 +23,7 @@ export const BUN_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "boolean",
         expectedValueSchema: z.enum(["true", "false"]),
         defaultExpectedValue: "true",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            return toBoolean(actual) === toBoolean(expected);
-        }
+        compare: booleanCompare
     },
     {
         fieldName: "install.frozen",
@@ -41,12 +34,7 @@ export const BUN_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "boolean",
         expectedValueSchema: z.enum(["true", "false"]),
         defaultExpectedValue: "true",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            return toBoolean(actual) === toBoolean(expected);
-        }
+        compare: booleanCompare
     },
     {
         fieldName: "install.saveTextLockfile",
@@ -57,12 +45,7 @@ export const BUN_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "boolean",
         expectedValueSchema: z.enum(["true", "false"]),
         defaultExpectedValue: "true",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            return toBoolean(actual) === toBoolean(expected);
-        }
+        compare: booleanCompare
     },
     {
         fieldName: "install.production",
@@ -73,12 +56,7 @@ export const BUN_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "boolean",
         expectedValueSchema: z.enum(["true", "false"]),
         defaultExpectedValue: "false",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            return toBoolean(actual) === toBoolean(expected);
-        }
+        compare: booleanCompare
     },
     {
         fieldName: "install.peer",
@@ -89,12 +67,7 @@ export const BUN_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "boolean",
         expectedValueSchema: z.enum(["true", "false"]),
         defaultExpectedValue: "true",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            return toBoolean(actual) === toBoolean(expected);
-        }
+        compare: booleanCompare
     },
     {
         fieldName: "install.optional",
@@ -105,12 +78,7 @@ export const BUN_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "boolean",
         expectedValueSchema: z.enum(["true", "false"]),
         defaultExpectedValue: "true",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            return toBoolean(actual) === toBoolean(expected);
-        }
+        compare: booleanCompare
     },
     {
         fieldName: "install.auto",
@@ -121,11 +89,6 @@ export const BUN_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "boolean",
         expectedValueSchema: z.enum(["true", "false"]),
         defaultExpectedValue: "false",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            return toBoolean(actual) === toBoolean(expected);
-        }
+        compare: booleanCompare
     }
 ];

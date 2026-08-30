@@ -31,8 +31,10 @@ export async function registerProject(params: RegisterProjectParams): Promise<Re
     let name: string;
     try {
         const pkgContent = await readFile(join(projectPath, "package.json"), "utf-8");
-        const pkgJson = packageJsonSchema.parse(JSON.parse(pkgContent));
-        name = pkgJson.name ?? basename(projectPath);
+        const parseResult = packageJsonSchema.safeParse(JSON.parse(pkgContent));
+        name = parseResult.success
+            ? (parseResult.data.name ?? basename(projectPath))
+            : basename(projectPath);
     } catch {
         name = basename(projectPath);
     }

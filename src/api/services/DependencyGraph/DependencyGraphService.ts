@@ -101,7 +101,7 @@ class DependencyGraphServiceImpl implements Abstraction.Interface {
     }
 
     public async findPaths(params: Abstraction.FindPathsParams): Promise<Abstraction.Path[]> {
-        const { projectId, packageName } = params;
+        const { projectId, packageName, maxDepth = 10, maxPaths = 100 } = params;
         const graph = await this.getGraph(projectId);
         const adjacencyMap = buildAdjacencyMap(graph.edges);
 
@@ -120,6 +120,9 @@ class DependencyGraphServiceImpl implements Abstraction.Interface {
 
             if (rootEdge.childPackage === packageName) {
                 paths.push({ target: packageName, chain });
+                if (paths.length >= maxPaths) {
+                    return paths;
+                }
                 continue;
             }
 
@@ -128,6 +131,11 @@ class DependencyGraphServiceImpl implements Abstraction.Interface {
 
         while (queue.length > 0) {
             const { chain, visitedPackageNames } = queue.shift()!;
+
+            if (chain.length >= maxDepth) {
+                continue;
+            }
+
             const current = chain[chain.length - 1]!;
             const children = adjacencyMap.get(`${current.packageName}@${current.version}`) ?? [];
 
@@ -140,14 +148,17 @@ class DependencyGraphServiceImpl implements Abstraction.Interface {
                     ...chain,
                     { packageName: childEdge.childPackage, version: childEdge.childVersion }
                 ];
-                const childVisitedPackageNames = new Set(visitedPackageNames);
-                childVisitedPackageNames.add(childEdge.childPackage);
 
                 if (childEdge.childPackage === packageName) {
                     paths.push({ target: packageName, chain: childChain });
+                    if (paths.length >= maxPaths) {
+                        return paths;
+                    }
                     continue;
                 }
 
+                const childVisitedPackageNames = new Set(visitedPackageNames);
+                childVisitedPackageNames.add(childEdge.childPackage);
                 queue.push({ chain: childChain, visitedPackageNames: childVisitedPackageNames });
             }
         }

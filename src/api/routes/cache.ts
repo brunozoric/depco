@@ -1,15 +1,11 @@
-import type { FastifyInstance, FastifyPluginOptions } from "fastify";
-import type { Container } from "@webiny/di";
+import type { FastifyInstance } from "fastify";
+import type { IPluginOptions } from "./types.js";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { clearCacheRoute, clearPackageCacheRoute } from "#shared/routes/index.js";
 import { ClearCacheUseCase, ClearPackageCacheUseCase } from "./useCases/cache/index.js";
 
-interface PluginOptions extends FastifyPluginOptions {
-    container: Container;
-}
-
-export async function cacheRoutes(app: FastifyInstance, options: PluginOptions): Promise<void> {
+export async function cacheRoutes(app: FastifyInstance, options: IPluginOptions): Promise<void> {
     const { container } = options;
 
     // DELETE /api/cache — clear the entire registry cache.

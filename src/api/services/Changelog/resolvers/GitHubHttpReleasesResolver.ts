@@ -1,16 +1,9 @@
-import { z } from "zod";
 import { ChangelogResolver as Abstraction } from "../abstractions/ChangelogResolver.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { EncryptionService } from "#api/services/Encryption/abstractions/EncryptionService.js";
 import { extractOwnerRepo } from "../extractOwnerRepo.js";
 import { readGitHubToken } from "./readGitHubToken.js";
-
-const githubReleasesSchema = z.array(
-    z.object({
-        tag_name: z.string(),
-        body: z.string().nullable().default(null)
-    })
-);
+import { githubReleasesSchema } from "../schemas.js";
 
 class GitHubHttpReleasesResolverImpl implements Abstraction.Interface {
     public readonly name = "github-http-releases";

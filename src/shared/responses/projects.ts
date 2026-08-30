@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { jobHandleResponseSchema } from "./jobs.js";
 
 export const securityStatusSchema = z.object({
     passes: z.boolean(),
@@ -46,9 +47,7 @@ export const listProjectsResponseSchema = z.object({
 
 export const getProjectResponseSchema = z.object({ item: projectSchema });
 
-export const scanProjectAsyncResponseSchema = z.object({
-    item: z.object({ jobId: z.string() })
-});
+export const scanProjectAsyncResponseSchema = jobHandleResponseSchema;
 
 export const getProjectDependenciesResponseSchema = z.object({
     items: z.array(dependencySchema),
@@ -81,20 +80,14 @@ export const importProjectsResponseSchema = z.object({
     items: z.array(importResultSchema)
 });
 
-export const projectTeamSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    color: z.string()
-});
+export const projectTeamSchema = projectTeamBadgeSchema;
 
 export const getProjectTeamsResponseSchema = z.object({
     items: z.array(projectTeamSchema),
     total: z.number()
 });
 
-export const cloneProjectResponseSchema = z.object({
-    item: z.object({ jobId: z.string() })
-});
+export const cloneProjectResponseSchema = jobHandleResponseSchema;
 
 export const bulkScanProjectsResponseSchema = z.object({
     enqueuedCount: z.number(),

@@ -1,7 +1,6 @@
 import { z } from "zod";
 import type { IDependencyEdge } from "../abstractions/LockfileParserService.js";
-import type { IRootPackageJson } from "./types.js";
-import { rootPackageJsonSchema } from "./types.js";
+import { parseRootPackageJson } from "./types.js";
 
 const NODE_MODULES_SEGMENT = "node_modules/";
 
@@ -53,19 +52,7 @@ export function parseNpmLockfile(
         return [];
     }
 
-    let rootPackageJson: IRootPackageJson;
-    try {
-        const parsedRootPackageJson = rootPackageJsonSchema.safeParse(
-            JSON.parse(rootPackageJsonContent)
-        );
-        if (!parsedRootPackageJson.success) {
-            throw new Error(JSON.stringify(parsedRootPackageJson.error.issues));
-        }
-        rootPackageJson = parsedRootPackageJson.data as IRootPackageJson;
-    } catch {
-        rootPackageJson = {};
-    }
-
+    const rootPackageJson = parseRootPackageJson(rootPackageJsonContent);
     const devDependencyNames = new Set(Object.keys(rootPackageJson.devDependencies ?? {}));
     const packages = lockfile.packages ?? {};
     const dependencyEdges: IDependencyEdge[] = [];

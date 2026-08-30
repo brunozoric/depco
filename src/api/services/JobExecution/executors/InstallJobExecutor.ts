@@ -44,8 +44,13 @@ class InstallJobExecutorImpl implements JobExecutor.Interface {
                     .default([])
             });
 
-            const parsed = schema.parse(JSON.parse(context.packagesJson ?? "{}"));
-            flags = parsed.flags;
+            const parseResult = schema.safeParse(JSON.parse(context.packagesJson ?? "{}"));
+            if (!parseResult.success) {
+                throw new Error(
+                    `Invalid install flags payload: ${parseResult.error.issues.map(i => i.message).join(", ")}`
+                );
+            }
+            flags = parseResult.data.flags;
         }
 
         try {

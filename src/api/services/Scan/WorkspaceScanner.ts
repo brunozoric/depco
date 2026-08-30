@@ -46,11 +46,14 @@ async function collectWorkspacesFromPackageJson(projectPath: string): Promise<IW
     let patterns: string[] = [];
     try {
         const content = await readFile(join(projectPath, "package.json"), "utf-8");
-        const pkg = packageJsonSchema.parse(JSON.parse(content)) as IPackageJson;
-        if (Array.isArray(pkg.workspaces)) {
-            patterns = pkg.workspaces;
-        } else if (pkg.workspaces?.packages) {
-            patterns = pkg.workspaces.packages;
+        const parseResult = packageJsonSchema.safeParse(JSON.parse(content));
+        if (parseResult.success) {
+            const pkg = parseResult.data as IPackageJson;
+            if (Array.isArray(pkg.workspaces)) {
+                patterns = pkg.workspaces;
+            } else if (pkg.workspaces?.packages) {
+                patterns = pkg.workspaces.packages;
+            }
         }
     } catch {
         patterns = [];
@@ -124,7 +127,8 @@ export class WorkspaceScanner {
                 const packageJsonPath = join(projectPath, workspace.location, "package.json");
                 try {
                     const content = await readFile(packageJsonPath, "utf-8");
-                    return packageJsonSchema.parse(JSON.parse(content)) as IPackageJson;
+                    const parseResult = packageJsonSchema.safeParse(JSON.parse(content));
+                    return parseResult.success ? (parseResult.data as IPackageJson) : null;
                 } catch {
                     return null;
                 }
@@ -177,9 +181,9 @@ export class WorkspaceScanner {
                     join(projectPath, workspace.location, "package.json"),
                     "utf-8"
                 );
-                const pkg = packageJsonSchema.parse(JSON.parse(content)) as IPackageJson;
-                if (pkg.name) {
-                    names.add(pkg.name);
+                const parseResult = packageJsonSchema.safeParse(JSON.parse(content));
+                if (parseResult.success && parseResult.data.name) {
+                    names.add(parseResult.data.name);
                 }
             } catch {
                 continue;

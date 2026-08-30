@@ -1,8 +1,7 @@
 import { z } from "zod";
+import { jobHandleResponseSchema } from "./jobs.js";
 
-export const installProjectResponseSchema = z.object({
-    item: z.object({ jobId: z.string() })
-});
+export const installProjectResponseSchema = jobHandleResponseSchema;
 
 export const getInstallOptionsResponseSchema = z.object({
     items: z.array(

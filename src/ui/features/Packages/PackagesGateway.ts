@@ -5,46 +5,28 @@ import {
     rescanPackageRoute,
     getPackageDetailRoute
 } from "#shared/routes/index.js";
+import { cleanQueryRecord } from "../../infrastructure/HttpClient/cleanQuery.js";
 
 class PackagesGatewayImpl implements Abstraction.Interface {
     public constructor(private readonly httpClient: HTTPClient.Interface) {}
 
     public async list(filters?: Abstraction.Filters): Promise<Abstraction.ListResponse> {
-        const query: Record<string, string> = {};
-        if (filters?.search) {
-            query["search"] = filters.search;
-        }
-        if (filters?.upgradeType) {
-            query["upgradeType"] = filters.upgradeType;
-        }
-        if (filters?.dependencyKind) {
-            query["dependencyKind"] = filters.dependencyKind;
-        }
-        if (filters?.projectId) {
-            query["projectId"] = filters.projectId;
-        }
-        if (filters?.hasChangelog) {
-            query["hasChangelog"] = "true";
-        }
-        if (filters?.page !== undefined) {
-            query["page"] = String(filters.page);
-        }
-        if (filters?.pageSize !== undefined) {
-            query["pageSize"] = String(filters.pageSize);
-        }
-        if (filters?.sortBy) {
-            query["sortBy"] = filters.sortBy;
-        }
-        if (filters?.sortOrder) {
-            query["sortOrder"] = filters.sortOrder;
-        }
-        if (filters?.teamId) {
-            query["teamId"] = filters.teamId;
-        }
+        const query = cleanQueryRecord({
+            search: filters?.search,
+            upgradeType: filters?.upgradeType,
+            dependencyKind: filters?.dependencyKind,
+            projectId: filters?.projectId,
+            hasChangelog: filters?.hasChangelog ? "true" : undefined,
+            page: filters?.page !== undefined ? String(filters.page) : undefined,
+            pageSize: filters?.pageSize !== undefined ? String(filters.pageSize) : undefined,
+            sortBy: filters?.sortBy,
+            sortOrder: filters?.sortOrder,
+            teamId: filters?.teamId
+        });
 
         const response = await this.httpClient.request(listPackagesRoute, {
             params: {},
-            query: Object.keys(query).length > 0 ? query : undefined
+            query
         });
         return { items: response.items, total: response.total };
     }

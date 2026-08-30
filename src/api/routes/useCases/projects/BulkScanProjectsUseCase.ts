@@ -19,20 +19,28 @@ class BulkScanProjectsUseCaseImpl implements Abstraction.Interface {
             let enqueuedCount = 0;
             let skippedCount = 0;
 
-            for (const projectId of params.projectIds) {
-                const activeJob = await db
-                    .select()
+            const projectsWithActiveJobs = new Set<string>();
+
+            if (!params.force && params.projectIds.length > 0) {
+                const activeJobRows = await db
+                    .select({ referenceId: upgradeJobs.referenceId })
                     .from(upgradeJobs)
                     .where(
                         and(
-                            eq(upgradeJobs.referenceId, projectId),
+                            inArray(upgradeJobs.referenceId, params.projectIds),
                             eq(upgradeJobs.type, "scan"),
                             inArray(upgradeJobs.status, ["pending", "running"])
                         )
                     )
-                    .get();
+                    .all();
 
-                if (activeJob && !params.force) {
+                for (const row of activeJobRows) {
+                    projectsWithActiveJobs.add(row.referenceId);
+                }
+            }
+
+            for (const projectId of params.projectIds) {
+                if (projectsWithActiveJobs.has(projectId)) {
                     skippedCount++;
                     continue;
                 }

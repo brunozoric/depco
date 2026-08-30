@@ -54,7 +54,7 @@ describe("DashboardGateway", () => {
 
             expect(calls).toHaveLength(1);
             expect(calls[0]!.route).toBe(dashboardHealthRoute);
-            expect(calls[0]!.args).toEqual({ params: {}, query: {} });
+            expect(calls[0]!.args).toEqual({ params: {}, query: undefined });
             expect(result).toEqual(mockResult);
         });
     });
@@ -82,7 +82,7 @@ describe("DashboardGateway", () => {
 
             expect(calls).toHaveLength(1);
             expect(calls[0]!.route).toBe(dashboardActivityRoute);
-            expect(calls[0]!.args).toEqual({ params: {}, query: {} });
+            expect(calls[0]!.args).toEqual({ params: {}, query: undefined });
             expect(result).toEqual(mockResult);
         });
     });
@@ -96,7 +96,7 @@ describe("DashboardGateway", () => {
 
             expect(calls).toHaveLength(1);
             expect(calls[0]!.route).toBe(dashboardStalenessRoute);
-            expect(calls[0]!.args).toEqual({ params: {}, query: {} });
+            expect(calls[0]!.args).toEqual({ params: {}, query: undefined });
             expect(result).toEqual(mockResult);
         });
     });
@@ -110,7 +110,7 @@ describe("DashboardGateway", () => {
 
             expect(calls).toHaveLength(1);
             expect(calls[0]!.route).toBe(dashboardSecurityRoute);
-            expect(calls[0]!.args).toEqual({ params: {}, query: {} });
+            expect(calls[0]!.args).toEqual({ params: {}, query: undefined });
             expect(result).toEqual(mockResult);
         });
     });
@@ -124,7 +124,7 @@ describe("DashboardGateway", () => {
 
             expect(calls).toHaveLength(1);
             expect(calls[0]!.route).toBe(dashboardVulnerabilityTrendRoute);
-            expect(calls[0]!.args).toEqual({ params: {}, query: {} });
+            expect(calls[0]!.args).toEqual({ params: {}, query: undefined });
             expect(result).toEqual(mockResult);
         });
 
@@ -163,7 +163,7 @@ describe("DashboardGateway", () => {
 
             expect(calls).toHaveLength(1);
             expect(calls[0]!.route).toBe(getLicenseSummaryRoute);
-            expect(calls[0]!.args).toEqual({ params: {}, query: {} });
+            expect(calls[0]!.args).toEqual({ params: {}, query: undefined });
             expect(result).toEqual(mockResult);
         });
     });

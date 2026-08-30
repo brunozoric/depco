@@ -11,21 +11,10 @@ import {
 import type { IJob } from "./abstractions/UpgradesGateway.js";
 import { UpgradesGateway as Abstraction } from "./abstractions/UpgradesGateway.js";
 import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
+import type { z } from "zod";
+import type { jobSchema } from "#shared/responses/jobs.js";
 
-interface IJobApiItem {
-    id: string;
-    referenceId: string;
-    referenceType: string;
-    type: string;
-    status: string;
-    packages: string | null;
-    logs: string | null;
-    startedAt: number | null;
-    completedAt: number | null;
-    warning?: string | null | undefined;
-    progress: number | null;
-    progressLabel: string | null;
-}
+type IJobApiItem = z.infer<typeof jobSchema>;
 
 function toJob(item: IJobApiItem): IJob {
     return {

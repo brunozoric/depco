@@ -39,7 +39,8 @@ function setup() {
     });
     const securityService: SecurityService.Interface = {
         check: vi.fn(async () => ({ passes: true, checks: {} })),
-        getLatest: vi.fn(async () => null)
+        getLatest: vi.fn(async () => null),
+        getLatestForProjects: vi.fn(async () => new Map())
     };
     container.registerInstance(SecurityService, securityService);
     const jobWorker = createJobWorkerStub();

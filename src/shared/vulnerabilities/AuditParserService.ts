@@ -109,12 +109,17 @@ class AuditParserServiceImpl implements Abstraction.Interface {
     }
 
     private parseNpmAudit(jsonOutput: string): IAuditRecord[] {
-        let parsed: z.infer<typeof npmAuditSchema>;
+        let json: unknown;
         try {
-            parsed = npmAuditSchema.parse(JSON.parse(jsonOutput));
+            json = JSON.parse(jsonOutput);
         } catch {
             return [];
         }
+        const parseResult = npmAuditSchema.safeParse(json);
+        if (!parseResult.success) {
+            return [];
+        }
+        const parsed = parseResult.data;
 
         const records: IAuditRecord[] = [];
         for (const entry of Object.values(parsed.vulnerabilities)) {
@@ -175,12 +180,17 @@ class AuditParserServiceImpl implements Abstraction.Interface {
     }
 
     private parsePnpmAudit(jsonOutput: string): IAuditRecord[] {
-        let parsed: z.infer<typeof pnpmAuditSchema>;
+        let json: unknown;
         try {
-            parsed = pnpmAuditSchema.parse(JSON.parse(jsonOutput));
+            json = JSON.parse(jsonOutput);
         } catch {
             return [];
         }
+        const parseResult = pnpmAuditSchema.safeParse(json);
+        if (!parseResult.success) {
+            return [];
+        }
+        const parsed = parseResult.data;
 
         const records: IAuditRecord[] = [];
         for (const advisory of Object.values(parsed.advisories)) {

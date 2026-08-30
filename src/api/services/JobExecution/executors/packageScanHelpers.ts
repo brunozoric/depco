@@ -133,10 +133,11 @@ export async function insertChangelogPlaceholders(
         for (const version of versionsToStore) {
             const publishedAt = data.time[version] ? new Date(data.time[version]!).getTime() : null;
 
-            await db
+            const versionId = generateId();
+            const vInserted = await db
                 .insert(dependencyVersions)
                 .values({
-                    id: generateId(),
+                    id: versionId,
                     dependencyId,
                     version,
                     publishedAt
@@ -144,25 +145,30 @@ export async function insertChangelogPlaceholders(
                 .onConflictDoNothing()
                 .run();
 
-            const versionRow = await db
-                .select({ id: dependencyVersions.id })
-                .from(dependencyVersions)
-                .where(
-                    and(
-                        eq(dependencyVersions.dependencyId, dependencyId),
-                        eq(dependencyVersions.version, version)
-                    )
-                )
-                .get();
+            const resolvedVersionId =
+                vInserted.changes > 0
+                    ? versionId
+                    : (
+                          await db
+                              .select({ id: dependencyVersions.id })
+                              .from(dependencyVersions)
+                              .where(
+                                  and(
+                                      eq(dependencyVersions.dependencyId, dependencyId),
+                                      eq(dependencyVersions.version, version)
+                                  )
+                              )
+                              .get()
+                      )?.id;
 
-            if (!versionRow) {
+            if (!resolvedVersionId) {
                 continue;
             }
 
             const existingChangelog = await db
                 .select({ id: changelogs.id })
                 .from(changelogs)
-                .where(eq(changelogs.dependencyVersionId, versionRow.id))
+                .where(eq(changelogs.dependencyVersionId, resolvedVersionId))
                 .get();
 
             if (!existingChangelog) {
@@ -171,7 +177,7 @@ export async function insertChangelogPlaceholders(
                     .values({
                         id: generateId(),
                         dependencyId,
-                        dependencyVersionId: versionRow.id
+                        dependencyVersionId: resolvedVersionId
                     })
                     .run();
             }

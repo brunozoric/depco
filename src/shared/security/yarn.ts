@@ -1,7 +1,6 @@
 import { z } from "zod";
-import { toBoolean } from "@webiny/stdlib";
 import type { SecurityFieldDefinition } from "./types.js";
-import { parseDuration } from "./duration.js";
+import { booleanCompare, existsCompare, durationCompare } from "./comparators.js";
 
 export const YARN_SECURITY_FIELDS: SecurityFieldDefinition[] = [
     {
@@ -13,9 +12,7 @@ export const YARN_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "exists",
         expectedValueSchema: z.literal("exists"),
         defaultExpectedValue: "exists",
-        compare(actual: unknown, _expected: string): boolean {
-            return actual != null && Array.isArray(actual);
-        }
+        compare: existsCompare
     },
     {
         fieldName: "npmMinimalAgeGate",
@@ -28,16 +25,7 @@ export const YARN_SECURITY_FIELDS: SecurityFieldDefinition[] = [
             .string()
             .regex(/^\d+[dhms]$/, "Must be a duration like 3d, 72h, 30m"),
         defaultExpectedValue: "3d",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            try {
-                return parseDuration(String(actual)) >= parseDuration(expected);
-            } catch {
-                return false;
-            }
-        }
+        compare: durationCompare
     },
     {
         fieldName: "enableScripts",
@@ -47,12 +35,7 @@ export const YARN_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "boolean",
         expectedValueSchema: z.enum(["true", "false"]),
         defaultExpectedValue: "false",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            return toBoolean(actual) === toBoolean(expected);
-        }
+        compare: booleanCompare
     },
     {
         fieldName: "approvedGitRepositories",
@@ -62,8 +45,6 @@ export const YARN_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "exists",
         expectedValueSchema: z.literal("exists"),
         defaultExpectedValue: "exists",
-        compare(actual: unknown, _expected: string): boolean {
-            return actual != null && Array.isArray(actual);
-        }
+        compare: existsCompare
     }
 ];

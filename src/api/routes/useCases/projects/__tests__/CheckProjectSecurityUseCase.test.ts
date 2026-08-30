@@ -10,7 +10,8 @@ function setup(checkResult: SecurityService.CheckResult) {
     ProjectsUseCasesFeature.register(container);
     const securityService: SecurityService.Interface = {
         check: vi.fn(async () => checkResult),
-        getLatest: vi.fn(async () => null)
+        getLatest: vi.fn(async () => null),
+        getLatestForProjects: vi.fn(async () => new Map())
     };
     container.registerInstance(SecurityService, securityService);
     const useCase = container.resolve(CheckProjectSecurityUseCase);

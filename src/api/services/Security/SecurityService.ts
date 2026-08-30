@@ -2,7 +2,7 @@ import { readFile } from "fs/promises";
 import { join } from "path";
 import { parse as parseYaml } from "yaml";
 import { parse as parseToml } from "smol-toml";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 import { generateId } from "@webiny/stdlib";
 import { SecurityService as Abstraction } from "./abstractions/SecurityService.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
@@ -132,10 +132,51 @@ class SecurityServiceImpl implements Abstraction.Interface {
             return null;
         }
 
+        let checks: Record<string, boolean>;
+        try {
+            checks = JSON.parse(row.results) as Record<string, boolean>;
+        } catch {
+            checks = {};
+        }
+
         return {
             passes: row.passes === 1,
-            checks: JSON.parse(row.results) as Record<string, boolean>
+            checks
         };
+    }
+
+    public async getLatestForProjects(
+        projectIds: string[]
+    ): Promise<Map<string, Abstraction.CheckResult>> {
+        const resultMap = new Map<string, Abstraction.CheckResult>();
+        if (projectIds.length === 0) {
+            return resultMap;
+        }
+
+        const rows = await this.databaseClient.db
+            .select()
+            .from(securityChecks)
+            .where(inArray(securityChecks.projectId, projectIds))
+            .orderBy(desc(securityChecks.checkedAt))
+            .all();
+
+        for (const row of rows) {
+            if (resultMap.has(row.projectId)) {
+                continue;
+            }
+            let checks: Record<string, boolean>;
+            try {
+                checks = JSON.parse(row.results) as Record<string, boolean>;
+            } catch {
+                checks = {};
+            }
+            resultMap.set(row.projectId, {
+                passes: row.passes === 1,
+                checks
+            });
+        }
+
+        return resultMap;
     }
 
     private async persistResult(projectId: string, result: Abstraction.CheckResult): Promise<void> {

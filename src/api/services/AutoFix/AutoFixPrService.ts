@@ -166,7 +166,12 @@ export class AutoFixPrServiceImpl implements Abstraction.Interface {
 
         const coveredPackageNames = new Set<string>();
         for (const row of existingPullRequestRows) {
-            const packageNames = JSON.parse(row.packageNames) as string[];
+            let packageNames: string[];
+            try {
+                packageNames = JSON.parse(row.packageNames) as string[];
+            } catch {
+                packageNames = [];
+            }
             for (const packageName of packageNames) {
                 coveredPackageNames.add(packageName);
             }

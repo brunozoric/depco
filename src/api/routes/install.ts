@@ -1,15 +1,11 @@
-import type { FastifyInstance, FastifyPluginOptions } from "fastify";
-import type { Container } from "@webiny/di";
+import type { FastifyInstance } from "fastify";
+import type { IPluginOptions } from "./types.js";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { installProjectRoute, getInstallOptionsRoute } from "#shared/routes/index.js";
 import { InstallProjectUseCase, GetInstallOptionsUseCase } from "./useCases/install/index.js";
 
-interface PluginOptions extends FastifyPluginOptions {
-    container: Container;
-}
-
-export async function installRoutes(app: FastifyInstance, options: PluginOptions): Promise<void> {
+export async function installRoutes(app: FastifyInstance, options: IPluginOptions): Promise<void> {
     const { container } = options;
 
     registerRoute(

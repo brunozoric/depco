@@ -8,6 +8,7 @@ export interface ISecurityCheckResult {
 export interface ISecurityService {
     check(projectId: string, projectPath: string): Promise<ISecurityCheckResult>;
     getLatest(projectId: string): Promise<ISecurityCheckResult | null>;
+    getLatestForProjects(projectIds: string[]): Promise<Map<string, ISecurityCheckResult>>;
 }
 
 export const SecurityService = createAbstraction<ISecurityService>("Api/SecurityService");

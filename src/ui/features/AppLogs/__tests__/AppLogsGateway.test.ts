@@ -40,7 +40,7 @@ describe("AppLogsGateway", () => {
 
             expect(calls).toHaveLength(1);
             expect(calls[0]!.route).toBe(listLogsRoute);
-            expect(calls[0]!.args).toEqual({ params: {}, query: {} });
+            expect(calls[0]!.args).toEqual({ params: {}, query: undefined });
             expect(result).toEqual({ items: [], total: 0 });
         });
 
@@ -102,7 +102,7 @@ describe("AppLogsGateway", () => {
 
             expect(calls).toHaveLength(1);
             expect(calls[0]!.route).toBe(deleteLogsRoute);
-            expect(calls[0]!.args).toEqual({ params: {}, body: {} });
+            expect(calls[0]!.args).toEqual({ params: {}, body: undefined });
         });
 
         it("should send all filter values in the body", async () => {

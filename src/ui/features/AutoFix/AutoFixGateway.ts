@@ -8,29 +8,7 @@ import {
     generateAutoFixPrRoute,
     deleteAutoFixPullRequestRoute
 } from "#shared/routes/index.js";
-
-function buildPullRequestListQuery(
-    filters?: Abstraction.PullRequestListFilters
-): Record<string, string> {
-    const query: Record<string, string> = {};
-    if (filters?.projectId) {
-        query["projectId"] = filters.projectId;
-    }
-    if (filters?.status) {
-        query["status"] = filters.status;
-    }
-    return query;
-}
-
-function buildProjectPullRequestListQuery(
-    filters?: Abstraction.ProjectPullRequestListFilters
-): Record<string, string> {
-    const query: Record<string, string> = {};
-    if (filters?.status) {
-        query["status"] = filters.status;
-    }
-    return query;
-}
+import { cleanQueryRecord } from "../../infrastructure/HttpClient/cleanQuery.js";
 
 class AutoFixGatewayImpl implements Abstraction.Interface {
     public constructor(private readonly httpClient: HTTPClient.Interface) {}
@@ -52,11 +30,12 @@ class AutoFixGatewayImpl implements Abstraction.Interface {
     public async listPullRequests(
         filters?: Abstraction.PullRequestListFilters
     ): Promise<Abstraction.PullRequestListResponse> {
-        const query = buildPullRequestListQuery(filters);
-
         return this.httpClient.request(listAutoFixPullRequestsRoute, {
             params: {},
-            query: Object.keys(query).length > 0 ? query : undefined
+            query: cleanQueryRecord({
+                projectId: filters?.projectId,
+                status: filters?.status
+            })
         });
     }
 
@@ -64,11 +43,9 @@ class AutoFixGatewayImpl implements Abstraction.Interface {
         projectId: string,
         filters?: Abstraction.ProjectPullRequestListFilters
     ): Promise<Abstraction.PullRequestListResponse> {
-        const query = buildProjectPullRequestListQuery(filters);
-
         return this.httpClient.request(getProjectAutoFixPullRequestsRoute, {
             params: { projectId },
-            query: Object.keys(query).length > 0 ? query : undefined
+            query: cleanQueryRecord({ status: filters?.status })
         });
     }
 

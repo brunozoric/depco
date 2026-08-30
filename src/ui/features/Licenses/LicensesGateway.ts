@@ -12,78 +12,32 @@ import {
     listLicenseViolationsRoute,
     getLicenseViolationsSummaryRoute
 } from "#shared/routes/index.js";
+import { cleanQuery, cleanQueryRecord } from "../../infrastructure/HttpClient/cleanQuery.js";
 
-function buildLicenseListQuery(filters?: Abstraction.ListFilters): Record<string, string> {
-    const query: Record<string, string> = {};
-    if (filters?.projectId) {
-        query["projectId"] = filters.projectId;
-    }
-    if (filters?.riskTier) {
-        query["riskTier"] = filters.riskTier;
-    }
-    if (filters?.packageName) {
-        query["packageName"] = filters.packageName;
-    }
-    if (filters?.spdxId) {
-        query["spdxId"] = filters.spdxId;
-    }
-    if (filters?.teamId) {
-        query["teamId"] = filters.teamId;
-    }
-    if (filters?.violationAction) {
-        query["violationAction"] = filters.violationAction;
-    }
-    if (filters?.page) {
-        query["page"] = String(filters.page);
-    }
-    if (filters?.pageSize) {
-        query["pageSize"] = String(filters.pageSize);
-    }
-    if (filters?.sortBy) {
-        query["sortBy"] = filters.sortBy;
-    }
-    if (filters?.sortOrder) {
-        query["sortOrder"] = filters.sortOrder;
-    }
-    return query;
-}
-
-function buildPolicyListQuery(filters?: Abstraction.PolicyListFilters): Record<string, string> {
-    const query: Record<string, string> = {};
-    if (filters?.projectId) {
-        query["projectId"] = filters.projectId;
-    }
-    return query;
-}
-
-function buildViolationListQuery(
-    filters?: Abstraction.ViolationListFilters
-): Record<string, string> {
-    const query: Record<string, string> = {};
-    if (filters?.projectId) {
-        query["projectId"] = filters.projectId;
-    }
-    if (filters?.action) {
-        query["action"] = filters.action;
-    }
-    if (filters?.packageName) {
-        query["packageName"] = filters.packageName;
-    }
-    if (filters?.teamId) {
-        query["teamId"] = filters.teamId;
-    }
-    return query;
+function buildLicenseListQuery(
+    filters?: Abstraction.ListFilters
+): Record<string, string> | undefined {
+    return cleanQueryRecord({
+        projectId: filters?.projectId,
+        riskTier: filters?.riskTier,
+        packageName: filters?.packageName,
+        spdxId: filters?.spdxId,
+        teamId: filters?.teamId,
+        violationAction: filters?.violationAction,
+        page: filters?.page ? String(filters.page) : undefined,
+        pageSize: filters?.pageSize ? String(filters.pageSize) : undefined,
+        sortBy: filters?.sortBy,
+        sortOrder: filters?.sortOrder
+    });
 }
 
 class LicensesGatewayImpl implements Abstraction.Interface {
     public constructor(private readonly httpClient: HTTPClient.Interface) {}
 
     public async list(filters?: Abstraction.ListFilters): Promise<Abstraction.ListResponse> {
-        const query = buildLicenseListQuery(filters);
-
         return this.httpClient.request(listLicensesRoute, {
             params: {},
-            query: Object.keys(query).length > 0 ? query : undefined
+            query: buildLicenseListQuery(filters)
         });
     }
 
@@ -91,25 +45,16 @@ class LicensesGatewayImpl implements Abstraction.Interface {
         projectId: string,
         filters?: Abstraction.ListFilters
     ): Promise<Abstraction.ListResponse> {
-        const query = buildLicenseListQuery(filters);
-
         return this.httpClient.request(getProjectLicensesRoute, {
             params: { projectId },
-            query: Object.keys(query).length > 0 ? query : undefined
+            query: buildLicenseListQuery(filters)
         });
     }
 
     public async getSummary(teamId?: string, projectId?: string): Promise<Abstraction.SummaryData> {
-        const query: Record<string, string> = {};
-        if (teamId) {
-            query["teamId"] = teamId;
-        }
-        if (projectId) {
-            query["projectId"] = projectId;
-        }
         return this.httpClient.request(getLicenseSummaryRoute, {
             params: {},
-            query: Object.keys(query).length > 0 ? query : {}
+            query: cleanQuery({ teamId, projectId })
         });
     }
 
@@ -120,11 +65,9 @@ class LicensesGatewayImpl implements Abstraction.Interface {
     public async listPolicies(
         filters?: Abstraction.PolicyListFilters
     ): Promise<Abstraction.PolicyListResponse> {
-        const query = buildPolicyListQuery(filters);
-
         return this.httpClient.request(listLicensePoliciesRoute, {
             params: {},
-            query: Object.keys(query).length > 0 ? query : undefined
+            query: cleanQuery({ projectId: filters?.projectId })
         });
     }
 
@@ -154,11 +97,14 @@ class LicensesGatewayImpl implements Abstraction.Interface {
     public async listViolations(
         filters?: Abstraction.ViolationListFilters
     ): Promise<Abstraction.ViolationListResponse> {
-        const query = buildViolationListQuery(filters);
-
         return this.httpClient.request(listLicenseViolationsRoute, {
             params: {},
-            query: Object.keys(query).length > 0 ? query : undefined
+            query: cleanQuery({
+                projectId: filters?.projectId,
+                action: filters?.action,
+                packageName: filters?.packageName,
+                teamId: filters?.teamId
+            })
         });
     }
 

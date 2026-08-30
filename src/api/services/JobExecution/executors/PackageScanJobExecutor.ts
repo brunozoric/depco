@@ -35,7 +35,13 @@ class PackageScanJobExecutorImpl implements Abstraction.Interface {
     ) {}
 
     public async execute(context: JobExecutor.ExecutionContext): Promise<void> {
-        const scanPackages = scanPackagesSchema.parse(JSON.parse(context.packagesJson ?? "{}"));
+        const parseResult = scanPackagesSchema.safeParse(JSON.parse(context.packagesJson ?? "{}"));
+        if (!parseResult.success) {
+            throw new Error(
+                `Invalid scan packages payload: ${parseResult.error.issues.map(i => i.message).join(", ")}`
+            );
+        }
+        const scanPackages = parseResult.data;
         const { db } = this.databaseClient;
         const minimalAgeSeconds = await resolveMinimalAgeSeconds(db, context.packageManager);
 

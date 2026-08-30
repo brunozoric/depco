@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { toBoolean } from "@webiny/stdlib";
 import type { SecurityFieldDefinition } from "./types.js";
+import { booleanCompare, numericMinutesCompare } from "./comparators.js";
 
 export const PNPM_SECURITY_FIELDS: SecurityFieldDefinition[] = [
     {
@@ -12,12 +12,7 @@ export const PNPM_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "boolean",
         expectedValueSchema: z.enum(["true", "false"]),
         defaultExpectedValue: "true",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            return toBoolean(actual) === toBoolean(expected);
-        }
+        compare: booleanCompare
     },
     {
         fieldName: "strictSsl",
@@ -28,12 +23,7 @@ export const PNPM_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "boolean",
         expectedValueSchema: z.enum(["true", "false"]),
         defaultExpectedValue: "true",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            return toBoolean(actual) === toBoolean(expected);
-        }
+        compare: booleanCompare
     },
     {
         fieldName: "strictPeerDependencies",
@@ -44,12 +34,7 @@ export const PNPM_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "boolean",
         expectedValueSchema: z.enum(["true", "false"]),
         defaultExpectedValue: "true",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            return toBoolean(actual) === toBoolean(expected);
-        }
+        compare: booleanCompare
     },
     {
         fieldName: "minimumReleaseAge",
@@ -62,17 +47,7 @@ export const PNPM_SECURITY_FIELDS: SecurityFieldDefinition[] = [
             .string()
             .regex(/^\d+$/, "Must be a number in minutes (e.g. 4320 for 3 days)"),
         defaultExpectedValue: "4320",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            const actualMinutes = Number(actual);
-            const expectedMinutes = Number(expected);
-            if (Number.isNaN(actualMinutes) || Number.isNaN(expectedMinutes)) {
-                return false;
-            }
-            return actualMinutes >= expectedMinutes;
-        }
+        compare: numericMinutesCompare
     },
     {
         fieldName: "minimumReleaseAgeStrict",
@@ -83,12 +58,7 @@ export const PNPM_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "boolean",
         expectedValueSchema: z.enum(["true", "false"]),
         defaultExpectedValue: "true",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            return toBoolean(actual) === toBoolean(expected);
-        }
+        compare: booleanCompare
     },
     {
         fieldName: "strictDepBuilds",
@@ -99,12 +69,7 @@ export const PNPM_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "boolean",
         expectedValueSchema: z.enum(["true", "false"]),
         defaultExpectedValue: "true",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            return toBoolean(actual) === toBoolean(expected);
-        }
+        compare: booleanCompare
     },
     {
         fieldName: "blockExoticSubdeps",
@@ -115,11 +80,6 @@ export const PNPM_SECURITY_FIELDS: SecurityFieldDefinition[] = [
         inputType: "boolean",
         expectedValueSchema: z.enum(["true", "false"]),
         defaultExpectedValue: "true",
-        compare(actual: unknown, expected: string): boolean {
-            if (actual == null) {
-                return false;
-            }
-            return toBoolean(actual) === toBoolean(expected);
-        }
+        compare: booleanCompare
     }
 ];

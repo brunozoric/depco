@@ -1,22 +1,20 @@
 import { FilesystemGateway as Abstraction } from "./abstractions/FilesystemGateway.js";
 import { HTTPClient } from "../../infrastructure/HttpClient/abstractions/HTTPClient.js";
 import { browseFilesystemRoute, scanFilesystemRoute } from "#shared/routes/index.js";
+import { cleanQueryRecord } from "../../infrastructure/HttpClient/cleanQuery.js";
 
 class FilesystemGatewayImpl implements Abstraction.Interface {
     public constructor(private readonly httpClient: HTTPClient.Interface) {}
 
     public async browse(path?: string, showHidden?: boolean): Promise<Abstraction.BrowseResult> {
-        const query: Record<string, string> = {};
-        if (path) {
-            query["path"] = path;
-        }
-        if (showHidden) {
-            query["showHidden"] = "true";
-        }
+        const query = cleanQueryRecord({
+            path,
+            showHidden: showHidden ? "true" : undefined
+        });
 
         const response = await this.httpClient.request(browseFilesystemRoute, {
             params: {},
-            query: Object.keys(query).length > 0 ? query : undefined
+            query
         });
 
         return { items: response.items, currentPath: response.currentPath };

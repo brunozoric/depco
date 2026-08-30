@@ -8,17 +8,10 @@ import {
     skipUpgradeStepRoute,
     abortUpgradeSessionRoute
 } from "#shared/routes/index.js";
+import type { z } from "zod";
+import type { sessionSchema } from "#shared/responses/upgradeSessions.js";
 
-interface IUpgradeSessionApiItem {
-    id: string;
-    projectId: string;
-    status: string;
-    currentStep: string;
-    steps: Abstraction.StepState[];
-    stepOrder: string[];
-    createdAt: number;
-    updatedAt: number;
-}
+type IUpgradeSessionApiItem = z.infer<typeof sessionSchema>;
 
 function toSession(item: IUpgradeSessionApiItem): IUpgradeSessionResponse {
     return {

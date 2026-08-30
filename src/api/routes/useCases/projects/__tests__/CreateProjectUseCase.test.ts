@@ -19,7 +19,8 @@ function createPackageManagerServiceStub(): PackageManagerService.Interface {
 function createSecurityServiceStub(): SecurityService.Interface {
     return {
         check: vi.fn(async () => ({ passes: true, checks: {} })),
-        getLatest: vi.fn(async () => null)
+        getLatest: vi.fn(async () => null),
+        getLatestForProjects: vi.fn(async () => new Map())
     };
 }
 
