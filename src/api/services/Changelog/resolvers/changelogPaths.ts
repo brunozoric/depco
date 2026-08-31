@@ -1,5 +1,7 @@
 export const CHANGELOG_FILES = ["CHANGELOG.md", "CHANGES.md", "History.md"];
 
+const MONOREPO_DIRECTORIES = ["packages", "libs", "apps", "modules", "plugins"];
+
 export function buildChangelogPaths(input: {
     packageName: string;
     repoDirectory?: string | null | undefined;
@@ -15,11 +17,12 @@ export function buildChangelogPaths(input: {
 
     paths.push(...CHANGELOG_FILES);
 
-    if (packageName.startsWith("@")) {
-        const unscoped = packageName.split("/")[1];
-        if (unscoped) {
+    const unscoped = packageName.startsWith("@") ? packageName.split("/")[1] : undefined;
+
+    if (unscoped) {
+        for (const directory of MONOREPO_DIRECTORIES) {
             for (const filename of CHANGELOG_FILES) {
-                paths.push(`packages/${unscoped}/${filename}`);
+                paths.push(`${directory}/${unscoped}/${filename}`);
             }
         }
     }
