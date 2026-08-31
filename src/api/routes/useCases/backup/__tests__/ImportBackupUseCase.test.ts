@@ -7,7 +7,7 @@ import type { Container } from "@webiny/di";
 import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { PackageManagerService } from "#api/services/PackageManager/index.js";
-import { projects } from "#api/db/schema.js";
+import { projects, dependencies, dependencyVersions, changelogs } from "#api/db/schema.js";
 import { BackupUseCasesFeature } from "../feature.js";
 import { ImportBackupUseCase } from "../abstractions/ImportBackupUseCase.js";
 import type { IBackupPayload } from "../backupTypes.js";
@@ -199,6 +199,88 @@ describe("ImportBackupUseCase", () => {
             expect(result.value.projects.failed).toBe(1);
             expect(result.value.projects.imported).toBe(0);
             expect(result.value.projects.errors[0]).toContain(missingPath);
+        }
+    });
+
+    it("imports multiple projects with multiple dependencies and versions", async () => {
+        const secondProjectDir = mkdtempSync(join(tmpdir(), "dependency-upgrader-import-backup-"));
+        writeFileSync(
+            join(secondProjectDir, "package.json"),
+            JSON.stringify({ name: "second-project" })
+        );
+
+        try {
+            const { useCase, db } = createContext();
+            const now = Date.now();
+
+            const payload = createEmptyBackupPayload({
+                projects: [
+                    {
+                        name: "imported-project",
+                        path: projectDir,
+                        packageManager: "yarn",
+                        pmVersion: "4.0.0"
+                    },
+                    {
+                        name: "second-project",
+                        path: secondProjectDir,
+                        packageManager: "npm",
+                        pmVersion: "10.0.0"
+                    }
+                ],
+                dependencies: [
+                    {
+                        name: "react",
+                        repoUrl: "https://github.com/facebook/react",
+                        versions: [
+                            {
+                                version: "18.2.0",
+                                publishedAt: now,
+                                changelog: { content: "v18.2 notes", source: "github-releases" }
+                            },
+                            {
+                                version: "18.3.0",
+                                publishedAt: now + 1000,
+                                changelog: undefined
+                            }
+                        ]
+                    },
+                    {
+                        name: "lodash",
+                        repoUrl: "https://github.com/lodash/lodash",
+                        versions: [
+                            {
+                                version: "4.17.21",
+                                publishedAt: now,
+                                changelog: { content: "Security patch", source: "changelog-file" }
+                            }
+                        ]
+                    }
+                ]
+            });
+
+            const result = await useCase.execute({ payload });
+
+            expect(result.isOk()).toBe(true);
+            if (!result.isOk()) {
+                return;
+            }
+
+            expect(result.value.projects.imported).toBe(2);
+
+            const allProjects = db.select().from(projects).all();
+            expect(allProjects).toHaveLength(2);
+
+            const allDeps = db.select().from(dependencies).all();
+            expect(allDeps).toHaveLength(2);
+
+            const allVersions = db.select().from(dependencyVersions).all();
+            expect(allVersions).toHaveLength(3);
+
+            const allChangelogs = db.select().from(changelogs).all();
+            expect(allChangelogs).toHaveLength(2);
+        } finally {
+            rmSync(secondProjectDir, { recursive: true, force: true });
         }
     });
 

@@ -153,6 +153,82 @@ describe("ExportBackupUseCase", () => {
         }
     });
 
+    it("exports multiple dependencies with multiple versions and mixed changelogs", async () => {
+        const { useCase, db } = createContext();
+        const now = Date.now();
+
+        await db
+            .insert(dependencies)
+            .values([
+                {
+                    id: "dep-a",
+                    name: "react",
+                    repoUrl: "https://github.com/facebook/react",
+                    createdAt: now
+                },
+                {
+                    id: "dep-b",
+                    name: "lodash",
+                    repoUrl: "https://github.com/lodash/lodash",
+                    createdAt: now
+                }
+            ])
+            .run();
+        await db
+            .insert(dependencyVersions)
+            .values([
+                { id: "ver-a1", dependencyId: "dep-a", version: "18.2.0", publishedAt: now },
+                { id: "ver-a2", dependencyId: "dep-a", version: "18.3.0", publishedAt: now + 1000 },
+                { id: "ver-b1", dependencyId: "dep-b", version: "4.17.21", publishedAt: now }
+            ])
+            .run();
+        await db
+            .insert(changelogs)
+            .values([
+                {
+                    id: "cl-a1",
+                    dependencyId: "dep-a",
+                    dependencyVersionId: "ver-a1",
+                    content: "React 18.2 notes",
+                    source: "github-releases",
+                    fetchedAt: now
+                },
+                {
+                    id: "cl-b1",
+                    dependencyId: "dep-b",
+                    dependencyVersionId: "ver-b1",
+                    content: "Lodash patch notes",
+                    source: "changelog-file",
+                    fetchedAt: now
+                }
+            ])
+            .run();
+
+        const result = await useCase.execute();
+
+        expect(result.isOk()).toBe(true);
+        if (!result.isOk()) {
+            return;
+        }
+
+        const deps = result.value.dependencies;
+        expect(deps).toHaveLength(2);
+
+        const reactDep = deps.find(dep => dep.name === "react")!;
+        expect(reactDep.versions).toHaveLength(2);
+        const v182 = reactDep.versions.find(version => version.version === "18.2.0")!;
+        expect(v182.changelog).toEqual({ content: "React 18.2 notes", source: "github-releases" });
+        const v183 = reactDep.versions.find(version => version.version === "18.3.0")!;
+        expect(v183.changelog).toBeUndefined();
+
+        const lodashDep = deps.find(dep => dep.name === "lodash")!;
+        expect(lodashDep.versions).toHaveLength(1);
+        expect(lodashDep.versions[0]!.changelog).toEqual({
+            content: "Lodash patch notes",
+            source: "changelog-file"
+        });
+    });
+
     it("fails with 500 when the database throws", async () => {
         const { container } = createContext();
         container.registerInstance(DatabaseClient, createThrowingDatabaseClient("disk full"));

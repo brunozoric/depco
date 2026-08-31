@@ -1,0 +1,9 @@
+{
+  "path": ["src/"],
+  "format": ["typescript", "typescripttsx"],
+  "ignore": ["**/node_modules/**", "**/__tests__/**", "**/dist/**", "**/migrations/**"],
+  "minLines": 5,
+  "minTokens": 50,
+  "reporters": ["console", "json", "html"],
+  "output": ".jscpd"
+}

@@ -33,7 +33,7 @@ export class JobRecoveryHelper {
     }
 
     public async drain(): Promise<void> {
-        await Promise.all([...this.inFlight]);
+        await Promise.all(this.inFlight);
     }
 
     public async cancelJob(jobId: string): Promise<void> {

@@ -207,6 +207,43 @@ describe("ListProjectsUseCase", () => {
         expect(result.value.total).toBe(2);
     });
 
+    it("uses getLatestForProjects for bulk security lookup across multiple projects", async () => {
+        const getLatestForProjects = vi.fn(async (ids: string[]) => {
+            const map = new Map<string, SecurityService.CheckResult>();
+            map.set(ids[0]!, { passes: true, checks: { a: true } });
+            map.set(ids[1]!, { passes: false, checks: { a: false } });
+            return map;
+        });
+
+        const { container, db } = createTestApiContainer();
+        ProjectsUseCasesFeature.register(container);
+        container.registerInstance(SecurityService, {
+            check: vi.fn(async () => ({ passes: true, checks: {} })),
+            getLatest: vi.fn(async () => null),
+            getLatestForProjects
+        });
+
+        const id1 = insertProject(db, { name: "project-one" });
+        const id2 = insertProject(db, { name: "project-two" });
+
+        const useCase = container.resolve(ListProjectsUseCase);
+        const result = await useCase.execute({});
+
+        expect(result.isOk()).toBe(true);
+        if (!result.isOk()) {
+            return;
+        }
+
+        expect(getLatestForProjects).toHaveBeenCalledTimes(1);
+        expect(getLatestForProjects).toHaveBeenCalledWith(expect.arrayContaining([id1, id2]));
+
+        const items = result.value.items;
+        const item1 = items.find(item => item.name === "project-one")!;
+        const item2 = items.find(item => item.name === "project-two")!;
+        expect(item1.security).toEqual({ passes: true, checks: { a: true } });
+        expect(item2.security).toEqual({ passes: false, checks: { a: false } });
+    });
+
     it("includes engineStatus and rootEnginesNode in response items", async () => {
         const { useCase, db } = setup();
         insertProject(db, {
