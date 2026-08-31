@@ -5,6 +5,7 @@
 Comprehensive codebase cleanup, optimization, and modernization across 15 commits and 320+ files.
 
 ### Code quality
+
 - Extracted ~90 inline structural types into named interfaces across the entire codebase
 - Fixed 4 file separation violations (abstraction + implementation mixed)
 - Replaced all `.parse()` with `.safeParse()` in 8+ files
@@ -17,12 +18,14 @@ Comprehensive codebase cleanup, optimization, and modernization across 15 commit
 - Fixed `process.exit(0)` on prompt cancellation → exit code 130
 
 ### Performance
+
 - Eliminated N+1 queries in ImportBackupUseCase, packageScanHelpers, ListProjectsUseCase, BulkScanProjectsUseCase
 - Added bulk `getLatestForProjects()` method to SecurityService
 - Map pre-indexing in ExportBackupUseCase (O(D×V×C) → O(D+V+C))
 - Added maxDepth/maxPaths limits to DependencyGraphService.findPaths BFS
 
 ### Shared module extraction (18 new modules)
+
 - `shared/validation.ts` — formatZodError
 - `shared/pagination.ts` — DEFAULT_PAGE_SIZES, computeTotalPages
 - `shared/jobs/constants.ts` — TERMINAL_JOB_STATUSES
@@ -38,6 +41,7 @@ Comprehensive codebase cleanup, optimization, and modernization across 15 commit
 - `api/routes/types.ts` — shared IPluginOptions (was in 27 files)
 
 ### Deduplication
+
 - IUnexpectedError removed from 68 local redefinitions → import from shared
 - projectNotFoundError() factory replaces 21 inline Result.fail() literals
 - PluginOptions extracted from 27 route files
@@ -49,6 +53,7 @@ Comprehensive codebase cleanup, optimization, and modernization across 15 commit
 - z.infer replaces 3 manual gateway type redeclarations
 
 ### Architecture
+
 - Created PromptService abstraction (library-agnostic CLI prompts)
 - Swapped @inquirer/prompts → @clack/prompts via the abstraction
 - Decomposed ImportBackupUseCase.execute() (180 lines → 6 private methods)
@@ -56,6 +61,7 @@ Comprehensive codebase cleanup, optimization, and modernization across 15 commit
 - Expanded changelog monorepo path heuristics (packages/libs/apps/modules/plugins)
 
 ### CI/CD
+
 - Added NPM_TOKEN gate on publish workflow (two-job design, skips gracefully)
 - Tightened scorecard permissions (read-all → {})
 - Added concurrency groups to codeql + pr-title workflows
@@ -64,6 +70,7 @@ Comprehensive codebase cleanup, optimization, and modernization across 15 commit
 - All 19 action references SHA-pinned with version comments
 
 ### Testing
+
 - 20 new tests (401 files, 2776 tests total, was 399/2756)
 - changelogPaths tests (7 tests for monorepo heuristics)
 - ClackPromptService tests (8 tests including cancellation)
