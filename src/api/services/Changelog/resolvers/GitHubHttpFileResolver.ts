@@ -1,18 +1,12 @@
 import { formatZodError } from "#shared/index.js";
-import { z } from "zod";
 import { ChangelogResolver as Abstraction } from "../abstractions/ChangelogResolver.js";
 import { DatabaseClient } from "#api/db/abstractions/DatabaseClient.js";
 import { EncryptionService } from "#api/services/Encryption/abstractions/EncryptionService.js";
 import { extractOwnerRepo } from "../extractOwnerRepo.js";
 import { parseVersionSections } from "../parseVersionSections.js";
 import { readGitHubToken } from "./readGitHubToken.js";
-
-const githubContentsSchema = z.object({
-    content: z.string().optional(),
-    encoding: z.string().optional()
-});
-
-const CHANGELOG_FILES = ["CHANGELOG.md", "CHANGES.md", "History.md"];
+import { buildChangelogPaths } from "./changelogPaths.js";
+import { githubContentsSchema } from "../schemas.js";
 
 class GitHubHttpFileResolverImpl implements Abstraction.Interface {
     public readonly name = "github-http-file";
@@ -51,24 +45,7 @@ class GitHubHttpFileResolverImpl implements Abstraction.Interface {
             }
 
             const versionSet = new Set(versions);
-            const paths: string[] = [];
-
-            if (repoDirectory) {
-                for (const filename of CHANGELOG_FILES) {
-                    paths.push(`${repoDirectory}/${filename}`);
-                }
-            }
-
-            paths.push(...CHANGELOG_FILES);
-
-            if (packageName.startsWith("@")) {
-                const unscoped = packageName.split("/")[1];
-                if (unscoped) {
-                    for (const filename of CHANGELOG_FILES) {
-                        paths.push(`packages/${unscoped}/${filename}`);
-                    }
-                }
-            }
+            const paths = buildChangelogPaths({ packageName, repoDirectory });
 
             for (const filePath of paths) {
                 try {

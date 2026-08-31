@@ -24,6 +24,7 @@ CLAUDE.local.md
 .claude/worktrees/
 .claire/**
 .codegraph
+.jscpd
 docs/.reports
 *.tsbuildinfo
 tsconfig.tsbuildinfo

@@ -6,3 +6,8 @@ export const githubReleasesSchema = z.array(
         body: z.string().nullable().default(null)
     })
 );
+
+export const githubContentsSchema = z.object({
+    content: z.string().optional(),
+    encoding: z.string().optional()
+});
