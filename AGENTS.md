@@ -78,7 +78,7 @@ src/
       Logger/         — LoggerService (pino-based structured logging: console via pino-pretty, file via pino-roll with daily + 10MB rotation, DB via custom writable stream to appLogs + WebSocket broadcast). Singleton. initFileDestination() called from server.ts. Per-destination log levels: `log_level` (DB destination, default warn), `console_log_level` (default info), `file_log_level` (default debug) — all read from appSettings. `refreshLogLevels()` hot-reloads levels from DB without restart (called by UpsertAppSettingUseCase on log level key changes). File config supports `logLevel`, `consoleLogLevel`, `fileLogLevel`.
       Auth/           — AuthService (decomposed: SessionManager, LoginCodeManager, tokenHash helper) + UserService (login/register/session/CRUD)
       AutoFix/        — AutoFixSettingsService (per-project config CRUD) + AutoFixPrService (eligible-package selection, license-deny filtering, grouping strategies, PR body generation)
-      Changelog/      — ChangelogService + resolvers/ subfolder (6 resolvers via { multiple: true } binding, tried in registration order: GitHubReleasesResolver (gh CLI releases), ChangelogFileResolver (gh CLI file), RawGitHubChangelogResolver (raw.githubusercontent.com, no auth, public repos), GitHubHttpReleasesResolver (api.github.com releases, optional github_token), GitHubHttpFileResolver (api.github.com contents, optional github_token), NpmReadmeResolver (npm registry README fallback)). Shared helpers: extractOwnerRepo, parseVersionSections, readGitHubToken (reads/decrypts github_token from app_settings)
+      Changelog/      — ChangelogService + resolvers/ subfolder (shared changelogPaths.ts for monorepo heuristics: packages/libs/apps/modules/plugins, shared schemas.ts for githubReleasesSchema + githubContentsSchema, 6 resolvers via { multiple: true } binding, tried in registration order: GitHubReleasesResolver (gh CLI releases), ChangelogFileResolver (gh CLI file), RawGitHubChangelogResolver (raw.githubusercontent.com, no auth, public repos), GitHubHttpReleasesResolver (api.github.com releases, optional github_token), GitHubHttpFileResolver (api.github.com contents, optional github_token), NpmReadmeResolver (npm registry README fallback)). Shared helpers: extractOwnerRepo, parseVersionSections, readGitHubToken (reads/decrypts github_token from app_settings)
       CommandRunner/  — CommandRunner (execa wrapper with signal support)
       DependencyChange/ — DependencyChangeService (detects added/removed/version-changed packages between scans)
       DependencyGraph/ — DependencyGraphService + LockfileParserService (thin router, delegates to parsers/ subfolder: parseNpmLockfile, parseYarnLockfile, parsePnpmLockfile, parseBunLockfile + shared types.ts). BFS path finding, search
@@ -109,10 +109,12 @@ src/
     feature.ts        — API DI compositor (imports and registers all sub-features, no implementation imports)
   cli/
     runner/           — StepRunner abstraction + implementation (sequential step execution with rollback on failure, Logger-based output), Step abstraction, feature.ts (StepRunnerFeature — registers ConsoleLoggerFeature)
+    services/
+      Prompt/         — PromptService abstraction (text, password) + ClackPromptService implementation (@clack/prompts). Library-agnostic — swapping prompt library = one new impl file + one DI binding.
     commands/
       abstractions/   — Command abstraction (ICommand: steps(), context())
       init/           — InitCommand (composes init steps), steps/ subfolder, feature.ts (InitCommandFeature)
-        steps/          — EnsureDataDirectory, RunMigrations, GenerateEncryptionKey, SelectPort, CreateAdminUser, WriteEnvFile, PrintNextSteps — each own abstraction + implementation + feature.ts
+        steps/          — EnsureDataDirectory, RunMigrations, GenerateEncryptionKey, SelectPort, CreateAdminUser, WriteEnvFile, PrintNextSteps — each own abstraction + implementation + feature.ts. SelectPort and CreateAdminUser use PromptService (not direct @clack/prompts imports).
       start/          — StartCommand (composes start steps), steps/ subfolder, feature.ts (StartCommandFeature)
         steps/          — ValidateEnvironment, StartServer — each own abstraction + implementation + feature.ts
       scan/           — ScanCommand (composes scan steps), steps/ subfolder, formatters/ subfolder, feature.ts (ScanCommandFeature). Standalone — no server, no DB. Supports depco.config.ts for configuration. `--check license|vulnerability|all` (default: license), `--format table|json|csv|sarif` (default: table), `--output <path>` (write output to file instead of stdout, prints summary to stdout).
@@ -131,8 +133,12 @@ src/
     routes/           — shared Zod route definitions per domain. Import response schemas from ../responses/. All routes with response: field validated on both API and UI side
     templates/        — resolveTemplate utility for branch/commit/PR message token replacement (YYYY/MM/DD/BRANCH/PROJECT/COUNT/PACKAGES_TABLE)
     schedules/        — ScanInterval type, INTERVAL_MS, SCAN_INTERVALS constants
-    errors.ts         — getErrorMessage(error, fallback) utility, IUnexpectedError + IProjectNotFoundError shared types, unexpectedError(error) helper (used by all ~119 use case implementations)
-    time.ts           — DAY_MS, HOUR_MS, MINUTE_MS constants
+    errors.ts         — getErrorMessage(error, fallback) utility, IUnexpectedError + IProjectNotFoundError + ISettingNotFoundError + IUnknownPackageManagerError + IInvalidExpectedValueError shared types, unexpectedError(error) + projectNotFoundError(message?) helpers
+    validation.ts     — formatZodError(issues) — shared Zod error formatting (replaces JSON.stringify)
+    time.ts           — DAY_MS, HOUR_MS, MINUTE_MS constants, todayISO() helper
+    pagination.ts     — DEFAULT_PAGE_SIZES, computeTotalPages helper
+    jobs/             — TERMINAL_JOB_STATUSES constant
+    versions/         — classifyUpgrade, compareVersions (shared across API + UI)
     vulnerabilities/  — VulnerabilitySeverity type, VULNERABILITY_SEVERITIES, VULNERABILITY_PENALTY, computeVulnerabilityPenalty, TVulnerabilitySource, IAuditRecord, IMergedVulnerability. Shared services: AuditParserService (parses npm/yarn/pnpm audit JSON), OsvQueryService (slim orchestrator, delegates to CvssScoring.ts, OsvSchemas.ts, OsvAdvisoryTransform.ts), VulnerabilityMerger (dedup/merge audit+OSV by CVE). Deduplication utilities: computeDedupKey, hashString, mergeMapKey. SharedVulnerabilityFeature registers all shared services.
     licenses/         — LicenseRiskTier type (permissive/weak-copyleft/copyleft/proprietary/unknown), LICENSE_RISK_TIERS SPDX-to-tier map, classifyLicenseRiskTier(spdxId) classification function, LicensePolicyAction type (allow/warn/deny), LICENSE_POLICY_ACTIONS constant
     config/           — defineConfig() + IDepcoConfig types + Zod schema. Exported via package.json "exports" as @fundus/depco/config.
@@ -248,7 +254,7 @@ docs/
 - **UseCase pattern**: every route handler delegates to a UseCase (resolve from DI → execute() → Result.match). Use cases return `Result<Data, Error>` from `@webiny/stdlib` (re-exported via `#shared/index.js`). Error types are discriminated unions with typed `code` string literal (`interface IErrors { notFound: IProjectNotFoundError; unexpected: IUnexpectedError }; type Error = IErrors[keyof IErrors]`). Common types IUnexpectedError + IProjectNotFoundError imported from `#shared/errors.js`. Catch blocks use `unexpectedError(error)` helper. Sequential try/catch (no nesting). One file per abstraction, one file per implementation, never combined.
 - **Query services**: complex SQL extracted from routes into PackageQueryService, VulnerabilityQueryService, LicenseQueryService (DI singletons in services/)
 - Services are plain DI-wired classes (SecurityService, ScanService, PackageManagerService, etc.)
-- **Zod rule**: always use `safeParse()`, never `parse()` — validation must not throw. Handle `!parsed.success` explicitly.
+- **Zod rule**: always use `safeParse()`, never `parse()` — validation must not throw. Handle `!parsed.success` explicitly. Format errors via `formatZodError(parsed.error.issues)` from `#shared/validation.js`.
 - Routes use `registerRoute(app, routeDef, opts, handler)` with shared Zod-validated route definitions from `src/shared/routes/`. The handler receives `(request, reply, send)` — the third argument is an `IRouteSend<TResponse>` object with typed helpers: `send.one({ result })` wraps value in `{item}`, `send.list({ result })` forwards result.value, `send.none({ result, status? })` returns `{success:true}` or 204. Response types are derived from the route definition's `TResponse` — no manual generics needed. `sendError({ reply, request, error: SendableError })` returns `{error:{code, message}}`. All delegate error handling to `sendError` with `SendableError` interface (`code`, `message`, `statusCode?`, `data?`, `stack?`). Routing abstractions: `SendableError`, `RoutingOptions`, `ErrorLoggerHook`, `getRoutingOptions` in `src/shared/routing/abstractions/`
 - JobWorker (decomposed: JobQueryHelper, JobRecoveryHelper): concurrent job execution, handles job types: `dependency`, `transient`, `packageManager`, `scan`, `package-scan`, `vulnerability-scan`, `license-scan`, `graph-refresh`, `clone`, `install`, `changelog`, `auto-fix-pr`, `transitive-resolve`. `recoverStaleJobs()` marks any running/pending jobs as `"interrupted"` (not `"failed"`) on server startup with logs "Job interrupted by server restart" — UI shows orange badge, filterable status, distinct from actual failures. Jobs use `referenceId` + `referenceType` instead of `projectId` — project jobs have `referenceType: "project"`, changelog jobs have `referenceType: "package"` with `referenceId = packageName`. AbortController per running job — `cancelJob` aborts running or marks pending as cancelled. `drain()` resolves when all in-flight jobs complete (deterministic test helper + graceful shutdown). Services accept optional `signal?: AbortSignal` threaded to execa via CommandRunner. Chained transient refresh extracts package names from the dependency job and passes them through for targeted refresh. Parent job tracking: `parentJobId` nullable column on `upgradeJobs` — set automatically by chaining methods (dependency→transient, install/dependency/transient→scan, scan orchestrator→child jobs). Error logging includes full stack trace. Orchestration methods: `waitForJob(input)` polls job status every 200ms until terminal, `waitForJobs(input)` waits for multiple jobs concurrently, `getRunningJobsForReference(input)` queries running jobs by referenceId+type. Job log writes are buffered — `appendLog` accumulates in memory, flushes to DB every 2 seconds via timer, WebSocket broadcast stays per-line instant. `finishJob` persists full logs regardless. Progress DB writes throttled to 1/sec. Both log-flush and progress-write catch blocks log errors via Logger abstraction (best-effort — job continues on DB failure).
 - JobExecutorRegistry: strategy pattern — maps job type to executor. Executors validate their packages JSON with Zod (no unsafe casts). Adding a new job type = one executor class + register in `JobExecutorRegistry` constructor.
@@ -379,6 +385,9 @@ docs/
 
 - **No inline structural types** — always use named interfaces, even for simple shapes like `Record<string, { label: string }>`. Extract to named interface.
 - **All destructive actions require confirmation dialog** — use `ConfirmDialog` from `#ui/infrastructure/Shared/components/ConfirmDialog.js` for any delete/remove action.
+- **Error handling consistency** — use `getErrorMessage(error)` from `#shared/index.js`, never inline `error instanceof Error ? error.message : ...`. Use `projectNotFoundError()` and `unexpectedError()` factories from `#shared/errors.js`.
+- **Shared formatting** — date/time formatters in `src/ui/infrastructure/Shared/formatting/` (dateFormatters, datetimeConverters, truncate, formatFieldName). Badge colors in `src/ui/infrastructure/Shared/upgrades/upgradeBadgeColors.ts`.
+- **Shared constants** — `DEFAULT_PAGE_SIZES` + `computeTotalPages` in `src/shared/pagination.ts`, `TERMINAL_JOB_STATUSES` in `src/shared/jobs/constants.ts`, `PACKAGE_MANAGER_IDS` in `src/shared/security/types.ts`, `paginationQuerySchema` in `src/shared/routing/paginationSchema.ts`.
 
 ### DI Conventions
 
@@ -420,7 +429,7 @@ docs/
 
 ## Tooling Notes
 
-- **oxlint**, not ESLint. Config: `.oxlintrc.json`. TypeScript + React plugins enabled.
+- **oxlint**, not ESLint. No `no-restricted-syntax` support — safeParse/getErrorMessage conventions enforced by code review, not lint rules.
 - **oxfmt**, not Prettier. Config: `.oxfmtrc.json`. 4-space indent for JS/TS/TSX files.
 - **adio** for dependency hygiene. Config: `.adiorc.js`. `#` subpath imports are in `ignore.src`.
 - **Yarn 4** with `nodeLinker: node-modules`. Never use `npx` or `yarn dlx` — if a package is needed, ask the user to add it.
