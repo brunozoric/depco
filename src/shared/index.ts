@@ -12,9 +12,9 @@ export {
     type IUnexpectedError,
     type IProjectNotFoundError,
     type INameAlreadyExistsError,
+    type IInvalidExpectedValueError,
     type ISettingNotFoundError,
     type IUnknownPackageManagerError,
-    type IInvalidExpectedValueError,
     unexpectedError,
     projectNotFoundError,
     getErrorMessage
