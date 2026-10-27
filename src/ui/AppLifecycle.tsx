@@ -12,7 +12,6 @@ import { WebSocketListener } from "#ui/infrastructure/WebSocket/index.js";
 import { EventBridge } from "#ui/infrastructure/Events/abstractions/EventBridge.js";
 import "#ui/infrastructure/Events/eventMap.js";
 import { TeamListService } from "#ui/features/TeamFilter/abstractions/TeamListService.js";
-import { LoginPageFeature } from "./presentation/Auth/LoginPage/feature.js";
 
 // Establishes the WebSocket connection once on app mount and tears it down
 // on unmount. Renders nothing — it only manages the connection lifecycle.
@@ -51,31 +50,6 @@ function SessionRestorer(): null {
                 authRepository.clearAuth();
             }
         })();
-    }, [container]);
-
-    return null;
-}
-
-// Checks the URL for a magic-link token/email pair on app mount, verifies it,
-// and strips the params from the URL once handled. Renders nothing.
-function MagicLinkHandler(): null {
-    const container = useContainer();
-
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const token = params.get("token");
-        const email = params.get("email");
-        if (!token || !email) {
-            return;
-        }
-
-        const { presenter } = LoginPageFeature.resolve(container);
-        void presenter.verifyMagicLink({ token, email });
-
-        const url = new URL(window.location.href);
-        url.searchParams.delete("token");
-        url.searchParams.delete("email");
-        window.history.replaceState(null, "", url.toString());
     }, [container]);
 
     return null;
@@ -159,7 +133,6 @@ export function PreAuthLifecycle(): React.ReactNode {
     return (
         <>
             <SessionRestorer />
-            <MagicLinkHandler />
         </>
     );
 }

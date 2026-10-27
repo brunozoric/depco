@@ -1,4 +1,5 @@
 import type React from "react";
+import { useEffect } from "react";
 import {
     ActionIcon,
     AppShell,
@@ -20,7 +21,7 @@ import { TeamListService } from "#ui/features/TeamFilter/abstractions/TeamListSe
 import { LoginPageFeature } from "./presentation/Auth/LoginPage/feature.js";
 import { LoginPage } from "./presentation/Auth/LoginPage/LoginPage.js";
 import { SbomExportDialog } from "./presentation/Sbom/SbomPage/components/SbomExportDialog.js";
-import { SbomPresenter } from "./presentation/Sbom/SbomPage/abstractions/SbomPresenter.js";
+import { SbomPageFeature } from "./presentation/Sbom/SbomPage/feature.js";
 
 interface AuthGateProps {
     children: React.ReactNode;
@@ -32,6 +33,24 @@ export const AuthGate = observer(function AuthGate({ children }: AuthGateProps):
     const container = useContainer();
     const authRepository = container.resolve(AuthRepository);
     const { presenter } = useFeature(LoginPageFeature);
+
+    // Verifies a magic link on load using the same presenter the login page
+    // renders, so loading and error state show up there.
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get("token");
+        const email = params.get("email");
+        if (!token || !email) {
+            return;
+        }
+
+        void presenter.verifyMagicLink({ token, email });
+
+        const url = new URL(window.location.href);
+        url.searchParams.delete("token");
+        url.searchParams.delete("email");
+        window.history.replaceState(null, "", url.toString());
+    }, [presenter]);
 
     if (!authRepository.isAuthenticated) {
         return <LoginPage presenter={presenter} />;
@@ -119,8 +138,7 @@ export function SbomDialogContainer({
     opened,
     onClose
 }: SbomDialogContainerProps): React.ReactNode {
-    const container = useContainer();
-    const presenter = container.resolve(SbomPresenter);
+    const { presenter } = useFeature(SbomPageFeature);
 
     return <SbomExportDialog opened={opened} onClose={onClose} presenter={presenter} />;
 }
