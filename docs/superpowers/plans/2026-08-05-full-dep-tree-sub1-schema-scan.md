@@ -249,7 +249,11 @@ In `src/api/services/abstractions/ScanService.ts`:
 
 ```typescript
 export type DependencyKind =
-  "dependency" | "devDependency" | "peerDependency" | "optionalDependency" | "transitive";
+  | "dependency"
+  | "devDependency"
+  | "peerDependency"
+  | "optionalDependency"
+  | "transitive";
 
 export interface IScanServiceDependency {
   name: string;
