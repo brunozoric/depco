@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { IPluginOptions } from "./types.js";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
@@ -21,9 +20,7 @@ import {
     DeleteJobsUseCase
 } from "./useCases/jobs/index.js";
 
-export async function jobRoutes(app: FastifyInstance, options: IPluginOptions): Promise<void> {
-    const { container } = options;
-
+export async function jobRoutes(app: FastifyInstance): Promise<void> {
     // POST /api/projects/:id/jobs/upgrade — maps {name, targetVersion} to
     // {name, from, to} using the latest scan results, then enqueues a
     // dependency job. If `refreshTransient` is true, it's forwarded to the
@@ -33,7 +30,7 @@ export async function jobRoutes(app: FastifyInstance, options: IPluginOptions): 
         createUpgradeJobRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(UpgradeJobUseCase);
+            const useCase = request.container.resolve(UpgradeJobUseCase);
             const result = await useCase.execute({
                 projectId: request.params.id,
                 packages: request.body.packages,
@@ -51,7 +48,7 @@ export async function jobRoutes(app: FastifyInstance, options: IPluginOptions): 
         createTransientJobRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(CreateTransientJobUseCase);
+            const useCase = request.container.resolve(CreateTransientJobUseCase);
             const result = await useCase.execute({ projectId: request.params.id });
 
             return send.one({ result });
@@ -60,7 +57,7 @@ export async function jobRoutes(app: FastifyInstance, options: IPluginOptions): 
 
     // GET /api/projects/:id/jobs/:jobId — job status + logs.
     registerRoute(app, getJobRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetJobUseCase);
+        const useCase = request.container.resolve(GetJobUseCase);
         const result = await useCase.execute({
             projectId: request.params.id,
             jobId: request.params.jobId
@@ -71,7 +68,7 @@ export async function jobRoutes(app: FastifyInstance, options: IPluginOptions): 
 
     // GET /api/projects/:id/jobs — job history for the project.
     registerRoute(app, listJobsRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(ListProjectJobsUseCase);
+        const useCase = request.container.resolve(ListProjectJobsUseCase);
         const result = await useCase.execute({ projectId: request.params.id });
 
         return send.list({ result });
@@ -79,7 +76,7 @@ export async function jobRoutes(app: FastifyInstance, options: IPluginOptions): 
 
     // GET /api/jobs — jobs across all projects with filtering, pagination, sorting.
     registerRoute(app, listAllJobsRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(ListAllJobsUseCase);
+        const useCase = request.container.resolve(ListAllJobsUseCase);
         const result = await useCase.execute(request.query);
 
         return send.list({ result });
@@ -91,7 +88,7 @@ export async function jobRoutes(app: FastifyInstance, options: IPluginOptions): 
         cancelJobRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(CancelJobUseCase);
+            const useCase = request.container.resolve(CancelJobUseCase);
             const result = await useCase.execute({ jobId: request.params.jobId });
 
             return send.none({ result });
@@ -104,7 +101,7 @@ export async function jobRoutes(app: FastifyInstance, options: IPluginOptions): 
         deleteJobsRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(DeleteJobsUseCase);
+            const useCase = request.container.resolve(DeleteJobsUseCase);
             const result = await useCase.execute(request.body);
 
             return send.list({ result });

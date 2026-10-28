@@ -63,7 +63,7 @@ Subpath imports via package.json `imports` with conditional resolution:
 src/
   api/
     db/               — Drizzle schema, migrations, DatabaseClient abstraction
-    routes/           — Fastify route plugins. Thin handlers: resolve UseCase from DI, call execute(), match Result to HTTP response. All business logic lives in useCases/.
+    routes/           — Fastify route plugins. Thin handlers: resolve UseCase from `request.container` (per-request child container), call execute(), match Result to HTTP response. Route plugins never receive the root container. All business logic lives in useCases/.
       useCases/       — UseCase layer (Result pattern). 24 domain folders, ~130 use cases total. Each domain: abstractions/ (one file per use case — interface, params/data/error types with discriminated union, createAbstraction, namespace), implementation files (one per use case — createImplementation, sequential try/catch, Result.ok/Result.fail), feature.ts, index.ts. Shared helpers where needed (jobConditions.ts, changelogEnqueue.ts, teamStatsHelper.ts, engineStaleness.ts, etc.).
         Domains: auth, autoFix, backup, cache, changelogs, dashboard, dependencyGraph, engines, filesystem, install, jobs, licenses, logs, packageManager, packages, projects, sbom, scanSchedules, settings, stepHooks, teams, upgradeSessions, users, vulnerabilities
       projects/       — projectCrudRoutes, projectBulkRoutes, projectDetailRoutes (thin handlers)
@@ -105,6 +105,7 @@ src/
     utils/            — registerProject.ts (shared project registration helper), globWorkspacePattern.ts (shared workspace glob for ScanService + filesystem routes), teamFilter.ts (teamProjectIds SQL helper — centralizes team filtering subquery)
     workers/          — bree worker scripts (scanWorker.js)
     websocket/        — WebSocketBroadcaster abstraction + Fastify WS plugin
+    middleware/       — requestContainer.ts (`registerRequestContainer(app, root)`: onRequest hook giving every request `request.container = root.createChildContainer()`; registered before authHook; put request-scoped registrations in `inContainerScope()`, true globals stay root singletons), authHook.ts (resolves AuthService from request.container), requirePermission.ts. Route tests call `registerRequestContainer(app, container)` before registering route plugins.
     server.ts         — Fastify setup, migration runner, stale job recovery, job worker loop, GET /api/health (unauthenticated, whitelisted in authHook). Loads `.env` via dotenv. DB path configurable via `DB_PATH` env var (default: `./data/manager.db`). Requires `ENCRYPTION_KEY` env var for token storage. All error logging via LoggerService/pino (resolved after migrations, before Fastify creation). Fastify uses `loggerInstance: pinoChild({ source: "http" })` for HTTP request/response logging. Rate limiting: global disabled (`global: false`), per-route limits on auth endpoints only (login: 10/15min, verify-code: 5/15min, magic-link: 5/15min, verify-magic-link: 10/15min)
     feature.ts        — API DI compositor (imports and registers all sub-features, no implementation imports)
   cli/

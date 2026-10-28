@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { IPluginOptions } from "./types.js";
 import { registerRoute } from "#shared/routing/index.js";
 import {
     listUsersRoute,
@@ -22,18 +21,16 @@ import {
 
 const FULL_PERMISSION = "full";
 
-export async function userRoutes(app: FastifyInstance, options: IPluginOptions): Promise<void> {
-    const { container } = options;
-
+export async function userRoutes(app: FastifyInstance): Promise<void> {
     registerRoute(app, listUsersRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(ListUsersUseCase);
+        const useCase = request.container.resolve(ListUsersUseCase);
         const result = await useCase.execute(request.query);
 
         return send.list({ result });
     });
 
     registerRoute(app, getUserRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetUserUseCase);
+        const useCase = request.container.resolve(GetUserUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
         return send.one({ result });
@@ -44,7 +41,7 @@ export async function userRoutes(app: FastifyInstance, options: IPluginOptions):
         createUserRoute,
         { preHandler: requirePermission(FULL_PERMISSION) },
         async (request, _reply, send) => {
-            const useCase = container.resolve(CreateUserUseCase);
+            const useCase = request.container.resolve(CreateUserUseCase);
             const result = await useCase.execute(request.body);
 
             return send.one({ result, status: 201 });
@@ -53,7 +50,7 @@ export async function userRoutes(app: FastifyInstance, options: IPluginOptions):
 
     registerRoute(app, updateUserRoute, {}, async (request, _reply, send) => {
         const { user: sessionUser } = request as IAuthenticatedRequest;
-        const useCase = container.resolve(UpdateUserUseCase);
+        const useCase = request.container.resolve(UpdateUserUseCase);
         const result = await useCase.execute({
             id: request.params.id,
             sessionUserId: sessionUser.id,
@@ -73,7 +70,7 @@ export async function userRoutes(app: FastifyInstance, options: IPluginOptions):
         { preHandler: requirePermission(FULL_PERMISSION) },
         async (request, _reply, send) => {
             const { user: sessionUser } = request as IAuthenticatedRequest;
-            const useCase = container.resolve(DeleteUserUseCase);
+            const useCase = request.container.resolve(DeleteUserUseCase);
             const result = await useCase.execute({
                 id: request.params.id,
                 sessionUserId: sessionUser.id
@@ -89,7 +86,7 @@ export async function userRoutes(app: FastifyInstance, options: IPluginOptions):
         { preHandler: requirePermission(FULL_PERMISSION) },
         async (request, _reply, send) => {
             const { user: sessionUser } = request as IAuthenticatedRequest;
-            const useCase = container.resolve(ForceLogoutUserUseCase);
+            const useCase = request.container.resolve(ForceLogoutUserUseCase);
             const result = await useCase.execute({
                 id: request.params.id,
                 sessionUserId: sessionUser.id

@@ -12,6 +12,7 @@ import { NodeReleaseDataService } from "../../services/Engine/index.js";
 import { projects, engineChecks } from "#api/db/schema.js";
 import { engineRoutes } from "../engines.js";
 import type { INodeRelease } from "#shared/engines/types.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
@@ -77,8 +78,9 @@ async function createTestContext(): Promise<IRouteTestContext> {
     });
 
     const app = Fastify();
-    app.addHook("onRequest", createAuthHook(container));
-    await app.register(engineRoutes, { container });
+    registerRequestContainer(app, container);
+    app.addHook("onRequest", createAuthHook());
+    await app.register(engineRoutes);
     await app.ready();
 
     const { token } = await createTestSession({ db });

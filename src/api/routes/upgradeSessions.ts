@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { IPluginOptions } from "./types.js";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
@@ -17,18 +16,13 @@ import {
     AbortUpgradeSessionUseCase
 } from "./useCases/upgradeSessions/index.js";
 
-export async function upgradeSessionRoutes(
-    app: FastifyInstance,
-    options: IPluginOptions
-): Promise<void> {
-    const { container } = options;
-
+export async function upgradeSessionRoutes(app: FastifyInstance): Promise<void> {
     registerRoute(
         app,
         createUpgradeSessionRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(CreateUpgradeSessionUseCase);
+            const useCase = request.container.resolve(CreateUpgradeSessionUseCase);
             const result = await useCase.execute({ projectId: request.params.id });
 
             return send.one({ result });
@@ -36,7 +30,7 @@ export async function upgradeSessionRoutes(
     );
 
     registerRoute(app, getUpgradeSessionRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetUpgradeSessionUseCase);
+        const useCase = request.container.resolve(GetUpgradeSessionUseCase);
         const result = await useCase.execute({
             projectId: request.params.id,
             sessionId: request.params.sessionId
@@ -50,7 +44,7 @@ export async function upgradeSessionRoutes(
         executeUpgradeStepRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(ExecuteUpgradeStepUseCase);
+            const useCase = request.container.resolve(ExecuteUpgradeStepUseCase);
             const result = await useCase.execute({
                 projectId: request.params.id,
                 sessionId: request.params.sessionId,
@@ -67,7 +61,7 @@ export async function upgradeSessionRoutes(
         skipUpgradeStepRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(SkipUpgradeStepUseCase);
+            const useCase = request.container.resolve(SkipUpgradeStepUseCase);
             const result = await useCase.execute({
                 projectId: request.params.id,
                 sessionId: request.params.sessionId,
@@ -83,7 +77,7 @@ export async function upgradeSessionRoutes(
         abortUpgradeSessionRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(AbortUpgradeSessionUseCase);
+            const useCase = request.container.resolve(AbortUpgradeSessionUseCase);
             const result = await useCase.execute({
                 projectId: request.params.id,
                 sessionId: request.params.sessionId

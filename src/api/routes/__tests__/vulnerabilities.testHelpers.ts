@@ -17,6 +17,7 @@ import { OsvCacheService } from "#api/services/Vulnerability/index.js";
 import type { IOsvEnrichedDetail } from "#api/services/Vulnerability/index.js";
 import { projects, vulnerabilities } from "#api/db/schema.js";
 import { vulnerabilityRoutes } from "../vulnerabilities.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 export type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
@@ -160,8 +161,9 @@ export async function createTestContext(): Promise<IRouteTestContext> {
     const { container, db } = createTestApiContainer();
 
     const app = Fastify();
-    app.addHook("onRequest", createAuthHook(container));
-    await app.register(vulnerabilityRoutes, { container });
+    registerRequestContainer(app, container);
+    app.addHook("onRequest", createAuthHook());
+    await app.register(vulnerabilityRoutes);
     await app.ready();
 
     const { token } = await createTestSession({ db });
@@ -192,8 +194,9 @@ export async function createMockedRouteContext(): Promise<IMockedRouteContext> {
     container.registerInstance(OsvCacheService, osvCacheService);
 
     const app = Fastify();
-    app.addHook("onRequest", createAuthHook(container));
-    await app.register(vulnerabilityRoutes, { container });
+    registerRequestContainer(app, container);
+    app.addHook("onRequest", createAuthHook());
+    await app.register(vulnerabilityRoutes);
     await app.ready();
 
     const { token } = await createTestSession({ db });

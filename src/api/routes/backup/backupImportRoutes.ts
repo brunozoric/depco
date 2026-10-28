@@ -1,6 +1,5 @@
 import { z } from "zod";
 import type { FastifyInstance } from "fastify";
-import type { Container } from "@webiny/di";
 import { unzipSync, strFromU8 } from "fflate";
 import { Result } from "#shared/index.js";
 import { defineRoute, registerRoute } from "#shared/routing/index.js";
@@ -19,7 +18,7 @@ const importBackupZipRoute = defineRoute({
     response: importResultSchema
 });
 
-export function registerBackupImportRoutes(app: FastifyInstance, container: Container): void {
+export function registerBackupImportRoutes(app: FastifyInstance): void {
     registerRoute(
         app,
         importBackupZipRoute,
@@ -66,7 +65,7 @@ export function registerBackupImportRoutes(app: FastifyInstance, container: Cont
                 });
             }
 
-            const useCase = container.resolve(ImportBackupUseCase);
+            const useCase = request.container.resolve(ImportBackupUseCase);
             const result = await useCase.execute({ payload: parseResult.data });
 
             return send.list({ result });

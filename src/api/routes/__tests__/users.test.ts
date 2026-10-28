@@ -8,6 +8,7 @@ import { users, sessions } from "#api/db/schema.js";
 import { WebSocketBroadcaster } from "#api/websocket/abstractions/WebSocketBroadcaster.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
 import { userRoutes } from "../users.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
@@ -31,8 +32,9 @@ describe("user routes", () => {
         container.registerInstance(WebSocketBroadcaster, broadcaster);
 
         app = Fastify();
-        app.addHook("onRequest", createAuthHook(container));
-        await app.register(userRoutes, { container });
+        registerRequestContainer(app, container);
+        app.addHook("onRequest", createAuthHook());
+        await app.register(userRoutes);
         await app.ready();
     });
 

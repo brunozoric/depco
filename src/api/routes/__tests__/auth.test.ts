@@ -8,6 +8,7 @@ import { loginCodes, sessions } from "#api/db/schema.js";
 import { UserService } from "#api/services/Auth/index.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
 import { authRoutes } from "../auth.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 type TestContainer = ReturnType<typeof createTestApiContainer>["container"];
@@ -23,8 +24,9 @@ describe("auth routes", () => {
         container = result.container;
 
         app = Fastify();
-        app.addHook("onRequest", createAuthHook(container));
-        await app.register(authRoutes, { container });
+        registerRequestContainer(app, container);
+        app.addHook("onRequest", createAuthHook());
+        await app.register(authRoutes);
         await app.ready();
     });
 

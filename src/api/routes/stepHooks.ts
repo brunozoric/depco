@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { IPluginOptions } from "./types.js";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
@@ -15,14 +14,9 @@ import {
     DeleteStepHookUseCase
 } from "./useCases/stepHooks/index.js";
 
-export async function stepHooksRoutes(
-    app: FastifyInstance,
-    options: IPluginOptions
-): Promise<void> {
-    const { container } = options;
-
+export async function stepHooksRoutes(app: FastifyInstance): Promise<void> {
     registerRoute(app, listStepHooksRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(ListStepHooksUseCase);
+        const useCase = request.container.resolve(ListStepHooksUseCase);
         const result = await useCase.execute({ projectId: request.params.id });
 
         return send.list({ result });
@@ -33,7 +27,7 @@ export async function stepHooksRoutes(
         createStepHookRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(CreateStepHookUseCase);
+            const useCase = request.container.resolve(CreateStepHookUseCase);
             const result = await useCase.execute({
                 projectId: request.params.id,
                 position: request.body.position,
@@ -52,7 +46,7 @@ export async function stepHooksRoutes(
         updateStepHookRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(UpdateStepHookUseCase);
+            const useCase = request.container.resolve(UpdateStepHookUseCase);
             const result = await useCase.execute({
                 projectId: request.params.id,
                 hookId: request.params.hookId,
@@ -73,7 +67,7 @@ export async function stepHooksRoutes(
         deleteStepHookRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(DeleteStepHookUseCase);
+            const useCase = request.container.resolve(DeleteStepHookUseCase);
             const result = await useCase.execute({
                 projectId: request.params.id,
                 hookId: request.params.hookId

@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { Container } from "@webiny/di";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
@@ -15,23 +14,23 @@ import {
     ScanProjectLicensesUseCase
 } from "../useCases/licenses/index.js";
 
-export function registerLicenseQueryRoutes(app: FastifyInstance, container: Container): void {
+export function registerLicenseQueryRoutes(app: FastifyInstance): void {
     registerRoute(app, listLicensesRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(ListLicensesUseCase);
+        const useCase = request.container.resolve(ListLicensesUseCase);
         const result = await useCase.execute(request.query);
 
         return send.list({ result });
     });
 
     registerRoute(app, getLicenseSummaryRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetLicenseSummaryUseCase);
+        const useCase = request.container.resolve(GetLicenseSummaryUseCase);
         const result = await useCase.execute(request.query);
 
         return send.list({ result });
     });
 
     registerRoute(app, getProjectLicensesRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetProjectLicensesUseCase);
+        const useCase = request.container.resolve(GetProjectLicensesUseCase);
         const result = await useCase.execute({
             projectId: request.params.projectId,
             ...request.query
@@ -45,7 +44,7 @@ export function registerLicenseQueryRoutes(app: FastifyInstance, container: Cont
         scanProjectLicensesRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(ScanProjectLicensesUseCase);
+            const useCase = request.container.resolve(ScanProjectLicensesUseCase);
             const result = await useCase.execute({ projectId: request.params.projectId });
 
             return send.list({ result });

@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { IPluginOptions } from "./types.js";
 import { registerRoute } from "#shared/routing/index.js";
 import {
     loginRoute,
@@ -19,9 +18,7 @@ import {
     LogoutUseCase
 } from "./useCases/auth/index.js";
 
-export async function authRoutes(app: FastifyInstance, options: IPluginOptions): Promise<void> {
-    const { container } = options;
-
+export async function authRoutes(app: FastifyInstance): Promise<void> {
     registerRoute(
         app,
         loginRoute,
@@ -29,7 +26,7 @@ export async function authRoutes(app: FastifyInstance, options: IPluginOptions):
             config: { rateLimit: { max: 10, timeWindow: "15 minutes" } }
         },
         async (request, _reply, send) => {
-            const useCase = container.resolve(LoginUseCase);
+            const useCase = request.container.resolve(LoginUseCase);
             const result = await useCase.execute(request.body);
 
             return send.none({ result });
@@ -43,7 +40,7 @@ export async function authRoutes(app: FastifyInstance, options: IPluginOptions):
             config: { rateLimit: { max: 5, timeWindow: "15 minutes" } }
         },
         async (request, _reply, send) => {
-            const useCase = container.resolve(VerifyCodeUseCase);
+            const useCase = request.container.resolve(VerifyCodeUseCase);
             const result = await useCase.execute(request.body);
 
             return send.one({ status: 200, result });
@@ -58,7 +55,7 @@ export async function authRoutes(app: FastifyInstance, options: IPluginOptions):
         },
         async (request, _reply, send) => {
             const baseUrl = `${request.protocol}://${request.hostname}`;
-            const useCase = container.resolve(RequestMagicLinkUseCase);
+            const useCase = request.container.resolve(RequestMagicLinkUseCase);
             const result = await useCase.execute({ ...request.body, baseUrl });
 
             return send.none({ result });
@@ -72,7 +69,7 @@ export async function authRoutes(app: FastifyInstance, options: IPluginOptions):
             config: { rateLimit: { max: 10, timeWindow: "15 minutes" } }
         },
         async (request, _reply, send) => {
-            const useCase = container.resolve(VerifyMagicLinkUseCase);
+            const useCase = request.container.resolve(VerifyMagicLinkUseCase);
             const result = await useCase.execute(request.body);
 
             return send.one({ status: 200, result });
@@ -81,14 +78,14 @@ export async function authRoutes(app: FastifyInstance, options: IPluginOptions):
 
     registerRoute(app, getMeRoute, {}, async (request, _reply, send) => {
         const { user } = request as IAuthenticatedRequest;
-        const useCase = container.resolve(GetMeUseCase);
+        const useCase = request.container.resolve(GetMeUseCase);
         const result = await useCase.execute({ userId: user.id });
 
         return send.one({ status: 200, result });
     });
 
     registerRoute(app, logoutRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(LogoutUseCase);
+        const useCase = request.container.resolve(LogoutUseCase);
         const result = await useCase.execute({
             authorizationHeader: request.headers.authorization
         });

@@ -18,6 +18,7 @@ import { EmailService } from "#api/services/Email/index.js";
 import { JobWorker } from "../../services/JobExecution/index.js";
 import { jobRoutes } from "../jobs.js";
 import { projects, scanResults } from "#api/db/schema.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 describe("job routes", () => {
     let app: FastifyInstance;
@@ -77,8 +78,9 @@ describe("job routes", () => {
         jobWorker = container.resolve(JobWorker);
 
         app = Fastify();
-        app.addHook("onRequest", createAuthHook(container));
-        await app.register(jobRoutes, { container });
+        registerRequestContainer(app, container);
+        app.addHook("onRequest", createAuthHook());
+        await app.register(jobRoutes);
         await app.ready();
 
         ({ token } = await createTestSession({ db }));
@@ -421,8 +423,9 @@ describe("job routes", () => {
             const slowWorker = slowContainer.resolve(JobWorker);
 
             const slowApp = Fastify();
-            slowApp.addHook("onRequest", createAuthHook(slowContainer));
-            await slowApp.register(jobRoutes, { container: slowContainer });
+            registerRequestContainer(slowApp, slowContainer);
+            slowApp.addHook("onRequest", createAuthHook());
+            await slowApp.register(jobRoutes);
             await slowApp.ready();
 
             const { token: slowToken } = await createTestSession({ db: slowDb });

@@ -8,6 +8,7 @@ import { registryCache } from "#api/db/schema.js";
 import { CommandRunner } from "../../services/CommandRunner/index.js";
 import { createAuthHook } from "../../middleware/authHook.js";
 import { cacheRoutes } from "../cache.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
@@ -34,8 +35,9 @@ describe("cache routes", () => {
         });
 
         app = Fastify();
-        app.addHook("onRequest", createAuthHook(container));
-        await app.register(cacheRoutes, { container });
+        registerRequestContainer(app, container);
+        app.addHook("onRequest", createAuthHook());
+        await app.register(cacheRoutes);
         await app.ready();
 
         ({ token } = await createTestSession({ db }));

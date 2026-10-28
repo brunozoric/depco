@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { Container } from "@webiny/di";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
@@ -15,9 +14,9 @@ import {
     BulkScanProjectsUseCase
 } from "../useCases/projects/index.js";
 
-export function registerProjectBulkRoutes(app: FastifyInstance, container: Container): void {
-    registerRoute(app, exportProjectsRoute, {}, async (_request, _reply, send) => {
-        const useCase = container.resolve(ExportProjectsUseCase);
+export function registerProjectBulkRoutes(app: FastifyInstance): void {
+    registerRoute(app, exportProjectsRoute, {}, async (request, _reply, send) => {
+        const useCase = request.container.resolve(ExportProjectsUseCase);
         const result = await useCase.execute({});
 
         return send.list({ result });
@@ -28,7 +27,7 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
         importProjectsRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(ImportProjectsUseCase);
+            const useCase = request.container.resolve(ImportProjectsUseCase);
             const result = await useCase.execute({ items: request.body.items });
 
             return send.list({ result });
@@ -40,7 +39,7 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
         cloneProjectRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(CloneProjectUseCase);
+            const useCase = request.container.resolve(CloneProjectUseCase);
             const result = await useCase.execute({
                 url: request.body.url,
                 destination: request.body.destination,
@@ -56,7 +55,7 @@ export function registerProjectBulkRoutes(app: FastifyInstance, container: Conta
         bulkScanProjectsRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(BulkScanProjectsUseCase);
+            const useCase = request.container.resolve(BulkScanProjectsUseCase);
             const result = await useCase.execute({
                 projectIds: request.body.projectIds,
                 force: request.body.force

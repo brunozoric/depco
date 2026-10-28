@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { Container } from "@webiny/di";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
@@ -15,16 +14,13 @@ import {
     ResetSecuritySettingsUseCase
 } from "../../useCases/settings/index.js";
 
-export function registerSecuritySettingsActionRoutes(
-    app: FastifyInstance,
-    container: Container
-): void {
+export function registerSecuritySettingsActionRoutes(app: FastifyInstance): void {
     registerRoute(
         app,
         createSecuritySettingRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(CreateSecuritySettingUseCase);
+            const useCase = request.container.resolve(CreateSecuritySettingUseCase);
             const result = await useCase.execute(request.body);
 
             return send.one({ result, status: 201 });
@@ -36,7 +32,7 @@ export function registerSecuritySettingsActionRoutes(
         updateSecuritySettingRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(UpdateSecuritySettingUseCase);
+            const useCase = request.container.resolve(UpdateSecuritySettingUseCase);
             const result = await useCase.execute({
                 id: request.params.id,
                 expectedValue: request.body.expectedValue
@@ -51,7 +47,7 @@ export function registerSecuritySettingsActionRoutes(
         toggleSecuritySettingRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(ToggleSecuritySettingUseCase);
+            const useCase = request.container.resolve(ToggleSecuritySettingUseCase);
             const result = await useCase.execute({ id: request.params.id });
 
             return send.one({ result });
@@ -63,7 +59,7 @@ export function registerSecuritySettingsActionRoutes(
         resetSecuritySettingsRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(ResetSecuritySettingsUseCase);
+            const useCase = request.container.resolve(ResetSecuritySettingsUseCase);
             const result = await useCase.execute({ packageManager: request.body.packageManager });
 
             return send.list({ result });

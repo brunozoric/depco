@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { Container } from "@webiny/di";
 import { registerRoute } from "#shared/routing/index.js";
 import {
     dashboardActivityRoute,
@@ -14,30 +13,30 @@ import {
     GetDashboardDependencyChangesUseCase
 } from "../useCases/dashboard/index.js";
 
-export function registerDashboardStatusRoutes(app: FastifyInstance, container: Container): void {
+export function registerDashboardStatusRoutes(app: FastifyInstance): void {
     registerRoute(app, dashboardActivityRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetDashboardActivityUseCase);
+        const useCase = request.container.resolve(GetDashboardActivityUseCase);
         const result = await useCase.execute({ teamId: request.query.teamId });
 
         return send.list({ result });
     });
 
     registerRoute(app, dashboardStalenessRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetDashboardStalenessUseCase);
+        const useCase = request.container.resolve(GetDashboardStalenessUseCase);
         const result = await useCase.execute({ teamId: request.query.teamId });
 
         return send.list({ result });
     });
 
     registerRoute(app, dashboardSecurityRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetDashboardSecurityUseCase);
+        const useCase = request.container.resolve(GetDashboardSecurityUseCase);
         const result = await useCase.execute({ teamId: request.query.teamId });
 
         return send.list({ result });
     });
 
     registerRoute(app, dashboardDependencyChangesRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetDashboardDependencyChangesUseCase);
+        const useCase = request.container.resolve(GetDashboardDependencyChangesUseCase);
         const result = await useCase.execute({
             projectId: request.query.projectId,
             limit: request.query.limit,

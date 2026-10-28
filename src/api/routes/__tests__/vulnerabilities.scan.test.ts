@@ -16,6 +16,7 @@ import {
     createMockOsvCacheService
 } from "./vulnerabilities.testHelpers.js";
 import type { TestDb } from "./vulnerabilities.testHelpers.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 describe("vulnerability routes", () => {
     let app: FastifyInstance;
@@ -34,8 +35,9 @@ describe("vulnerability routes", () => {
         container.registerInstance(OsvCacheService, osvCacheService);
 
         app = Fastify();
-        app.addHook("onRequest", createAuthHook(container));
-        await app.register(vulnerabilityRoutes, { container });
+        registerRequestContainer(app, container);
+        app.addHook("onRequest", createAuthHook());
+        await app.register(vulnerabilityRoutes);
         await app.ready();
 
         ({ token } = await createTestSession({ db }));

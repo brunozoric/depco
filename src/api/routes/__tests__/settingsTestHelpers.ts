@@ -6,6 +6,7 @@ import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.
 import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
 import { settingsRoutes } from "../settings.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 export type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
@@ -21,8 +22,9 @@ export async function setupSettingsRouteTest(): Promise<SettingsRouteTestContext
     const container = result.container;
 
     const app = Fastify();
-    app.addHook("onRequest", createAuthHook(container));
-    await app.register(settingsRoutes, { container });
+    registerRequestContainer(app, container);
+    app.addHook("onRequest", createAuthHook());
+    await app.register(settingsRoutes);
     await app.ready();
 
     const { token } = await createTestSession({ db });

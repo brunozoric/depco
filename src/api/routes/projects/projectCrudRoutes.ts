@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { Container } from "@webiny/di";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
@@ -17,13 +16,13 @@ import {
     UpdateProjectUseCase
 } from "../useCases/projects/index.js";
 
-export function registerProjectCrudRoutes(app: FastifyInstance, container: Container): void {
+export function registerProjectCrudRoutes(app: FastifyInstance): void {
     registerRoute(
         app,
         createProjectRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(CreateProjectUseCase);
+            const useCase = request.container.resolve(CreateProjectUseCase);
             const result = await useCase.execute({ projectPath: request.body.path });
 
             return send.one({ result, status: 201 });
@@ -31,7 +30,7 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
     );
 
     registerRoute(app, listProjectsRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(ListProjectsUseCase);
+        const useCase = request.container.resolve(ListProjectsUseCase);
         const result = await useCase.execute({
             page: request.query.page,
             pageSize: request.query.pageSize,
@@ -46,7 +45,7 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
     });
 
     registerRoute(app, getProjectRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetProjectUseCase);
+        const useCase = request.container.resolve(GetProjectUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
         return send.one({ result });
@@ -57,7 +56,7 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
         deleteProjectRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(DeleteProjectUseCase);
+            const useCase = request.container.resolve(DeleteProjectUseCase);
             const result = await useCase.execute({ id: request.params.id });
 
             return send.none({ result, status: 204 });
@@ -69,7 +68,7 @@ export function registerProjectCrudRoutes(app: FastifyInstance, container: Conta
         updateProjectRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(UpdateProjectUseCase);
+            const useCase = request.container.resolve(UpdateProjectUseCase);
             const result = await useCase.execute({
                 id: request.params.id,
                 name: request.body.name

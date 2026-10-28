@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { IPluginOptions } from "./types.js";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
@@ -15,14 +14,9 @@ import {
     GetDependencyGraphStatsUseCase
 } from "./useCases/dependencyGraph/index.js";
 
-export async function dependencyGraphRoutes(
-    app: FastifyInstance,
-    options: IPluginOptions
-): Promise<void> {
-    const { container } = options;
-
+export async function dependencyGraphRoutes(app: FastifyInstance): Promise<void> {
     registerRoute(app, getDependencyGraphRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetDependencyGraphUseCase);
+        const useCase = request.container.resolve(GetDependencyGraphUseCase);
         const result = await useCase.execute({
             projectId: request.params.projectId,
             packageName: request.query.package
@@ -32,7 +26,7 @@ export async function dependencyGraphRoutes(
     });
 
     registerRoute(app, searchDependencyPackagesRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(SearchDependencyPackagesUseCase);
+        const useCase = request.container.resolve(SearchDependencyPackagesUseCase);
         const result = await useCase.execute({
             projectId: request.params.projectId,
             query: request.query.query,
@@ -47,7 +41,7 @@ export async function dependencyGraphRoutes(
         refreshDependencyGraphRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(RefreshDependencyGraphUseCase);
+            const useCase = request.container.resolve(RefreshDependencyGraphUseCase);
             const result = await useCase.execute({ projectId: request.params.projectId });
 
             return send.list({ result });
@@ -55,7 +49,7 @@ export async function dependencyGraphRoutes(
     );
 
     registerRoute(app, getDependencyGraphStatsRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetDependencyGraphStatsUseCase);
+        const useCase = request.container.resolve(GetDependencyGraphStatsUseCase);
         const result = await useCase.execute({ projectId: request.params.projectId });
 
         return send.list({ result });

@@ -8,6 +8,7 @@ import { ScanSchedulerService } from "#api/services/ScanScheduler/index.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
 import { projects, scanSchedules } from "#api/db/schema.js";
 import { scanScheduleRoutes } from "../scanSchedules.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
@@ -36,8 +37,9 @@ describe("scan schedule routes", () => {
         container.registerInstance(ScanSchedulerService, scheduler);
 
         app = Fastify();
-        app.addHook("onRequest", createAuthHook(container));
-        await app.register(scanScheduleRoutes, { container });
+        registerRequestContainer(app, container);
+        app.addHook("onRequest", createAuthHook());
+        await app.register(scanScheduleRoutes);
         await app.ready();
 
         ({ token } = await createTestSession({ db }));

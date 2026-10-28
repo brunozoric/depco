@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { Container } from "@webiny/di";
 import { registerRoute } from "#shared/routing/index.js";
 import {
     dashboardTrendRoute,
@@ -16,9 +15,9 @@ import {
     GetDashboardAutoFixTrendUseCase
 } from "../useCases/dashboard/index.js";
 
-export function registerDashboardTrendRoutes(app: FastifyInstance, container: Container): void {
+export function registerDashboardTrendRoutes(app: FastifyInstance): void {
     registerRoute(app, dashboardTrendRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetDashboardTrendUseCase);
+        const useCase = request.container.resolve(GetDashboardTrendUseCase);
         const result = await useCase.execute({
             range: request.query.range,
             teamId: request.query.teamId
@@ -28,7 +27,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
     });
 
     registerRoute(app, dashboardVulnerabilityTrendRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetDashboardVulnerabilityTrendUseCase);
+        const useCase = request.container.resolve(GetDashboardVulnerabilityTrendUseCase);
         const result = await useCase.execute({
             days: request.query.days,
             teamId: request.query.teamId
@@ -38,7 +37,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
     });
 
     registerRoute(app, dashboardStalenessTrendRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetDashboardStalenessTrendUseCase);
+        const useCase = request.container.resolve(GetDashboardStalenessTrendUseCase);
         const result = await useCase.execute({
             days: request.query.days,
             teamId: request.query.teamId
@@ -48,7 +47,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
     });
 
     registerRoute(app, dashboardLicenseTrendRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetDashboardLicenseTrendUseCase);
+        const useCase = request.container.resolve(GetDashboardLicenseTrendUseCase);
         const result = await useCase.execute({
             days: request.query.days,
             teamId: request.query.teamId
@@ -58,7 +57,7 @@ export function registerDashboardTrendRoutes(app: FastifyInstance, container: Co
     });
 
     registerRoute(app, dashboardAutoFixTrendRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetDashboardAutoFixTrendUseCase);
+        const useCase = request.container.resolve(GetDashboardAutoFixTrendUseCase);
         const result = await useCase.execute({
             days: request.query.days,
             teamId: request.query.teamId

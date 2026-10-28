@@ -8,6 +8,7 @@ import { LockfileParserService } from "#api/services/DependencyGraph/index.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
 import { projects, dependencyEdges } from "#api/db/schema.js";
 import { dependencyGraphRoutes } from "../dependencyGraph.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
@@ -79,8 +80,9 @@ async function createTestContext(
     container.registerInstance(LockfileParserService, createStubLockfileParserService(parsedEdges));
 
     const app = Fastify();
-    app.addHook("onRequest", createAuthHook(container));
-    await app.register(dependencyGraphRoutes, { container });
+    registerRequestContainer(app, container);
+    app.addHook("onRequest", createAuthHook());
+    await app.register(dependencyGraphRoutes);
     await app.ready();
 
     const { token } = await createTestSession({ db });

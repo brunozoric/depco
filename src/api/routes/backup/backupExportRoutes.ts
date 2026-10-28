@@ -1,6 +1,5 @@
 import { z } from "zod";
 import type { FastifyInstance } from "fastify";
-import type { Container } from "@webiny/di";
 import { zipSync, strToU8 } from "fflate";
 import { defineRoute, registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
@@ -14,13 +13,13 @@ const exportBackupZipRoute = defineRoute({
     params: z.object({})
 });
 
-export function registerBackupExportRoutes(app: FastifyInstance, container: Container): void {
+export function registerBackupExportRoutes(app: FastifyInstance): void {
     registerRoute(
         app,
         exportBackupZipRoute,
         { preHandler: [requirePermission("full")] },
-        async (_request, reply, send) => {
-            const useCase = container.resolve(ExportBackupUseCase);
+        async (request, reply, send) => {
+            const useCase = request.container.resolve(ExportBackupUseCase);
             const result = await useCase.execute();
 
             if (result.isFail()) {

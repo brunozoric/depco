@@ -15,6 +15,7 @@ import {
     teamProjects
 } from "#api/db/schema.js";
 import { packagesRoutes } from "../packages.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
@@ -111,8 +112,9 @@ describe("packages routes", () => {
         const container = result.container;
 
         app = Fastify();
-        app.addHook("onRequest", createAuthHook(container));
-        await app.register(packagesRoutes, { container });
+        registerRequestContainer(app, container);
+        app.addHook("onRequest", createAuthHook());
+        await app.register(packagesRoutes);
         await app.ready();
 
         ({ token } = await createTestSession({ db }));

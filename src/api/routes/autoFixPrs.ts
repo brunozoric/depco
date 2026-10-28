@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { IPluginOptions } from "./types.js";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
@@ -15,16 +14,11 @@ import {
     GenerateAutoFixPrUseCase
 } from "./useCases/autoFix/index.js";
 
-export async function autoFixPrRoutes(
-    app: FastifyInstance,
-    options: IPluginOptions
-): Promise<void> {
-    const { container } = options;
-
+export async function autoFixPrRoutes(app: FastifyInstance): Promise<void> {
     // Registered before the parametrized "/:projectId/..." routes below so it
     // isn't shadowed by them.
     registerRoute(app, listAutoFixPullRequestsRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(ListAutoFixPullRequestsUseCase);
+        const useCase = request.container.resolve(ListAutoFixPullRequestsUseCase);
         const result = await useCase.execute(request.query);
 
         return send.list({ result });
@@ -39,7 +33,7 @@ export async function autoFixPrRoutes(
         deleteAutoFixPullRequestRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(DeleteAutoFixPullRequestUseCase);
+            const useCase = request.container.resolve(DeleteAutoFixPullRequestUseCase);
             const result = await useCase.execute({ id: request.params.id });
 
             return send.list({ result });
@@ -47,7 +41,7 @@ export async function autoFixPrRoutes(
     );
 
     registerRoute(app, getProjectAutoFixPullRequestsRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetProjectAutoFixPullRequestsUseCase);
+        const useCase = request.container.resolve(GetProjectAutoFixPullRequestsUseCase);
         const result = await useCase.execute({
             projectId: request.params.projectId,
             status: request.query.status
@@ -61,7 +55,7 @@ export async function autoFixPrRoutes(
         generateAutoFixPrRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(GenerateAutoFixPrUseCase);
+            const useCase = request.container.resolve(GenerateAutoFixPrUseCase);
             const result = await useCase.execute({ projectId: request.params.projectId });
 
             return send.list({ result });

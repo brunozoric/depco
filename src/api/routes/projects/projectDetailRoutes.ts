@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { Container } from "@webiny/di";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
@@ -21,13 +20,13 @@ import {
     SetProjectTeamsUseCase
 } from "../useCases/projects/index.js";
 
-export function registerProjectDetailRoutes(app: FastifyInstance, container: Container): void {
+export function registerProjectDetailRoutes(app: FastifyInstance): void {
     registerRoute(
         app,
         scanProjectAsyncRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(ScanProjectUseCase);
+            const useCase = request.container.resolve(ScanProjectUseCase);
             const result = await useCase.execute({
                 id: request.params.id,
                 force: request.query.force
@@ -38,7 +37,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
     );
 
     registerRoute(app, getProjectDependenciesRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetProjectDependenciesUseCase);
+        const useCase = request.container.resolve(GetProjectDependenciesUseCase);
         const result = await useCase.execute({
             id: request.params.id,
             dependencyKind: request.query.dependencyKind,
@@ -52,14 +51,14 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
     });
 
     registerRoute(app, getTransitiveResolveStatusRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetTransitiveResolveStatusUseCase);
+        const useCase = request.container.resolve(GetTransitiveResolveStatusUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
         return send.list({ result });
     });
 
     registerRoute(app, getProjectSecurityRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetProjectSecurityUseCase);
+        const useCase = request.container.resolve(GetProjectSecurityUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
         return send.one({ result });
@@ -70,7 +69,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
         checkProjectSecurityRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(CheckProjectSecurityUseCase);
+            const useCase = request.container.resolve(CheckProjectSecurityUseCase);
             const result = await useCase.execute({ id: request.params.id });
 
             return send.one({ result });
@@ -78,7 +77,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
     );
 
     registerRoute(app, getProjectTeamsRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetProjectTeamsUseCase);
+        const useCase = request.container.resolve(GetProjectTeamsUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
         return send.list({ result });
@@ -89,7 +88,7 @@ export function registerProjectDetailRoutes(app: FastifyInstance, container: Con
         setProjectTeamsRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(SetProjectTeamsUseCase);
+            const useCase = request.container.resolve(SetProjectTeamsUseCase);
             const result = await useCase.execute({
                 id: request.params.id,
                 teamIds: request.body.teamIds

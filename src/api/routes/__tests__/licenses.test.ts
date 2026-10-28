@@ -17,6 +17,7 @@ import {
 } from "#api/db/schema.js";
 import { licenseRoutes } from "../licenses.js";
 import { licensePolicyRoutes } from "../licensePolicies.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
@@ -70,9 +71,10 @@ async function createTestContext(): Promise<IRouteTestContext> {
     });
 
     const app = Fastify();
-    app.addHook("onRequest", createAuthHook(container));
-    await app.register(licenseRoutes, { container });
-    await app.register(licensePolicyRoutes, { container });
+    registerRequestContainer(app, container);
+    app.addHook("onRequest", createAuthHook());
+    await app.register(licenseRoutes);
+    await app.register(licensePolicyRoutes);
     await app.ready();
 
     const { token } = await createTestSession({ db });

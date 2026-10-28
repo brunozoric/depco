@@ -15,6 +15,7 @@ import {
     registryCache
 } from "#api/db/schema.js";
 import { backupRoutes } from "../backup.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 interface BackupVersionEntry {
     version: string;
@@ -71,8 +72,9 @@ describe("backup routes", () => {
         const container = result.container;
 
         app = Fastify();
-        app.addHook("onRequest", createAuthHook(container));
-        await app.register(backupRoutes, { container });
+        registerRequestContainer(app, container);
+        app.addHook("onRequest", createAuthHook());
+        await app.register(backupRoutes);
         await app.ready();
 
         ({ token } = await createTestSession({ db }));

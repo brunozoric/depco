@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { IPluginOptions } from "./types.js";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
@@ -19,11 +18,9 @@ import {
     DeleteTeamUseCase
 } from "./useCases/teams/index.js";
 
-export async function teamsRoutes(app: FastifyInstance, options: IPluginOptions): Promise<void> {
-    const { container } = options;
-
+export async function teamsRoutes(app: FastifyInstance): Promise<void> {
     registerRoute(app, listTeamsRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(ListTeamsUseCase);
+        const useCase = request.container.resolve(ListTeamsUseCase);
         const result = await useCase.execute({
             page: request.query.page,
             pageSize: request.query.pageSize
@@ -37,7 +34,7 @@ export async function teamsRoutes(app: FastifyInstance, options: IPluginOptions)
         createTeamRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(CreateTeamUseCase);
+            const useCase = request.container.resolve(CreateTeamUseCase);
             const result = await useCase.execute(request.body);
 
             return send.one({ result, status: 201 });
@@ -45,7 +42,7 @@ export async function teamsRoutes(app: FastifyInstance, options: IPluginOptions)
     );
 
     registerRoute(app, getTeamDetailRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetTeamUseCase);
+        const useCase = request.container.resolve(GetTeamUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
         return send.one({ result });
@@ -56,7 +53,7 @@ export async function teamsRoutes(app: FastifyInstance, options: IPluginOptions)
         updateTeamRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(UpdateTeamUseCase);
+            const useCase = request.container.resolve(UpdateTeamUseCase);
             const result = await useCase.execute({
                 id: request.params.id,
                 name: request.body.name,
@@ -72,7 +69,7 @@ export async function teamsRoutes(app: FastifyInstance, options: IPluginOptions)
         setTeamProjectsRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(SetTeamProjectsUseCase);
+            const useCase = request.container.resolve(SetTeamProjectsUseCase);
             const result = await useCase.execute({
                 id: request.params.id,
                 projectIds: request.body.projectIds
@@ -87,7 +84,7 @@ export async function teamsRoutes(app: FastifyInstance, options: IPluginOptions)
         deleteTeamRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(DeleteTeamUseCase);
+            const useCase = request.container.resolve(DeleteTeamUseCase);
             const result = await useCase.execute({ id: request.params.id });
 
             return send.none({ result, status: 204 });

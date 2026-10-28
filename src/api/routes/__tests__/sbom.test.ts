@@ -5,6 +5,7 @@ import { generateId } from "@webiny/stdlib";
 import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { projects, scanResults } from "#api/db/schema.js";
 import { sbomRoutes } from "../sbom.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 describe("sbom routes", () => {
     let app: FastifyInstance;
@@ -16,7 +17,8 @@ describe("sbom routes", () => {
         const container = result.container;
 
         app = Fastify();
-        await app.register(sbomRoutes, { container });
+        registerRequestContainer(app, container);
+        await app.register(sbomRoutes);
         await app.ready();
     });
 

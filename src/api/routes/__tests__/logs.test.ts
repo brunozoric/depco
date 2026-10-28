@@ -7,6 +7,7 @@ import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { appLogs } from "#api/db/schema.js";
 import { createAuthHook } from "../../middleware/authHook.js";
 import { logsRoutes } from "../logs.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
@@ -47,8 +48,9 @@ describe("logs routes", () => {
         const container = result.container;
 
         app = Fastify();
-        app.addHook("onRequest", createAuthHook(container));
-        await app.register(logsRoutes, { container });
+        registerRequestContainer(app, container);
+        app.addHook("onRequest", createAuthHook());
+        await app.register(logsRoutes);
         await app.ready();
 
         ({ token } = await createTestSession({ db }));

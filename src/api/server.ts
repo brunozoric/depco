@@ -20,6 +20,7 @@ import { VulnerabilityService } from "./services/Vulnerability/index.js";
 import { AutoFixSettingsService } from "./services/AutoFix/index.js";
 import { AuthService } from "./services/Auth/index.js";
 import { WebSocketBroadcaster } from "./websocket/abstractions/WebSocketBroadcaster.js";
+import { registerRequestContainer } from "./middleware/requestContainer.js";
 import { createAuthHook } from "./middleware/authHook.js";
 import { createDatabaseClient } from "./db/client.js";
 import { runMigrations } from "./db/migrate.js";
@@ -73,33 +74,33 @@ async function registerAllRoutes(
     app: FastifyInstance,
     container: ReturnType<typeof createContainer>
 ): Promise<void> {
-    await app.register(projectRoutes, { container });
-    await app.register(jobRoutes, { container });
-    await app.register(packageManagerRoutes, { container });
-    await app.register(cacheRoutes, { container });
-    await app.register(settingsRoutes, { container });
-    await app.register(filesystemRoutes, { container });
-    await app.register(installRoutes, { container });
-    await app.register(changelogRoutes, { container });
-    await app.register(packagesRoutes, { container });
-    await app.register(appSettingsRoutes, { container });
-    await app.register(upgradeSessionRoutes, { container });
-    await app.register(logsRoutes, { container });
-    await app.register(backupRoutes, { container });
-    await app.register(stepHooksRoutes, { container });
-    await app.register(dashboardRoutes, { container });
-    await app.register(scanScheduleRoutes, { container });
-    await app.register(vulnerabilityRoutes, { container });
-    await app.register(licenseRoutes, { container });
-    await app.register(licensePolicyRoutes, { container });
-    await app.register(autoFixSettingsRoutes, { container });
-    await app.register(autoFixPrRoutes, { container });
-    await app.register(dependencyGraphRoutes, { container });
-    await app.register(sbomRoutes, { container });
-    await app.register(engineRoutes, { container });
-    await app.register(teamsRoutes, { container });
-    await app.register(userRoutes, { container });
-    await app.register(authRoutes, { container });
+    await app.register(projectRoutes);
+    await app.register(jobRoutes);
+    await app.register(packageManagerRoutes);
+    await app.register(cacheRoutes);
+    await app.register(settingsRoutes);
+    await app.register(filesystemRoutes);
+    await app.register(installRoutes);
+    await app.register(changelogRoutes);
+    await app.register(packagesRoutes);
+    await app.register(appSettingsRoutes);
+    await app.register(upgradeSessionRoutes);
+    await app.register(logsRoutes);
+    await app.register(backupRoutes);
+    await app.register(stepHooksRoutes);
+    await app.register(dashboardRoutes);
+    await app.register(scanScheduleRoutes);
+    await app.register(vulnerabilityRoutes);
+    await app.register(licenseRoutes);
+    await app.register(licensePolicyRoutes);
+    await app.register(autoFixSettingsRoutes);
+    await app.register(autoFixPrRoutes);
+    await app.register(dependencyGraphRoutes);
+    await app.register(sbomRoutes);
+    await app.register(engineRoutes);
+    await app.register(teamsRoutes);
+    await app.register(userRoutes);
+    await app.register(authRoutes);
     await app.register(websocketRoutes, { container });
 }
 
@@ -243,11 +244,13 @@ export async function createServer(): Promise<FastifyInstance> {
         global: false
     });
 
-    // Global auth hook: requires a valid session `Authorization: Bearer`
+    // Per-request child container first, so every later hook and route
+    // handler resolves from it. Global auth hook: requires a valid session `Authorization: Bearer`
     // token on every `/api/*` route except the login/verification endpoints.
     // The `/ws` WebSocket upgrade authenticates separately, via a `?token=`
     // query param — see WebSocketPlugin.ts.
-    app.addHook("onRequest", createAuthHook(container));
+    registerRequestContainer(app, container);
+    app.addHook("onRequest", createAuthHook());
 
     app.get("/api/health", async (_request, reply) => {
         reply.send({ status: "ok" });

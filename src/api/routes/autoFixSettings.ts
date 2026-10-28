@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { IPluginOptions } from "./types.js";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { getAutoFixSettingsRoute, updateAutoFixSettingsRoute } from "#shared/routes/index.js";
@@ -35,14 +34,9 @@ function buildUpdateSettingsInput(
     return input;
 }
 
-export async function autoFixSettingsRoutes(
-    app: FastifyInstance,
-    options: IPluginOptions
-): Promise<void> {
-    const { container } = options;
-
+export async function autoFixSettingsRoutes(app: FastifyInstance): Promise<void> {
     registerRoute(app, getAutoFixSettingsRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetAutoFixSettingsUseCase);
+        const useCase = request.container.resolve(GetAutoFixSettingsUseCase);
         const result = await useCase.execute({ projectId: request.params.projectId });
 
         return send.list({ result });
@@ -53,7 +47,7 @@ export async function autoFixSettingsRoutes(
         updateAutoFixSettingsRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(UpdateAutoFixSettingsUseCase);
+            const useCase = request.container.resolve(UpdateAutoFixSettingsUseCase);
             const result = await useCase.execute({
                 projectId: request.params.projectId,
                 input: buildUpdateSettingsInput(request.body)

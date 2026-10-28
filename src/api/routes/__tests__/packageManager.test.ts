@@ -18,6 +18,7 @@ import { EmailService } from "../../services/Email/index.js";
 import { JobWorker } from "../../services/JobExecution/index.js";
 import { packageManagerRoutes } from "../packageManager.js";
 import { projects } from "#api/db/schema.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 describe("package manager routes", () => {
     let app: FastifyInstance;
@@ -78,8 +79,9 @@ describe("package manager routes", () => {
         container.registerInstance(EmailService, { send: vi.fn() });
 
         app = Fastify();
-        app.addHook("onRequest", createAuthHook(container));
-        await app.register(packageManagerRoutes, { container });
+        registerRequestContainer(app, container);
+        app.addHook("onRequest", createAuthHook());
+        await app.register(packageManagerRoutes);
         await app.ready();
 
         ({ token } = await createTestSession({ db }));
@@ -175,8 +177,9 @@ describe("package manager routes", () => {
         const jobWorker = localContainer.resolve(JobWorker);
 
         const localApp = Fastify();
-        localApp.addHook("onRequest", createAuthHook(localContainer));
-        await localApp.register(packageManagerRoutes, { container: localContainer });
+        registerRequestContainer(localApp, localContainer);
+        localApp.addHook("onRequest", createAuthHook());
+        await localApp.register(packageManagerRoutes);
         await localApp.ready();
 
         const { token: localToken } = await createTestSession({ db: localResult.db });
@@ -268,8 +271,9 @@ describe("package manager routes", () => {
         const jobWorker = localContainer.resolve(JobWorker);
 
         const localApp = Fastify();
-        localApp.addHook("onRequest", createAuthHook(localContainer));
-        await localApp.register(packageManagerRoutes, { container: localContainer });
+        registerRequestContainer(localApp, localContainer);
+        localApp.addHook("onRequest", createAuthHook());
+        await localApp.register(packageManagerRoutes);
         await localApp.ready();
 
         const { token: localToken } = await createTestSession({ db: localResult.db });
@@ -336,8 +340,9 @@ describe("package manager routes", () => {
             .run();
 
         const localApp = Fastify();
-        localApp.addHook("onRequest", createAuthHook(localContainer));
-        await localApp.register(packageManagerRoutes, { container: localContainer });
+        registerRequestContainer(localApp, localContainer);
+        localApp.addHook("onRequest", createAuthHook());
+        await localApp.register(packageManagerRoutes);
         await localApp.ready();
 
         const { token: localToken } = await createTestSession({ db: localResult.db });

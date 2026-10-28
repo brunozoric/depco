@@ -1,6 +1,5 @@
 import { createHash } from "crypto";
 import type { FastifyRequest, FastifyReply } from "fastify";
-import type { Container } from "@webiny/di";
 import { AuthService } from "#api/services/Auth/index.js";
 
 export interface IAuthenticatedRequest extends FastifyRequest {
@@ -15,9 +14,7 @@ const AUTH_WHITELIST = new Set([
     "POST /api/auth/verify-magic-link"
 ]);
 
-export function createAuthHook(container: Container) {
-    const authService = container.resolve(AuthService);
-
+export function createAuthHook() {
     return async function authHook(request: FastifyRequest, reply: FastifyReply): Promise<void> {
         const url = request.routeOptions.url ?? request.url;
 
@@ -40,6 +37,7 @@ export function createAuthHook(container: Container) {
         const rawToken = authHeader.slice(7);
         const tokenHash = createHash("sha256").update(rawToken).digest("hex");
 
+        const authService = request.container.resolve(AuthService);
         const sessionUser = await authService.getSessionUser(tokenHash);
         if (!sessionUser) {
             reply.status(401).send({ error: { message: "Session expired" } });

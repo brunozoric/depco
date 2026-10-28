@@ -13,6 +13,7 @@ import { ScanSchedulerService } from "../../services/ScanScheduler/index.js";
 import { EmailService } from "../../services/Email/index.js";
 import { JobWorker } from "../../services/JobExecution/index.js";
 import { projectRoutes } from "../projects.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 export const VALID_YARNRC = [
     "npmPreapprovedPackages: []",
@@ -116,8 +117,9 @@ export async function setupProjectsTest(): Promise<ProjectsTestContext> {
     const jobWorker = container.resolve(JobWorker);
 
     const app = Fastify();
-    app.addHook("onRequest", createAuthHook(container));
-    await app.register(projectRoutes, { container });
+    registerRequestContainer(app, container);
+    app.addHook("onRequest", createAuthHook());
+    await app.register(projectRoutes);
     await app.ready();
 
     const { token } = await createTestSession({ db });

@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { IPluginOptions } from "./types.js";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import { getPackageManagerRoute, updatePackageManagerRoute } from "#shared/routes/index.js";
@@ -8,15 +7,10 @@ import {
     UpdatePackageManagerUseCase
 } from "./useCases/packageManager/index.js";
 
-export async function packageManagerRoutes(
-    app: FastifyInstance,
-    options: IPluginOptions
-): Promise<void> {
-    const { container } = options;
-
+export async function packageManagerRoutes(app: FastifyInstance): Promise<void> {
     // GET /api/projects/:id/package-manager — current package manager version.
     registerRoute(app, getPackageManagerRoute, {}, async (request, _reply, send) => {
-        const useCase = container.resolve(GetPackageManagerUseCase);
+        const useCase = request.container.resolve(GetPackageManagerUseCase);
         const result = await useCase.execute({ id: request.params.id });
 
         return send.one({ result });
@@ -29,7 +23,7 @@ export async function packageManagerRoutes(
         updatePackageManagerRoute,
         { preHandler: [requirePermission("full")] },
         async (request, _reply, send) => {
-            const useCase = container.resolve(UpdatePackageManagerUseCase);
+            const useCase = request.container.resolve(UpdatePackageManagerUseCase);
             const result = await useCase.execute({
                 id: request.params.id,
                 version: request.body.version

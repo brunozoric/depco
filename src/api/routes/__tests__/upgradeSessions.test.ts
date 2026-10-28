@@ -10,6 +10,7 @@ import { GitService } from "#api/services/Git/index.js";
 import { UpgradeService } from "#api/services/Upgrade/index.js";
 import { StepHookService } from "#api/services/StepHook/index.js";
 import { upgradeSessionRoutes } from "../upgradeSessions.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
@@ -66,8 +67,9 @@ describe("upgrade session routes", () => {
         });
 
         app = Fastify();
-        app.addHook("onRequest", createAuthHook(container));
-        await app.register(upgradeSessionRoutes, { container });
+        registerRequestContainer(app, container);
+        app.addHook("onRequest", createAuthHook());
+        await app.register(upgradeSessionRoutes);
         await app.ready();
 
         ({ token } = await createTestSession({ db }));

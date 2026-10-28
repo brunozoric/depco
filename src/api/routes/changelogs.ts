@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { IPluginOptions } from "./types.js";
 import { registerRoute } from "#shared/routing/index.js";
 import { requirePermission } from "#api/middleware/requirePermission.js";
 import {
@@ -15,26 +14,21 @@ import {
     GetChangelogStatsUseCase
 } from "./useCases/changelogs/index.js";
 
-export async function changelogRoutes(
-    app: FastifyInstance,
-    options: IPluginOptions
-): Promise<void> {
-    const { container } = options;
-
+export async function changelogRoutes(app: FastifyInstance): Promise<void> {
     registerRoute(
         app,
         reResolveAllChangelogsRoute,
         { preHandler: [requirePermission("full")] },
-        async (_request, _reply, send) => {
-            const useCase = container.resolve(ReResolveAllChangelogsUseCase);
+        async (request, _reply, send) => {
+            const useCase = request.container.resolve(ReResolveAllChangelogsUseCase);
             const result = await useCase.execute({});
 
             return send.list({ result });
         }
     );
 
-    registerRoute(app, getChangelogStatsRoute, {}, async (_request, _reply, send) => {
-        const useCase = container.resolve(GetChangelogStatsUseCase);
+    registerRoute(app, getChangelogStatsRoute, {}, async (request, _reply, send) => {
+        const useCase = request.container.resolve(GetChangelogStatsUseCase);
         const result = await useCase.execute({});
 
         return send.list({ result });
@@ -44,7 +38,7 @@ export async function changelogRoutes(
         const { packageName } = request.params;
         const { from, to } = request.query;
 
-        const useCase = container.resolve(GetChangelogsUseCase);
+        const useCase = request.container.resolve(GetChangelogsUseCase);
         const result = await useCase.execute({ packageName, from, to });
 
         return send.list({ result });
@@ -58,7 +52,7 @@ export async function changelogRoutes(
             const { packageName } = request.params;
             const { from, to } = request.body;
 
-            const useCase = container.resolve(ReResolveChangelogsUseCase);
+            const useCase = request.container.resolve(ReResolveChangelogsUseCase);
             const result = await useCase.execute({ packageName, from, to });
 
             return send.list({ result });

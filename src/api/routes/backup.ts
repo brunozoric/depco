@@ -1,11 +1,8 @@
 import type { FastifyInstance } from "fastify";
-import type { IPluginOptions } from "./types.js";
 import { registerBackupExportRoutes } from "./backup/backupExportRoutes.js";
 import { registerBackupImportRoutes } from "./backup/backupImportRoutes.js";
 
-export async function backupRoutes(app: FastifyInstance, options: IPluginOptions): Promise<void> {
-    const { container } = options;
-
+export async function backupRoutes(app: FastifyInstance): Promise<void> {
     app.addContentTypeParser(
         "application/octet-stream",
         { parseAs: "buffer" },
@@ -14,6 +11,6 @@ export async function backupRoutes(app: FastifyInstance, options: IPluginOptions
         }
     );
 
-    registerBackupExportRoutes(app, container);
-    registerBackupImportRoutes(app, container);
+    registerBackupExportRoutes(app);
+    registerBackupImportRoutes(app);
 }

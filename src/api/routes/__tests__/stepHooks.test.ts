@@ -9,6 +9,7 @@ import { createTestSession } from "#testing/helpers/createTestSession.js";
 import { createAuthHook } from "#api/middleware/authHook.js";
 import { projects, projectStepHooks } from "#api/db/schema.js";
 import { stepHooksRoutes } from "../stepHooks.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
@@ -35,8 +36,9 @@ describe("step hooks routes", () => {
             .run();
 
         app = Fastify();
-        app.addHook("onRequest", createAuthHook(container));
-        await app.register(stepHooksRoutes, { container });
+        registerRequestContainer(app, container);
+        app.addHook("onRequest", createAuthHook());
+        await app.register(stepHooksRoutes);
         await app.ready();
 
         ({ token } = await createTestSession({ db }));

@@ -7,6 +7,7 @@ import type { FastifyInstance } from "fastify";
 import { filesystemRoutes } from "../filesystem.js";
 import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { projects } from "#api/db/schema.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 function createProjectDir(basePath: string, name: string): string {
     const dirPath = join(basePath, name);
@@ -29,7 +30,8 @@ describe("filesystem routes", () => {
         const { container } = createTestApiContainer();
 
         app = Fastify();
-        await app.register(filesystemRoutes, { container });
+        registerRequestContainer(app, container);
+        await app.register(filesystemRoutes);
         await app.ready();
     });
 
@@ -367,7 +369,8 @@ describe("scan endpoint", () => {
         const container = result.container;
 
         app = Fastify();
-        await app.register(filesystemRoutes, { container });
+        registerRequestContainer(app, container);
+        await app.register(filesystemRoutes);
         await app.ready();
     });
 

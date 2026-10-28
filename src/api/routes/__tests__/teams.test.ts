@@ -14,6 +14,7 @@ import {
     licenseSnapshots
 } from "#api/db/schema.js";
 import { teamsRoutes } from "../teams.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
@@ -41,8 +42,9 @@ describe("teams routes", () => {
         const container = result.container;
 
         app = Fastify();
-        app.addHook("onRequest", createAuthHook(container));
-        await app.register(teamsRoutes, { container });
+        registerRequestContainer(app, container);
+        app.addHook("onRequest", createAuthHook());
+        await app.register(teamsRoutes);
         await app.ready();
 
         ({ token } = await createTestSession({ db }));

@@ -1,14 +1,12 @@
 import type { FastifyInstance } from "fastify";
-import type { IPluginOptions } from "./types.js";
 import { registerRoute, sendError, sendBlob } from "#shared/routing/index.js";
 import { exportAllSbomRoute, exportProjectSbomRoute } from "#shared/routes/index.js";
 import { ExportAllSbomUseCase, ExportProjectSbomUseCase } from "./useCases/sbom/index.js";
 
-export async function sbomRoutes(app: FastifyInstance, options: IPluginOptions): Promise<void> {
-    const { container } = options;
+export async function sbomRoutes(app: FastifyInstance): Promise<void> {
     // Registered before "/:projectId" so it isn't shadowed by that param route.
     registerRoute(app, exportAllSbomRoute, {}, async (request, reply) => {
-        const useCase = container.resolve(ExportAllSbomUseCase);
+        const useCase = request.container.resolve(ExportAllSbomUseCase);
         const result = await useCase.execute({ format: request.query.format });
 
         result.match({
@@ -29,7 +27,7 @@ export async function sbomRoutes(app: FastifyInstance, options: IPluginOptions):
     });
 
     registerRoute(app, exportProjectSbomRoute, {}, async (request, reply) => {
-        const useCase = container.resolve(ExportProjectSbomUseCase);
+        const useCase = request.container.resolve(ExportProjectSbomUseCase);
         const result = await useCase.execute({
             projectId: request.params.projectId,
             format: request.query.format

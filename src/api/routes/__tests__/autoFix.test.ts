@@ -9,6 +9,7 @@ import { createAuthHook } from "../../middleware/authHook.js";
 import { projects, autoFixPullRequests } from "#api/db/schema.js";
 import { autoFixSettingsRoutes } from "../autoFixSettings.js";
 import { autoFixPrRoutes } from "../autoFixPrs.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
@@ -64,9 +65,10 @@ async function createTestContext(): Promise<IRouteTestContext> {
     });
 
     const app = Fastify();
-    app.addHook("onRequest", createAuthHook(container));
-    await app.register(autoFixSettingsRoutes, { container });
-    await app.register(autoFixPrRoutes, { container });
+    registerRequestContainer(app, container);
+    app.addHook("onRequest", createAuthHook());
+    await app.register(autoFixSettingsRoutes);
+    await app.register(autoFixPrRoutes);
     await app.ready();
 
     const { token } = await createTestSession({ db });

@@ -9,6 +9,7 @@ import { changelogs, dependencies, dependencyVersions, upgradeJobs } from "#api/
 import { changelogRoutes } from "../changelogs.js";
 import { eq } from "drizzle-orm";
 import { JobWorker } from "../../services/JobExecution/index.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 type TestDb = ReturnType<typeof createTestApiContainer>["db"];
 
@@ -108,8 +109,9 @@ describe("changelog routes", () => {
         });
 
         app = Fastify();
-        app.addHook("onRequest", createAuthHook(container));
-        await app.register(changelogRoutes, { container });
+        registerRequestContainer(app, container);
+        app.addHook("onRequest", createAuthHook());
+        await app.register(changelogRoutes);
         await app.ready();
 
         ({ token } = await createTestSession({ db }));

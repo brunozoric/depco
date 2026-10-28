@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import { createTestApiContainer } from "#testing/helpers/createTestApiContainer.js";
 import { dashboardRoutes } from "../dashboard.js";
+import { registerRequestContainer } from "#api/middleware/requestContainer.js";
 
 export interface DashboardTestContext {
     app: FastifyInstance;
@@ -12,7 +13,8 @@ export async function setupDashboardTest(): Promise<DashboardTestContext> {
     const result = createTestApiContainer();
     const db = result.db;
     const app = Fastify();
-    await app.register(dashboardRoutes, { container: result.container });
+    registerRequestContainer(app, result.container);
+    await app.register(dashboardRoutes);
     await app.ready();
     return { app, db };
 }
