@@ -1388,6 +1388,7 @@ __metadata:
     jsdom: "npm:^30.1.3"
     mobx: "npm:^7.1.1"
     mobx-react-lite: "npm:^5.1.0"
+    oxc-parser: "npm:^0.133.0"
     oxfmt: "npm:^0.74.0"
     oxlint: "npm:^1.89.0"
     picomatch: "npm:^4.0.7"
